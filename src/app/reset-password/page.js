@@ -1,6 +1,8 @@
 'use client';
+
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link'; // ✅ This was missing
 
 export default function ResetPassword() {
   const router = useRouter();
@@ -74,3 +76,4 @@ export default function ResetPassword() {
     </main>
   );
 }
+

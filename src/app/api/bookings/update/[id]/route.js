@@ -8,7 +8,6 @@ export async function PUT(req, { params }) {
   try {
     const { status } = await req.json();
 
-    // ✅ Validate status, including 'rejected'
     if (!['pending', 'accepted', 'rejected'].includes(status)) {
       return new Response(JSON.stringify({ message: 'Invalid status value' }), { status: 400 });
     }
