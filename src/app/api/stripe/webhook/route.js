@@ -1,5 +1,5 @@
 import dbConnect from '@/lib/dbConnect';
-import Cleaner from '@/models/cleaner';
+import Cleaner from '@/models/Cleaner';
 import Stripe from 'stripe';
 import { NextResponse } from 'next/server';
 

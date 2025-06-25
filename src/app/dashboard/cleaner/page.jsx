@@ -139,7 +139,7 @@ export default function CleanerDashboard() {
         )}
       </div>
 
-      {/* Tap feedback styling */}
+      
       <style jsx global>{`
         .active-tap:active {
           transform: scale(0.98);
