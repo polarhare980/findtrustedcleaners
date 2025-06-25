@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from 'next/navigation';
 import Head from "next/head";
 import Link from "next/link";
-<!-- Trigger redeploy -->
+
 
 // ✅ Embed sanitisation
 function isSafeEmbed(code) {
@@ -238,7 +238,7 @@ export default function HomePage() {
         </footer>
       </main>
 
-      {/* Tap feedback styling */}
+  
       <style jsx global>{`
         .active-tap:active {
           transform: scale(0.98);
