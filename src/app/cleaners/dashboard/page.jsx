@@ -8,17 +8,23 @@ const allServices = ['Oven Cleaning', 'Carpet Cleaning', 'Window Cleaning', 'Whi
 
 export default function CleanerDashboard() {
   const router = useRouter();
-  const [mounted, setMounted] = useState(false); // ✅ this will protect SSR
+  const [mounted, setMounted] = useState(false);
   const [id, setId] = useState(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const storedId = localStorage.getItem('cleanerId');
       setId(storedId);
-      setMounted(true); // ✅ allow rendering only on client
+      setMounted(true);
     }
   }, []);
 
+  // ✅ This is crucial
+  if (!mounted) {
+    return null; // Or return a loading spinner if you prefer
+  }
+
+  // ✅ Your existing dashboard code continues here
 
   const [formData, setFormData] = useState(null);
   const [loading, setLoading] = useState(true);
