@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Head from 'next/head';
 import Link from 'next/link';
 
-export default function ClientRegister() {
+function ClientRegisterPage() {
   const [form, setForm] = useState({
     fullName: '',
     email: '',
@@ -48,7 +48,6 @@ export default function ClientRegister() {
       if (res.ok && data.id) {
         localStorage.setItem('clientId', data.id);
 
-        // ✅ Redirect to next page if provided
         const nextUrl = searchParams.get('next');
         if (nextUrl) {
           router.push(nextUrl);
@@ -140,5 +139,13 @@ export default function ClientRegister() {
         </p>
       </footer>
     </main>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={<p className="p-6 text-center text-teal-700">Loading...</p>}>
+      <ClientRegisterPage />
+    </Suspense>
   );
 }
