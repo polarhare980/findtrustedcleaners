@@ -8,14 +8,16 @@ const allServices = ['Oven Cleaning', 'Carpet Cleaning', 'Window Cleaning', 'Whi
 
 export default function CleanerDashboard() {
   const router = useRouter();
+  const [mounted, setMounted] = useState(false); // ✅ this will protect SSR
   const [id, setId] = useState(null);
 
-useEffect(() => {
-  if (typeof window !== 'undefined') {
-    const storedId = localStorage.getItem('cleanerId');
-    setId(storedId);
-  }
-}, []);
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedId = localStorage.getItem('cleanerId');
+      setId(storedId);
+      setMounted(true); // ✅ allow rendering only on client
+    }
+  }, []);
 
 
   const [formData, setFormData] = useState(null);
