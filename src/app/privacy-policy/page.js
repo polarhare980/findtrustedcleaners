@@ -2,6 +2,7 @@
 
 import Head from 'next/head';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function PrivacyPolicyPage() {
   return (
@@ -20,7 +21,7 @@ export default function PrivacyPolicyPage() {
       <header className="bg-[#0D9488] text-white py-4 px-6 shadow">
         <div className="flex justify-between items-center">
           <Link href="/">
-            <img src="/findtrusted-logo.png" alt="Logo" className="w-32 h-auto" />
+            <Image src="/findtrusted-logo.png" alt="Logo" className="w-32 h-auto" width={128} height={40} />
           </Link>
           <nav className="space-x-6 text-sm font-medium">
             <Link href="/cleaners" className="hover:underline">Find a Cleaner</Link>
@@ -37,7 +38,7 @@ export default function PrivacyPolicyPage() {
 
         <p className="mb-4 font-medium">Effective Date: 17 June 2025</p>
 
-        <p className="mb-4">Welcome to FindTrustedCleaners ("we," "us," or "our"). We respect your privacy and are committed to protecting your personal data. This Privacy Policy explains how we collect, use, and safeguard your information.</p>
+        <p className="mb-4">Welcome to FindTrustedCleaners (&#34;we,&#34; &#34;us,&#34; or &#34;our&#34;). We respect your privacy and are committed to protecting your personal data. This Privacy Policy explains how we collect, use, and safeguard your information.</p>
 
         <h2 className="text-2xl font-semibold mt-6 mb-2">1. What We Collect</h2>
         <ul className="list-disc list-inside mb-4">
@@ -111,7 +112,7 @@ export default function PrivacyPolicyPage() {
         <p className="mb-4">Our website may contain links to third-party websites. We are not responsible for their privacy practices and recommend reviewing their policies.</p>
 
         <h2 className="text-2xl font-semibold mt-6 mb-2">10. Data Breach Notification</h2>
-        <p className="mb-4">If a data breach occurs, we will notify the Information Commissioner's Office (ICO) within 72 hours if legally required and inform affected users as appropriate.</p>
+        <p className="mb-4">If a data breach occurs, we will notify the Information Commissioner&#39;s Office (ICO) within 72 hours if legally required and inform affected users as appropriate.</p>
 
         <h2 className="text-2xl font-semibold mt-6 mb-2">11. Changes to This Policy</h2>
         <p className="mb-4">We may update this Privacy Policy. Changes will be posted on this page.</p>

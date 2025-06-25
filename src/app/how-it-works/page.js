@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
 import Head from 'next/head';
+import Image from 'next/image';
 
 export default function HowItWorks() {
   return (
@@ -45,7 +46,7 @@ export default function HowItWorks() {
       <main className="min-h-screen bg-white text-gray-700">
         <header className="flex items-center justify-between px-6 py-4 bg-[#0D9488] shadow text-white">
           <Link href="/">
-            <img src="/findtrusted-logo.png" alt="FindTrustedCleaners Logo" className="w-32 h-auto" />
+            <Image src="/findtrusted-logo.png" alt="FindTrustedCleaners Logo" className="w-32 h-auto" width={128} height={40} />
           </Link>
           <nav className="space-x-6 text-sm font-medium">
             <Link href="/" className="hover:text-gray-200">Home</Link>
@@ -63,7 +64,7 @@ export default function HowItWorks() {
           </nav>
           <h1 className="text-3xl font-bold text-[#0D9488] mb-4 text-center">How It Works</h1>
           <p className="text-center text-gray-700 mb-10 text-lg">
-            Whether you're looking to book a trusted cleaner or list your own services, here's exactly how FindTrustedCleaners makes the process simple, transparent, and local.
+            Whether you&#39;re looking to book a trusted cleaner or list your own services, here&#39;s exactly how FindTrustedCleaners makes the process simple, transparent, and local.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
@@ -74,7 +75,7 @@ export default function HowItWorks() {
                 <li>📅 See available hours, ratings, and pricing</li>
                 <li>📝 Request a time slot with your chosen cleaner</li>
                 <li>⏳ No payment is taken until the cleaner approves your request</li>
-                <li>✅ Once approved, you complete the payment and unlock the cleaner’s verified contact info</li>
+                <li>✅ Once approved, you complete the payment and unlock the cleaner&#39;s verified contact info</li>
                 <li>🔓 Pending markers will be shown on requested slots to avoid double booking</li>
               </ul>
             </div>
@@ -103,22 +104,22 @@ export default function HowItWorks() {
         </section>
 
         <footer className="bg-[#0D9488] text-white border-t py-6 px-6 text-center text-sm">
-        <nav className="flex flex-wrap justify-center gap-4 mb-2">
-          <Link href="/about">About Us</Link>
-          <Link href="/terms">Terms & Conditions</Link>
-          <Link href="/privacy-policy">Privacy Policy</Link>
-          <Link href="/cookie-policy">Cookie Policy</Link>
-          <Link href="/contact">Contact</Link>
-          <Link href="/faq">FAQs</Link>
-          <Link href="/sitemap">Site Map</Link>
-        </nav>
+          <nav className="flex flex-wrap justify-center gap-4 mb-2">
+            <Link href="/about">About Us</Link>
+            <Link href="/terms">Terms & Conditions</Link>
+            <Link href="/privacy-policy">Privacy Policy</Link>
+            <Link href="/cookie-policy">Cookie Policy</Link>
+            <Link href="/contact">Contact</Link>
+            <Link href="/faq">FAQs</Link>
+            <Link href="/sitemap">Site Map</Link>
+          </nav>
 
-        <p className="mb-2">&copy; {new Date().getFullYear()} FindTrustedCleaners. All rights reserved.</p>
+          <p className="mb-2">&copy; {new Date().getFullYear()} FindTrustedCleaners. All rights reserved.</p>
 
-        <p className="text-xs">
-          FindTrustedCleaners is committed to GDPR compliance. Read our <Link href="/privacy-policy" className="underline">Privacy Policy</Link> and <Link href="/cookie-policy" className="underline">Cookie Policy</Link> for details on how we protect your data. You may <Link href="/contact" className="underline">contact us</Link> at any time to manage your personal information.
-        </p>
-      </footer>
+          <p className="text-xs">
+            FindTrustedCleaners is committed to GDPR compliance. Read our <Link href="/privacy-policy" className="underline">Privacy Policy</Link> and <Link href="/cookie-policy" className="underline">Cookie Policy</Link> for details on how we protect your data. You may <Link href="/contact" className="underline">contact us</Link> at any time to manage your personal information.
+          </p>
+        </footer>
       </main>
     </>
   );

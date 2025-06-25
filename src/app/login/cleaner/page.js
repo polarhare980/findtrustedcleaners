@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Head from 'next/head';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function CleanerProfile() {
   const { id } = useParams();
@@ -75,14 +76,14 @@ export default function CleanerProfile() {
   return (
     <>
       <Head>
-        <title>{cleaner.realName}'s Profile | Find Trusted Cleaners</title>
+        <title>{cleaner.realName}&#39;s Profile | Find Trusted Cleaners</title>
         <meta name="description" content="View and manage your cleaner profile." />
       </Head>
 
       <main className="min-h-screen bg-white text-gray-800">
         <header className="flex items-center justify-between px-6 py-4 bg-[#0D9488] text-white">
           <Link href="/">
-            <img src="/findtrusted-logo.png" alt="Logo" className="w-32 h-auto" />
+            <Image src="/findtrusted-logo.png" alt="Logo" className="w-32 h-auto" width={128} height={40} />
           </Link>
           <nav className="space-x-4 text-sm">
             <Link href="/cleaners" className="hover:text-gray-200">Find Cleaners</Link>
@@ -92,10 +93,12 @@ export default function CleanerProfile() {
 
         <section className="max-w-4xl mx-auto px-6 py-10">
           <div className="flex items-center gap-6">
-            <img
+            <Image
               src="/profile-placeholder.png"
               alt="Profile"
               className="w-32 h-32 rounded-full object-cover border"
+              width={128}
+              height={128}
             />
             <div>
               <h1 className="text-3xl font-bold text-[#0D9488]">{cleaner.realName}</h1>
@@ -124,7 +127,7 @@ export default function CleanerProfile() {
               ))}
               {days.map((d) => (
                 <>
-                  <div className="bg-white p-1 text-center font-medium">{d}</div>
+                  <div key={d} className="bg-white p-1 text-center font-medium">{d}</div>
                   {hours.map((h) => {
                     const key = `${d}-${h}`;
                     const value = cleaner.availability?.[key];
@@ -148,22 +151,22 @@ export default function CleanerProfile() {
         </section>
 
         <footer className="bg-[#0D9488] text-white border-t py-6 px-6 text-center text-sm">
-        <nav className="flex flex-wrap justify-center gap-4 mb-2">
-          <Link href="/about">About Us</Link>
-          <Link href="/terms">Terms & Conditions</Link>
-          <Link href="/privacy-policy">Privacy Policy</Link>
-          <Link href="/cookie-policy">Cookie Policy</Link>
-          <Link href="/contact">Contact</Link>
-          <Link href="/faq">FAQs</Link>
-          <Link href="/sitemap">Site Map</Link>
-        </nav>
+          <nav className="flex flex-wrap justify-center gap-4 mb-2">
+            <Link href="/about">About Us</Link>
+            <Link href="/terms">Terms & Conditions</Link>
+            <Link href="/privacy-policy">Privacy Policy</Link>
+            <Link href="/cookie-policy">Cookie Policy</Link>
+            <Link href="/contact">Contact</Link>
+            <Link href="/faq">FAQs</Link>
+            <Link href="/sitemap">Site Map</Link>
+          </nav>
 
-        <p className="mb-2">&copy; {new Date().getFullYear()} FindTrustedCleaners. All rights reserved.</p>
+          <p className="mb-2">&copy; {new Date().getFullYear()} FindTrustedCleaners. All rights reserved.</p>
 
-        <p className="text-xs">
-          FindTrustedCleaners is committed to GDPR compliance. Read our <Link href="/privacy-policy" className="underline">Privacy Policy</Link> and <Link href="/cookie-policy" className="underline">Cookie Policy</Link> for details on how we protect your data. You may <Link href="/contact" className="underline">contact us</Link> at any time to manage your personal information.
-        </p>
-      </footer>
+          <p className="text-xs">
+            FindTrustedCleaners is committed to GDPR compliance. Read our <Link href="/privacy-policy" className="underline">Privacy Policy</Link> and <Link href="/cookie-policy" className="underline">Cookie Policy</Link> for details on how we protect your data. You may <Link href="/contact" className="underline">contact us</Link> at any time to manage your personal information.
+          </p>
+        </footer>
       </main>
     </>
   );
