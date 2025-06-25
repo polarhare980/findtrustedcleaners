@@ -18,7 +18,7 @@ export default function TermsAndConditions() {
           <div>
             <h2 className="text-xl font-semibold mb-2">2. Definitions</h2>
             <p>
-              "Platform" refers to our website. "Cleaner" refers to an individual or business offering cleaning services. "Client" refers to any individual using the platform to find or contact a cleaner.
+              &quot;Platform&quot; refers to our website. &quot;Cleaner&quot; refers to an individual or business offering cleaning services. &quot;Client&quot; refers to any individual using the platform to find or contact a cleaner.
             </p>
           </div>
 
