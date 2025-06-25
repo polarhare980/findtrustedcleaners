@@ -8,7 +8,15 @@ const allServices = ['Oven Cleaning', 'Carpet Cleaning', 'Window Cleaning', 'Whi
 
 export default function CleanerDashboard() {
   const router = useRouter();
-  const id = localStorage.getItem('cleanerId');
+  const [id, setId] = useState(null);
+
+useEffect(() => {
+  if (typeof window !== 'undefined') {
+    const storedId = localStorage.getItem('cleanerId');
+    setId(storedId);
+  }
+}, []);
+
 
   const [formData, setFormData] = useState(null);
   const [loading, setLoading] = useState(true);
