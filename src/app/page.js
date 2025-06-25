@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation';
 import Head from "next/head";
 import Link from "next/link";
 
-
 // ✅ Embed sanitisation
 function isSafeEmbed(code) {
   const hasIframe = code.includes('<iframe') && code.includes('src=');
@@ -15,9 +14,16 @@ function isSafeEmbed(code) {
 }
 
 export default function HomePage() {
+  const [mounted, setMounted] = useState(false); // ✅ SSR Protection
   const [cleaners, setCleaners] = useState([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setMounted(true);
+    }
+  }, []);
 
   useEffect(() => {
     const fetchCleaners = async () => {
@@ -51,6 +57,9 @@ export default function HomePage() {
     }
   };
 
+  // ✅ Prevent SSR build errors
+  if (!mounted) return null;
+
   return (
     <>
       <Head>
@@ -68,6 +77,7 @@ export default function HomePage() {
           className="absolute inset-0 w-full h-full object-cover opacity-40 -z-10"
         />
 
+        {/* Header */}
         <header className="flex flex-col sm:flex-row sm:items-center justify-between px-6 py-4 bg-teal-600 bg-opacity-90 shadow text-white space-y-2 sm:space-y-0">
           <Link href="/">
             <img src="/findtrusted-logo.png" alt="Logo" className="w-32 h-auto" />
@@ -81,6 +91,7 @@ export default function HomePage() {
           </nav>
         </header>
 
+        {/* Hero Section */}
         <section className="text-center py-10 bg-white/40 backdrop-blur rounded-xl mx-4 my-6">
           <h1 className="text-4xl font-bold text-[#0D9488]">Find Trusted Cleaners</h1>
           <p className="text-base text-gray-700 mt-2">
@@ -88,6 +99,7 @@ export default function HomePage() {
           </p>
         </section>
 
+        {/* CTA Section */}
         <section className="flex flex-col sm:flex-row justify-center gap-6 px-6 py-8">
           <Link
             href="/cleaners"
@@ -103,6 +115,7 @@ export default function HomePage() {
           </Link>
         </section>
 
+        {/* Featured Cleaners */}
         <section className="px-6 py-10">
           <h2 className="text-2xl font-semibold mb-4 text-center text-white drop-shadow">
             Featured Cleaners
@@ -178,6 +191,7 @@ export default function HomePage() {
           )}
         </section>
 
+        {/* Features Section */}
         <section className="grid grid-cols-1 md:grid-cols-2 gap-6 px-6 py-10 bg-white/40 backdrop-blur-md rounded-xl mx-4 my-6">
           <div>
             <h3 className="text-xl font-semibold mb-2 text-[#0D9488]">For Cleaners</h3>
@@ -197,6 +211,7 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* Footer */}
         <footer className="bg-teal-600 border-t py-6 px-6 text-center text-sm text-white">
           <nav className="flex flex-wrap justify-center gap-4 mb-2">
             <Link href="/about" className="active-tap">About Us</Link>
@@ -238,7 +253,6 @@ export default function HomePage() {
         </footer>
       </main>
 
-  
       <style jsx global>{`
         .active-tap:active {
           transform: scale(0.98);

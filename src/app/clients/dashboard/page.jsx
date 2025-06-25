@@ -5,20 +5,25 @@ import { useRouter } from 'next/navigation';
 
 export default function ClientDashboard() {
   const router = useRouter();
+  const [mounted, setMounted] = useState(false); // ✅ SSR Protection
   const [client, setClient] = useState(null);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
 
-  // ✅ Protect dashboard
   useEffect(() => {
-    const clientId = localStorage.getItem('clientId');
-    if (!clientId) {
-      router.push('/login/clients');
+    if (typeof window !== 'undefined') {
+      const clientId = localStorage.getItem('clientId');
+      if (!clientId) {
+        router.push('/login/clients');
+      }
+      setMounted(true); // ✅ Only render on client
     }
   }, [router]);
 
   useEffect(() => {
+    if (!mounted) return;
+
     const fetchClient = async () => {
       const id = localStorage.getItem('clientId');
 
@@ -40,18 +45,17 @@ export default function ClientDashboard() {
     };
 
     fetchClient();
-  }, []);
+  }, [mounted]);
 
   useEffect(() => {
-    const fetchBookings = async () => {
-      if (!client) return;
+    if (!client) return;
 
+    const fetchBookings = async () => {
       try {
         const res = await fetch(`/api/bookings/client/${client._id}`);
         if (!res.ok) throw new Error('Failed to fetch bookings');
         const data = await res.json();
 
-        // ✅ Fetch cleaner names for each booking
         const bookingsWithNames = await Promise.all(
           data.map(async (booking) => {
             try {
@@ -77,13 +81,9 @@ export default function ClientDashboard() {
     if (!confirm('Are you sure you want to cancel this booking?')) return;
 
     try {
-      const res = await fetch(`/api/bookings/delete/${bookingId}`, {
-        method: 'DELETE',
-      });
-
+      const res = await fetch(`/api/bookings/delete/${bookingId}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to cancel booking');
 
-      // Remove cancelled booking from local state
       setBookings(bookings.filter((b) => b._id !== bookingId));
       alert('Booking cancelled successfully.');
     } catch (err) {
@@ -119,6 +119,7 @@ export default function ClientDashboard() {
     }
   };
 
+  if (!mounted) return null; // ✅ Prevent build errors
   if (loading) return <p className="p-6 text-gray-500">Loading dashboard...</p>;
   if (!client) return <p className="p-6 text-red-600">Client not found or not logged in.</p>;
 
@@ -127,7 +128,6 @@ export default function ClientDashboard() {
       <div className="w-full max-w-2xl bg-white shadow-lg rounded-2xl p-8">
         <h1 className="text-3xl font-bold text-teal-700 mb-6 text-center">Welcome, {client.fullName}</h1>
 
-        {/* Profile Section */}
         <div className="space-y-6">
           {['fullName', 'email', 'phone', 'address', 'postcode'].map((field) => (
             <div key={field}>
@@ -172,7 +172,6 @@ export default function ClientDashboard() {
           </button>
         </div>
 
-        {/* Booking History Section */}
         <div className="mt-12">
           <h2 className="text-2xl font-semibold text-teal-700 mb-4">Your Booking History</h2>
 
@@ -202,4 +201,3 @@ export default function ClientDashboard() {
     </div>
   );
 }
-

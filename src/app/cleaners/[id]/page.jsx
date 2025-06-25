@@ -15,8 +15,15 @@ function isSafeEmbed(code) {
 export default function PublicCleanerProfile() {
   const { id } = useParams();
   const router = useRouter();
+  const [mounted, setMounted] = useState(false); // ✅ SSR Protection
   const [cleaner, setCleaner] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setMounted(true);
+    }
+  }, []);
 
   useEffect(() => {
     const fetchCleaner = async () => {
@@ -63,6 +70,9 @@ export default function PublicCleanerProfile() {
     }
   };
 
+  // ✅ Prevent SSR build errors
+  if (!mounted) return null;
+
   if (loading) return <p className="p-6 text-gray-500">Loading profile...</p>;
   if (!cleaner) return <p className="p-6 text-red-500">Cleaner not found</p>;
 
@@ -79,19 +89,19 @@ export default function PublicCleanerProfile() {
       <p><strong>Postcode:</strong> {cleaner.postcode}</p>
       <p><strong>Hourly Rate:</strong> £{cleaner.rate || 'Not set'}</p>
 
-<button
-  onClick={() => {
-    const clientId = localStorage.getItem('clientId');
-    if (!clientId) {
-      router.push(`/register/client?next=/cleaners/${cleaner._id}/checkout`);
-    } else {
-      router.push(`/cleaners/${cleaner._id}/checkout`);
-    }
-  }}
-  className="mt-4 bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded shadow"
->
-  Book this Cleaner
-</button>
+      <button
+        onClick={() => {
+          const clientId = localStorage.getItem('clientId');
+          if (!clientId) {
+            router.push(`/register/client?next=/cleaners/${cleaner._id}/checkout`);
+          } else {
+            router.push(`/cleaners/${cleaner._id}/checkout`);
+          }
+        }}
+        className="mt-4 bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded shadow"
+      >
+        Book this Cleaner
+      </button>
 
       <div className="mt-4">
         <h2 className="font-semibold">Services Offered:</h2>

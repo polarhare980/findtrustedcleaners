@@ -8,14 +8,18 @@ export default function CheckoutPage() {
   const { id } = useParams();
   const router = useRouter();
 
+  const [mounted, setMounted] = useState(false); // ✅ SSR Protection
   const [cleaner, setCleaner] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // ✅ Checkout Protection
+  // ✅ SSR-safe Client Check
   useEffect(() => {
-    const clientId = localStorage.getItem('clientId');
-    if (!clientId) {
-      router.push(`/login/clients?next=/cleaners/${id}/checkout`);
+    if (typeof window !== 'undefined') {
+      const clientId = localStorage.getItem('clientId');
+      if (!clientId) {
+        router.push(`/login/clients?next=/cleaners/${id}/checkout`);
+      }
+      setMounted(true);
     }
   }, [id, router]);
 
@@ -34,6 +38,9 @@ export default function CheckoutPage() {
 
     fetchCleaner();
   }, [id]);
+
+  // ✅ Prevent SSR build errors
+  if (!mounted) return null;
 
   if (loading) return <p className="p-10 text-center text-gray-500">Loading checkout...</p>;
   if (!cleaner) return <p className="p-10 text-center text-red-500">Cleaner not found.</p>;
@@ -69,12 +76,11 @@ export default function CheckoutPage() {
         <p className="mb-4 text-gray-600">This is where the payment form will go (Stripe, PayPal, etc).</p>
 
         <button
-  onClick={() => router.push('/booking/confirmation')}
-  className="bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded shadow"
->
-  Complete Booking
-</button>
-
+          onClick={() => router.push('/booking/confirmation')}
+          className="bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded shadow"
+        >
+          Complete Booking
+        </button>
       </div>
     </div>
   );

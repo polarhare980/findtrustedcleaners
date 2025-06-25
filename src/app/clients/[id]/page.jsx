@@ -7,29 +7,35 @@ export default function ClientDashboard({ params }) {
   const router = useRouter();
   const [client, setClient] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false); // ✅ SSR protection
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) return router.push('/login');
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('token');
+      if (!token) return router.push('/login');
 
-    try {
-      const decoded = jwt.decode(token);
-      fetch(`/api/clients/${decoded.id}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) {
-            setClient(data.client);
-          } else {
-            router.push('/login');
-          }
-        });
-    } catch {
-      router.push('/login');
-    } finally {
-      setLoading(false);
+      try {
+        const decoded = jwt.decode(token);
+        fetch(`/api/clients/${decoded.id}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              setClient(data.client);
+            } else {
+              router.push('/login');
+            }
+          });
+      } catch {
+        router.push('/login');
+      } finally {
+        setLoading(false);
+      }
+
+      setMounted(true); // ✅ Safe to render now
     }
-  }, []);
+  }, [router]);
 
+  if (!mounted) return null; // ✅ Prevents server-side render crash
   if (loading) return <p className="p-6">Loading...</p>;
 
   return (
