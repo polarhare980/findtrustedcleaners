@@ -12,12 +12,9 @@ export default async function dbConnect() {
   }
 
   try {
-    const db = await mongoose.connect(uri, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    await mongoose.connect(uri); // ✅ No need for extra options
 
-    isConnected = db.connections[0].readyState === 1;
+    isConnected = mongoose.connection.readyState === 1;
     console.log("✅ MongoDB connected");
   } catch (error) {
     console.error("❌ MongoDB connection error:", error);
