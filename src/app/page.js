@@ -84,7 +84,7 @@ export default function HomePage() {
           </Link>
           <nav className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-6 text-sm font-medium">
             <Link href="/cleaners" className="active-tap">Find a Cleaner</Link>
-            <Link href="/register" className="active-tap">List Yourself</Link>
+            <Link href="/register/cleaners" className="active-tap">List Yourself</Link>
             <Link href="/how-it-works" className="active-tap">How It Works</Link>
             <Link href="/login" className="active-tap">Login</Link>
             <Link href="/blog" className="active-tap">Blog</Link>
@@ -108,7 +108,7 @@ export default function HomePage() {
             Find a Cleaner
           </Link>
           <Link
-            href="/register"
+            href="/register/cleaners"
             className="bg-white text-[#0D9488] border border-[#0D9488] px-6 py-4 rounded shadow hover:bg-gray-100 text-center w-full sm:w-auto active-tap"
           >
             List Yourself
