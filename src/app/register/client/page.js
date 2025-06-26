@@ -75,7 +75,7 @@ function ClientRegisterPage() {
         </Link>
         <nav className="space-x-4 text-sm">
           <Link href="/cleaners" className="hover:text-gray-200">Find Cleaners</Link>
-          <Link href="/register" className="hover:text-gray-200">Register Cleaner</Link>
+          <Link href="/register/cleaners" className="hover:text-gray-200">Register Cleaner</Link>
           <Link href="/login" className="hover:text-gray-200">Login</Link>
         </nav>
       </header>

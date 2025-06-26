@@ -36,7 +36,7 @@ export default function ContactPage() {
         </Link>
         <nav className="space-x-6 text-sm font-medium">
           <Link href="/cleaners">Find a Cleaner</Link>
-          <Link href="/register">List Yourself</Link>
+          <Link href="/register/cleaners">List Yourself</Link>
           <Link href="/how-it-works">How It Works</Link>
           <Link href="/login">Login</Link>
           <Link href="/about">About</Link>

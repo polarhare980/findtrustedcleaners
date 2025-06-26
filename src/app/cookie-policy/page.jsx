@@ -57,5 +57,24 @@ export default function CookiePolicy() {
         <Link href="/privacy-policy" className="underline text-teal-700">Privacy Policy</Link> for more details on how we protect your personal data.
       </p>
     </main>
+  <footer className="bg-[#0D9488] text-white border-t py-6 px-6 text-center text-sm">
+        <nav className="flex flex-wrap justify-center gap-4 mb-2">
+          <Link href="/about">About Us</Link>
+          <Link href="/terms">Terms & Conditions</Link>
+          <Link href="/privacy-policy">Privacy Policy</Link>
+          <Link href="/cookie-policy">Cookie Policy</Link>
+          <Link href="/contact">Contact</Link>
+          <Link href="/faq">FAQs</Link>
+          <Link href="/sitemap">Site Map</Link>
+        </nav>
+
+        <p className="mb-2">&copy; {new Date().getFullYear()} FindTrustedCleaners. All rights reserved.</p>
+
+        <p className="text-xs">
+          FindTrustedCleaners is committed to GDPR compliance. Read our <Link href="/privacy-policy" className="underline">Privacy Policy</Link> and <Link href="/cookie-policy" className="underline">Cookie Policy</Link> for details on how we protect your data. You may <Link href="/contact" className="underline">contact us</Link> at any time to manage your personal information.
+        </p>
+      </footer>
+    </main>
   );
 }
+

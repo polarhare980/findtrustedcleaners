@@ -91,7 +91,7 @@ export default function CleanerRegister() {
           <nav className="space-x-6 text-sm font-medium">
             <Link href="/">Home</Link>
             <Link href="/cleaners" className="hover:text-teal-600">Find a Cleaner</Link>
-            <Link href="/register" className="hover:text-teal-600">List Yourself</Link>
+            <Link href="/register/cleaners" className="hover:text-teal-600">List Yourself</Link>
             <Link href="/how-it-works" className="hover:text-teal-600">How It Works</Link>
             <Link href="/login" className="hover:text-teal-600">Login</Link>
             <Link href="/blog" className="hover:text-teal-600">Blog</Link>
