@@ -12,7 +12,7 @@ export default async function dbConnect() {
   }
 
   try {
-    await mongoose.connect(uri); // ✅ No need for extra options
+    await mongoose.connect(uri); // ✅ No options
 
     isConnected = mongoose.connection.readyState === 1;
     console.log("✅ MongoDB connected");
