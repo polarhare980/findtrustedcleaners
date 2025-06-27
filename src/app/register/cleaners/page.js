@@ -1,4 +1,5 @@
 'use client';
+
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Head from 'next/head';
@@ -45,29 +46,46 @@ export default function CleanerRegister() {
     });
   };
 
-  // ✅ Updated handleChange to auto-convert 'rates' to number
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm(prev => ({
       ...prev,
-      [name]: name === 'rates' ? parseFloat(value) : value // ✅ Ensure rates is sent as a number
+      [name]: name === 'rates' ? parseFloat(value) : value
     }));
   };
 
+  // ✅ Updated with safe fetch handling
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (form.password !== form.confirmPassword) {
       alert('Passwords do not match');
       return;
     }
-    const res = await fetch('/api/cleaners', {
-      method: 'POST',
-      body: JSON.stringify(form),
-      headers: { 'Content-Type': 'application/json' },
-    });
 
-    const data = await res.json();
-    if (data.success) router.push(`/cleaners/success`);
+    try {
+      const res = await fetch('/api/cleaners', {
+        method: 'POST',
+        body: JSON.stringify(form),
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          router.push(`/cleaners/success`);
+        } else {
+          alert(data.message || 'Something went wrong. Please try again.');
+        }
+      } else {
+        const errorText = await res.text();
+        console.error('API Error:', errorText);
+        alert('Failed to register. Please try again.');
+      }
+    } catch (err) {
+      console.error('Registration error:', err);
+      alert('An unexpected error occurred. Please try again.');
+    }
   };
 
   return (
@@ -82,16 +100,10 @@ export default function CleanerRegister() {
       </Head>
 
       <main className="relative min-h-screen text-[#0D9488] overflow-hidden">
-        <img
-          src="/background.jpg"
-          alt="Background"
-          className="absolute inset-0 w-full h-full object-cover -z-10"
-        />
+        <img src="/background.jpg" alt="Background" className="absolute inset-0 w-full h-full object-cover -z-10" />
 
         <header className="flex items-center justify-between px-6 py-4 bg-white/30 shadow text-[#0D9488]">
-          <Link href="/">
-            <img src="/findtrusted-logo.png" alt="Logo" className="w-32 h-auto" />
-          </Link>
+          <Link href="/"><img src="/findtrusted-logo.png" alt="Logo" className="w-32 h-auto" /></Link>
           <nav className="space-x-6 text-sm font-medium">
             <Link href="/">Home</Link>
             <Link href="/cleaners" className="hover:text-teal-600">Find a Cleaner</Link>

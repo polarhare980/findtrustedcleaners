@@ -27,6 +27,7 @@ function ClientRegisterPage() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  // ✅ Updated with safe fetch handling
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage('');
@@ -43,30 +44,36 @@ function ClientRegisterPage() {
         headers: { 'Content-Type': 'application/json' },
       });
 
-      const data = await res.json();
+      if (res.ok) {
+        const data = await res.json();
 
-      if (res.ok && data.id) {
-        localStorage.setItem('clientId', data.id);
+        if (data.id) {
+          localStorage.setItem('clientId', data.id);
 
-        const nextUrl = searchParams.get('next');
-        if (nextUrl) {
-          router.push(nextUrl);
+          const nextUrl = searchParams.get('next');
+          if (nextUrl) {
+            router.push(nextUrl);
+          } else {
+            router.push('/clients/dashboard');
+          }
         } else {
-          router.push('/clients/dashboard');
+          setMessage('Registration failed. Please try again.');
         }
       } else {
-        setMessage(data.message || 'Something went wrong.'); // ✅ Updated here
+        const errorText = await res.text();
+        console.error('API error:', errorText);
+        setMessage('Failed to register. Please try again.');
       }
     } catch (err) {
       console.error('Registration error:', err);
-      setMessage('An error occurred during registration.');
+      setMessage('An unexpected error occurred. Please try again.');
     }
   };
 
   return (
     <main className="min-h-screen bg-white text-gray-700 relative">
       <Head>
-        <title>Register as a Client | FindTrustedCleaners</title>
+        <title>Register as a Client | Find Trusted Cleaners</title>
       </Head>
 
       <header className="flex items-center justify-between px-6 py-4 bg-[#0D9488] bg-opacity-90 text-white">
