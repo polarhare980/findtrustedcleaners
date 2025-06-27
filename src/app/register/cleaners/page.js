@@ -45,9 +45,13 @@ export default function CleanerRegister() {
     });
   };
 
+  // ✅ Updated handleChange to auto-convert 'rates' to number
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+    setForm(prev => ({
+      ...prev,
+      [name]: name === 'rates' ? parseFloat(value) : value // ✅ Ensure rates is sent as a number
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -154,13 +158,13 @@ export default function CleanerRegister() {
             </div>
 
             <label className="flex items-center space-x-2 text-sm mt-4">
-  <input type="checkbox" required className="accent-teal-700" />
-  <span>
-    I agree to the{' '}
-    <Link href="/terms" className="underline text-teal-700">Terms & Conditions</Link> and{' '}
-    <Link href="/privacy-policy" className="underline text-teal-700">Privacy Policy</Link>.
-  </span>
-</label>
+              <input type="checkbox" required className="accent-teal-700" />
+              <span>
+                I agree to the{' '}
+                <Link href="/terms" className="underline text-teal-700">Terms & Conditions</Link> and{' '}
+                <Link href="/privacy-policy" className="underline text-teal-700">Privacy Policy</Link>.
+              </span>
+            </label>
 
             <button type="submit" className="mt-4 w-full bg-[#0D9488] text-white py-3 rounded shadow hover:bg-teal-700">
               Register Cleaner
@@ -169,22 +173,22 @@ export default function CleanerRegister() {
         </section>
 
         <footer className="bg-[#0D9488] text-white border-t py-6 px-6 text-center text-sm">
-        <nav className="flex flex-wrap justify-center gap-4 mb-2">
-          <Link href="/about">About Us</Link>
-          <Link href="/terms">Terms & Conditions</Link>
-          <Link href="/privacy-policy">Privacy Policy</Link>
-          <Link href="/cookie-policy">Cookie Policy</Link>
-          <Link href="/contact">Contact</Link>
-          <Link href="/faq">FAQs</Link>
-          <Link href="/sitemap">Site Map</Link>
-        </nav>
+          <nav className="flex flex-wrap justify-center gap-4 mb-2">
+            <Link href="/about">About Us</Link>
+            <Link href="/terms">Terms & Conditions</Link>
+            <Link href="/privacy-policy">Privacy Policy</Link>
+            <Link href="/cookie-policy">Cookie Policy</Link>
+            <Link href="/contact">Contact</Link>
+            <Link href="/faq">FAQs</Link>
+            <Link href="/sitemap">Site Map</Link>
+          </nav>
 
-        <p className="mb-2">&copy; {new Date().getFullYear()} FindTrustedCleaners. All rights reserved.</p>
+          <p className="mb-2">&copy; {new Date().getFullYear()} FindTrustedCleaners. All rights reserved.</p>
 
-        <p className="text-xs">
-          FindTrustedCleaners is committed to GDPR compliance. Read our <Link href="/privacy-policy" className="underline">Privacy Policy</Link> and <Link href="/cookie-policy" className="underline">Cookie Policy</Link> for details on how we protect your data. You may <Link href="/contact" className="underline">contact us</Link> at any time to manage your personal information.
-        </p>
-      </footer>
+          <p className="text-xs">
+            FindTrustedCleaners is committed to GDPR compliance. Read our <Link href="/privacy-policy" className="underline">Privacy Policy</Link> and <Link href="/cookie-policy" className="underline">Cookie Policy</Link> for details on how we protect your data. You may <Link href="/contact" className="underline">contact us</Link> at any time to manage your personal information.
+          </p>
+        </footer>
       </main>
     </>
   );

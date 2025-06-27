@@ -12,7 +12,14 @@ export default async function dbConnect() {
   }
 
   try {
-    await mongoose.connect(uri); // ✅ No options
+    // ✅ Recommended for Mongoose v7+ to suppress warnings
+    mongoose.set('strictQuery', false);
+
+    // ✅ Use proper connection options
+    await mongoose.connect(uri, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
 
     isConnected = mongoose.connection.readyState === 1;
     console.log("✅ MongoDB connected");

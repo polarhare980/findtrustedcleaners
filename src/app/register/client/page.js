@@ -55,7 +55,7 @@ function ClientRegisterPage() {
           router.push('/clients/dashboard');
         }
       } else {
-        setMessage(data.error || 'Something went wrong.');
+        setMessage(data.message || 'Something went wrong.'); // ✅ Updated here
       }
     } catch (err) {
       console.error('Registration error:', err);
