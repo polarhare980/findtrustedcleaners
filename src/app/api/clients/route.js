@@ -20,7 +20,8 @@ export async function POST(req) {
     data.password = hashedPassword;
 
     const client = await Client.create(data);
-    return NextResponse.json({ success: true, id: client._id });
+
+    return NextResponse.json({ success: true, id: client._id }, { status: 201 });
   } catch (err) {
     console.error('❌ Error creating client:', err.message);
     return NextResponse.json({ success: false, message: 'Failed to create client.' }, { status: 500 });

@@ -78,7 +78,7 @@ export default function LoginPage() {
           <nav className="space-x-6 text-sm font-medium">
             <Link href="/" className="hover:text-gray-200">Home</Link>
             <Link href="/cleaners" className="hover:text-gray-200">Find a Cleaner</Link>
-            <Link href="/register" className="hover:text-gray-200">List Yourself</Link>
+            <Link href="/register/cleaners" className="hover:text-gray-200">List Yourself</Link>
             <Link href="/how-it-works" className="hover:text-gray-200">How It Works</Link>
             <Link href="/blog" className="hover:text-gray-200">Blog</Link>
           </nav>

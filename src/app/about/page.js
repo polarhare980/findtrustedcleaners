@@ -24,7 +24,7 @@ export default function AboutPage() {
           </Link>
           <nav className="space-x-6 text-sm font-medium">
             <Link href="/cleaners" className="hover:underline">Find a Cleaner</Link>
-            <Link href="/register" className="hover:underline">List Yourself</Link>
+            <Link href="/register/cleaners" className="hover:underline">List Yourself</Link>
             <Link href="/how-it-works" className="hover:underline">How It Works</Link>
             <Link href="/login" className="hover:underline">Login</Link>
             <Link href="/blog" className="hover:underline">Blog</Link>

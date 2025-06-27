@@ -1,9 +1,9 @@
 import { connectToDatabase } from '@/lib/db';
 import Cleaner from '@/models/Cleaner';
 import { NextResponse } from 'next/server';
-import { verifyToken } from '@/middleware/verifyToken'; // 🔐 Import your JWT middleware
+import { verifyToken } from '@/lib/auth'; // ✅ Correct JWT middleware path
 
-// PUT - Update cleaner profile (🔒 Now protected)
+// PUT - Update cleaner profile (🔒 Protected)
 export async function PUT(req, { params }) {
   await connectToDatabase();
   const { id } = params;
@@ -13,9 +13,13 @@ export async function PUT(req, { params }) {
     // 🔐 Validate JWT token
     const user = await verifyToken(req);
 
-    // Optional: Check that the logged-in user matches the profile being updated
-    if (user.id !== id && user.userType !== 'admin') {
-      return NextResponse.json({ message: 'Access denied.' }, { status: 403 });
+    if (!user) {
+      return NextResponse.json({ success: false, message: 'Unauthorised' }, { status: 401 });
+    }
+
+    // ✅ Only the owner or admin can update
+    if (user.id !== id && user.type !== 'admin') {
+      return NextResponse.json({ success: false, message: 'Access denied.' }, { status: 403 });
     }
 
     const updated = await Cleaner.findByIdAndUpdate(
@@ -30,17 +34,17 @@ export async function PUT(req, { params }) {
     );
 
     if (!updated) {
-      return NextResponse.json({ message: 'Cleaner not found' }, { status: 404 });
+      return NextResponse.json({ success: false, message: 'Cleaner not found' }, { status: 404 });
     }
 
-    return NextResponse.json(updated);
+    return NextResponse.json({ success: true, cleaner: updated });
   } catch (err) {
     console.error('❌ Error updating cleaner:', err.message);
-    return NextResponse.json({ message: err.message }, { status: 401 });
+    return NextResponse.json({ success: false, message: 'Server error.' }, { status: 500 });
   }
 }
 
-// GET - Fetch single cleaner profile (💬 Typically public, no protection needed)
+// GET - Fetch single cleaner profile (💬 Public)
 export async function GET(req, { params }) {
   await connectToDatabase();
   const { id } = params;
@@ -48,12 +52,12 @@ export async function GET(req, { params }) {
   try {
     const cleaner = await Cleaner.findById(id).select('-password');
     if (!cleaner) {
-      return NextResponse.json({ message: 'Cleaner not found' }, { status: 404 });
+      return NextResponse.json({ success: false, message: 'Cleaner not found' }, { status: 404 });
     }
 
-    return NextResponse.json(cleaner);
+    return NextResponse.json({ success: true, cleaner });
   } catch (err) {
     console.error('❌ Error fetching cleaner:', err);
-    return NextResponse.json({ message: 'Error fetching cleaner' }, { status: 500 });
+    return NextResponse.json({ success: false, message: 'Error fetching cleaner' }, { status: 500 });
   }
 }

@@ -1,6 +1,6 @@
 import { connectToDatabase } from '@/lib/db';
-import booking from '@/models/booking';
-import { verifyToken } from '@/middleware/verifyToken'; // 🔐 Import JWT middleware
+import Booking from '@/models/booking'; // ✅ Capitalised model
+import { verifyToken } from '@/lib/auth'; // ✅ Correct JWT middleware location
 
 // POST - Create Booking (🔒 Protected)
 export async function POST(req) {
@@ -10,24 +10,28 @@ export async function POST(req) {
     // 🔐 Validate JWT token
     const user = await verifyToken(req);
 
+    if (!user) {
+      return new Response(JSON.stringify({ success: false, message: 'Unauthorised' }), { status: 401 });
+    }
+
     // ✅ Only clients should create bookings
-    if (user.userType !== 'client') {
-      return new Response(JSON.stringify({ message: 'Access denied.' }), { status: 403 });
+    if (user.type !== 'client') {
+      return new Response(JSON.stringify({ success: false, message: 'Access denied.' }), { status: 403 });
     }
 
     const data = await req.json();
 
-    // ✅ Optional: Automatically attach the client ID to the booking
-    const newBooking = await booking.create({ ...data, clientId: user.id });
+    // ✅ Attach client ID automatically
+    const newBooking = await Booking.create({ ...data, clientId: user.id });
 
-    return new Response(JSON.stringify({ message: 'Booking created', booking: newBooking }), { status: 201 });
+    return new Response(JSON.stringify({ success: true, message: 'Booking created', booking: newBooking }), { status: 201 });
   } catch (err) {
-    console.error('❌ Booking Error:', err.message);
-    return new Response(JSON.stringify({ message: err.message }), { status: 401 });
+    console.error('❌ Booking Creation Error:', err.message);
+    return new Response(JSON.stringify({ success: false, message: 'Error processing booking.' }), { status: 500 });
   }
 }
 
-// GET - Get All Bookings (🔒 Protected, should limit access)
+// GET - Get Bookings (🔒 Protected)
 export async function GET(req) {
   await connectToDatabase();
 
@@ -35,21 +39,25 @@ export async function GET(req) {
     // 🔐 Validate JWT token
     const user = await verifyToken(req);
 
-    let bookings;
-
-    if (user.userType === 'admin') {
-      // ✅ Admin can see all bookings
-      bookings = await booking.find();
-    } else if (user.userType === 'client') {
-      // ✅ Clients can only see their own bookings
-      bookings = await booking.find({ clientId: user.id });
-    } else {
-      return new Response(JSON.stringify({ message: 'Access denied.' }), { status: 403 });
+    if (!user) {
+      return new Response(JSON.stringify({ success: false, message: 'Unauthorised' }), { status: 401 });
     }
 
-    return new Response(JSON.stringify(bookings), { status: 200 });
+    let bookings;
+
+    if (user.type === 'admin') {
+      // ✅ Admin can see all bookings
+      bookings = await Booking.find();
+    } else if (user.type === 'client') {
+      // ✅ Clients can only see their own bookings
+      bookings = await Booking.find({ clientId: user.id });
+    } else {
+      return new Response(JSON.stringify({ success: false, message: 'Access denied.' }), { status: 403 });
+    }
+
+    return new Response(JSON.stringify({ success: true, bookings }), { status: 200 });
   } catch (err) {
     console.error('❌ Booking Fetch Error:', err.message);
-    return new Response(JSON.stringify({ message: err.message }), { status: 401 });
+    return new Response(JSON.stringify({ success: false, message: 'Error fetching bookings.' }), { status: 500 });
   }
 }

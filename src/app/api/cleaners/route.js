@@ -3,6 +3,7 @@ import Cleaner from "@/models/Cleaner";
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 
+// GET - Fetch single cleaner by ID or all cleaners (💬 Public)
 export async function GET(req) {
   await dbConnect();
   const { searchParams } = new URL(req.url);
@@ -10,16 +11,16 @@ export async function GET(req) {
 
   try {
     if (id) {
-      // ✅ Return a single cleaner by ID
+      // ✅ Return a single cleaner by ID (password excluded)
       const cleaner = await Cleaner.findById(id).select('-password');
       if (!cleaner) {
         return NextResponse.json({ success: false, message: 'Cleaner not found' }, { status: 404 });
       }
-      return NextResponse.json(cleaner);
+      return NextResponse.json({ success: true, cleaner }, { status: 200 });
     } else {
-      // ✅ Return all cleaners (no password)
+      // ✅ Return all cleaners (password excluded)
       const cleaners = await Cleaner.find({}, '-password');
-      return NextResponse.json(cleaners);
+      return NextResponse.json({ success: true, cleaners }, { status: 200 });
     }
   } catch (err) {
     console.error('❌ GET cleaner error:', err);
@@ -27,6 +28,7 @@ export async function GET(req) {
   }
 }
 
+// POST - Register new cleaner (💬 Public)
 export async function POST(req) {
   await dbConnect();
   const data = await req.json();
@@ -47,9 +49,10 @@ export async function POST(req) {
     const cleaner = await Cleaner.create(data);
     console.log('✅ Cleaner created:', cleaner._id);
 
-    return NextResponse.json({ success: true, id: cleaner._id });
+    return NextResponse.json({ success: true, id: cleaner._id }, { status: 201 });
   } catch (err) {
     console.error('❌ Error creating cleaner:', err.message);
     return NextResponse.json({ success: false, message: 'Failed to create cleaner.' }, { status: 500 });
   }
 }
+
