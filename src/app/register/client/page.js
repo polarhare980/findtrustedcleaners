@@ -27,7 +27,6 @@ function ClientRegisterPage() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  // ✅ Updated with safe fetch handling
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage('');
@@ -40,21 +39,34 @@ function ClientRegisterPage() {
     try {
       const res = await fetch('/api/clients', {
         method: 'POST',
-        body: JSON.stringify(form),
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form)
       });
 
       if (res.ok) {
         const data = await res.json();
 
-        if (data.id) {
-          localStorage.setItem('clientId', data.id);
+        if (data.success) {
+          // ✅ Optional: You can auto-login here if you want
+          const loginRes = await fetch('/api/login', {
+            method: 'POST',
+            credentials: 'include', // ✅ Required for cookie handling
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: form.email, password: form.password, userType: 'client' })
+          });
 
-          const nextUrl = searchParams.get('next');
-          if (nextUrl) {
-            router.push(nextUrl);
+          const loginData = await loginRes.json();
+
+          if (loginRes.ok && loginData.success) {
+            const nextUrl = searchParams.get('next');
+            if (nextUrl) {
+              router.push(nextUrl);
+            } else {
+              router.push('/clients/dashboard');
+            }
           } else {
-            router.push('/clients/dashboard');
+            setMessage('Registration successful, but login failed. Please try logging in.');
+            router.push('/login');
           }
         } else {
           setMessage('Registration failed. Please try again.');

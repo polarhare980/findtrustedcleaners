@@ -8,7 +8,7 @@ export default function ClientDashboard() {
 
   useEffect(() => {
     const fetchUser = async () => {
-      const res = await fetch('/api/auth/me');
+      const res = await fetch('/api/auth/me', { credentials: 'include' }); // ✅ Required for cookie auth
       const data = await res.json();
       if (!data.success) {
         router.push('/login');

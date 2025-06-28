@@ -9,7 +9,7 @@ export function createToken(payload) {
 }
 
 // ✅ Verify the token from cookies
-export async function verifyToken(req) {
+export async function verifyToken() {
   try {
     const cookieHeader = req.headers.get('cookie');
     if (!cookieHeader) throw new Error('No token provided');

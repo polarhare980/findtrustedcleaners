@@ -10,7 +10,7 @@ export default function CleanerDashboard() {
 
   useEffect(() => {
     const fetchUser = async () => {
-      const res = await fetch('/api/auth/me');
+      const res = await fetch('/api/auth/me', { credentials: 'include' });
       const data = await res.json();
       if (!data.success) {
         router.push('/login');
@@ -26,7 +26,7 @@ export default function CleanerDashboard() {
       if (!user) return;
 
       try {
-        const res = await fetch(`/api/bookings/cleaner/${user._id}`);
+        const res = await fetch(`/api/bookings/cleaner/${user._id}`, { credentials: 'include' });
         const data = await res.json();
         setBookings(data);
       } catch (err) {
@@ -43,6 +43,7 @@ export default function CleanerDashboard() {
     try {
       const res = await fetch(`/api/bookings/update/${bookingId}`, {
         method: 'PUT',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus }),
       });
@@ -62,6 +63,7 @@ export default function CleanerDashboard() {
     try {
       const res = await fetch('/api/stripe/session', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ cleanerId: user._id }),
       });
@@ -139,7 +141,6 @@ export default function CleanerDashboard() {
         )}
       </div>
 
-      
       <style jsx global>{`
         .active-tap:active {
           transform: scale(0.98);

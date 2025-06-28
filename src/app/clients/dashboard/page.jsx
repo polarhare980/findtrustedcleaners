@@ -13,46 +13,35 @@ export default function ClientDashboard() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const clientId = localStorage.getItem('clientId');
-      if (!clientId) {
-        router.push('/login/clients');
-      }
-      setMounted(true); // ✅ Only render on client
+      const fetchClient = async () => {
+        try {
+          const res = await fetch('/api/auth/me', { credentials: 'include' });
+          const data = await res.json();
+
+          if (!data.success || data.user.role !== 'client') {
+            router.push('/login/clients');
+          } else {
+            setClient(data.user);
+          }
+        } catch (err) {
+          console.error('Error fetching client:', err);
+          router.push('/login/clients');
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchClient();
+      setMounted(true);
     }
   }, [router]);
-
-  useEffect(() => {
-    if (!mounted) return;
-
-    const fetchClient = async () => {
-      const id = localStorage.getItem('clientId');
-
-      if (!id) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const res = await fetch(`/api/clients/${id}`);
-        if (!res.ok) throw new Error('Client not found');
-        const data = await res.json();
-        setClient(data);
-      } catch (err) {
-        console.error('Error loading client:', err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchClient();
-  }, [mounted]);
 
   useEffect(() => {
     if (!client) return;
 
     const fetchBookings = async () => {
       try {
-        const res = await fetch(`/api/bookings/client/${client._id}`);
+        const res = await fetch(`/api/bookings/client/${client._id}`, { credentials: 'include' });
         if (!res.ok) throw new Error('Failed to fetch bookings');
         const data = await res.json();
 
@@ -81,7 +70,10 @@ export default function ClientDashboard() {
     if (!confirm('Are you sure you want to cancel this booking?')) return;
 
     try {
-      const res = await fetch(`/api/bookings/delete/${bookingId}`, { method: 'DELETE' });
+      const res = await fetch(`/api/bookings/delete/${bookingId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
       if (!res.ok) throw new Error('Failed to cancel booking');
 
       setBookings(bookings.filter((b) => b._id !== bookingId));
@@ -92,10 +84,14 @@ export default function ClientDashboard() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('clientId');
-    localStorage.removeItem('token');
-    router.push('/login/clients');
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+      router.push('/login/clients');
+    } catch (err) {
+      console.error('Error logging out:', err.message);
+      router.push('/login/clients');
+    }
   };
 
   const handleChange = (e) => {
@@ -107,6 +103,7 @@ export default function ClientDashboard() {
     try {
       const res = await fetch(`/api/clients/${client._id}`, {
         method: 'PUT',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(client),
       });
@@ -119,7 +116,7 @@ export default function ClientDashboard() {
     }
   };
 
-  if (!mounted) return null; // ✅ Prevent build errors
+  if (!mounted) return null;
   if (loading) return <p className="p-6 text-gray-500">Loading dashboard...</p>;
   if (!client) return <p className="p-6 text-red-600">Client not found or not logged in.</p>;
 

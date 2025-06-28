@@ -9,10 +9,18 @@ export default function ClientAccountPage() {
 
   useEffect(() => {
     const fetchClient = async () => {
-      const res = await fetch('/api/client-profile');
+      const res = await fetch('/api/client-profile', {
+        credentials: 'include' // ✅ Required for protected routes using cookies
+      });
       const data = await res.json();
-      setClient(data);
+
+      if (!data.success) {
+        window.location.href = '/login'; // ✅ Redirect if not logged in
+      } else {
+        setClient(data.client);
+      }
     };
+
     fetchClient();
   }, []);
 
@@ -50,22 +58,22 @@ export default function ClientAccountPage() {
       </section>
 
       <footer className="bg-[#0D9488] text-white border-t py-6 px-6 text-center text-sm">
-              <nav className="flex flex-wrap justify-center gap-4 mb-2">
-                <Link href="/about">About Us</Link>
-                <Link href="/terms">Terms & Conditions</Link>
-                <Link href="/privacy-policy">Privacy Policy</Link>
-                <Link href="/cookie-policy">Cookie Policy</Link>
-                <Link href="/contact">Contact</Link>
-                <Link href="/faq">FAQs</Link>
-                <Link href="/sitemap">Site Map</Link>
-              </nav>
-      
-              <p className="mb-2">&copy; {new Date().getFullYear()} FindTrustedCleaners. All rights reserved.</p>
-      
-              <p className="text-xs">
-                FindTrustedCleaners is committed to GDPR compliance. Read our <Link href="/privacy-policy" className="underline">Privacy Policy</Link> and <Link href="/cookie-policy" className="underline">Cookie Policy</Link> for details on how we protect your data. You may <Link href="/contact" className="underline">contact us</Link> at any time to manage your personal information.
-              </p>
-            </footer>
+        <nav className="flex flex-wrap justify-center gap-4 mb-2">
+          <Link href="/about">About Us</Link>
+          <Link href="/terms">Terms & Conditions</Link>
+          <Link href="/privacy-policy">Privacy Policy</Link>
+          <Link href="/cookie-policy">Cookie Policy</Link>
+          <Link href="/contact">Contact</Link>
+          <Link href="/faq">FAQs</Link>
+          <Link href="/sitemap">Site Map</Link>
+        </nav>
+
+        <p className="mb-2">&copy; {new Date().getFullYear()} FindTrustedCleaners. All rights reserved.</p>
+
+        <p className="text-xs">
+          FindTrustedCleaners is committed to GDPR compliance. Read our <Link href="/privacy-policy" className="underline">Privacy Policy</Link> and <Link href="/cookie-policy" className="underline">Cookie Policy</Link> for details on how we protect your data. You may <Link href="/contact" className="underline">contact us</Link> at any time to manage your personal information.
+        </p>
+      </footer>
     </main>
   );
 }

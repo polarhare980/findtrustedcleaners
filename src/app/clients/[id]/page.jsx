@@ -1,9 +1,8 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import jwt from 'jsonwebtoken';
 
-export default function ClientDashboard({ params }) {
+export default function ClientDashboard() {
   const router = useRouter();
   const [client, setClient] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -11,26 +10,25 @@ export default function ClientDashboard({ params }) {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('token');
-      if (!token) return router.push('/login');
+      const fetchClient = async () => {
+        try {
+          const res = await fetch('/api/auth/me', { credentials: 'include' });
+          const data = await res.json();
 
-      try {
-        const decoded = jwt.decode(token);
-        fetch(`/api/clients/${decoded.id}`)
-          .then(res => res.json())
-          .then(data => {
-            if (data.success) {
-              setClient(data.client);
-            } else {
-              router.push('/login');
-            }
-          });
-      } catch {
-        router.push('/login');
-      } finally {
-        setLoading(false);
-      }
+          if (!data.success || data.user.role !== 'client') {
+            router.push('/login');
+          } else {
+            setClient(data.user);
+          }
+        } catch (err) {
+          console.error('Error fetching client:', err);
+          router.push('/login');
+        } finally {
+          setLoading(false);
+        }
+      };
 
+      fetchClient();
       setMounted(true); // ✅ Safe to render now
     }
   }, [router]);

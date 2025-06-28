@@ -14,60 +14,50 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async (e) => {
-  e.preventDefault();
-  setError('');
+    e.preventDefault();
+    setError('');
 
-  if (!email.includes('@')) {
-    setError('Please enter a valid email address.');
-    return;
-  }
-
-  try {
-    const res = await fetch(`/api/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, userType })
-    });
-
-    let data = {};
-    try {
-      data = await res.json(); // may fail if empty response
-    } catch (jsonErr) {
-      console.error('❌ Failed to parse JSON from /api/login:', jsonErr);
+    if (!email.includes('@')) {
+      setError('Please enter a valid email address.');
+      return;
     }
 
-   if (res.ok && data.success && data.id) {
-  if (userType === 'client') {
-    localStorage.setItem('clientId', data.id); // ✅ Save for clients
-    router.push('/clients/dashboard'); // ✅ Go to dashboard without query string
-  } else if (userType === 'cleaner') {
-    localStorage.setItem('cleanerId', data.id); // ✅ Save for cleaners
-    router.push('/cleaners/dashboard'); // ✅ Cleaner dashboard
-  }
-} else {
-  setError(data.message || 'Login failed. Please check your credentials.');
-}
+    try {
+      const res = await fetch(`/api/login`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, userType })
+      });
 
-  } catch (err) {
-    console.error('❌ Login request error:', err);
-    setError('A network error occurred. Please try again.');
-  }
-};
+      let data = {};
+      try {
+        data = await res.json();
+      } catch (jsonErr) {
+        console.error('❌ Failed to parse JSON from /api/login:', jsonErr);
+      }
+
+      if (res.ok && data.success) {
+        if (userType === 'client') {
+          router.push('/clients/dashboard');
+        } else if (userType === 'cleaner') {
+          router.push('/cleaners/dashboard');
+        }
+      } else {
+        setError(data.message || 'Login failed. Please check your credentials.');
+      }
+
+    } catch (err) {
+      console.error('❌ Login request error:', err);
+      setError('A network error occurred. Please try again.');
+    }
+  };
+
   return (
     <>
       <Head>
         <title>Login | Find Trusted Cleaners</title>
         <meta name="description" content="Login to your Find Trusted Cleaners account as a client or cleaner." />
-        <meta name="keywords" content="cleaner login, client login, Find Trusted Cleaners login" />
-        <meta property="og:title" content="Login - Find Trusted Cleaners" />
-        <meta property="og:description" content="Access your Find Trusted Cleaners account." />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://www.findtrustedcleaners.co.uk/login" />
-        <meta property="og:image" content="/findtrusted-logo.png" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Login - Find Trusted Cleaners" />
-        <meta name="twitter:description" content="Log in to manage your account and bookings." />
-        <meta name="twitter:image" content="/findtrusted-logo.png" />
       </Head>
 
       <main className="min-h-screen bg-white text-gray-700">
@@ -78,7 +68,7 @@ export default function LoginPage() {
           <nav className="space-x-6 text-sm font-medium">
             <Link href="/" className="hover:text-gray-200">Home</Link>
             <Link href="/cleaners" className="hover:text-gray-200">Find a Cleaner</Link>
-            <Link href="/register/cleaners" className="hover:text-gray-200">List Yourself</Link>
+            <Link href="/register/cleaners/" className="hover:text-gray-200">List Yourself</Link>
             <Link href="/how-it-works" className="hover:text-gray-200">How It Works</Link>
             <Link href="/blog" className="hover:text-gray-200">Blog</Link>
           </nav>
@@ -133,8 +123,8 @@ export default function LoginPage() {
             </button>
             <div className="flex justify-between text-sm mt-2">
               <Link href="/forgot-password" className="text-[#0D9488] hover:underline">Forgot password?</Link>
-              <Link href={`/register/${userType}`} className="text-[#0D9488] hover:underline">
-                Register as a {userType.charAt(0).toUpperCase() + userType.slice(1)}
+              <Link href="/register/cleaners/" className="text-[#0D9488] hover:underline">
+                Register as a Cleaner
               </Link>
             </div>
           </form>
@@ -148,23 +138,23 @@ export default function LoginPage() {
           </div>
         </section>
 
-       <footer className="bg-[#0D9488] text-white border-t py-6 px-6 text-center text-sm">
-        <nav className="flex flex-wrap justify-center gap-4 mb-2">
-          <Link href="/about">About Us</Link>
-          <Link href="/terms">Terms & Conditions</Link>
-          <Link href="/privacy-policy">Privacy Policy</Link>
-          <Link href="/cookie-policy">Cookie Policy</Link>
-          <Link href="/contact">Contact</Link>
-          <Link href="/faq">FAQs</Link>
-          <Link href="/sitemap">Site Map</Link>
-        </nav>
+        <footer className="bg-[#0D9488] text-white border-t py-6 px-6 text-center text-sm">
+          <nav className="flex flex-wrap justify-center gap-4 mb-2">
+            <Link href="/about">About Us</Link>
+            <Link href="/terms">Terms & Conditions</Link>
+            <Link href="/privacy-policy">Privacy Policy</Link>
+            <Link href="/cookie-policy">Cookie Policy</Link>
+            <Link href="/contact">Contact</Link>
+            <Link href="/faq">FAQs</Link>
+            <Link href="/sitemap">Site Map</Link>
+          </nav>
 
-        <p className="mb-2">&copy; {new Date().getFullYear()} FindTrustedCleaners. All rights reserved.</p>
+          <p className="mb-2">&copy; {new Date().getFullYear()} FindTrustedCleaners. All rights reserved.</p>
 
-        <p className="text-xs">
-          FindTrustedCleaners is committed to GDPR compliance. Read our <Link href="/privacy-policy" className="underline">Privacy Policy</Link> and <Link href="/cookie-policy" className="underline">Cookie Policy</Link> for details on how we protect your data. You may <Link href="/contact" className="underline">contact us</Link> at any time to manage your personal information.
-        </p>
-      </footer>
+          <p className="text-xs">
+            FindTrustedCleaners is committed to GDPR compliance. Read our <Link href="/privacy-policy" className="underline">Privacy Policy</Link> and <Link href="/cookie-policy" className="underline">Cookie Policy</Link> for details on how we protect your data. You may <Link href="/contact" className="underline">contact us</Link> at any time to manage your personal information.
+          </p>
+        </footer>
       </main>
     </>
   );

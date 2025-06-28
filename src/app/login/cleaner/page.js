@@ -1,21 +1,37 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Head from 'next/head';
 import Link from 'next/link';
 import Image from 'next/image';
 
 export default function CleanerProfile() {
   const { id } = useParams();
+  const router = useRouter();
+
   const [cleaner, setCleaner] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saveStatus, setSaveStatus] = useState('');
 
   useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await fetch('/api/auth/me', { credentials: 'include' });
+        const data = await res.json();
+        if (!data.success || data.user._id !== id) {
+          router.push('/login');
+        } else {
+          fetchCleaner();
+        }
+      } catch {
+        router.push('/login');
+      }
+    };
+
     const fetchCleaner = async () => {
       try {
-        const res = await fetch(`/api/cleaners/${id}`);
+        const res = await fetch(`/api/cleaners/${id}`, { credentials: 'include' });
         if (!res.ok) throw new Error('Failed to fetch');
         const data = await res.json();
         setCleaner(data);
@@ -25,8 +41,9 @@ export default function CleanerProfile() {
         setLoading(false);
       }
     };
-    fetchCleaner();
-  }, [id]);
+
+    fetchUser();
+  }, [id, router]);
 
   const updateAvailability = async (slot) => {
     if (!cleaner) return;
@@ -43,6 +60,7 @@ export default function CleanerProfile() {
     try {
       const res = await fetch(`/api/cleaners/${id}/availability`, {
         method: 'PUT',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ availability: newAvailability }),
       });

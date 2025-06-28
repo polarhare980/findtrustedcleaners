@@ -7,7 +7,7 @@ export async function GET(req, { params }) {
 
   try {
     // 🔐 Validate JWT token
-    const user = await verifyToken(req);
+    const user = await verifyToken();
 
     if (!user) {
       return new Response(JSON.stringify({ success: false, message: 'Unauthorised' }), { status: 401 });

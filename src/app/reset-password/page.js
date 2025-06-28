@@ -1,14 +1,25 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link'; // ✅ This was missing
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 
 export default function ResetPassword() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [message, setMessage] = useState('');
+  const [token, setToken] = useState('');
+
+  useEffect(() => {
+    const urlToken = searchParams.get('token');
+    if (!urlToken) {
+      setMessage('Invalid or missing reset token.');
+    } else {
+      setToken(urlToken);
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -18,11 +29,30 @@ export default function ResetPassword() {
       return;
     }
 
-    // Simulate success
-    setTimeout(() => {
-      setMessage('Password successfully reset. Redirecting to login...');
-      setTimeout(() => router.push('/login'), 2000);
-    }, 1000);
+    if (!token) {
+      setMessage('Reset token is missing or invalid.');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/reset-password', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, password })
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        setMessage('Password successfully reset. Redirecting to login...');
+        setTimeout(() => router.push('/login'), 2000);
+      } else {
+        setMessage(data.message || 'Failed to reset password. Please try again.');
+      }
+    } catch (err) {
+      console.error('Error resetting password:', err);
+      setMessage('An unexpected error occurred. Please try again.');
+    }
   };
 
   return (
@@ -76,4 +106,3 @@ export default function ResetPassword() {
     </main>
   );
 }
-

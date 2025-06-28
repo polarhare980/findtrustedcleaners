@@ -9,7 +9,7 @@ export async function GET(req, { params }) {
 
   try {
     // 🔐 Validate JWT token
-    const user = await verifyToken(req);
+    const user = await verifyToken();
 
     // ✅ Correct field: should be user.type
     if (user.id !== params.id && user.type !== 'admin') {
@@ -35,7 +35,7 @@ export async function PUT(req, { params }) {
 
   try {
     // 🔐 Validate JWT token
-    const user = await verifyToken(req);
+    const user = await verifyToken();
 
     // ✅ Correct field: should be user.type
     if (user.id !== params.id && user.type !== 'admin') {

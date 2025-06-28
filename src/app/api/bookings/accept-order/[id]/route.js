@@ -12,7 +12,7 @@ export async function PUT(req, { params }) {
 
   try {
     // 🔐 Validate JWT token
-    const user = await verifyToken(req);
+    const user = await verifyToken();
 
     if (!user) {
       return NextResponse.json({ success: false, message: 'Unauthorised' }, { status: 401 });
