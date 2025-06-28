@@ -2,32 +2,21 @@ import { connectToDatabase } from '@/lib/db';
 import Booking from '@/models/booking';
 import Cleaner from '@/models/Cleaner';
 import Stripe from 'stripe';
-import { buffer } from 'micro';
 import { NextResponse } from 'next/server';
 
-// ✅ Use environment variable
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
-
-export async function POST(req) {
+export async function POST(request) {
   await connectToDatabase();
 
-  const buf = await req.arrayBuffer();
-  const rawBody = Buffer.from(buf).toString();
-
-  const sig = req.headers.get('stripe-signature');
+  const rawBody = await request.text(); // ✅ Correct way to get raw body
+  const signature = request.headers.get('stripe-signature');
   const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
   let event;
 
   try {
-    event = stripe.webhooks.constructEvent(rawBody, sig, endpointSecret);
+    event = stripe.webhooks.constructEvent(rawBody, signature, endpointSecret);
   } catch (err) {
     console.error('❌ Stripe Webhook Error:', err.message);
     return new Response(`Webhook Error: ${err.message}`, { status: 400 });
@@ -66,5 +55,3 @@ export async function POST(req) {
 
   return new Response('Webhook received successfully.', { status: 200 });
 }
-  
-
