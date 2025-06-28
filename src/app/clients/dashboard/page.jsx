@@ -18,7 +18,7 @@ export default function ClientDashboard() {
           const res = await fetch('/api/auth/me', { credentials: 'include' });
           const data = await res.json();
 
-          if (!data.success || data.user.role !== 'client') {
+          if (!data.success || data.user.type !== 'client') {
             router.push('/login/clients');
           } else {
             setClient(data.user);
@@ -41,7 +41,7 @@ export default function ClientDashboard() {
 
     const fetchBookings = async () => {
       try {
-        const res = await fetch(`/api/bookings/client/${client._id}`, { credentials: 'include' });
+        const res = await fetch(`/api/bookings/client/${client.id}`, { credentials: 'include' });
         if (!res.ok) throw new Error('Failed to fetch bookings');
         const data = await res.json();
 
@@ -101,7 +101,7 @@ export default function ClientDashboard() {
 
   const handleSave = async () => {
     try {
-      const res = await fetch(`/api/clients/${client._id}`, {
+      const res = await fetch(`/api/clients/${client.id}`, {
         method: 'PUT',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },

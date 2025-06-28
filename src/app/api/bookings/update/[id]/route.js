@@ -1,31 +1,45 @@
 import { connectToDatabase } from '@/lib/db';
-import booking from '@/models/booking'; // ✅ Lowercase as you requested
+import Booking from '@/models/booking';
+import { NextResponse } from 'next/server';
+import { verifyToken } from '@/lib/auth';
 
-// PUT - Update booking status
 export async function PUT(req, { params }) {
   await connectToDatabase();
 
   try {
+    // ✅ Verify user session
+    const token = req.cookies.get('token')?.value;
+
+    if (!token) {
+      return NextResponse.json({ message: 'Unauthorised' }, { status: 401 });
+    }
+
+    const user = verifyToken(token);
+
+    if (!user || user.type !== 'cleaner') {
+      return NextResponse.json({ message: 'Access denied' }, { status: 403 });
+    }
+
     const { status } = await req.json();
 
     if (!['pending', 'accepted', 'rejected'].includes(status)) {
-      return new Response(JSON.stringify({ message: 'Invalid status value' }), { status: 400 });
+      return NextResponse.json({ message: 'Invalid status value' }, { status: 400 });
     }
 
-    // ✅ Update booking status (handles accept/reject)
-    const updatedBooking = await booking.findByIdAndUpdate(
+    // ✅ Update booking status (accept or reject)
+    const updatedBooking = await Booking.findByIdAndUpdate(
       params.id,
       { status },
       { new: true }
     );
 
     if (!updatedBooking) {
-      return new Response(JSON.stringify({ message: 'Booking not found' }), { status: 404 });
+      return NextResponse.json({ message: 'Booking not found' }, { status: 404 });
     }
 
-    return new Response(JSON.stringify({ message: `Booking ${status} successfully`, booking: updatedBooking }), { status: 200 });
+    return NextResponse.json({ message: `Booking ${status} successfully`, booking: updatedBooking }, { status: 200 });
   } catch (err) {
     console.error('❌ Booking Update Error:', err.message);
-    return new Response(JSON.stringify({ message: 'Error updating booking' }), { status: 500 });
+    return NextResponse.json({ message: 'Error updating booking' }, { status: 500 });
   }
 }

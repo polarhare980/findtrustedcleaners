@@ -1,4 +1,5 @@
 'use client';
+
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import React from 'react';
@@ -15,7 +16,7 @@ function isSafeEmbed(code) {
 export default function PublicCleanerProfile() {
   const { id } = useParams();
   const router = useRouter();
-  const [mounted, setMounted] = useState(false); // ✅ SSR Protection
+  const [mounted, setMounted] = useState(false);
   const [cleaner, setCleaner] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -41,36 +42,37 @@ export default function PublicCleanerProfile() {
     fetchCleaner();
   }, [id]);
 
-  // ✅ Handle Booking Request
-  const handleBookingRequest = async (day, time) => {
-    const clientId = localStorage.getItem('clientId');
-
-    if (!clientId) {
-      alert('Please log in as a client to make a booking.');
-      return;
-    }
-
+  // ✅ Handle Stripe Checkout Request
+  const handleStripeCheckout = async (day, time, price) => {
     try {
-      const res = await fetch('/api/bookings', {
+      const authRes = await fetch('/api/auth/me', { credentials: 'include' });
+      const authData = await authRes.json();
+
+      if (!authData.success || authData.user.type !== 'client') {
+        alert('Please log in as a client to make a booking.');
+        router.push('/login/clients');
+        return;
+      }
+
+      const res = await fetch('/api/stripe/session', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          cleanerId: cleaner._id,
-          clientId,
-          day,
-          time,
-        }),
+        body: JSON.stringify({ cleanerId: cleaner._id, day, time, price }),
       });
 
-      if (!res.ok) throw new Error('Booking failed');
-      alert(`Booking request sent for ${day} at ${time}:00!`);
+      const data = await res.json();
+
+      if (!res.ok) throw new Error('Stripe session failed');
+
+      // ✅ Redirect to Stripe Checkout
+      window.location.href = data.url;
     } catch (err) {
-      console.error('❌ Booking Request Error:', err.message);
-      alert('There was a problem sending the booking request.');
+      console.error('❌ Stripe Checkout Error:', err.message);
+      alert('There was a problem connecting to Stripe.');
     }
   };
 
-  // ✅ Prevent SSR build errors
   if (!mounted) return null;
 
   if (loading) return <p className="p-6 text-gray-500">Loading profile...</p>;
@@ -88,20 +90,6 @@ export default function PublicCleanerProfile() {
       <h1 className="text-2xl font-bold mb-4 text-teal-700">{cleaner.realName}</h1>
       <p><strong>Postcode:</strong> {cleaner.postcode}</p>
       <p><strong>Hourly Rate:</strong> £{cleaner.rate || 'Not set'}</p>
-
-      <button
-        onClick={() => {
-          const clientId = localStorage.getItem('clientId');
-          if (!clientId) {
-            router.push(`/register/client?next=/cleaners/${cleaner._id}/checkout`);
-          } else {
-            router.push(`/cleaners/${cleaner._id}/checkout`);
-          }
-        }}
-        className="mt-4 bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded shadow"
-      >
-        Book this Cleaner
-      </button>
 
       <div className="mt-4">
         <h2 className="font-semibold">Services Offered:</h2>
@@ -178,7 +166,7 @@ export default function PublicCleanerProfile() {
                   <div key={hourKey} className="h-8 w-full">
                     {isAvailable ? (
                       <button
-                        onClick={() => handleBookingRequest(day, hourKey)}
+                        onClick={() => handleStripeCheckout(day, hourKey, cleaner.rate)}
                         className="w-full h-full bg-green-500 hover:bg-green-600 text-white rounded"
                       >
                         Book
@@ -207,7 +195,7 @@ export default function PublicCleanerProfile() {
                     <div key={hour} className="w-full">
                       {isAvailable ? (
                         <button
-                          onClick={() => handleBookingRequest(day, hour)}
+                          onClick={() => handleStripeCheckout(day, hour, cleaner.rate)}
                           className="w-full bg-green-500 hover:bg-green-600 text-white rounded py-1"
                         >
                           {hour}:00 Book

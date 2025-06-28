@@ -1,36 +1,37 @@
-// /app/api/bookings/accept-order/[id]/route.js
-
 import { connectToDatabase } from '@/lib/db';
-import Booking from '@/models/booking'; // ✅ Model name should be capitalized
+import Booking from '@/models/booking';
 import { NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/auth'; // ✅ Should match where you store verifyToken
+import { verifyToken } from '@/lib/auth';
 
 export async function PUT(req, { params }) {
   await connectToDatabase();
   const { id } = params;
-  const body = await req.json();
 
   try {
-    // 🔐 Validate JWT token
-    const user = await verifyToken();
+    // ✅ Extract and verify JWT token from cookie
+    const token = req.cookies.get('token')?.value;
 
-    if (!user) {
+    if (!token) {
       return NextResponse.json({ success: false, message: 'Unauthorised' }, { status: 401 });
     }
 
-    // ✅ Ensure only cleaners can accept orders
-    if (user.type !== 'cleaner') {
+    const user = verifyToken(token);
+
+    if (!user || user.type !== 'cleaner') {
       return NextResponse.json({ success: false, message: 'Access denied.' }, { status: 403 });
     }
 
-    // 🎯 Booking update logic example
-    await Booking.findByIdAndUpdate(id, {
+    // ✅ Update booking status to accepted
+    const updatedBooking = await Booking.findByIdAndUpdate(id, {
       status: 'accepted',
       acceptedBy: user.id,
-      ...body, // if you want to allow additional fields
-    });
+    }, { new: true });
 
-    return NextResponse.json({ success: true, message: 'Order accepted.' });
+    if (!updatedBooking) {
+      return NextResponse.json({ success: false, message: 'Booking not found.' }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true, message: 'Order accepted.', booking: updatedBooking });
   } catch (err) {
     console.error('❌ Booking acceptance error:', err.message);
     return NextResponse.json({ success: false, message: 'Server error.' }, { status: 500 });
