@@ -8,7 +8,7 @@ import { NextResponse } from 'next/server';
 // ✅ Use environment variable
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-// ✅ Required for raw body parsing in Next.js API routes
+
 export const config = {
   api: {
     bodyParser: false,
@@ -66,3 +66,5 @@ export async function POST(req) {
 
   return new Response('Webhook received successfully.', { status: 200 });
 }
+  
+
