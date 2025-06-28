@@ -4,7 +4,8 @@ import Stripe from 'stripe';
 import { NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 
-const stripe = new Stripe('sk_test_51RdqMWQg7zJvOx8UPioT8e6Zw7OYGQlNwR4O6eowufu9HNFP1NrZUieHFLCJxvp0qFTdOahlvr61Ag8KJWADJbEs00yAfdGSDw');
+// ✅ Correctly use environment variable
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export async function POST(req) {
   await connectToDatabase();

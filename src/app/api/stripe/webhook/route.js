@@ -5,7 +5,8 @@ import Stripe from 'stripe';
 import { buffer } from 'micro';
 import { NextResponse } from 'next/server';
 
-const stripe = new Stripe('sk_test_51RdqMWQg7zJvOx8UPioT8e6Zw7OYGQlNwR4O6eowufu9HNFP1NrZUieHFLCJxvp0qFTdOahlvr61Ag8KJWADJbEs00yAfdGSDw');
+// ✅ Use environment variable securely
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 // ✅ Disable Next.js's default body parser
 export const config = {
@@ -38,7 +39,11 @@ export async function POST(req) {
 
     try {
       // ✅ Confirm the booking
-      const booking = await Booking.findByIdAndUpdate(bookingId, { status: 'confirmed' }, { new: true });
+      const booking = await Booking.findByIdAndUpdate(
+        bookingId,
+        { status: 'confirmed' },
+        { new: true }
+      );
 
       if (!booking) throw new Error('Booking not found');
 
@@ -47,10 +52,10 @@ export async function POST(req) {
 
       if (!cleaner) throw new Error('Cleaner not found');
 
-      // Set the booked slot to unavailable
       if (!cleaner.availability[booking.day]) {
         cleaner.availability[booking.day] = {};
       }
+
       cleaner.availability[booking.day][booking.time] = false; // Mark as unavailable
 
       await cleaner.save();
