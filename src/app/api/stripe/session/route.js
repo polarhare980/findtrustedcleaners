@@ -4,7 +4,7 @@ import Stripe from 'stripe';
 import { NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 
-// ✅ Correctly use environment variable
+// ✅ Use environment variable
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export async function POST(req) {
@@ -48,8 +48,8 @@ export async function POST(req) {
         },
       ],
       mode: 'payment',
-      success_url: `https://www.findtrustedcleaners.com/booking/confirmation`,
-      cancel_url: `https://www.findtrustedcleaners.com/cleaners/${cleanerId}`,
+      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/booking/confirmation`,
+      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/cleaners/${cleanerId}`,
       metadata: {
         bookingId: newBooking._id.toString(),
       },

@@ -5,10 +5,10 @@ import Stripe from 'stripe';
 import { buffer } from 'micro';
 import { NextResponse } from 'next/server';
 
-// ✅ Use environment variable securely
+// ✅ Use environment variable
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-// ✅ Disable Next.js's default body parser
+// ✅ Required for raw body parsing in Next.js API routes
 export const config = {
   api: {
     bodyParser: false,
@@ -38,7 +38,6 @@ export async function POST(req) {
     const bookingId = session.metadata.bookingId;
 
     try {
-      // ✅ Confirm the booking
       const booking = await Booking.findByIdAndUpdate(
         bookingId,
         { status: 'confirmed' },
@@ -47,16 +46,14 @@ export async function POST(req) {
 
       if (!booking) throw new Error('Booking not found');
 
-      // ✅ Lock the booked slot in the cleaner's availability
       const cleaner = await Cleaner.findById(booking.cleanerId);
-
       if (!cleaner) throw new Error('Cleaner not found');
 
       if (!cleaner.availability[booking.day]) {
         cleaner.availability[booking.day] = {};
       }
 
-      cleaner.availability[booking.day][booking.time] = false; // Mark as unavailable
+      cleaner.availability[booking.day][booking.time] = false; // Lock the slot
 
       await cleaner.save();
 
