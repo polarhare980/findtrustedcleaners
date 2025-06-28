@@ -1,5 +1,5 @@
 import { connectToDatabase } from '@/lib/db';
-import Booking from '@/models/booking'; // ✅ Correct model capitalisation
+import booking from '@/models/booking'; // ✅ Correct model capitalisation
 import { verifyToken } from '@/lib/auth'; // ✅ JWT middleware
 
 export async function GET(req, { params }) {
@@ -23,6 +23,6 @@ export async function GET(req, { params }) {
     return new Response(JSON.stringify(bookings), { status: 200 });
   } catch (err) {
     console.error('❌ Fetch Cleaner Bookings Error:', err.message);
-    return new Response(JSON.stringify({ message: 'Error fetching bookings' }), { status: 500 });
+    return new Response(JSON.stringify({ success: false, message: 'Error fetching bookings' }), { status: 500 });
   }
 }

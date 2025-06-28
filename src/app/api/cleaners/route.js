@@ -3,27 +3,46 @@ import Cleaner from "@/models/Cleaner";
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 
-// GET - Fetch single cleaner by ID or all cleaners (💬 Public)
+// GET - Fetch cleaner(s) with optional filters (💬 Public)
 export async function GET(req) {
   await dbConnect();
   const { searchParams } = new URL(req.url);
   const id = searchParams.get('id');
+  const postcode = searchParams.get('postcode') || '';
+  const minRating = parseFloat(searchParams.get('minRating')) || 0;
+  const bookingStatus = searchParams.get('bookingStatus') || 'all';
 
   try {
+    // ✅ Return a single cleaner by ID
     if (id) {
-      // ✅ Return a single cleaner by ID (password excluded)
       const cleaner = await Cleaner.findById(id).select('-password');
       if (!cleaner) {
         return NextResponse.json({ success: false, message: 'Cleaner not found' }, { status: 404 });
       }
-      return NextResponse.json({ success: true, cleaner }, { status: 200 });
-    } else {
-      // ✅ Return all cleaners (password excluded)
-      const cleaners = await Cleaner.find({}, '-password');
-      return NextResponse.json({ success: true, cleaners }, { status: 200 });
+      return NextResponse.json({ success: true, cleaners: [cleaner] }, { status: 200 }); // Always return array
     }
+
+    // ✅ Build filter query
+    const query = {};
+
+    if (postcode) {
+      query.postcode = { $regex: postcode, $options: 'i' };
+    }
+
+    if (minRating > 0) {
+      query.rating = { $gte: minRating };
+    }
+
+    if (bookingStatus !== 'all') {
+      query.bookingStatus = bookingStatus;
+    }
+
+    // ✅ Return all matching cleaners (password excluded)
+    const cleaners = await Cleaner.find(query).select('-password');
+
+    return NextResponse.json({ success: true, cleaners }, { status: 200 });
   } catch (err) {
-    console.error('❌ GET cleaner error:', err);
+    console.error('❌ GET cleaner error:', err.message);
     return NextResponse.json({ success: false, message: 'Failed to fetch cleaner(s).' }, { status: 500 });
   }
 }
@@ -55,4 +74,3 @@ export async function POST(req) {
     return NextResponse.json({ success: false, message: 'Failed to create cleaner.' }, { status: 500 });
   }
 }
-

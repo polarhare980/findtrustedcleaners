@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -10,10 +10,11 @@ export default function CleanerDashboard() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [cleaner, setCleaner] = useState(null);
-  const [formData, setFormData] = useState(null);
+  const [formData, setFormData] = useState({});
   const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [availabilityChanged, setAvailabilityChanged] = useState(false);
+  const [message, setMessage] = useState('');
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -69,7 +70,7 @@ export default function CleanerDashboard() {
   const toggleAvailability = (day, hour) => {
     const isBooked = formData.availability?.[day]?.[hour] === false;
 
-    if (isBooked) return; // ✅ Block editing booked slots
+    if (isBooked) return;
 
     setFormData(prev => {
       const updated = { ...prev.availability };
@@ -84,9 +85,11 @@ export default function CleanerDashboard() {
     });
 
     setAvailabilityChanged(true);
+    setMessage('');
   };
 
   const handleSave = async () => {
+    setSaving(true);
     try {
       const res = await fetch(`/api/cleaners/${cleaner.id}`, {
         method: 'PUT',
@@ -95,11 +98,13 @@ export default function CleanerDashboard() {
         body: JSON.stringify(formData),
       });
       if (!res.ok) throw new Error('Update failed');
-      alert('Changes saved successfully!');
+      setMessage('✅ Changes saved successfully!');
       setAvailabilityChanged(false);
     } catch (err) {
       console.error(err);
-      alert('Error saving changes.');
+      setMessage('❌ Error saving changes.');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -109,6 +114,12 @@ export default function CleanerDashboard() {
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white shadow rounded-xl">
       <h1 className="text-3xl font-bold text-teal-700 mb-6 text-center">Cleaner Dashboard</h1>
+
+      {message && (
+        <div className="mb-4 text-center text-white py-2 rounded" style={{ backgroundColor: message.includes('✅') ? 'green' : 'red' }}>
+          {message}
+        </div>
+      )}
 
       <div className="mb-6">
         <h2 className="text-xl font-semibold text-teal-700 mb-2">Availability Grid</h2>
@@ -131,9 +142,12 @@ export default function CleanerDashboard() {
                 return (
                   <div
                     key={`${day}-${hour}`}
-                    className={`h-8 w-full flex items-center justify-center rounded cursor-pointer ${
-                      isBooked ? 'bg-red-500 text-white cursor-not-allowed' : isAvailable ? 'bg-green-500 text-white' : 'bg-gray-300'
-                    }`}
+                    className={`h-8 w-full flex items-center justify-center rounded cursor-pointer ${isBooked
+                      ? 'bg-red-500 text-white cursor-not-allowed'
+                      : isAvailable
+                        ? 'bg-green-500 text-white'
+                        : 'bg-gray-300'
+                      }`}
                     onClick={() => toggleAvailability(day, hour)}
                   >
                     {isBooked ? 'Booked' : isAvailable ? 'Available' : 'Unavailable'}
@@ -144,7 +158,6 @@ export default function CleanerDashboard() {
           ))}
         </div>
 
-        {/* Mobile View */}
         <div className="sm:hidden space-y-4 mt-4">
           {days.map(day => (
             <div key={day}>
@@ -157,9 +170,12 @@ export default function CleanerDashboard() {
                   return (
                     <div
                       key={`${day}-${hour}`}
-                      className={`w-full py-1 text-center rounded cursor-pointer ${
-                        isBooked ? 'bg-red-500 text-white cursor-not-allowed' : isAvailable ? 'bg-green-500 text-white' : 'bg-gray-300'
-                      }`}
+                      className={`w-full py-1 text-center rounded cursor-pointer ${isBooked
+                        ? 'bg-red-500 text-white cursor-not-allowed'
+                        : isAvailable
+                          ? 'bg-green-500 text-white'
+                          : 'bg-gray-300'
+                        }`}
                       onClick={() => toggleAvailability(day, hour)}
                     >
                       {isBooked ? `${hour}:00 Booked` : isAvailable ? `${hour}:00 Available` : `${hour}:00 Unavailable`}
@@ -175,10 +191,10 @@ export default function CleanerDashboard() {
       <div className="flex justify-end">
         <button
           onClick={handleSave}
-          className="bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-lg shadow"
-          disabled={!availabilityChanged}
+          className="bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-lg shadow disabled:opacity-50"
+          disabled={!availabilityChanged || saving}
         >
-          Save Changes
+          {saving ? 'Saving...' : 'Save Changes'}
         </button>
       </div>
     </div>

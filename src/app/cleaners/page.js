@@ -5,35 +5,25 @@ import Link from 'next/link';
 import Head from 'next/head';
 
 export default function FindCleanerPage() {
-  const [cleaners, setCleaners] = useState([]);
-  const [postcode, setPostcode] = useState('');
   const [filteredCleaners, setFilteredCleaners] = useState([]);
+  const [postcode, setPostcode] = useState('');
   const [minRating, setMinRating] = useState(0);
   const [bookingStatus, setBookingStatus] = useState('all');
 
   useEffect(() => {
-    const fetchCleaners = async () => {
-      const res = await fetch('/api/cleaners');
-      const data = await res.json();
-      setCleaners(data);
-      setFilteredCleaners(data);
+    const fetchFilteredCleaners = async () => {
+      try {
+        const url = `/api/cleaners?postcode=${postcode}&minRating=${minRating}&bookingStatus=${bookingStatus}`;
+        const res = await fetch(url);
+        const { cleaners } = await res.json();
+        setFilteredCleaners(cleaners);
+      } catch (err) {
+        console.error('Error fetching cleaners:', err);
+      }
     };
-    fetchCleaners();
-  }, []);
 
-  useEffect(() => {
-    let result = [...cleaners];
-    if (postcode) {
-      result = result.filter(c => c.postcode.toLowerCase().includes(postcode.toLowerCase()));
-    }
-    if (minRating > 0) {
-      result = result.filter(c => (parseFloat(c.rating) || 0) >= minRating);
-    }
-    if (bookingStatus !== 'all') {
-      result = result.filter(c => c.bookingStatus === bookingStatus);
-    }
-    setFilteredCleaners(result);
-  }, [postcode, minRating, bookingStatus, cleaners]);
+    fetchFilteredCleaners();
+  }, [postcode, minRating, bookingStatus]);
 
   return (
     <main className="relative min-h-screen text-[#0D9488]">

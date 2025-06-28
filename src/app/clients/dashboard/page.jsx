@@ -10,6 +10,7 @@ export default function ClientDashboard() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -100,6 +101,7 @@ export default function ClientDashboard() {
   };
 
   const handleSave = async () => {
+    setSaving(true);
     try {
       const res = await fetch(`/api/clients/${client.id}`, {
         method: 'PUT',
@@ -113,6 +115,9 @@ export default function ClientDashboard() {
       setIsEditing(false);
     } catch (err) {
       console.error('Error updating profile:', err.message);
+      alert('There was a problem updating your profile.');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -155,9 +160,10 @@ export default function ClientDashboard() {
           ) : (
             <button
               onClick={handleSave}
-              className="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition"
+              className="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition disabled:opacity-50"
+              disabled={saving}
             >
-              Save Changes
+              {saving ? 'Saving...' : 'Save Changes'}
             </button>
           )}
 

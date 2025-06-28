@@ -1,10 +1,10 @@
 'use client';
+
 import { useEffect, useState } from "react";
 import { useRouter } from 'next/navigation';
 import Head from "next/head";
 import Link from "next/link";
 
-// ✅ Embed sanitisation
 function isSafeEmbed(code) {
   const hasIframe = code.includes('<iframe') && code.includes('src=');
   const forbidden = ['<script', '<style', 'onerror', 'onload', 'javascript:'];
@@ -14,29 +14,27 @@ function isSafeEmbed(code) {
 }
 
 export default function HomePage() {
-  const [mounted, setMounted] = useState(false); // ✅ SSR Protection
-  const [cleaners, setCleaners] = useState([]);
+  const [mounted, setMounted] = useState(false);
+  const [premiumCleaners, setPremiumCleaners] = useState([]);
+  const [freeCleaners, setFreeCleaners] = useState([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setMounted(true);
-    }
+    if (typeof window !== 'undefined') setMounted(true);
   }, []);
 
   useEffect(() => {
     const fetchCleaners = async () => {
       try {
         const res = await fetch("/api/cleaners");
-        const contentType = res.headers.get("content-type");
+        const { cleaners } = await res.json();
 
-        if (!contentType || !contentType.includes("application/json")) {
-          throw new Error("Invalid response from server");
-        }
+        const premium = cleaners.filter(c => c.isPremium).slice(0, 5);
+        const free = cleaners.filter(c => !c.isPremium).slice(0, 5);
 
-        const data = await res.json();
-        setCleaners(data.slice(0, 5));
+        setPremiumCleaners(premium);
+        setFreeCleaners(free);
       } catch (err) {
         console.error("Failed to fetch cleaners:", err.message);
       } finally {
@@ -49,7 +47,6 @@ export default function HomePage() {
 
   const handleBookingRequest = (cleanerId) => {
     const clientId = localStorage.getItem('clientId');
-
     if (!clientId) {
       router.push(`/login/clients?next=/cleaners/${cleanerId}/checkout`);
     } else {
@@ -57,31 +54,21 @@ export default function HomePage() {
     }
   };
 
-  // ✅ Prevent SSR build errors
   if (!mounted) return null;
 
   return (
     <>
       <Head>
         <title>Find Trusted Cleaners | Trusted Local Cleaning Services UK</title>
-        <meta
-          name="description"
-          content="Browse and book trusted, verified cleaners in your area. Rated professionals for your home cleaning needs."
-        />
+        <meta name="description" content="Browse and book trusted, verified cleaners in your area. Rated professionals for your home cleaning needs." />
       </Head>
 
       <main className="relative min-h-screen overflow-hidden text-gray-700">
-        <img
-          src="/background.jpg"
-          alt="Background"
-          className="absolute inset-0 w-full h-full object-cover opacity-40 -z-10"
-        />
+        <img src="/background.jpg" alt="Background" className="absolute inset-0 w-full h-full object-cover opacity-40 -z-10" />
 
         {/* Header */}
         <header className="flex flex-col sm:flex-row sm:items-center justify-between px-6 py-4 bg-teal-600 bg-opacity-90 shadow text-white space-y-2 sm:space-y-0">
-          <Link href="/">
-            <img src="/findtrusted-logo.png" alt="Logo" className="w-32 h-auto" />
-          </Link>
+          <Link href="/"><img src="/findtrusted-logo.png" alt="Logo" className="w-32 h-auto" /></Link>
           <nav className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-6 text-sm font-medium">
             <Link href="/cleaners" className="active-tap">Find a Cleaner</Link>
             <Link href="/register/cleaners" className="active-tap">List Yourself</Link>
@@ -94,98 +81,44 @@ export default function HomePage() {
         {/* Hero Section */}
         <section className="text-center py-10 bg-white/40 backdrop-blur rounded-xl mx-4 my-6">
           <h1 className="text-4xl font-bold text-[#0D9488]">Find Trusted Cleaners</h1>
-          <p className="text-base text-gray-700 mt-2">
-            Real Cleaners. Real Reviews. Book Local.
-          </p>
+          <p className="text-base text-gray-700 mt-2">Real Cleaners. Real Reviews. Book Local.</p>
         </section>
 
         {/* CTA Section */}
         <section className="flex flex-col sm:flex-row justify-center gap-6 px-6 py-8">
-          <Link
-            href="/cleaners"
-            className="bg-[#0D9488] text-white px-6 py-4 rounded shadow hover:bg-teal-700 text-center w-full sm:w-auto active-tap"
-          >
-            Find a Cleaner
-          </Link>
-          <Link
-            href="/register/cleaners"
-            className="bg-white text-[#0D9488] border border-[#0D9488] px-6 py-4 rounded shadow hover:bg-gray-100 text-center w-full sm:w-auto active-tap"
-          >
-            List Yourself
-          </Link>
+          <Link href="/cleaners" className="bg-[#0D9488] text-white px-6 py-4 rounded shadow hover:bg-teal-700 text-center w-full sm:w-auto active-tap">Find a Cleaner</Link>
+          <Link href="/register/cleaners" className="bg-white text-[#0D9488] border border-[#0D9488] px-6 py-4 rounded shadow hover:bg-gray-100 text-center w-full sm:w-auto active-tap">List Yourself</Link>
         </section>
 
-        {/* Featured Cleaners */}
+        {/* Premium Cleaners */}
         <section className="px-6 py-10">
-          <h2 className="text-2xl font-semibold mb-4 text-center text-white drop-shadow">
-            Featured Cleaners
-          </h2>
+          <h2 className="text-2xl font-semibold mb-4 text-center text-white drop-shadow">Featured Premium Cleaners</h2>
 
           {loading ? (
             <p className="text-center text-white">Loading featured cleaners...</p>
+          ) : premiumCleaners.length === 0 ? (
+            <p className="text-center text-white">No premium cleaners available at this time.</p>
           ) : (
             <div className="flex overflow-x-auto gap-4 pb-4 px-2">
-              {cleaners.map((cleaner, i) => (
-                <div
-                  key={i}
-                  className="min-w-[250px] border rounded shadow p-4 bg-white bg-opacity-90 flex-shrink-0"
-                >
-                  <img
-                    src={cleaner.image || "/profile-placeholder.png"}
-                    alt={cleaner.realName}
-                    className="w-full h-32 object-cover rounded mb-2"
-                  />
-                  <p className="font-bold">{cleaner.realName}</p>
-                  <p>⭐ {cleaner.rating || "Not rated yet"}</p>
-                  <p>💷 {cleaner.rate ? `£${cleaner.rate}/hr` : "Rate not set"}</p>
+              {premiumCleaners.map((cleaner) => (
+                <CleanerCard key={cleaner._id} cleaner={cleaner} handleBookingRequest={handleBookingRequest} isPremium />
+              ))}
+            </div>
+          )}
+        </section>
 
-                  {(cleaner.googleReviewUrl || cleaner.facebookReviewUrl) && (
-                    <div className="mt-2 flex flex-col gap-1 text-sm">
-                      {cleaner.googleReviewUrl && (
-                        <a
-                          href={cleaner.googleReviewUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 underline active-tap"
-                        >
-                          Google Reviews
-                        </a>
-                      )}
-                      {cleaner.facebookReviewUrl && (
-                        <a
-                          href={cleaner.facebookReviewUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 underline active-tap"
-                        >
-                          Facebook Reviews
-                        </a>
-                      )}
-                    </div>
-                  )}
+        {/* Free Cleaners */}
+        <section className="px-6 py-10">
+          <h2 className="text-2xl font-semibold mb-4 text-center text-white drop-shadow">Free Listed Cleaners</h2>
 
-                  {cleaner.embedCode && isSafeEmbed(cleaner.embedCode) && (
-                    <div
-                      className="mt-2"
-                      dangerouslySetInnerHTML={{ __html: cleaner.embedCode }}
-                    />
-                  )}
-
-                  <div className="mt-2 space-y-1">
-                    <Link
-                      href={`/cleaners/${cleaner._id}`}
-                      className="block w-full text-center bg-blue-600 text-white py-1 rounded hover:bg-blue-700 active-tap"
-                    >
-                      View Profile
-                    </Link>
-                    <button
-                      onClick={() => handleBookingRequest(cleaner._id)}
-                      className="w-full bg-green-500 text-white py-1 rounded hover:bg-green-600 active-tap"
-                    >
-                      Request Booking
-                    </button>
-                  </div>
-                </div>
+          {loading ? (
+            <p className="text-center text-white">Loading cleaners...</p>
+          ) : freeCleaners.length === 0 ? (
+            <p className="text-center text-white">No free listed cleaners available at this time.</p>
+          ) : (
+            <div className="flex overflow-x-auto gap-4 pb-4 px-2">
+              {freeCleaners.map((cleaner) => (
+                <CleanerCard key={cleaner._id} cleaner={cleaner} handleBookingRequest={handleBookingRequest} />
               ))}
             </div>
           )}
@@ -222,33 +155,16 @@ export default function HomePage() {
             <Link href="/faq" className="active-tap">FAQs</Link>
             <Link href="/sitemap" className="active-tap">Site Map</Link>
           </nav>
-          <Link
-            href="#"
-            onClick={() => {
-              localStorage.removeItem('cookie_consent');
-              window.location.reload();
-            }}
-            className="underline active-tap"
-          >
-            Cookie Settings
-          </Link>
+
+          <Link href="#" onClick={() => { localStorage.removeItem('cookie_consent'); window.location.reload(); }} className="underline active-tap">Cookie Settings</Link>
 
           <p className="mb-2">&copy; {new Date().getFullYear()} FindTrustedCleaners. All rights reserved.</p>
 
           <p className="text-xs">
             FindTrustedCleaners is committed to GDPR compliance. Read our{" "}
-            <Link href="/privacy-policy" className="underline active-tap">
-              Privacy Policy
-            </Link>{" "}
-            and{" "}
-            <Link href="/cookie-policy" className="underline active-tap">
-              Cookie Policy
-            </Link>{" "}
-            for details on how we protect your data. You may{" "}
-            <Link href="/contact" className="underline active-tap">
-              contact us
-            </Link>{" "}
-            at any time to manage your personal information.
+            <Link href="/privacy-policy" className="underline active-tap">Privacy Policy</Link>{" "} and{" "}
+            <Link href="/cookie-policy" className="underline active-tap">Cookie Policy</Link>{" "} for details on how we protect your data.
+            You may <Link href="/contact" className="underline active-tap">contact us</Link> at any time to manage your personal information.
           </p>
         </footer>
       </main>
@@ -259,5 +175,42 @@ export default function HomePage() {
         }
       `}</style>
     </>
+  );
+}
+
+// Cleaner Card Component
+function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
+  return (
+    <div className="min-w-[250px] border rounded shadow p-4 bg-white bg-opacity-90 flex-shrink-0">
+      {isPremium && <span className="block mb-2 text-xs bg-yellow-400 text-white px-2 py-1 rounded">Premium Cleaner</span>}
+      <img src={cleaner.image || "/profile-placeholder.png"} alt={cleaner.realName} className="w-full h-32 object-cover rounded mb-2" />
+      <p className="font-bold">{cleaner.realName}</p>
+      <p>⭐ {cleaner.rating || "Not rated yet"}</p>
+      <p>💷 {cleaner.rate ? `£${cleaner.rate}/hr` : "Rate not set"}</p>
+
+      {(cleaner.googleReviewUrl || cleaner.facebookReviewUrl) && (
+        <div className="mt-2 flex flex-col gap-1 text-sm">
+          {cleaner.googleReviewUrl && (
+            <a href={cleaner.googleReviewUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline active-tap">
+              Google Reviews
+            </a>
+          )}
+          {cleaner.facebookReviewUrl && (
+            <a href={cleaner.facebookReviewUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline active-tap">
+              Facebook Reviews
+            </a>
+          )}
+        </div>
+      )}
+
+      {cleaner.embedCode && isSafeEmbed(cleaner.embedCode) && (
+        <div className="mt-2" dangerouslySetInnerHTML={{ __html: cleaner.embedCode }} />
+      )}
+
+      <div className="mt-2 space-y-1">
+        <Link href={`/cleaners/${cleaner._id}`} className="block w-full text-center bg-blue-600 text-white py-1 rounded hover:bg-blue-700 active-tap">View Profile</Link>
+        <button onClick={() => handleBookingRequest(cleaner._id)} className="w-full bg-green-500 text-white py-1 rounded hover:bg-green-600 active-tap">Request Booking</button>
+      </div>
+    </div>
   );
 }

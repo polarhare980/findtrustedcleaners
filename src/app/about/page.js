@@ -17,6 +17,7 @@ export default function AboutPage() {
         <meta property="og:url" content="https://www.findtrustedcleaners.co.uk/about" />
       </Head>
 
+      {/* Header */}
       <header className="bg-[#0D9488] text-white py-4 px-6 shadow">
         <div className="flex justify-between items-center">
           <Link href="/">
@@ -32,41 +33,65 @@ export default function AboutPage() {
         </div>
       </header>
 
-      <section className="max-w-4xl mx-auto p-6">
-        <h1 className="text-3xl font-bold text-[#0D9488] mb-6">About Us</h1>
-
-        <p className="mb-4">Hi there – we&#39;re the same friendly folks behind <a href="https://www.ovendetailing.com" className="text-teal-600 underline">www.OvenDetailing.com</a>, a small, family-run oven cleaning business based in West Sussex.</p>
-
-        <p className="mb-4">Over the years, we&#39;ve been asked again and again: <strong>&#34;Do you know a good cleaner?&#34;</strong> It turns out <em>a lot</em> of people are searching for help they can actually trust – and many great local cleaners are trying to find regular work without signing up to expensive apps or bidding against each other for jobs.</p>
-
-        <p className="mb-4">So, we thought – why not build something simple that works for everyone?</p>
-
-        <h2 className="text-xl font-semibold text-[#0D9488] mt-6 mb-2">A Platform That Helps Both Sides</h2>
-        <p className="mb-4"><strong>FindTrustedCleaners</strong> was born out of that idea: to connect reliable local cleaners with everyday people who just want their homes looked after – without the fuss, subscription fees, or salesy nonsense.</p>
-
-        <p className="mb-4">It&#39;s not some giant faceless corporation. It&#39;s just us – trying to make things a little easier.</p>
-
-        <ul className="list-disc list-inside mb-6">
-          <li>Clarity – see availability before you book</li>
-          <li>Fairness – no crazy commission fees or hidden charges</li>
-          <li>Trust – only verified contact details are shared after booking</li>
-          <li>Support – for independent, hardworking cleaners and families alike</li>
-        </ul>
-
-        <h2 className="text-xl font-semibold text-[#0D9488] mt-6 mb-2">Why We Built It</h2>
-        <p className="mb-4">We know what it&#39;s like to juggle work, family, and cleaning. We also know what it&#39;s like to run a local service business, doing the graft and hoping the next job will come through.</p>
-
-        <p className="mb-4"><strong>FindTrustedCleaners</strong> bridges that gap. It&#39;s a space where:</p>
-        <ul className="list-disc list-inside mb-6">
-          <li>Cleaners don&#39;t have to pay to list or fight over leads</li>
-          <li>Clients don&#39;t have to endlessly message or second guess who to trust</li>
-        </ul>
-
-        <p className="mb-4">Just honest, real-time info – and real people behind it.</p>
-
-        <p className="mt-8 text-sm">Thanks for stopping by. Whether you&#39;re booking a cleaner or listing your services – we&#39;re genuinely glad you&#39;re here. Need to reach us? Pop over to our <Link href="/contact" className="underline text-teal-600">Contact Page</Link> or email: <strong>hello@findtrustedcleaners.co.uk</strong></p>
+      {/* Hero Section */}
+      <section className="relative text-center py-16 bg-[#0D9488] text-white">
+        <h1 className="text-4xl font-bold mb-2">About FindTrustedCleaners</h1>
+        <p className="text-lg">Connecting reliable local cleaners with real homes across the UK.</p>
       </section>
 
+      {/* Content */}
+      <section className="max-w-4xl mx-auto p-6 space-y-6">
+        <p>Hi there – we&#39;re the same friendly folks behind <a href="https://www.ovendetailing.com" className="text-teal-600 underline" target="_blank" rel="noopener noreferrer">www.OvenDetailing.com</a>, a small, family-run oven cleaning business based in West Sussex.</p>
+
+        <p>Over the years, we&#39;ve been asked again and again: <strong>&#34;Do you know a good cleaner?&#34;</strong> It turns out <em>a lot</em> of people are searching for help they can actually trust – and many great local cleaners are trying to find regular work without signing up to expensive apps or bidding against each other for jobs.</p>
+
+        <p>So, we thought – why not build something simple that works for everyone?</p>
+
+        {/* Values Section */}
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+          <div className="bg-gray-100 rounded-lg p-4 shadow">
+            <h2 className="text-xl font-semibold mb-2 text-[#0D9488]">Our Mission</h2>
+            <p>FindTrustedCleaners connects reliable local cleaners with everyday people who just want their homes looked after – without the fuss, subscription fees, or salesy nonsense.</p>
+          </div>
+          <div className="bg-gray-100 rounded-lg p-4 shadow">
+            <h2 className="text-xl font-semibold mb-2 text-[#0D9488]">Who We Are</h2>
+            <p>We&#39;re not a faceless corporation. We&#39;re a small, family-run team from West Sussex trying to make life easier for cleaners and families alike.</p>
+          </div>
+        </section>
+
+        {/* Key Benefits */}
+        <section className="mt-8">
+          <h2 className="text-xl font-semibold mb-4 text-[#0D9488]">Why People Choose Us</h2>
+          <ul className="list-disc list-inside space-y-2">
+            <li><strong>Clarity:</strong> See cleaner availability before you book.</li>
+            <li><strong>Fairness:</strong> No crazy commission fees or hidden charges.</li>
+            <li><strong>Trust:</strong> Only verified contact details are shared after booking.</li>
+            <li><strong>Support:</strong> Helping independent cleaners and families thrive.</li>
+          </ul>
+        </section>
+
+        {/* Why We Built It */}
+        <section className="mt-8">
+          <h2 className="text-xl font-semibold mb-4 text-[#0D9488]">Why We Built It</h2>
+          <p className="mb-4">We know what it&#39;s like to juggle work, family, and cleaning. We also know what it&#39;s like to run a local service business, doing the graft and hoping the next job will come through.</p>
+
+          <p className="mb-4"><strong>FindTrustedCleaners</strong> bridges that gap. It&#39;s a space where:</p>
+
+          <ul className="list-disc list-inside space-y-2">
+            <li>Cleaners don&#39;t have to pay to list or fight over leads.</li>
+            <li>Clients don&#39;t have to endlessly message or second guess who to trust.</li>
+          </ul>
+
+          <p className="mt-4">Just honest, real-time info – and real people behind it.</p>
+        </section>
+
+        {/* Contact Section */}
+        <section className="mt-8">
+          <p className="text-sm">Thanks for stopping by. Whether you&#39;re booking a cleaner or listing your services – we&#39;re genuinely glad you&#39;re here. Need to reach us? Pop over to our <Link href="/contact" className="underline text-teal-600">Contact Page</Link> or email: <strong>hello@findtrustedcleaners.co.uk</strong></p>
+        </section>
+      </section>
+
+      {/* Footer */}
       <footer className="bg-[#0D9488] text-white border-t py-6 px-6 text-center text-sm">
         <nav className="flex flex-wrap justify-center gap-4 mb-2">
           <Link href="/about">About Us</Link>
