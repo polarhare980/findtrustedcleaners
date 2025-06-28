@@ -1,28 +1,41 @@
 import jwt from 'jsonwebtoken';
+import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'pepsi';
+// ✅ Require JWT_SECRET to be set
+if (!process.env.JWT_SECRET) {
+  throw new Error('JWT_SECRET not defined in environment variables');
+}
+
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // ✅ Create a JWT token
 export function createToken(payload) {
-  if (!process.env.JWT_SECRET) throw Error('JWT_SECRET not defined');
-  return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' });
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
 }
 
-// ✅ Verify the token from cookies
-export async function verifyToken() {
+// ✅ Get and verify token using Next.js cookies API
+export function verifyToken() {
   try {
-    const cookieHeader = req.headers.get('cookie');
-    if (!cookieHeader) throw new Error('No token provided');
+    const cookieStore = cookies();
+    const token = cookieStore.get('token')?.value;
 
-    const tokenMatch = cookieHeader.match(/token=([^;]+)/);
-    if (!tokenMatch) throw new Error('No token provided');
+    if (!token) return null;
 
-    const token = tokenMatch[1];
-    const decoded = jwt.verify(token, JWT_SECRET);
-
-    return decoded; // ✅ return the decoded user info
+    return jwt.verify(token, JWT_SECRET);
   } catch (err) {
     console.error('❌ JWT verification error:', err.message);
     return null;
   }
+}
+
+// ✅ Middleware-style protection for API routes
+export async function protectRoute() {
+  const decoded = verifyToken();
+
+  if (!decoded) {
+    return { valid: false, response: NextResponse.json({ success: false, message: 'Not authenticated.' }, { status: 401 }) };
+  }
+
+  return { valid: true, user: decoded };
 }

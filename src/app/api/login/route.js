@@ -5,22 +5,24 @@ import Cleaner from '@/models/Cleaner';
 import { createToken } from '@/lib/auth';
 import { serialize } from 'cookie';
 import bcrypt from 'bcryptjs';
-import { NextResponse } from 'next/server'; // ✅ Next.js 13+ app routes
+import { NextResponse } from 'next/server';
 
 export async function POST(req) {
   await connectToDatabase();
 
   try {
-    // ✅ Rate Limiting
-    const remaining = await limiter.check(req, 5, 'LOGIN_LIMIT'); // Optional: 5 requests per minute
+    const remaining = await limiter.check(req, 5, 'LOGIN_LIMIT');
     if (remaining <= 0) {
       return NextResponse.json({ success: false, message: 'Too many login attempts, please try later.' }, { status: 429 });
     }
 
-    // ✅ Parse Request Body
-    const { email, password, userType } = await req.json();
+    const body = await req.json();
+    const { email, password, userType } = body;
 
-    // ✅ Model Selection
+    if (!email || !password || !userType) {
+      return NextResponse.json({ success: false, message: 'All fields are required.' }, { status: 400 });
+    }
+
     const Model = userType === 'client' ? Client : Cleaner;
     const user = await Model.findOne({ email });
 
@@ -28,26 +30,21 @@ export async function POST(req) {
       return NextResponse.json({ success: false, message: 'Invalid email or password' }, { status: 401 });
     }
 
-    // ✅ Compare hashed passwords
     const passwordMatch = await bcrypt.compare(password, user.password);
 
     if (!passwordMatch) {
       return NextResponse.json({ success: false, message: 'Invalid email or password' }, { status: 401 });
     }
 
-    // ✅ Create JWT token
     const token = createToken({ id: user._id, type: userType });
 
-    // ✅ Secure httpOnly cookie
     const cookie = serialize('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       path: '/',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7, // 7 days
+      maxAge: 60 * 60 * 24 * 7,
     });
-
-    console.log(`✅ ${userType} Login Success, ID:`, user._id);
 
     return new NextResponse(JSON.stringify({ success: true, id: user._id, type: userType }), {
       status: 200,

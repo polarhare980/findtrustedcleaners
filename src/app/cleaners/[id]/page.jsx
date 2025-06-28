@@ -19,6 +19,7 @@ export default function PublicCleanerProfile() {
   const [mounted, setMounted] = useState(false);
   const [cleaner, setCleaner] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(''); // ✅ Add error state
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -30,10 +31,23 @@ export default function PublicCleanerProfile() {
     const fetchCleaner = async () => {
       try {
         const res = await fetch(`/api/public-cleaners/${id}`);
+
+        if (!res.ok) {
+          setError('Cleaner not found or server error.');
+          return;
+        }
+
         const data = await res.json();
-        setCleaner(data);
+
+        if (!data || !data.success || !data.cleaner) {
+          setError('Cleaner not found.');
+          return;
+        }
+
+        setCleaner(data.cleaner);
       } catch (err) {
         console.error('Failed to load cleaner profile', err);
+        setError('Failed to fetch cleaner profile.');
       } finally {
         setLoading(false);
       }
@@ -65,7 +79,6 @@ export default function PublicCleanerProfile() {
 
       if (!res.ok) throw new Error('Stripe session failed');
 
-      // ✅ Redirect to Stripe Checkout
       window.location.href = data.url;
     } catch (err) {
       console.error('❌ Stripe Checkout Error:', err.message);
@@ -74,13 +87,19 @@ export default function PublicCleanerProfile() {
   };
 
   if (!mounted) return null;
-
   if (loading) return <p className="p-6 text-gray-500">Loading profile...</p>;
-  if (!cleaner) return <p className="p-6 text-red-500">Cleaner not found</p>;
+
+  if (error) {
+    return (
+      <main className="p-6 text-red-600">
+        <h1 className="text-2xl font-bold mb-4">Error</h1>
+        <p>{error}</p>
+      </main>
+    );
+  }
 
   return (
     <div className="max-w-xl mx-auto p-6 border shadow rounded-xl mt-6 bg-white">
-      {/* Profile Image */}
       {cleaner.image && (
         <div className="flex justify-center mb-6">
           <img src={cleaner.image} alt={cleaner.realName} className="w-32 h-32 object-cover rounded-full border" />
@@ -104,12 +123,10 @@ export default function PublicCleanerProfile() {
         )}
       </div>
 
-      {/* ✅ Reviews Section */}
       {(cleaner.googleReviewUrl || cleaner.facebookReviewUrl || cleaner.embedCode) && (
         <div className="mt-6">
           <h2 className="font-semibold text-teal-700 mb-2">Reviews</h2>
 
-          {/* External Links */}
           <div className="space-y-2 text-sm">
             {cleaner.googleReviewUrl && (
               <a
@@ -133,7 +150,6 @@ export default function PublicCleanerProfile() {
             )}
           </div>
 
-          {/* Embedded Widget */}
           {cleaner.embedCode && isSafeEmbed(cleaner.embedCode) && (
             <div
               className="mt-4"
@@ -143,11 +159,10 @@ export default function PublicCleanerProfile() {
         </div>
       )}
 
-      {/* ✅ Availability Grid (Responsive) */}
+      {/* ✅ Availability Grid (Desktop) */}
       <div className="mt-6">
         <h2 className="font-semibold mb-2">Availability:</h2>
 
-        {/* Desktop Grid */}
         <div className="hidden sm:grid grid-cols-[80px_repeat(13,_1fr)] gap-1 text-sm">
           <div></div>
           {[...Array(13)].map((_, hour) => (
@@ -181,7 +196,7 @@ export default function PublicCleanerProfile() {
           ))}
         </div>
 
-        {/* Mobile Stacked View */}
+        {/* Mobile View */}
         <div className="sm:hidden space-y-4 mt-4">
           {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => (
             <div key={day}>

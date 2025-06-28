@@ -1,7 +1,7 @@
 import { connectToDatabase } from '@/lib/db';
 import Cleaner from '@/models/Cleaner';
 import { NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/auth'; // ✅ Correct JWT middleware path
+import { protectRoute } from '@/lib/auth';
 
 // PUT - Update cleaner profile (🔒 Protected)
 export async function PUT(req, { params }) {
@@ -9,19 +9,16 @@ export async function PUT(req, { params }) {
   const { id } = params;
   const body = await req.json();
 
+  // 🔐 Validate JWT token using protectRoute
+  const { valid, user, response } = await protectRoute();
+  if (!valid) return response;
+
+  // ✅ Only the owner or admin can update
+  if (user.id !== id && user.type !== 'admin') {
+    return NextResponse.json({ success: false, message: 'Access denied.' }, { status: 403 });
+  }
+
   try {
-    // 🔐 Validate JWT token
-    const user = await verifyToken();
-
-    if (!user) {
-      return NextResponse.json({ success: false, message: 'Unauthorised' }, { status: 401 });
-    }
-
-    // ✅ Only the owner or admin can update
-    if (user.id !== id && user.type !== 'admin') {
-      return NextResponse.json({ success: false, message: 'Access denied.' }, { status: 403 });
-    }
-
     const updated = await Cleaner.findByIdAndUpdate(
       id,
       {
@@ -57,7 +54,7 @@ export async function GET(req, { params }) {
 
     return NextResponse.json({ success: true, cleaner });
   } catch (err) {
-    console.error('❌ Error fetching cleaner:', err);
+    console.error('❌ Error fetching cleaner:', err.message);
     return NextResponse.json({ success: false, message: 'Error fetching cleaner' }, { status: 500 });
   }
 }

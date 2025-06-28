@@ -13,16 +13,14 @@ export async function GET(req) {
   const bookingStatus = searchParams.get('bookingStatus') || 'all';
 
   try {
-    // ✅ Return a single cleaner by ID
     if (id) {
       const cleaner = await Cleaner.findById(id).select('-password');
       if (!cleaner) {
         return NextResponse.json({ success: false, message: 'Cleaner not found' }, { status: 404 });
       }
-      return NextResponse.json({ success: true, cleaners: [cleaner] }, { status: 200 }); // Always return array
+      return NextResponse.json({ success: true, cleaners: [cleaner] }, { status: 200 });
     }
 
-    // ✅ Build filter query
     const query = {};
 
     if (postcode) {
@@ -37,7 +35,6 @@ export async function GET(req) {
       query.bookingStatus = bookingStatus;
     }
 
-    // ✅ Return all matching cleaners (password excluded)
     const cleaners = await Cleaner.find(query).select('-password');
 
     return NextResponse.json({ success: true, cleaners }, { status: 200 });
@@ -61,7 +58,6 @@ export async function POST(req) {
       return NextResponse.json({ success: false, message: 'Email already in use.' }, { status: 400 });
     }
 
-    // ✅ Hash the password before saving
     const hashedPassword = await bcrypt.hash(data.password, 10);
     data.password = hashedPassword;
 
