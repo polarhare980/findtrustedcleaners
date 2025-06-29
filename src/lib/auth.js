@@ -1,22 +1,36 @@
-// File: /app/api/auth/me/route.js
+// File: /src/lib/auth.js
+import jwt from 'jsonwebtoken';
 
-import { verifyToken } from '@/lib/auth';
-import { NextResponse } from 'next/server';
+const JWT_SECRET = process.env.JWT_SECRET || 'your_default_secret';
 
-export async function GET(req) {
+// ✅ Create Token
+export function createToken(payload) {
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+}
+
+// ✅ Verify Token
+export function verifyToken(token) {
   try {
-    // ✅ Get token from cookies
-    const token = req.cookies.get('token')?.value;
-
-    const decoded = verifyToken(token);
-
-    if (!decoded) {
-      return NextResponse.json({ success: false, message: 'No token provided or invalid' }, { status: 401 });
-    }
-
-    return NextResponse.json({ success: true, user: decoded });
+    return jwt.verify(token, JWT_SECRET);
   } catch (err) {
-    console.error('❌ Auth check error:', err.message);
-    return NextResponse.json({ success: false, message: 'Invalid token' }, { status: 401 });
+    return null;
   }
+}
+
+// ✅ Protect Route Example
+export async function protectRoute(request) {
+  const authHeader = request.headers.get('Authorization');
+  
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return { error: 'Unauthorized' };
+  }
+
+  const token = authHeader.split(' ')[1];
+  const user = verifyToken(token);
+  
+  if (!user) {
+    return { error: 'Invalid or expired token' };
+  }
+
+  return { user };
 }
