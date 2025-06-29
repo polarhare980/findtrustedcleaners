@@ -2,9 +2,16 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import LoadingSpinner from '@/components/LoadingSpinner'; // ✅ Loading component
 
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const hours = Array.from({ length: 13 }, (_, i) => `${7 + i}`);
+
+// ✅ SEO Meta Tags
+export const metadata = {
+  title: 'Cleaner Dashboard | Find Trusted Cleaners',
+  description: 'Manage your availability and cleaner profile on Find Trusted Cleaners.',
+};
 
 export default function CleanerDashboard() {
   const router = useRouter();
@@ -69,18 +76,14 @@ export default function CleanerDashboard() {
 
   const toggleAvailability = (day, hour) => {
     const isBooked = formData.availability?.[day]?.[hour] === false;
-
     if (isBooked) return;
 
     setFormData(prev => {
       const updated = { ...prev.availability };
-
       if (!updated[day]) {
         updated[day] = {};
       }
-
       updated[day][hour] = updated[day][hour] === true ? 'unavailable' : true;
-
       return { ...prev, availability: updated };
     });
 
@@ -109,14 +112,14 @@ export default function CleanerDashboard() {
   };
 
   if (!mounted) return null;
-  if (loading || !formData) return <p className="p-10 text-center text-teal-700 font-semibold">Loading dashboard...</p>;
+  if (loading || !formData) return <LoadingSpinner />;
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white shadow rounded-xl">
       <h1 className="text-3xl font-bold text-teal-700 mb-6 text-center">Cleaner Dashboard</h1>
 
       {message && (
-        <div className="mb-4 text-center text-white py-2 rounded" style={{ backgroundColor: message.includes('✅') ? 'green' : 'red' }}>
+        <div className={`mb-4 text-center text-white py-2 rounded ${message.includes('✅') ? 'bg-green-600' : 'bg-red-600'}`}>
           {message}
         </div>
       )}
@@ -127,9 +130,7 @@ export default function CleanerDashboard() {
         <div className="hidden sm:grid grid-cols-[80px_repeat(13,_1fr)] gap-1 text-sm">
           <div></div>
           {hours.map(hour => (
-            <div key={hour} className="text-center font-bold text-gray-700">
-              {hour}:00
-            </div>
+            <div key={hour} className="text-center font-bold text-gray-700">{hour}:00</div>
           ))}
 
           {days.map(day => (
@@ -158,6 +159,7 @@ export default function CleanerDashboard() {
           ))}
         </div>
 
+        {/* Mobile View */}
         <div className="sm:hidden space-y-4 mt-4">
           {days.map(day => (
             <div key={day}>

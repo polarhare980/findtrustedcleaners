@@ -1,7 +1,28 @@
 'use client';
-import Head from 'next/head';
+
 import Link from 'next/link';
 import { useState } from 'react';
+
+// ✅ SEO Meta Tags
+export const metadata = {
+  title: 'Contact Us | FindTrustedCleaners',
+  description: 'Contact the FindTrustedCleaners team for help, questions, or support.',
+  openGraph: {
+    title: 'Contact Us | FindTrustedCleaners',
+    description: 'Reach out to FindTrustedCleaners for help, support, or questions about our platform.',
+    url: 'https://www.findtrustedcleaners.co.uk/contact',
+    siteName: 'FindTrustedCleaners',
+    images: [
+      {
+        url: 'https://www.findtrustedcleaners.co.uk/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Contact FindTrustedCleaners',
+      },
+    ],
+    type: 'website',
+  },
+};
 
 export default function ContactPage() {
   const [form, setForm] = useState({ name: '', email: '', message: '' });
@@ -25,11 +46,8 @@ export default function ContactPage() {
 
   return (
     <main className="min-h-screen bg-white text-gray-700">
-      <Head>
-        <title>Contact Us | FindTrustedCleaners</title>
-        <meta name="description" content="Contact the FindTrustedCleaners team for help, questions, or support." />
-      </Head>
 
+      {/* Header */}
       <header className="flex items-center justify-between px-6 py-4 bg-[#0D9488] text-white shadow">
         <Link href="/">
           <img src="/findtrusted-logo.png" alt="Logo" className="w-32 h-auto" />
@@ -43,6 +61,7 @@ export default function ContactPage() {
         </nav>
       </header>
 
+      {/* Contact Form */}
       <section className="max-w-2xl mx-auto p-6 py-12">
         <h1 className="text-3xl font-bold text-[#0D9488] mb-6 text-center">Contact Us</h1>
         <p className="text-center text-gray-600 mb-6">Have a question or need help? Drop us a message and we’ll get back to you.</p>
@@ -82,23 +101,24 @@ export default function ContactPage() {
         </form>
       </section>
 
+      {/* Footer */}
       <footer className="bg-[#0D9488] text-white border-t py-6 px-6 text-center text-sm">
-              <nav className="flex flex-wrap justify-center gap-4 mb-2">
-                <Link href="/about">About Us</Link>
-                <Link href="/terms">Terms & Conditions</Link>
-                <Link href="/privacy-policy">Privacy Policy</Link>
-                <Link href="/cookie-policy">Cookie Policy</Link>
-                <Link href="/contact">Contact</Link>
-                <Link href="/faq">FAQs</Link>
-                <Link href="/sitemap">Site Map</Link>
-              </nav>
-      
-              <p className="mb-2">&copy; {new Date().getFullYear()} FindTrustedCleaners. All rights reserved.</p>
-      
-              <p className="text-xs">
-                FindTrustedCleaners is committed to GDPR compliance. Read our <Link href="/privacy-policy" className="underline">Privacy Policy</Link> and <Link href="/cookie-policy" className="underline">Cookie Policy</Link> for details on how we protect your data. You may <Link href="/contact" className="underline">contact us</Link> at any time to manage your personal information.
-              </p>
-            </footer>
+        <nav className="flex flex-wrap justify-center gap-4 mb-2">
+          <Link href="/about">About Us</Link>
+          <Link href="/terms">Terms & Conditions</Link>
+          <Link href="/privacy-policy">Privacy Policy</Link>
+          <Link href="/cookie-policy">Cookie Policy</Link>
+          <Link href="/contact">Contact</Link>
+          <Link href="/faq">FAQs</Link>
+          <Link href="/sitemap">Site Map</Link>
+        </nav>
+
+        <p className="mb-2">&copy; {new Date().getFullYear()} FindTrustedCleaners. All rights reserved.</p>
+
+        <p className="text-xs">
+          FindTrustedCleaners is committed to GDPR compliance. Read our <Link href="/privacy-policy" className="underline">Privacy Policy</Link> and <Link href="/cookie-policy" className="underline">Cookie Policy</Link> for details on how we protect your data. You may <Link href="/contact" className="underline">contact us</Link> at any time to manage your personal information.
+        </p>
+      </footer>
     </main>
   );
 }

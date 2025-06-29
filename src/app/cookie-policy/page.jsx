@@ -2,6 +2,27 @@
 
 import Link from 'next/link';
 
+// ✅ SEO Meta Tags
+export const metadata = {
+  title: 'Cookie Policy | FindTrustedCleaners',
+  description: 'Understand how FindTrustedCleaners uses cookies and how you can manage your preferences.',
+  openGraph: {
+    title: 'Cookie Policy | FindTrustedCleaners',
+    description: 'FindTrustedCleaners uses cookies to improve your experience. Read our Cookie Policy to manage your preferences.',
+    url: 'https://www.findtrustedcleaners.co.uk/cookie-policy',
+    siteName: 'FindTrustedCleaners',
+    images: [
+      {
+        url: 'https://www.findtrustedcleaners.co.uk/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Cookie Policy - FindTrustedCleaners',
+      },
+    ],
+    type: 'website',
+  },
+};
+
 export default function CookiePolicy() {
   return (
     <>
@@ -59,7 +80,7 @@ export default function CookiePolicy() {
         </p>
       </main>
 
-      {/* ✅ Footer properly wrapped */}
+      {/* Footer */}
       <footer className="bg-[#0D9488] text-white border-t py-6 px-6 text-center text-sm">
         <nav className="flex flex-wrap justify-center gap-4 mb-2">
           <Link href="/about">About Us</Link>

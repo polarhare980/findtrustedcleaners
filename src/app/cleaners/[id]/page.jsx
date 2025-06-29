@@ -3,6 +3,13 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import React from 'react';
+import LoadingSpinner from '@/components/LoadingSpinner'; // ✅ Loading animation component
+
+// ✅ SEO Meta Tags
+export const metadata = {
+  title: 'Cleaner Profile | Find Trusted Cleaners',
+  description: 'View the profile, services, and availability of trusted cleaners near you.',
+};
 
 // ✅ Sanitation for embed code
 function isSafeEmbed(code) {
@@ -19,7 +26,8 @@ export default function PublicCleanerProfile() {
   const [mounted, setMounted] = useState(false);
   const [cleaner, setCleaner] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(''); // ✅ Add error state
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -56,7 +64,7 @@ export default function PublicCleanerProfile() {
     fetchCleaner();
   }, [id]);
 
-  // ✅ Handle Stripe Checkout Request
+  // ✅ Stripe Checkout Handler with Success Message
   const handleStripeCheckout = async (day, time, price) => {
     try {
       const authRes = await fetch('/api/auth/me', { credentials: 'include' });
@@ -79,6 +87,7 @@ export default function PublicCleanerProfile() {
 
       if (!res.ok) throw new Error('Stripe session failed');
 
+      setSuccess('Redirecting to Stripe...');
       window.location.href = data.url;
     } catch (err) {
       console.error('❌ Stripe Checkout Error:', err.message);
@@ -87,11 +96,12 @@ export default function PublicCleanerProfile() {
   };
 
   if (!mounted) return null;
-  if (loading) return <p className="p-6 text-gray-500">Loading profile...</p>;
+
+  if (loading) return <LoadingSpinner />;
 
   if (error) {
     return (
-      <main className="p-6 text-red-600">
+      <main className="p-6 text-red-600 text-center">
         <h1 className="text-2xl font-bold mb-4">Error</h1>
         <p>{error}</p>
       </main>
@@ -100,6 +110,12 @@ export default function PublicCleanerProfile() {
 
   return (
     <div className="max-w-xl mx-auto p-6 border shadow rounded-xl mt-6 bg-white">
+      {success && (
+        <div className="p-4 mb-4 text-green-700 bg-green-50 border border-green-200 rounded text-center">
+          {success}
+        </div>
+      )}
+
       {cleaner.image && (
         <div className="flex justify-center mb-6">
           <img src={cleaner.image} alt={cleaner.realName} className="w-32 h-32 object-cover rounded-full border" />

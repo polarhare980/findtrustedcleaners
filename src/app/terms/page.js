@@ -2,6 +2,27 @@
 
 import Link from 'next/link';
 
+// ✅ SEO Meta Tags
+export const metadata = {
+  title: 'Terms and Conditions | FindTrustedCleaners',
+  description: 'Review the terms and conditions for using the FindTrustedCleaners platform, including responsibilities and booking policies.',
+  openGraph: {
+    title: 'Terms and Conditions | FindTrustedCleaners',
+    description: 'Review the terms and conditions for using the FindTrustedCleaners platform, including responsibilities and booking policies.',
+    url: 'https://www.findtrustedcleaners.co.uk/terms',
+    siteName: 'FindTrustedCleaners',
+    images: [
+      {
+        url: 'https://www.findtrustedcleaners.co.uk/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Terms and Conditions - FindTrustedCleaners',
+      },
+    ],
+    type: 'website',
+  },
+};
+
 export default function TermsAndConditions() {
   return (
     <main className="min-h-screen bg-white text-gray-700">

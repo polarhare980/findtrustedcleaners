@@ -3,23 +3,44 @@
 import Link from 'next/link';
 import { useState } from 'react';
 
+// ✅ SEO Meta Tags
+export const metadata = {
+  title: 'Frequently Asked Questions | FindTrustedCleaners',
+  description: 'Get answers to the most common questions about FindTrustedCleaners, including booking, pricing, availability, and account management.',
+  openGraph: {
+    title: 'Frequently Asked Questions | FindTrustedCleaners',
+    description: 'Answers to the most common questions about FindTrustedCleaners, including how to book, list yourself, manage availability, and more.',
+    url: 'https://www.findtrustedcleaners.co.uk/faq',
+    siteName: 'FindTrustedCleaners',
+    images: [
+      {
+        url: 'https://www.findtrustedcleaners.co.uk/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Frequently Asked Questions - FindTrustedCleaners',
+      },
+    ],
+    type: 'website',
+  },
+};
+
 export default function FAQPage() {
   const faqs = [
     {
       question: 'How do I book a cleaner?',
-      answer: 'Browse local profiles, check their availability, and click &quot;Request Booking.&quot; You&apos;ll be prompted to create a client account and pay a small one-time fee to unlock contact details.'
+      answer: 'Browse local profiles, check their availability, and click "Request Booking." You\'ll be prompted to create a client account and pay a small one-time fee to unlock contact details.'
     },
     {
       question: 'How do I list myself as a cleaner?',
-      answer: 'Click on &quot;List Yourself&quot; and fill out the short registration form. You can select your availability, services, and hourly rate.'
+      answer: 'Click on "List Yourself" and fill out the short registration form. You can select your availability, services, and hourly rate.'
     },
     {
       question: 'Do I need to pay for a subscription?',
-      answer: 'Nope. Clients pay a one-time fee to unlock cleaner contact info. Cleaners don&apos;t pay anything to appear in search results.'
+      answer: 'Nope. Clients pay a one-time fee to unlock cleaner contact info. Cleaners don\'t pay anything to appear in search results.'
     },
     {
-      question: 'What does &quot;Pending&quot; mean on the cleaner&apos;s availability?',
-      answer: 'Pending means a client has requested that time, but the cleaner hasn&apos;t confirmed yet. Cleaners can manage this in their dashboard.'
+      question: 'What does "Pending" mean on the cleaner\'s availability?',
+      answer: 'Pending means a client has requested that time, but the cleaner hasn\'t confirmed yet. Cleaners can manage this in their dashboard.'
     },
     {
       question: 'Is my data secure?',
@@ -31,7 +52,7 @@ export default function FAQPage() {
     },
     {
       question: 'How do I reset my password?',
-      answer: 'Go to the login page and click &quot;Forgot Password.&quot; Enter your email and follow the instructions to reset it securely.'
+      answer: 'Go to the login page and click "Forgot Password." Enter your email and follow the instructions to reset it securely.'
     },
     {
       question: 'What if no cleaners show up for my postcode?',

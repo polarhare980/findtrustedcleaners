@@ -68,7 +68,7 @@ export default function LoginPage() {
           <nav className="space-x-6 text-sm font-medium">
             <Link href="/" className="hover:text-gray-200">Home</Link>
             <Link href="/cleaners" className="hover:text-gray-200">Find a Cleaner</Link>
-            <Link href="/register/cleaners/" className="hover:text-gray-200">List Yourself</Link>
+            <Link href="/register/cleaners" className="hover:text-gray-200">List Yourself</Link>
             <Link href="/how-it-works" className="hover:text-gray-200">How It Works</Link>
             <Link href="/blog" className="hover:text-gray-200">Blog</Link>
           </nav>
@@ -122,9 +122,14 @@ export default function LoginPage() {
               Log In as {userType.charAt(0).toUpperCase() + userType.slice(1)}
             </button>
             <div className="flex justify-between text-sm mt-2">
-              <Link href="/forgot-password" className="text-[#0D9488] hover:underline">Forgot password?</Link>
-              <Link href="/register/cleaners/" className="text-[#0D9488] hover:underline">
-                Register as a Cleaner
+              <Link href="/forgot-password" className="text-[#0D9488] hover:underline">
+                Forgot password?
+              </Link>
+              <Link
+                href={userType === 'cleaner' ? '/register/cleaners' : '/register/clients'}
+                className="text-[#0D9488] hover:underline"
+              >
+                Register as a {userType === 'cleaner' ? 'Cleaner' : 'Client'}
               </Link>
             </div>
           </form>

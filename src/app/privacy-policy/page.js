@@ -1,22 +1,34 @@
 'use client';
 
-import Head from 'next/head';
 import Link from 'next/link';
 import Image from 'next/image';
+
+// ✅ SEO Meta Tags
+export const metadata = {
+  title: 'Privacy Policy | FindTrustedCleaners',
+  description: 'Privacy Policy for FindTrustedCleaners. Learn how we collect, use, and protect your data.',
+  keywords: 'Privacy, Data Policy, FindTrustedCleaners, GDPR, Cookies, Personal Information',
+  openGraph: {
+    title: 'Privacy Policy | FindTrustedCleaners',
+    description: 'How we collect, use, and protect personal data at FindTrustedCleaners.',
+    url: 'https://www.findtrustedcleaners.co.uk/privacy-policy',
+    siteName: 'FindTrustedCleaners',
+    images: [
+      {
+        url: 'https://www.findtrustedcleaners.co.uk/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Privacy Policy - FindTrustedCleaners',
+      },
+    ],
+    type: 'website',
+  },
+  robots: 'index, follow',
+};
 
 export default function PrivacyPolicyPage() {
   return (
     <main className="min-h-screen bg-white text-gray-700">
-      <Head>
-        <title>Privacy Policy | FindTrustedCleaners</title>
-        <meta name="description" content="Privacy Policy for FindTrustedCleaners. Learn how we collect, use, and protect your data." />
-        <meta name="keywords" content="Privacy, Data Policy, FindTrustedCleaners, GDPR, Cookies, Personal Information" />
-        <meta name="robots" content="index, follow" />
-        <meta property="og:title" content="Privacy Policy | FindTrustedCleaners" />
-        <meta property="og:description" content="How we collect, use, and protect personal data at FindTrustedCleaners." />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://www.findtrustedcleaners.co.uk/privacy-policy" />
-      </Head>
 
       <header className="bg-[#0D9488] text-white py-4 px-6 shadow">
         <div className="flex justify-between items-center">

@@ -1,21 +1,33 @@
 'use client';
 
-import Head from 'next/head';
 import Link from 'next/link';
 import Image from 'next/image';
+
+// ✅ SEO Meta Tags for App Router
+export const metadata = {
+  title: 'About Us | FindTrustedCleaners',
+  description: 'Learn about the family-run team behind FindTrustedCleaners, helping connect reliable local cleaners with households across the UK.',
+  keywords: 'About FindTrustedCleaners, Oven Detailing, family-run cleaning, trusted local cleaners, home services',
+  openGraph: {
+    title: 'About Us | FindTrustedCleaners',
+    description: 'Family-run and friendly, we created FindTrustedCleaners to connect trusted local cleaners with people who need help at home.',
+    url: 'https://www.findtrustedcleaners.co.uk/about',
+    siteName: 'FindTrustedCleaners',
+    images: [
+      {
+        url: 'https://www.findtrustedcleaners.co.uk/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'FindTrustedCleaners About Us',
+      },
+    ],
+    type: 'website',
+  },
+};
 
 export default function AboutPage() {
   return (
     <main className="min-h-screen bg-white text-gray-700">
-      <Head>
-        <title>About Us | FindTrustedCleaners</title>
-        <meta name="description" content="Learn about the family-run team behind FindTrustedCleaners, helping connect reliable local cleaners with households across the UK." />
-        <meta name="keywords" content="About FindTrustedCleaners, Oven Detailing, family-run cleaning, trusted local cleaners, home services" />
-        <meta property="og:title" content="About Us | FindTrustedCleaners" />
-        <meta property="og:description" content="Family-run and friendly, we're the team behind Oven Detailing – and we created FindTrustedCleaners to connect trusted local cleaners with people who need help at home." />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://www.findtrustedcleaners.co.uk/about" />
-      </Head>
 
       {/* Header */}
       <header className="bg-[#0D9488] text-white py-4 px-6 shadow">
