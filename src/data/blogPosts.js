@@ -1,1 +1,3 @@
-import blogPosts from '@/data/blogPosts';
+const blogPosts = [];
+
+export default blogPosts;
