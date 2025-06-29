@@ -64,7 +64,7 @@ export default function FindCleanerPage() {
         <div className="mb-6 text-center">
           <Link
             href="/register/client"
-            className="inline-block bg-[#0D9488] text-white px-4 py-2 rounded shadow hover:bg-teal-700"
+            className="cta-button"
           >
             Register as a Client
           </Link>
@@ -102,10 +102,16 @@ export default function FindCleanerPage() {
 
         <div className="grid gap-4">
           {filteredCleaners.length === 0 ? (
-            <p className="text-gray-500 text-center">No cleaners found matching criteria.</p>
+            <div className="empty-state">
+              <p>No cleaners found matching your search criteria.</p>
+              <p>Please check back soon — new cleaners are registering all the time!</p>
+              <Link href="/" className="cta-button">
+                Back to Home
+              </Link>
+            </div>
           ) : (
             filteredCleaners.map((cleaner) => (
-              <div key={cleaner._id} className="p-4 border rounded shadow bg-white bg-opacity-90">
+              <div key={cleaner._id} className="cleaner-card">
                 <div className="flex justify-between items-center mb-2">
                   <div>
                     <h2 className="text-xl font-semibold">{cleaner.realName}</h2>
@@ -113,14 +119,14 @@ export default function FindCleanerPage() {
                     <p className="text-sm">💷 {cleaner.rates} | ⭐ {cleaner.rating || 'Unrated'}</p>
                   </div>
                   <div>
-                    <span className={`px-2 py-1 text-sm rounded ${cleaner.bookingStatus === 'pending' ? 'bg-yellow-400' : cleaner.bookingStatus === 'available' ? 'bg-green-500' : 'bg-red-400'} text-white`}>
+                    <span className={`status-badge ${cleaner.bookingStatus === 'pending' ? 'status-pending' : cleaner.bookingStatus === 'available' ? 'status-available' : 'status-booked'}`}>
                       {cleaner.bookingStatus?.charAt(0).toUpperCase() + cleaner.bookingStatus?.slice(1) || 'Unknown'}
                     </span>
                   </div>
                 </div>
                 <Link
                   href={`/cleaners/${cleaner._id}`}
-                  className="inline-block mt-2 bg-[#0D9488] text-white px-4 py-2 rounded hover:bg-teal-700"
+                  className="cta-button mt-2 inline-block"
                 >
                   View Profile
                 </Link>

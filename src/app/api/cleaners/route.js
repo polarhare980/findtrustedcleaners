@@ -8,7 +8,7 @@ export async function GET(req) {
   await dbConnect();
   const { searchParams } = new URL(req.url);
   const id = searchParams.get('id');
-  const postcode = searchParams.get('postcode') || '';
+  const postcode = searchParams.get('postcode')?.trim() || '';
   const minRating = parseFloat(searchParams.get('minRating')) || 0;
   const bookingStatus = searchParams.get('bookingStatus') || 'all';
 
@@ -23,7 +23,7 @@ export async function GET(req) {
 
     const query = {};
 
-    if (postcode) {
+    if (postcode && postcode.length >= 2) {
       query.postcode = { $regex: postcode, $options: 'i' };
     }
 
@@ -35,7 +35,10 @@ export async function GET(req) {
       query.bookingStatus = bookingStatus;
     }
 
-    const cleaners = await Cleaner.find(query).select('-password');
+    // ✅ Prioritise premium cleaners first
+    const cleaners = await Cleaner.find(query)
+      .select('-password')
+      .sort({ isPremium: -1 }); // Premium first
 
     return NextResponse.json({ success: true, cleaners }, { status: 200 });
   } catch (err) {

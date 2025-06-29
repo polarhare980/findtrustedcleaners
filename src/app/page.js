@@ -1,24 +1,30 @@
 'use client';
 
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Head from "next/head";
-import Link from "next/link";
-
-function isSafeEmbed(code) {
-  const hasIframe = code.includes('<iframe') && code.includes('src=');
-  const forbidden = ['<script', '<style', 'onerror', 'onload', 'javascript:'];
-  const lower = code.toLowerCase();
-  const containsForbidden = forbidden.some(frag => lower.includes(frag));
-  return hasIframe && !containsForbidden;
-}
+import Head from 'next/head';
+import Link from 'next/link';
 
 export default function HomePage() {
   const [mounted, setMounted] = useState(false);
+  const router = useRouter();
+  const [postcode, setPostcode] = useState('');
+  const [propertySize, setPropertySize] = useState('studio');
+  const [cleaningType, setCleaningType] = useState('regular');
+  const [estimatedPrice, setEstimatedPrice] = useState(null);
+  const [showPrice, setShowPrice] = useState(false);
   const [premiumCleaners, setPremiumCleaners] = useState([]);
   const [freeCleaners, setFreeCleaners] = useState([]);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
+
+  const priceChart = {
+    studio: { regular: 200, deep: 200, tenancy: 200 },
+    '1-bed': { regular: 240, deep: 240, tenancy: 240 },
+    '2-bed': { regular: 285, deep: 285, tenancy: 285 },
+    '3-bed': { regular: 330, deep: 330, tenancy: 330 },
+    '4-5-bed': { regular: 404, deep: 404, tenancy: 404 },
+    '6+-bed': { regular: 450, deep: 450, tenancy: 450 },
+  };
 
   useEffect(() => {
     if (typeof window !== 'undefined') setMounted(true);
@@ -27,7 +33,7 @@ export default function HomePage() {
   useEffect(() => {
     const fetchCleaners = async () => {
       try {
-        const res = await fetch("/api/cleaners");
+        const res = await fetch('/api/cleaners');
         const { cleaners } = await res.json();
 
         const premium = cleaners.filter(c => c.isPremium).slice(0, 5);
@@ -36,7 +42,7 @@ export default function HomePage() {
         setPremiumCleaners(premium);
         setFreeCleaners(free);
       } catch (err) {
-        console.error("Failed to fetch cleaners:", err.message);
+        console.error('Failed to fetch cleaners:', err.message);
       } finally {
         setLoading(false);
       }
@@ -54,13 +60,19 @@ export default function HomePage() {
     }
   };
 
+  const handleCalculatePrice = () => {
+    const price = priceChart[propertySize][cleaningType];
+    setEstimatedPrice(price);
+    setShowPrice(true);
+  };
+
   if (!mounted) return null;
 
   return (
     <>
       <Head>
-        <title>Find Trusted Cleaners | Trusted Local Cleaning Services UK</title>
-        <meta name="description" content="Browse and book trusted, verified cleaners in your area. Rated professionals for your home cleaning needs." />
+        <title>Compare House Cleaning Services Near You | Find Trusted Cleaners</title>
+        <meta name="description" content="Compare domestic cleaners across the UK. Get instant quotes, find local cleaners, and book easily with Find Trusted Cleaners." />
       </Head>
 
       <main className="relative min-h-screen overflow-hidden text-gray-700">
@@ -79,15 +91,49 @@ export default function HomePage() {
         </header>
 
         {/* Hero Section */}
-        <section className="text-center py-10 bg-white/40 backdrop-blur rounded-xl mx-4 my-6">
-          <h1 className="text-4xl font-bold text-[#0D9488]">Find Trusted Cleaners</h1>
-          <p className="text-base text-gray-700 mt-2">Real Cleaners. Real Reviews. Book Local.</p>
-        </section>
+        <section className="text-center py-12 bg-white/70 backdrop-blur rounded-xl mx-4 my-6">
+          <h1 className="text-4xl font-bold text-[#0D9488] mb-4">Compare House Cleaning Services Near You</h1>
+          <p className="text-base text-gray-700 mb-6">Real cleaners. Local prices. Book quickly and easily.</p>
 
-        {/* CTA Section */}
-        <section className="flex flex-col sm:flex-row justify-center gap-6 px-6 py-8">
-          <Link href="/cleaners" className="bg-[#0D9488] text-white px-6 py-4 rounded shadow hover:bg-teal-700 text-center w-full sm:w-auto active-tap">Find a Cleaner</Link>
-          <Link href="/register/cleaners" className="bg-white text-[#0D9488] border border-[#0D9488] px-6 py-4 rounded shadow hover:bg-gray-100 text-center w-full sm:w-auto active-tap">List Yourself</Link>
+          {/* Postcode Search */}
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold mb-2">Search Cleaners by Postcode</h2>
+            <div className="flex flex-col sm:flex-row justify-center gap-4">
+              <input type="text" value={postcode} onChange={(e) => setPostcode(e.target.value)} placeholder="Enter Postcode" className="p-2 border rounded w-full sm:w-auto" />
+              <button onClick={() => router.push(`/cleaners?postcode=${postcode}`)} className="bg-[#0D9488] text-white px-6 py-2 rounded shadow hover:bg-teal-700 w-full sm:w-auto active-tap">Search Cleaners</button>
+            </div>
+          </div>
+
+          {/* Price Calculator */}
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold mb-2">Calculate Estimated Cleaning Cost</h2>
+            <div className="flex flex-col sm:flex-row justify-center gap-4">
+              <select value={propertySize} onChange={(e) => setPropertySize(e.target.value)} className="p-2 border rounded w-full sm:w-auto">
+                <option value="studio">Studio</option>
+                <option value="1-bed">1 Bed</option>
+                <option value="2-bed">2 Bed</option>
+                <option value="3-bed">3 Bed</option>
+                <option value="4-5-bed">4 or 5 Bed</option>
+                <option value="6+-bed">6 or More Bed</option>
+              </select>
+
+              <select value={cleaningType} onChange={(e) => setCleaningType(e.target.value)} className="p-2 border rounded w-full sm:w-auto">
+                <option value="regular">Regular Clean</option>
+                <option value="deep">Deep Clean</option>
+                <option value="tenancy">End of Tenancy</option>
+              </select>
+
+              <button onClick={handleCalculatePrice} className="bg-[#0D9488] text-white px-6 py-2 rounded shadow hover:bg-teal-700 w-full sm:w-auto active-tap">Calculate Price</button>
+            </div>
+
+            {showPrice && estimatedPrice && (
+              <div className="mt-4 text-lg text-gray-800">
+                <p>Estimated Price: £{estimatedPrice}</p>
+                <p className="text-sm text-gray-600 mt-2">Remember these are ball park averages. To get a better idea of typical cost of cleaning services, please search your postcode.</p>
+                <p className="text-sm text-gray-600 mt-1">Average hourly rate: £22 - £27</p>
+              </div>
+            )}
+          </div>
         </section>
 
         {/* Premium Cleaners */}
@@ -107,6 +153,50 @@ export default function HomePage() {
           )}
         </section>
 
+        {/* How It Works Section */}
+        <section className="px-6 py-10 bg-white/80 backdrop-blur-md rounded-xl mx-4 my-6">
+          <h2 className="text-2xl font-semibold mb-8 text-center text-[#0D9488]">How It Works</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 text-center">
+            <div className="flex flex-col items-center">
+              <div className="w-16 h-16 bg-[#0D9488] text-white rounded-full flex items-center justify-center text-2xl mb-4 shadow-lg">1</div>
+              <h3 className="text-xl font-semibold mb-2">Search</h3>
+              <p>Enter your postcode to find trusted cleaners in your area.</p>
+            </div>
+            <div className="flex flex-col items-center">
+              <div className="w-16 h-16 bg-[#0D9488] text-white rounded-full flex items-center justify-center text-2xl mb-4 shadow-lg">2</div>
+              <h3 className="text-xl font-semibold mb-2">Compare</h3>
+              <p>Review cleaner profiles, availability, and pricing to choose the best fit.</p>
+            </div>
+            <div className="flex flex-col items-center">
+              <div className="w-16 h-16 bg-[#0D9488] text-white rounded-full flex items-center justify-center text-2xl mb-4 shadow-lg">3</div>
+              <h3 className="text-xl font-semibold mb-2">Book</h3>
+              <p>Request your preferred cleaner and confirm your booking online.</p>
+            </div>
+          </div>
+
+          {/* Registration Buttons */}
+          <div className="flex flex-col sm:flex-row justify-center gap-6 mt-10">
+            <Link href="/register/cleaners" className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-full text-lg font-semibold shadow-lg text-center w-full sm:w-auto active-tap transition-transform transform hover:scale-105">
+              Register as a Cleaner
+            </Link>
+            <Link href="/register/clients" className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full text-lg font-semibold shadow-lg text-center w-full sm:w-auto active-tap transition-transform transform hover:scale-105">
+              Register as a Client
+            </Link>
+          </div>
+        </section>
+
+        {/* Why Choose Us Section */}
+        <section className="px-6 py-10 bg-white/80 backdrop-blur-md rounded-xl mx-4 my-6">
+          <h2 className="text-2xl font-semibold mb-4 text-center text-[#0D9488]">Why Choose Us?</h2>
+          <ul className="list-disc list-inside text-gray-700 text-base max-w-2xl mx-auto">
+            <li>All cleaners are independently verified and vetted.</li>
+            <li>See cleaner availability before booking.</li>
+            <li>No subscriptions, simple pay-per-booking model.</li>
+            <li>Real customer reviews to help you decide with confidence.</li>
+            <li>Easy-to-use platform with transparent pricing.</li>
+          </ul>
+        </section>
+
         {/* Free Cleaners */}
         <section className="px-6 py-10">
           <h2 className="text-2xl font-semibold mb-4 text-center text-white drop-shadow">Free Listed Cleaners</h2>
@@ -122,26 +212,6 @@ export default function HomePage() {
               ))}
             </div>
           )}
-        </section>
-
-        {/* Features Section */}
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-6 px-6 py-10 bg-white/40 backdrop-blur-md rounded-xl mx-4 my-6">
-          <div>
-            <h3 className="text-xl font-semibold mb-2 text-[#0D9488]">For Cleaners</h3>
-            <ul className="list-disc list-inside text-gray-700 text-base">
-              <li>Get new clients without paying for leads</li>
-              <li>Showcase your availability clearly</li>
-              <li>Collect reviews and boost trust</li>
-            </ul>
-          </div>
-          <div>
-            <h3 className="text-xl font-semibold mb-2 text-[#0D9488]">For Clients</h3>
-            <ul className="list-disc list-inside text-gray-700 text-base">
-              <li>See cleaner availability before booking</li>
-              <li>Read verified reviews</li>
-              <li>Simple booking with no subscriptions</li>
-            </ul>
-          </div>
         </section>
 
         {/* Footer */}
@@ -161,9 +231,9 @@ export default function HomePage() {
           <p className="mb-2">&copy; {new Date().getFullYear()} FindTrustedCleaners. All rights reserved.</p>
 
           <p className="text-xs">
-            FindTrustedCleaners is committed to GDPR compliance. Read our{" "}
-            <Link href="/privacy-policy" className="underline active-tap">Privacy Policy</Link>{" "} and{" "}
-            <Link href="/cookie-policy" className="underline active-tap">Cookie Policy</Link>{" "} for details on how we protect your data.
+            FindTrustedCleaners is committed to GDPR compliance. Read our{' '}
+            <Link href="/privacy-policy" className="underline active-tap">Privacy Policy</Link>{' '} and{' '}
+            <Link href="/cookie-policy" className="underline active-tap">Cookie Policy</Link>{' '} for details on how we protect your data.
             You may <Link href="/contact" className="underline active-tap">contact us</Link> at any time to manage your personal information.
           </p>
         </footer>
@@ -178,15 +248,14 @@ export default function HomePage() {
   );
 }
 
-// Cleaner Card Component
 function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
   return (
     <div className="min-w-[250px] border rounded shadow p-4 bg-white bg-opacity-90 flex-shrink-0">
       {isPremium && <span className="block mb-2 text-xs bg-yellow-400 text-white px-2 py-1 rounded">Premium Cleaner</span>}
-      <img src={cleaner.image || "/profile-placeholder.png"} alt={cleaner.realName} className="w-full h-32 object-cover rounded mb-2" />
+      <img src={cleaner.image || '/profile-placeholder.png'} alt={cleaner.realName} className="w-full h-32 object-cover rounded mb-2" />
       <p className="font-bold">{cleaner.realName}</p>
-      <p>⭐ {cleaner.rating || "Not rated yet"}</p>
-      <p>💷 {cleaner.rate ? `£${cleaner.rate}/hr` : "Rate not set"}</p>
+      <p>⭐ {cleaner.rating || 'Not rated yet'}</p>
+      <p>💷 {cleaner.rate ? `£${cleaner.rate}/hr` : 'Rate not set'}</p>
 
       {(cleaner.googleReviewUrl || cleaner.facebookReviewUrl) && (
         <div className="mt-2 flex flex-col gap-1 text-sm">
@@ -203,10 +272,6 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
         </div>
       )}
 
-      {cleaner.embedCode && isSafeEmbed(cleaner.embedCode) && (
-        <div className="mt-2" dangerouslySetInnerHTML={{ __html: cleaner.embedCode }} />
-      )}
-
       <div className="mt-2 space-y-1">
         <Link href={`/cleaners/${cleaner._id}`} className="block w-full text-center bg-blue-600 text-white py-1 rounded hover:bg-blue-700 active-tap">View Profile</Link>
         <button onClick={() => handleBookingRequest(cleaner._id)} className="w-full bg-green-500 text-white py-1 rounded hover:bg-green-600 active-tap">Request Booking</button>
@@ -214,3 +279,4 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
     </div>
   );
 }
+
