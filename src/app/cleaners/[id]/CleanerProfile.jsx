@@ -15,9 +15,9 @@ function isSafeEmbed(code) {
 }
 
 export default function CleanerProfile() {
-  // ✅ Your existing client code exactly as you wrote it
   const { id } = useParams();
   const router = useRouter();
+
   const [mounted, setMounted] = useState(false);
   const [cleaner, setCleaner] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -90,7 +90,6 @@ export default function CleanerProfile() {
   };
 
   if (!mounted) return null;
-
   if (loading) return <LoadingSpinner />;
 
   if (error) {
@@ -103,10 +102,6 @@ export default function CleanerProfile() {
   }
 
   return (
-    // ✅ Your entire JSX exactly as you have it here
-    // ✅ (No changes needed to the render section)
-    // ✅ You already wrote this perfectly
-    // ✅ Keep your booking buttons, availability grid, all as-is
     <div className="max-w-xl mx-auto p-6 border shadow rounded-xl mt-6 bg-white">
       {success && (
         <div className="p-4 mb-4 text-green-700 bg-green-50 border border-green-200 rounded text-center">
@@ -165,15 +160,12 @@ export default function CleanerProfile() {
           </div>
 
           {cleaner.embedCode && isSafeEmbed(cleaner.embedCode) && (
-            <div
-              className="mt-4"
-              dangerouslySetInnerHTML={{ __html: cleaner.embedCode }}
-            />
+            <div className="mt-4" dangerouslySetInnerHTML={{ __html: cleaner.embedCode }} />
           )}
         </div>
       )}
 
-      {/* ✅ Availability Grid (Desktop) */}
+      {/* ✅ Availability Grid - Desktop View */}
       <div className="mt-6">
         <h2 className="font-semibold mb-2">Availability:</h2>
 
@@ -210,7 +202,7 @@ export default function CleanerProfile() {
           ))}
         </div>
 
-        {/* Mobile View */}
+        {/* ✅ Mobile View */}
         <div className="sm:hidden space-y-4 mt-4">
           {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => (
             <div key={day}>

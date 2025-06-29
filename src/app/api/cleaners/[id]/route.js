@@ -1,5 +1,6 @@
 import { connectToDatabase } from '@/lib/db';
 import Cleaner from '@/models/Cleaner';
+import Purchase from '@/models/Purchase'; // ✅ New: Purchase Model
 import { NextResponse } from 'next/server';
 import { protectRoute } from '@/lib/auth';
 
@@ -41,7 +42,7 @@ export async function PUT(req, { params }) {
   }
 }
 
-// GET - Fetch single cleaner profile (💬 Public)
+// GET - Fetch single cleaner profile (💬 Public with Private Split)
 export async function GET(req, { params }) {
   await connectToDatabase();
   const { id } = params;
@@ -52,7 +53,39 @@ export async function GET(req, { params }) {
       return NextResponse.json({ success: false, message: 'Cleaner not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, cleaner });
+    // Public Data
+    const publicData = {
+      realName: cleaner.realName,
+      postcode: cleaner.postcode,
+      rates: cleaner.rates,
+      services: cleaner.services,
+      availability: cleaner.availability,
+      profileImage: cleaner.profileImage || '/profile-placeholder.png',
+    };
+
+    // By default, only return public data
+    let responseData = { ...publicData };
+    let hasAccess = false;
+
+    // 🔐 Check if the user has purchased access
+    const { valid, user } = await protectRoute();
+
+    if (valid && user && user.type === 'client') {
+      const purchase = await Purchase.findOne({ clientId: user.id, cleanerId: id });
+
+      if (purchase) {
+        hasAccess = true;
+
+        responseData = {
+          ...publicData,
+          phone: cleaner.phone,
+          email: cleaner.email,
+          companyName: cleaner.companyName,
+        };
+      }
+    }
+
+    return NextResponse.json({ success: true, cleaner: responseData, hasAccess });
   } catch (err) {
     console.error('❌ Error fetching cleaner:', err.message);
     return NextResponse.json({ success: false, message: 'Error fetching cleaner' }, { status: 500 });
