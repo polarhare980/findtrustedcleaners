@@ -1,41 +1,20 @@
-import jwt from 'jsonwebtoken';
+// File: /app/api/auth/me/route.js
+
+import { verifyToken } from '@/lib/auth';
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 
-// ✅ Require JWT_SECRET to be set
-if (!process.env.JWT_SECRET) {
-  throw new Error('JWT_SECRET not defined in environment variables');
-}
-
-const JWT_SECRET = process.env.JWT_SECRET;
-
-// ✅ Create a JWT token
-export function createToken(payload) {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
-}
-
-// ✅ Get and verify token using Next.js cookies API
-export function verifyToken() {
+export async function GET(req) {
   try {
-    const cookieStore = cookies();
-    const token = cookieStore.get('token')?.value;
+    // ✅ Correct: Call verifyToken with no arguments
+    const decoded = verifyToken();
 
-    if (!token) return null;
+    if (!decoded) {
+      return NextResponse.json({ success: false, message: 'No token provided or invalid' }, { status: 401 });
+    }
 
-    return jwt.verify(token, JWT_SECRET);
+    return NextResponse.json({ success: true, user: decoded });
   } catch (err) {
-    console.error('❌ JWT verification error:', err.message);
-    return null;
+    console.error('❌ Auth check error:', err.message);
+    return NextResponse.json({ success: false, message: 'Invalid token' }, { status: 401 });
   }
-}
-
-// ✅ Middleware-style protection for API routes
-export async function protectRoute() {
-  const decoded = verifyToken();
-
-  if (!decoded) {
-    return { valid: false, response: NextResponse.json({ success: false, message: 'Not authenticated.' }, { status: 401 }) };
-  }
-
-  return { valid: true, user: decoded };
 }
