@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import blogPosts from '@/data/blogPosts';
-import { motion } from 'framer-motion';
+
 
 export default function BlogPage() {
   return (
