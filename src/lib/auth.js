@@ -34,3 +34,4 @@ export async function protectRoute(request) {
 
   return { user };
 }
+
