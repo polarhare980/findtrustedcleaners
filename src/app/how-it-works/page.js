@@ -47,7 +47,7 @@ export default function HowItWorks() {
                 <li>See available hours, ratings, and pricing.</li>
                 <li>Request a time slot with your chosen cleaner.</li>
                 <li>No payment is taken until the cleaner approves your request.</li>
-                <li>Once approved, you complete the payment and unlock the cleaner's verified contact information.</li>
+                <li>Once approved, you complete the payment and unlock the cleaner&apos;s verified contact information.</li>
                 <li>Requested slots are marked to prevent double booking.</li>
               </ol>
             </div>
