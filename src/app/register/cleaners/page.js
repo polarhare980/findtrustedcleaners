@@ -22,7 +22,7 @@ export default function CleanerRegister() {
     rates: '',
     availability: {},
     services: [],
-    businessInsurance: false, // Added to handle insurance checkbox
+    businessInsurance: false, // Moved business insurance checkbox here
   });
 
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -149,14 +149,13 @@ export default function CleanerRegister() {
                     {service}
                   </label>
                 ))}
+                {/* Business Insurance Checkbox moved here */}
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" name="businessInsurance" checked={form.businessInsurance} onChange={handleChange} className="accent-teal-700" />
+                  <span>I have business insurance</span>
+                </label>
               </div>
             </div>
-
-            {/* Business Insurance Checkbox */}
-            <label className="flex items-center gap-2 text-sm mt-4">
-              <input type="checkbox" name="businessInsurance" checked={form.businessInsurance} onChange={handleChange} className="accent-teal-700" />
-              <span>I have business insurance</span>
-            </label>
 
             <div>
               <h2 className="text-lg font-semibold mt-4 mb-2">Set Your Availability</h2>

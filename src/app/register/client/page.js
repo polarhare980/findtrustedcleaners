@@ -11,7 +11,9 @@ function ClientRegisterPage() {
     email: '',
     password: '',
     confirmPassword: '',
-    address: '',
+    houseNameNumber: '',
+    street: '',
+    county: '',
     postcode: '',
     phone: ''
   });
@@ -119,8 +121,17 @@ function ClientRegisterPage() {
           </div>
 
           <input type="password" name="confirmPassword" placeholder="Confirm Password" value={form.confirmPassword} onChange={handleChange} className="w-full p-2 border rounded bg-white" required />
-          <input type="text" name="address" placeholder="Address" value={form.address} onChange={handleChange} className="w-full p-2 border rounded bg-white" />
-          <input type="text" name="postcode" placeholder="Postcode" value={form.postcode} onChange={handleChange} className="w-full p-2 border rounded bg-white" />
+          
+          {/* Split Address into Separate Fields */}
+          <div className="grid grid-cols-2 gap-4">
+            <input type="text" name="houseNameNumber" placeholder="House Name/Number" value={form.houseNameNumber} onChange={handleChange} className="w-full p-2 border rounded bg-white" required />
+            <input type="text" name="street" placeholder="Street" value={form.street} onChange={handleChange} className="w-full p-2 border rounded bg-white" required />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <input type="text" name="county" placeholder="County" value={form.county} onChange={handleChange} className="w-full p-2 border rounded bg-white" required />
+            <input type="text" name="postcode" placeholder="Postcode" value={form.postcode} onChange={handleChange} className="w-full p-2 border rounded bg-white" required />
+          </div>
+
           <input type="tel" name="phone" placeholder="Phone Number" value={form.phone} onChange={handleChange} className="w-full p-2 border rounded bg-white" />
 
           <label className="flex items-center space-x-2 text-sm">

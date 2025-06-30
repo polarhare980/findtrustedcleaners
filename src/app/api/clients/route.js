@@ -19,7 +19,22 @@ export async function POST(req) {
     const hashedPassword = await bcrypt.hash(data.password, 10);
     data.password = hashedPassword;
 
-    const client = await Client.create(data);
+    // ✅ Ensure address is stored as an object with the updated address fields
+    const address = {
+      houseNameNumber: data.houseNameNumber,
+      street: data.street,
+      county: data.county,
+      postcode: data.postcode
+    };
+
+    // Create the new client with the updated address structure
+    const client = await Client.create({
+      fullName: data.fullName,
+      email: data.email,
+      password: data.password,
+      phone: data.phone,
+      address, // Address as an object
+    });
 
     return NextResponse.json({ success: true, id: client._id }, { status: 201 });
   } catch (err) {

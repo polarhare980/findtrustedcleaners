@@ -18,8 +18,14 @@ export async function connectToDatabase() {
   if (!cached.promise) {
     cached.promise = mongoose.connect(MONGODB_URI, {
       useNewUrlParser: true,
-      useUnifiedTopology: true
-    }).then((mongoose) => mongoose);
+      useUnifiedTopology: true,
+      useFindAndModify: false, // Avoids deprecation warning for findAndModify
+    })
+    .then((mongoose) => mongoose)
+    .catch((err) => {
+      console.error('MongoDB connection error:', err);
+      throw err;  // Rethrow the error after logging it
+    });
   }
 
   cached.conn = await cached.promise;
