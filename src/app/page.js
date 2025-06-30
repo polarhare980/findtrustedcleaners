@@ -187,17 +187,37 @@ export default function HomePage() {
 
         {/* Why Choose Us Section */}
         <section className="px-6 py-10 bg-white/80 backdrop-blur-md rounded-xl mx-4 my-6">
-          <h2 className="text-2xl font-semibold mb-4 text-center text-[#0D9488]">Why Choose Us?</h2>
-          <ul className="list-disc list-inside text-gray-700 text-base max-w-2xl mx-auto">
-            <li>All cleaners are independently verified and vetted.</li>
-            <li>See cleaner availability before booking.</li>
-            <li>No subscriptions, simple pay-per-booking model.</li>
-            <li>Real customer reviews to help you decide with confidence.</li>
-            <li>Easy-to-use platform with transparent pricing.</li>
-          </ul>
+          <h2 className="text-2xl font-semibold mb-6 text-center text-[#0D9488]">Why Choose Us?</h2>
+          <div className="flex flex-wrap justify-center gap-6">
+            <div className="p-6 bg-[#0D9488] text-white rounded-lg shadow-lg flex flex-col items-center max-w-xs">
+              <div className="w-16 h-16 bg-white text-[#0D9488] rounded-full flex items-center justify-center text-2xl mb-4">1</div>
+              <h3 className="text-xl font-semibold mb-2">Verified Cleaners</h3>
+              <p className="text-center">All cleaners are independently verified and vetted to ensure trust and reliability.</p>
+            </div>
+            <div className="p-6 bg-[#0D9488] text-white rounded-lg shadow-lg flex flex-col items-center max-w-xs">
+              <div className="w-16 h-16 bg-white text-[#0D9488] rounded-full flex items-center justify-center text-2xl mb-4">2</div>
+              <h3 className="text-xl font-semibold mb-2">Transparent Availability</h3>
+              <p className="text-center">View cleaner availability in real-time to book at your convenience.</p>
+            </div>
+            <div className="p-6 bg-[#0D9488] text-white rounded-lg shadow-lg flex flex-col items-center max-w-xs">
+              <div className="w-16 h-16 bg-white text-[#0D9488] rounded-full flex items-center justify-center text-2xl mb-4">3</div>
+              <h3 className="text-xl font-semibold mb-2">No Subscriptions</h3>
+              <p className="text-center">Enjoy a pay-per-booking model with no hidden fees or ongoing subscriptions.</p>
+            </div>
+            <div className="p-6 bg-[#0D9488] text-white rounded-lg shadow-lg flex flex-col items-center max-w-xs">
+              <div className="w-16 h-16 bg-white text-[#0D9488] rounded-full flex items-center justify-center text-2xl mb-4">4</div>
+              <h3 className="text-xl font-semibold mb-2">Real Customer Reviews</h3>
+              <p className="text-center">Read verified reviews from real customers to make confident decisions.</p>
+            </div>
+            <div className="p-6 bg-[#0D9488] text-white rounded-lg shadow-lg flex flex-col items-center max-w-xs">
+              <div className="w-16 h-16 bg-white text-[#0D9488] rounded-full flex items-center justify-center text-2xl mb-4">5</div>
+              <h3 className="text-xl font-semibold mb-2">Simple, Transparent Pricing</h3>
+              <p className="text-center">Our pricing is clear, simple, and easy to understand. No surprises.</p>
+            </div>
+          </div>
         </section>
 
-        {/* Free Cleaners */}
+        {/* Free Cleaners Section */}
         <section className="px-6 py-10">
           <h2 className="text-2xl font-semibold mb-4 text-center text-white drop-shadow">Free Listed Cleaners</h2>
 
@@ -279,4 +299,3 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
     </div>
   );
 }
-
