@@ -11,6 +11,9 @@ export default function CleanerRegister() {
   const [form, setForm] = useState({
     realName: '',
     companyName: '',
+    houseNameNumber: '',
+    street: '',
+    county: '',
     postcode: '',
     email: '',
     phone: '',
@@ -18,7 +21,8 @@ export default function CleanerRegister() {
     confirmPassword: '',
     rates: '',
     availability: {},
-    services: []
+    services: [],
+    businessInsurance: false, // Added to handle insurance checkbox
   });
 
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -47,14 +51,13 @@ export default function CleanerRegister() {
   };
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setForm(prev => ({
       ...prev,
-      [name]: name === 'rates' ? parseFloat(value) : value
+      [name]: type === 'checkbox' ? checked : value
     }));
   };
 
-  // ✅ Updated with safe fetch handling
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -119,14 +122,25 @@ export default function CleanerRegister() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <input name="realName" onChange={handleChange} value={form.realName} placeholder="Real Name" className="w-full p-2 border rounded text-[#0D9488] bg-white" required />
             <input name="companyName" onChange={handleChange} value={form.companyName} placeholder="Company Name" className="w-full p-2 border rounded text-[#0D9488] bg-white" required />
-            <input name="postcode" onChange={handleChange} value={form.postcode} placeholder="Postcode" className="w-full p-2 border rounded text-[#0D9488] bg-white" required />
+
+            {/* Address Fields */}
+            <div className="grid grid-cols-2 gap-4">
+              <input name="houseNameNumber" onChange={handleChange} value={form.houseNameNumber} placeholder="House Name/Number" className="w-full p-2 border rounded text-[#0D9488] bg-white" required />
+              <input name="street" onChange={handleChange} value={form.street} placeholder="Street" className="w-full p-2 border rounded text-[#0D9488] bg-white" required />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <input name="county" onChange={handleChange} value={form.county} placeholder="County" className="w-full p-2 border rounded text-[#0D9488] bg-white" required />
+              <input name="postcode" onChange={handleChange} value={form.postcode} placeholder="Postcode" className="w-full p-2 border rounded text-[#0D9488] bg-white" required />
+            </div>
+
             <input name="email" onChange={handleChange} value={form.email} placeholder="Email" type="email" className="w-full p-2 border rounded text-[#0D9488] bg-white" required />
             <input name="phone" onChange={handleChange} value={form.phone} placeholder="Phone" type="tel" className="w-full p-2 border rounded text-[#0D9488] bg-white" required />
             <input name="password" onChange={handleChange} value={form.password} placeholder="Password" type="password" className="w-full p-2 border rounded text-[#0D9488] bg-white" required />
             <input name="confirmPassword" onChange={handleChange} value={form.confirmPassword} placeholder="Confirm Password" type="password" className="w-full p-2 border rounded text-[#0D9488] bg-white" required />
             <input name="rates" onChange={handleChange} value={form.rates} placeholder="Hourly Rate (e.g. £15/hr)" className="w-full p-2 border rounded text-[#0D9488] bg-white" required />
 
-            <div>
+            {/* Extras You Offer Section in White Box */}
+            <div className="p-4 bg-white rounded border shadow-sm">
               <h2 className="text-lg font-semibold mb-2 text-gray-600">Extras You Offer</h2>
               <div className="grid grid-cols-2 gap-2 text-gray-600">
                 {servicesList.map(service => (
@@ -137,6 +151,12 @@ export default function CleanerRegister() {
                 ))}
               </div>
             </div>
+
+            {/* Business Insurance Checkbox */}
+            <label className="flex items-center gap-2 text-sm mt-4">
+              <input type="checkbox" name="businessInsurance" checked={form.businessInsurance} onChange={handleChange} className="accent-teal-700" />
+              <span>I have business insurance</span>
+            </label>
 
             <div>
               <h2 className="text-lg font-semibold mt-4 mb-2">Set Your Availability</h2>

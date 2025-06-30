@@ -12,6 +12,7 @@ export async function POST(req) {
 
   try {
     const remaining = await limiter.check(req, 5, 'LOGIN_LIMIT').catch(() => null);
+    console.log('Remaining attempts:', remaining); // Debugging rate limit
     if (remaining !== null && remaining <= 0) {
       return NextResponse.json({ success: false, message: 'Too many login attempts, please try later.' }, { status: 429 });
     }
@@ -39,6 +40,7 @@ export async function POST(req) {
     }
 
     const passwordMatch = await bcrypt.compare(password, user.password);
+    console.log('Password match:', passwordMatch); // Debugging password match
 
     if (!passwordMatch) {
       console.warn(`❌ Password mismatch for email: ${email} as ${userType}`);
@@ -54,6 +56,9 @@ export async function POST(req) {
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7, // 7 days
     });
+
+    console.log('Token:', token); // Debugging token creation
+    console.log('Cookie:', cookie); // Debugging cookie
 
     return new NextResponse(JSON.stringify({ success: true, id: user._id, type: userType }), {
       status: 200,

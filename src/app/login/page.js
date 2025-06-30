@@ -126,7 +126,7 @@ export default function LoginPage() {
                 Forgot password?
               </Link>
               <Link
-                href={userType === 'cleaner' ? '/register/cleaners' : '/register/clients'}
+                href={userType === 'cleaner' ? '/register/cleaners' : '/register/client'}
                 className="text-[#0D9488] hover:underline"
               >
                 Register as a {userType === 'cleaner' ? 'Cleaner' : 'Client'}

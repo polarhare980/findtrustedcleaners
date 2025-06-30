@@ -64,7 +64,23 @@ export async function POST(req) {
     const hashedPassword = await bcrypt.hash(data.password, 10);
     data.password = hashedPassword;
 
-    const cleaner = await Cleaner.create(data);
+    // Ensure the new fields (address and insurance) are saved
+    const cleaner = await Cleaner.create({
+      realName: data.realName,
+      companyName: data.companyName,
+      houseNameNumber: data.houseNameNumber,  // New field
+      street: data.street,                    // New field
+      county: data.county,                    // New field
+      postcode: data.postcode,
+      email: data.email,
+      phone: data.phone,
+      password: data.password,
+      rates: data.rates,
+      availability: data.availability,
+      services: data.services,
+      businessInsurance: data.businessInsurance, // New field for business insurance
+    });
+
     console.log('✅ Cleaner created:', cleaner._id);
 
     return NextResponse.json({ success: true, id: cleaner._id }, { status: 201 });
