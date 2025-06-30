@@ -37,22 +37,22 @@ export default function HowItWorks() {
             Whether you're looking to book a trusted cleaner or list your own services, here's exactly how FindTrustedCleaners makes the process simple, transparent, and local.
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
             {/* Clients Section */}
-            <div className="bg-gray-50 p-6 rounded-lg shadow-md">
+            <div className="bg-gray-50 p-6 rounded-lg shadow-lg hover:shadow-2xl transition duration-300 ease-in-out transform hover:scale-105">
               <h2 className="text-2xl font-semibold mb-4 text-[#0D9488]">For Clients</h2>
               <ul className="space-y-4 text-lg text-gray-700">
                 <li><span className="font-bold text-[#0D9488]">🧹</span> Browse local cleaners for free</li>
                 <li><span className="font-bold text-[#0D9488]">📅</span> See available hours, ratings, and pricing</li>
                 <li><span className="font-bold text-[#0D9488]">📝</span> Request a time slot with your chosen cleaner</li>
                 <li><span className="font-bold text-[#0D9488]">⏳</span> No payment is taken until the cleaner approves your request</li>
-                <li><span className="font-bold text-[#0D9488]">✅</span> Once approved, you complete the payment and unlock the cleaner&apos;s verified contact info</li> {/* Escaped apostrophe */}
+                <li><span className="font-bold text-[#0D9488]">✅</span> Once approved, you complete the payment and unlock the cleaner&apos;s verified contact info</li>
                 <li><span className="font-bold text-[#0D9488]">🔓</span> Pending markers will be shown on requested slots to avoid double booking</li>
               </ul>
             </div>
 
             {/* Cleaners Section */}
-            <div className="bg-gray-50 p-6 rounded-lg shadow-md">
+            <div className="bg-gray-50 p-6 rounded-lg shadow-lg hover:shadow-2xl transition duration-300 ease-in-out transform hover:scale-105">
               <h2 className="text-2xl font-semibold mb-4 text-[#0D9488]">For Cleaners</h2>
               <ul className="space-y-4 text-lg text-gray-700">
                 <li><span className="font-bold text-[#0D9488]">🧼</span> Register your cleaning business for free</li>
