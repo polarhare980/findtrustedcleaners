@@ -46,7 +46,7 @@ export default function HowItWorks() {
                 <li><span className="font-bold text-[#0D9488]">📅</span> See available hours, ratings, and pricing</li>
                 <li><span className="font-bold text-[#0D9488]">📝</span> Request a time slot with your chosen cleaner</li>
                 <li><span className="font-bold text-[#0D9488]">⏳</span> No payment is taken until the cleaner approves your request</li>
-                <li><span className="font-bold text-[#0D9488]">✅</span> Once approved, you complete the payment and unlock the cleaner's verified contact info</li>
+                <li><span className="font-bold text-[#0D9488]">✅</span> Once approved, you complete the payment and unlock the cleaner&apos;s verified contact info</li> {/* Escaped apostrophe */}
                 <li><span className="font-bold text-[#0D9488]">🔓</span> Pending markers will be shown on requested slots to avoid double booking</li>
               </ul>
             </div>
