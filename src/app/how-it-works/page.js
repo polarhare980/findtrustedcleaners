@@ -1,4 +1,5 @@
 'use client';
+
 import Link from 'next/link';
 import Head from 'next/head';
 import Image from 'next/image';
@@ -10,13 +11,13 @@ export default function HowItWorks() {
         <title>How It Works | Find Trusted Cleaners</title>
         <meta name="description" content="Learn how Find Trusted Cleaners connects clients with reliable local cleaning professionals. Simple, transparent, and effective." />
         <meta name="keywords" content="how Find Trusted Cleaners works, cleaning service platform, hire cleaners, list cleaning business" />
-        {/* Open Graph and Twitter meta tags */}
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
       </Head>
 
-      <main className="min-h-screen bg-white text-gray-700">
+      <main className="min-h-screen bg-white text-gray-700" style={{ fontFamily: "'Inter', sans-serif" }}>
         <header className="flex items-center justify-between px-6 py-4 bg-[#0D9488] shadow text-white">
           <Link href="/">
-            <Image src="/findtrusted-logo.png" alt="FindTrustedCleaners Logo" className="w-32 h-auto" width={128} height={40} />
+            <Image src="/findtrusted-logo.png" alt="Find Trusted Cleaners Logo" className="w-32 h-auto" width={128} height={40} />
           </Link>
           <nav className="space-x-6 text-sm font-medium">
             <Link href="/" className="hover:text-gray-200">Home</Link>
@@ -34,34 +35,34 @@ export default function HowItWorks() {
           </nav>
           <h1 className="text-4xl font-semibold text-[#0D9488] mb-4 text-center">How It Works</h1>
           <p className="text-center text-gray-700 mb-10 text-lg">
-            Whether you're looking to book a trusted cleaner or list your own services, here's exactly how FindTrustedCleaners makes the process simple, transparent, and local.
+            Whether you are looking to book a trusted cleaner or list your own services, here is exactly how FindTrustedCleaners makes the process simple, transparent, and local.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
             {/* Clients Section */}
-            <div className="bg-gray-50 p-6 rounded-lg shadow-lg hover:shadow-2xl transition duration-300 ease-in-out transform hover:scale-105">
-              <h2 className="text-2xl font-semibold mb-4 text-[#0D9488]">For Clients</h2>
-              <ul className="space-y-4 text-lg text-gray-700">
-                <li><span className="font-bold text-[#0D9488]">🧹</span> Browse local cleaners for free</li>
-                <li><span className="font-bold text-[#0D9488]">📅</span> See available hours, ratings, and pricing</li>
-                <li><span className="font-bold text-[#0D9488]">📝</span> Request a time slot with your chosen cleaner</li>
-                <li><span className="font-bold text-[#0D9488]">⏳</span> No payment is taken until the cleaner approves your request</li>
-                <li><span className="font-bold text-[#0D9488]">✅</span> Once approved, you complete the payment and unlock the cleaner&apos;s verified contact info</li>
-                <li><span className="font-bold text-[#0D9488]">🔓</span> Pending markers will be shown on requested slots to avoid double booking</li>
-              </ul>
+            <div className="bg-gray-50 p-8 rounded-lg shadow-lg hover:shadow-2xl transition duration-300 ease-in-out transform hover:scale-105">
+              <h2 className="text-2xl font-semibold mb-6 text-[#0D9488] border-b pb-4">For Clients</h2>
+              <ol className="space-y-6 text-lg text-gray-700 list-decimal list-inside">
+                <li>Browse local cleaners for free.</li>
+                <li>See available hours, ratings, and pricing.</li>
+                <li>Request a time slot with your chosen cleaner.</li>
+                <li>No payment is taken until the cleaner approves your request.</li>
+                <li>Once approved, you complete the payment and unlock the cleaner's verified contact information.</li>
+                <li>Requested slots are marked to prevent double booking.</li>
+              </ol>
             </div>
 
             {/* Cleaners Section */}
-            <div className="bg-gray-50 p-6 rounded-lg shadow-lg hover:shadow-2xl transition duration-300 ease-in-out transform hover:scale-105">
-              <h2 className="text-2xl font-semibold mb-4 text-[#0D9488]">For Cleaners</h2>
-              <ul className="space-y-4 text-lg text-gray-700">
-                <li><span className="font-bold text-[#0D9488]">🧼</span> Register your cleaning business for free</li>
-                <li><span className="font-bold text-[#0D9488]">🗓️</span> Select your working hours on an easy grid</li>
-                <li><span className="font-bold text-[#0D9488]">👁️</span> Your availability is visible to clients (but contact info is protected)</li>
-                <li><span className="font-bold text-[#0D9488]">📥</span> Receive booking requests and approve or decline them via your dashboard</li>
-                <li><span className="font-bold text-[#0D9488]">💰</span> Only when you approve a request does the client complete payment and unlock your contact details</li>
-                <li><span className="font-bold text-[#0D9488]">✅</span> Keep your availability up to date to avoid double bookings</li>
-              </ul>
+            <div className="bg-gray-50 p-8 rounded-lg shadow-lg hover:shadow-2xl transition duration-300 ease-in-out transform hover:scale-105">
+              <h2 className="text-2xl font-semibold mb-6 text-[#0D9488] border-b pb-4">For Cleaners</h2>
+              <ol className="space-y-6 text-lg text-gray-700 list-decimal list-inside">
+                <li>Register your cleaning business for free.</li>
+                <li>Select your working hours using an easy grid system.</li>
+                <li>Your availability is visible to clients but your contact information remains protected until booking confirmation.</li>
+                <li>Receive booking requests and approve or decline them via your dashboard.</li>
+                <li>Payment is only completed once you approve a request, then your contact details are shared.</li>
+                <li>Keep your availability up to date to avoid double bookings.</li>
+              </ol>
             </div>
           </div>
 

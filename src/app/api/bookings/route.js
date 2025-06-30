@@ -22,7 +22,8 @@ export async function POST(req) {
     const data = await req.json();
 
     // ✅ Attach client ID automatically
-    const newBooking = await Booking.create({ ...data, clientId: user.id });
+  const newBooking = await Booking.create({ ...data, clientId: user.id, status: 'pending' });
+
 
     return new Response(JSON.stringify({ success: true, message: 'Booking created', booking: newBooking }), { status: 201 });
   } catch (err) {

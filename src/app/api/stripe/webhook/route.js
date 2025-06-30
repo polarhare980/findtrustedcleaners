@@ -1,57 +1,26 @@
-import { connectToDatabase } from '@/lib/db';
-import Booking from '@/models/booking';
-import Cleaner from '@/models/Cleaner';
-import Stripe from 'stripe';
-import { NextResponse } from 'next/server';
+// 📌 Webhook temporarily removed for deployment.
+// Final run-through must include the Stripe webhook to handle subscription confirmation and booking payments.
+// 
+// ✅ Cleaner Subscription Webhook:
+// Required to mark cleaner profiles as premium after successful £7.99/month payment.
+// Route: /src/app/api/stripe/webhook/route.js
+//
+// ✅ Booking Payment Webhook:
+// Required to unlock full cleaner profiles after client payment for a specific booking.
+//
+// 🚧 Current Status:
+// - Stripe subscription flow is built and working.
+// - Cleaner upgrade checkout session is working.
+// - Webhook removed for deployment compatibility.
+// - Client-side redirects to Stripe pending.
+// - Paywall logic pending.
+//
+// 🔔 Final Checklist:
+// - Reinstate this webhook.
+// - Complete booking payment webhook.
+// - Verify premium status updates in Cleaner Dashboard.
+// - Implement paywall and client-side redirects.
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
-export async function POST(request) {
-  await connectToDatabase();
-
-  const rawBody = await request.text(); // ✅ Correct way to get raw body
-  const signature = request.headers.get('stripe-signature');
-  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
-
-  let event;
-
-  try {
-    event = stripe.webhooks.constructEvent(rawBody, signature, endpointSecret);
-  } catch (err) {
-    console.error('❌ Stripe Webhook Error:', err.message);
-    return new Response(`Webhook Error: ${err.message}`, { status: 400 });
-  }
-
-  if (event.type === 'checkout.session.completed') {
-    const session = event.data.object;
-    const bookingId = session.metadata.bookingId;
-
-    try {
-      const booking = await Booking.findByIdAndUpdate(
-        bookingId,
-        { status: 'confirmed' },
-        { new: true }
-      );
-
-      if (!booking) throw new Error('Booking not found');
-
-      const cleaner = await Cleaner.findById(booking.cleanerId);
-      if (!cleaner) throw new Error('Cleaner not found');
-
-      if (!cleaner.availability[booking.day]) {
-        cleaner.availability[booking.day] = {};
-      }
-
-      cleaner.availability[booking.day][booking.time] = false; // Lock the slot
-
-      await cleaner.save();
-
-      console.log(`✅ Booking ${bookingId} confirmed and slot locked successfully.`);
-    } catch (err) {
-      console.error('❌ Booking processing error:', err.message);
-      return new Response('Error processing booking', { status: 500 });
-    }
-  }
-
-  return new Response('Webhook received successfully.', { status: 200 });
+export async function POST(req) {
+  return new Response('Webhook not yet implemented.', { status: 200 });
 }

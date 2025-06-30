@@ -1,16 +1,15 @@
-import { connectToDatabase } from '@/lib/db';
-import Booking from '@/models/booking';
 import { NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/auth';
 import Stripe from 'stripe';
+import { verifyToken } from '@/lib/auth';
+import { connectToDatabase } from '@/lib/db';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-export async function PUT(req, { params }) {
+export async function POST(req) {
   await connectToDatabase();
-  const { id } = params;
 
   try {
+    // ✅ Verify user token
     const token = req.cookies.get('token')?.value;
 
     if (!token) {
@@ -23,46 +22,38 @@ export async function PUT(req, { params }) {
       return NextResponse.json({ success: false, message: 'Access denied.' }, { status: 403 });
     }
 
-    // ✅ Update booking status to accepted
-    const updatedBooking = await Booking.findByIdAndUpdate(id, {
-      status: 'accepted',
-      acceptedBy: user.id,
-    }, { new: true });
-
-    if (!updatedBooking) {
-      return NextResponse.json({ success: false, message: 'Booking not found.' }, { status: 404 });
-    }
-
-    // ✅ Create Stripe Checkout Session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
-      mode: 'payment',
+      mode: 'subscription',
       line_items: [
         {
           price_data: {
             currency: 'gbp',
             product_data: {
-              name: `Booking with Cleaner`,
+              name: 'Premium Cleaner Profile',
             },
-            unit_amount: 5000, // £50.00 in pennies
+            unit_amount: 799, // £7.99 in pennies
+            recurring: {
+              interval: 'month',
+            },
           },
           quantity: 1,
         },
       ],
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/booking/confirmation?bookingId=${updatedBooking._id}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/booking/cancelled`,
+      success_url: `https://www.findtrustedcleaners.com/cleaner/upgrade-success`,
+      cancel_url: `https://www.findtrustedcleaners.com/cleaner/upgrade-cancelled`,
       metadata: {
-        bookingId: updatedBooking._id.toString(),
+        cleanerId: user.id,
       },
     });
 
     return NextResponse.json({
       success: true,
-      message: 'Order accepted. Proceed to payment.',
+      message: 'Proceed to payment.',
       checkoutUrl: session.url,
     });
   } catch (err) {
-    console.error('❌ Booking acceptance error:', err.message);
+    console.error('❌ Subscription creation error:', err.message);
     return NextResponse.json({ success: false, message: 'Server error.' }, { status: 500 });
   }
 }

@@ -3,6 +3,8 @@ import Cleaner from '@/models/Cleaner';
 import Client from '@/models/Client';
 import { createToken } from '@/lib/auth';
 import { serialize } from 'cookie';
+import bcrypt from 'bcryptjs';
+import { NextResponse } from 'next/server';
 
 export async function POST(req) {
   await connectToDatabase();
@@ -12,7 +14,7 @@ export async function POST(req) {
 
     if (!email || !password || !userType) {
       return new NextResponse(
-        JSON.stringify({ success: false, message: 'All fields are required' }),
+        JSON.stringify({ success: false, message: 'All fields are required.' }),
         { status: 400 }
       );
     }
@@ -25,7 +27,7 @@ export async function POST(req) {
       user = await Client.findOne({ email });
     } else {
       return new NextResponse(
-        JSON.stringify({ success: false, message: 'Invalid user type' }),
+        JSON.stringify({ success: false, message: 'Invalid user type.' }),
         { status: 400 }
       );
     }
@@ -33,16 +35,16 @@ export async function POST(req) {
     // Check if the user exists
     if (!user) {
       return new NextResponse(
-        JSON.stringify({ success: false, message: 'Invalid email or password' }),
+        JSON.stringify({ success: false, message: 'Invalid email or password.' }),
         { status: 401 }
       );
     }
 
-    // Compare entered password with stored password
-    const isPasswordValid = await user.comparePassword(password);
+    // Compare entered password with stored hashed password
+    const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       return new NextResponse(
-        JSON.stringify({ success: false, message: 'Invalid email or password' }),
+        JSON.stringify({ success: false, message: 'Invalid email or password.' }),
         { status: 401 }
       );
     }
@@ -67,7 +69,7 @@ export async function POST(req) {
   } catch (err) {
     console.error('Login error:', err);
     return new NextResponse(
-      JSON.stringify({ success: false, message: 'Server error' }),
+      JSON.stringify({ success: false, message: 'Server error.' }),
       { status: 500 }
     );
   }
