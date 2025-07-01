@@ -19,7 +19,6 @@ export async function connectToDatabase() {
     cached.promise = mongoose.connect(MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      useFindAndModify: false, // Avoids deprecation warning for findAndModify
     })
     .then((mongoose) => mongoose)
     .catch((err) => {
