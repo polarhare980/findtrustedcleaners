@@ -1,5 +1,3 @@
-// File: app/api/auth/register/route.js
-
 import { connectToDatabase } from '@/lib/db';
 import Cleaner from '@/models/Cleaner';
 import Client from '@/models/Client';
@@ -8,29 +6,31 @@ import { NextResponse } from 'next/server';
 
 export async function POST(req) {
   await connectToDatabase();
+  console.log('✅ Register route hit');
 
   try {
     const { email, password, userType } = await req.json();
+    console.log('📥 Received data:', { email, password, userType });
 
-    // Validate input
     if (!email || !password || !userType) {
+      console.log('❌ Missing fields');
       return new NextResponse(
         JSON.stringify({ success: false, message: 'All fields are required.' }),
         { status: 400 }
       );
     }
 
-    // Trim inputs to remove accidental spaces
     const trimmedEmail = email.trim();
     const trimmedPassword = password.trim();
+    console.log('✂️ Trimmed data:', { trimmedEmail, trimmedPassword, userType });
 
-    // Check if user already exists
     let existingUser;
     if (userType === 'cleaner') {
       existingUser = await Cleaner.findOne({ email: trimmedEmail });
     } else if (userType === 'client') {
       existingUser = await Client.findOne({ email: trimmedEmail });
     } else {
+      console.log('❌ Invalid user type');
       return new NextResponse(
         JSON.stringify({ success: false, message: 'Invalid user type.' }),
         { status: 400 }
@@ -38,16 +38,17 @@ export async function POST(req) {
     }
 
     if (existingUser) {
+      console.log('❌ User already exists');
       return new NextResponse(
         JSON.stringify({ success: false, message: 'User already exists.' }),
         { status: 409 }
       );
     }
 
-    // ✅ Hash the password here
+    console.log('🔐 Hashing password...');
     const hashedPassword = await bcrypt.hash(trimmedPassword, 10);
+    console.log('✅ Password hashed:', hashedPassword);
 
-    // Save the user with hashed password
     let newUser;
     if (userType === 'cleaner') {
       newUser = new Cleaner({ email: trimmedEmail, password: hashedPassword });
@@ -55,14 +56,16 @@ export async function POST(req) {
       newUser = new Client({ email: trimmedEmail, password: hashedPassword });
     }
 
+    console.log('💾 Saving user...');
     await newUser.save();
+    console.log('✅ User saved successfully');
 
     return new NextResponse(
       JSON.stringify({ success: true, message: 'User registered successfully.' }),
       { status: 201 }
     );
   } catch (err) {
-    console.error('Registration error:', err);
+    console.error('❌ Registration error:', err);
     return new NextResponse(
       JSON.stringify({ success: false, message: 'Server error.' }),
       { status: 500 }
