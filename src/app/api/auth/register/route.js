@@ -20,12 +20,16 @@ export async function POST(req) {
       );
     }
 
+    // Trim inputs to remove accidental spaces
+    const trimmedEmail = email.trim();
+    const trimmedPassword = password.trim();
+
     // Check if user already exists
     let existingUser;
     if (userType === 'cleaner') {
-      existingUser = await Cleaner.findOne({ email });
+      existingUser = await Cleaner.findOne({ email: trimmedEmail });
     } else if (userType === 'client') {
-      existingUser = await Client.findOne({ email });
+      existingUser = await Client.findOne({ email: trimmedEmail });
     } else {
       return new NextResponse(
         JSON.stringify({ success: false, message: 'Invalid user type.' }),
@@ -40,15 +44,15 @@ export async function POST(req) {
       );
     }
 
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // ✅ Hash the password here
+    const hashedPassword = await bcrypt.hash(trimmedPassword, 10);
 
-    // Create and save the new user
+    // Save the user with hashed password
     let newUser;
     if (userType === 'cleaner') {
-      newUser = new Cleaner({ email, password: hashedPassword });
+      newUser = new Cleaner({ email: trimmedEmail, password: hashedPassword });
     } else if (userType === 'client') {
-      newUser = new Client({ email, password: hashedPassword });
+      newUser = new Client({ email: trimmedEmail, password: hashedPassword });
     }
 
     await newUser.save();
@@ -65,5 +69,3 @@ export async function POST(req) {
     );
   }
 }
-
-
