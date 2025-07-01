@@ -2,7 +2,11 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
 // Availability schema remains flexible
-const availabilitySchema = new mongoose.Schema({}, { strict: false });
+const availabilitySchema = new mongoose.Schema({
+  monday: { type: Boolean, default: false },
+  tuesday: { type: Boolean, default: false },
+  // More days...
+}, { _id: false });
 
 const cleanerSchema = new mongoose.Schema({
   realName: { type: String, required: true },
@@ -11,8 +15,17 @@ const cleanerSchema = new mongoose.Schema({
   street: { type: String, required: true },
   county: { type: String, required: true },
   postcode: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  phone: { type: String, required: true },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    match: [/\S+@\S+\.\S+/, 'Please enter a valid email address'],
+  },
+  phone: {
+    type: String,
+    required: true,
+    match: [/^\d{10}$/, 'Please enter a valid 10-digit phone number'],
+  },
   password: { type: String, required: true },
   rates: { type: Number, required: true },
   availability: availabilitySchema, // Availability schema, flexible
@@ -37,5 +50,11 @@ cleanerSchema.pre('save', async function(next) {
 cleanerSchema.methods.comparePassword = async function(password) {
   return await bcrypt.compare(password, this.password); // Compare hashed password
 };
+
+// Add index for faster phone queries
+cleanerSchema.index({ phone: 1 });
+
+// Add index for services field if querying frequently by services
+cleanerSchema.index({ services: 1 });
 
 export default mongoose.models.Cleaner || mongoose.model('Cleaner', cleanerSchema);

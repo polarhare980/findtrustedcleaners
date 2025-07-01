@@ -1,5 +1,6 @@
 import { connectToDatabase } from '@/lib/db';
 import Cleaner from '@/models/Cleaner';
+import bcrypt from 'bcryptjs';
 
 export async function POST(req) {
   await connectToDatabase();
@@ -24,12 +25,15 @@ export async function POST(req) {
       );
     }
 
+    // Hash the password before saving
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     // Create new cleaner with hashed password
     const newCleaner = new Cleaner({
       realName,
       companyName,
       email,
-      password, // This will get hashed automatically when saved
+      password: hashedPassword, // Save the hashed password
       phone,
       rates,
       services,

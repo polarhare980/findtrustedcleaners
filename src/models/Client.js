@@ -6,9 +6,14 @@ const addressSchema = new mongoose.Schema({
   houseNameNumber: { type: String, required: true },
   street: { type: String, required: true },
   county: { type: String, required: true },
-  postcode: { type: String, required: true },
+  postcode: { 
+    type: String, 
+    required: true,
+    match: /^[A-Za-z0-9\s]{5,10}$/  // Basic validation for postcode (adjust regex as needed)
+  },
 });
 
+// Client schema
 const clientSchema = new mongoose.Schema({
   fullName: { type: String, required: true },
   email: { type: String, required: true, unique: true },
@@ -20,8 +25,12 @@ const clientSchema = new mongoose.Schema({
 // Hash the password before saving it to the database
 clientSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next(); // Only hash if password is modified
-  this.password = await bcrypt.hash(this.password, 10); // Hash password with bcrypt
-  next();
+  try {
+    this.password = await bcrypt.hash(this.password, 10); // Hash password with bcrypt
+    next();
+  } catch (err) {
+    next(err); // Pass error to the next middleware if password hashing fails
+  }
 });
 
 // Method to compare entered password with the stored hashed password

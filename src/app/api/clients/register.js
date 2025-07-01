@@ -25,11 +25,14 @@ export async function POST(req) {
       );
     }
 
+    // Hash the password before saving
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     // Create new client with hashed password
     const newClient = new Client({
       fullName,
       email,
-      password, // This will get hashed automatically when saved
+      password: hashedPassword, // Save the hashed password
       phone,
       address,
     });
