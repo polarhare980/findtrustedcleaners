@@ -66,11 +66,15 @@ export default function CleanerRegister() {
       return;
     }
 
-    try {
-      const res = await fetch('/api/cleaners', {
+ try {
+      const res = await fetch('/api/auth/register', {
         method: 'POST',
-        body: JSON.stringify(form),
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: form.email,
+          password: form.password,
+          userType: 'cleaner',
+        }),
       });
 
       if (res.ok) {

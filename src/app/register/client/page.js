@@ -7,15 +7,9 @@ import Link from 'next/link';
 
 function ClientRegisterPage() {
   const [form, setForm] = useState({
-    fullName: '',
     email: '',
     password: '',
     confirmPassword: '',
-    houseNameNumber: '',
-    street: '',
-    county: '',
-    postcode: '',
-    phone: ''
   });
 
   const [message, setMessage] = useState('');
@@ -39,22 +33,30 @@ function ClientRegisterPage() {
     }
 
     try {
-      const res = await fetch('/api/clients', {
+      const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form)
+        body: JSON.stringify({
+          email: form.email,
+          password: form.password,
+          userType: 'client',
+        }),
       });
 
       if (res.ok) {
         const data = await res.json();
 
         if (data.success) {
-          // ✅ Optional: You can auto-login here if you want
-          const loginRes = await fetch('/api/login', {
+          // ✅ Auto-login after successful registration
+          const loginRes = await fetch('/api/auth/login', {
             method: 'POST',
-            credentials: 'include', // ✅ Required for cookie handling
+            credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: form.email, password: form.password, userType: 'client' })
+            body: JSON.stringify({
+              email: form.email,
+              password: form.password,
+              userType: 'client',
+            }),
           });
 
           const loginData = await loginRes.json();
@@ -67,7 +69,7 @@ function ClientRegisterPage() {
               router.push('/clients/dashboard');
             }
           } else {
-            setMessage('Registration successful, but login failed. Please try logging in.');
+            setMessage('Registration successful, but login failed. Please log in manually.');
             router.push('/login');
           }
         } else {
@@ -110,7 +112,6 @@ function ClientRegisterPage() {
       <section className="p-6 max-w-xl mx-auto relative z-10">
         <h1 className="text-3xl font-bold text-[#0D9488] mb-4 text-center">Client Registration</h1>
         <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded shadow-md">
-          <input type="text" name="fullName" placeholder="Full Name" value={form.fullName} onChange={handleChange} className="w-full p-2 border rounded bg-white" required />
           <input type="email" name="email" placeholder="Email" value={form.email} onChange={handleChange} className="w-full p-2 border rounded bg-white" required />
 
           <div className="relative">
@@ -121,18 +122,6 @@ function ClientRegisterPage() {
           </div>
 
           <input type="password" name="confirmPassword" placeholder="Confirm Password" value={form.confirmPassword} onChange={handleChange} className="w-full p-2 border rounded bg-white" required />
-          
-          {/* Split Address into Separate Fields */}
-          <div className="grid grid-cols-2 gap-4">
-            <input type="text" name="houseNameNumber" placeholder="House Name/Number" value={form.houseNameNumber} onChange={handleChange} className="w-full p-2 border rounded bg-white" required />
-            <input type="text" name="street" placeholder="Street" value={form.street} onChange={handleChange} className="w-full p-2 border rounded bg-white" required />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <input type="text" name="county" placeholder="County" value={form.county} onChange={handleChange} className="w-full p-2 border rounded bg-white" required />
-            <input type="text" name="postcode" placeholder="Postcode" value={form.postcode} onChange={handleChange} className="w-full p-2 border rounded bg-white" required />
-          </div>
-
-          <input type="tel" name="phone" placeholder="Phone Number" value={form.phone} onChange={handleChange} className="w-full p-2 border rounded bg-white" />
 
           <label className="flex items-center space-x-2 text-sm">
             <input type="checkbox" required className="accent-teal-700" />
