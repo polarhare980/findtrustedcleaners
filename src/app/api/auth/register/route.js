@@ -9,22 +9,24 @@ export async function POST(req) {
   console.log('✅ Register route hit');
 
   try {
-    const { email, password, userType, fullName, phone, houseNameNumber, street, county, postcode } = await req.json();
-    console.log('📥 Received data:', { email, password, userType, fullName, phone, houseNameNumber, street, county, postcode });
+    const body = await req.json();
+    const { userType, email, password } = body;
 
-    if (!email || !password || !userType || !fullName || !phone || !houseNameNumber || !street || !county || !postcode) {
-      console.log('❌ Missing fields');
+    console.log('📥 Received data:', body);
+
+    if (!email || !password || !userType) {
+      console.log('❌ Missing basic fields');
       return new NextResponse(
-        JSON.stringify({ success: false, message: 'All fields are required.' }),
+        JSON.stringify({ success: false, message: 'Email, password, and user type are required.' }),
         { status: 400 }
       );
     }
 
-    const trimmedEmail = email.trim();
+    const trimmedEmail = email.trim().toLowerCase();
     const trimmedPassword = password.trim();
-    console.log('✂️ Trimmed data:', { trimmedEmail, trimmedPassword, userType });
 
     let existingUser;
+
     if (userType === 'cleaner') {
       existingUser = await Cleaner.findOne({ email: trimmedEmail });
     } else if (userType === 'client') {
@@ -47,12 +49,41 @@ export async function POST(req) {
 
     console.log('🔐 Hashing password...');
     const hashedPassword = await bcrypt.hash(trimmedPassword, 10);
-    console.log('✅ Password hashed:', hashedPassword);
 
     let newUser;
+
     if (userType === 'cleaner') {
-      newUser = new Cleaner({ email: trimmedEmail, password: hashedPassword });
+      const { realName, companyName, phone, rates, services, address } = body;
+
+      if (!realName || !companyName || !phone || !rates || !services || !address) {
+        console.log('❌ Missing cleaner fields');
+        return new NextResponse(
+          JSON.stringify({ success: false, message: 'All cleaner fields are required.' }),
+          { status: 400 }
+        );
+      }
+
+      newUser = new Cleaner({
+        realName,
+        companyName,
+        email: trimmedEmail,
+        password: hashedPassword,
+        phone,
+        rates,
+        services,
+        address,
+      });
     } else if (userType === 'client') {
+      const { fullName, phone, houseNameNumber, street, county, postcode } = body;
+
+      if (!fullName || !phone || !houseNameNumber || !street || !county || !postcode) {
+        console.log('❌ Missing client fields');
+        return new NextResponse(
+          JSON.stringify({ success: false, message: 'All client fields are required.' }),
+          { status: 400 }
+        );
+      }
+
       newUser = new Client({
         fullName,
         phone,
