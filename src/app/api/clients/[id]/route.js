@@ -12,8 +12,10 @@ export async function GET(req, context) {
   const { valid, user, response } = await protectRoute(req);
   if (!valid) return response;
 
-  if (user.type !== 'client' || String(user._id) !== String(params.id)) {
-    console.log('User ID:', user._id, 'Param ID:', params.id); // Debug
+  if (user.type !== 'client' || String(user._id?.toString()) !== String(params.id)) {
+    console.log('🔐 GET Access Denied:');
+    console.log('Session User ID:', user._id?.toString());
+    console.log('Requested Param ID:', params.id);
     return NextResponse.json({ success: false, message: 'Access denied.' }, { status: 403 });
   }
 
@@ -40,8 +42,12 @@ export async function PUT(req, context) {
   const { valid, user, response } = await protectRoute(req);
   if (!valid) return response;
 
-  if (String(user._id) !== String(params.id) && user.type !== 'admin') {
-    console.log('User ID:', user._id, 'Param ID:', params.id); // Debug
+  console.log('🔐 PUT Access Check:');
+  console.log('Session User ID:', user._id?.toString());
+  console.log('Requested Param ID:', params.id);
+
+  if (String(user._id?.toString()) !== String(params.id) && user.type !== 'admin') {
+    console.log('🔐 PUT Access Denied: ID Mismatch');
     return NextResponse.json({ success: false, message: 'Access denied.' }, { status: 403 });
   }
 
@@ -83,8 +89,12 @@ export async function DELETE(req, context) {
   const { valid, user, response } = await protectRoute(req);
   if (!valid) return response;
 
-  if (String(user._id) !== String(params.id) && user.type !== 'admin') {
-    console.log('User ID:', user._id, 'Param ID:', params.id); // Debug
+  console.log('🔐 DELETE Access Check:');
+  console.log('Session User ID:', user._id?.toString());
+  console.log('Requested Param ID:', params.id);
+
+  if (String(user._id?.toString()) !== String(params.id) && user.type !== 'admin') {
+    console.log('🔐 DELETE Access Denied: ID Mismatch');
     return NextResponse.json({ success: false, message: 'Access denied.' }, { status: 403 });
   }
 
