@@ -54,10 +54,10 @@ export async function POST(req) {
     // Try different query approaches
     console.log('🔍 Trying exact match...');
     user = await Model.findOne({ email: trimmedEmail });
-    
+
     if (!user) {
       console.log('🔍 Trying case-insensitive regex...');
-      user = await Model.findOne({ 
+      user = await Model.findOne({
         email: { $regex: new RegExp(`^${trimmedEmail}$`, 'i') }
       });
     }
@@ -68,17 +68,16 @@ export async function POST(req) {
     }
 
     console.log('👤 User found after all attempts:', user ? 'YES' : 'NO');
-    
+
     if (user) {
-      console.log('👤 Found user details:', { 
-        id: user._id, 
+      console.log('👤 Found user details:', {
+        id: user._id,
         email: `"${user.email}"`,
         emailLength: user.email.length,
         hasPassword: !!user.password,
         passwordLength: user.password ? user.password.length : 0
       });
     } else {
-      // If still not found, let's check if there are any similar emails
       const similarEmails = await Model.find({
         email: { $regex: trimmedEmail.split('@')[0], $options: 'i' }
       });
@@ -99,7 +98,6 @@ export async function POST(req) {
 
     if (!isPasswordValid) {
       console.log('❌ Incorrect password');
-      // Let's also check if the password was hashed properly
       console.log('🔐 Stored hash starts with $2b?', user.password.startsWith('$2b'));
       return new NextResponse(
         JSON.stringify({ success: false, message: 'Invalid email or password.' }),
@@ -107,7 +105,8 @@ export async function POST(req) {
       );
     }
 
-    const token = createToken({ id: user._id, type: userType });
+    // ✅ FIX: Stringify user._id in token
+    const token = createToken({ _id: user._id.toString(), type: userType });
 
     const cookie = serialize('token', token, {
       httpOnly: true,

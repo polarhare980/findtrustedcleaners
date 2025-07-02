@@ -11,27 +11,47 @@ export default function ClientDashboard() {
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [formData, setFormData] = useState({
+    fullName: '',
+    phone: '',
+    address: {
+      houseNameNumber: '',
+      street: '',
+      county: '',
+      postcode: '',
+    },
+  });
+
+  const fetchClient = async () => {
+    try {
+      const res = await fetch('/api/auth/me', { credentials: 'include' });
+      const data = await res.json();
+
+      if (!data.success || data.user.type !== 'client') {
+        router.push('/login/clients');
+      } else {
+        setClient(data.user);
+        setFormData({
+          fullName: data.user.fullName,
+          phone: data.user.phone,
+          address: {
+            houseNameNumber: data.user.address?.houseNameNumber || '',
+            street: data.user.address?.street || '',
+            county: data.user.address?.county || '',
+            postcode: data.user.address?.postcode || '',
+          },
+        });
+      }
+    } catch (err) {
+      console.error('Error fetching client:', err);
+      router.push('/login/clients');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const fetchClient = async () => {
-        try {
-          const res = await fetch('/api/auth/me', { credentials: 'include' });
-          const data = await res.json();
-
-          if (!data.success || data.user.type !== 'client') {
-            router.push('/login/clients');
-          } else {
-            setClient(data.user);
-          }
-        } catch (err) {
-          console.error('Error fetching client:', err);
-          router.push('/login/clients');
-        } finally {
-          setLoading(false);
-        }
-      };
-
       fetchClient();
       setMounted(true);
     }
@@ -42,12 +62,12 @@ export default function ClientDashboard() {
 
     const fetchBookings = async () => {
       try {
-        const res = await fetch(`/api/bookings/client/${client.id}`, { credentials: 'include' });
+        const res = await fetch(`/api/bookings/client/${client._id}`, { credentials: 'include' });
         if (!res.ok) throw new Error('Failed to fetch bookings');
-        const data = await res.json();
+        const { bookings } = await res.json();
 
         const bookingsWithNames = await Promise.all(
-          data.map(async (booking) => {
+          bookings.map(async (booking) => {
             try {
               const cleanerRes = await fetch(`/api/public-cleaners/${booking.cleanerId}`);
               const cleanerData = await cleanerRes.json();
@@ -97,20 +117,39 @@ export default function ClientDashboard() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setClient({ ...client, [name]: value });
+
+    if (['houseNameNumber', 'street', 'county', 'postcode'].includes(name)) {
+      setFormData((prev) => ({
+        ...prev,
+        address: { ...prev.address, [name]: value },
+      }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      const res = await fetch(`/api/clients/${client.id}`, {
+      const res = await fetch(`/api/clients/${client._id}`, {
         method: 'PUT',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(client),
+        body: JSON.stringify({
+          fullName: formData.fullName,
+          phone: formData.phone,
+          address: formData.address,
+        }),
       });
 
-      if (!res.ok) throw new Error('Failed to update profile');
+    if (!res.ok) {
+  const errorText = await res.text(); // ✅ This will show the real API response
+  console.error('API Response:', errorText);
+  throw new Error('Failed to update profile');
+}
+
+
+      await fetchClient(); // ✅ Re-fetch to get updated data
       alert('Profile updated successfully');
       setIsEditing(false);
     } catch (err) {
@@ -128,22 +167,54 @@ export default function ClientDashboard() {
   return (
     <div className="min-h-screen bg-teal-600 flex items-center justify-center p-4">
       <div className="w-full max-w-2xl bg-white shadow-lg rounded-2xl p-8">
-        <h1 className="text-3xl font-bold text-teal-700 mb-6 text-center">Welcome, {client.fullName}</h1>
+        <h1 className="text-3xl font-bold text-teal-700 mb-6 text-center">Welcome, {formData.fullName}</h1>
 
         <div className="space-y-6">
-          {['fullName', 'email', 'phone', 'address', 'postcode'].map((field) => (
+          <div>
+            <label className="block text-sm font-semibold text-teal-700 mb-1 capitalize">Full Name</label>
+            {isEditing ? (
+              <input
+                type="text"
+                name="fullName"
+                value={formData.fullName}
+                onChange={handleChange}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-400"
+              />
+            ) : (
+              <p className="text-gray-800 text-lg">{formData.fullName}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-teal-700 mb-1 capitalize">Phone</label>
+            {isEditing ? (
+              <input
+                type="text"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-400"
+              />
+            ) : (
+              <p className="text-gray-800 text-lg">{formData.phone}</p>
+            )}
+          </div>
+
+          {['houseNameNumber', 'street', 'county', 'postcode'].map((field) => (
             <div key={field}>
-              <label className="block text-sm font-semibold text-teal-700 mb-1 capitalize">{field.replace(/([A-Z])/g, ' $1')}</label>
+              <label className="block text-sm font-semibold text-teal-700 mb-1 capitalize">
+                {field.replace(/([A-Z])/g, ' $1')}
+              </label>
               {isEditing ? (
                 <input
                   type="text"
                   name={field}
-                  value={client[field]}
+                  value={formData.address[field]}
                   onChange={handleChange}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-400"
                 />
               ) : (
-                <p className="text-gray-800 text-lg">{client[field]}</p>
+                <p className="text-gray-800 text-lg">{formData.address[field]}</p>
               )}
             </div>
           ))}

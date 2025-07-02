@@ -7,7 +7,13 @@ import Link from 'next/link';
 
 function ClientRegisterPage() {
   const [form, setForm] = useState({
+    fullName: '',
     email: '',
+    phone: '',
+    houseNameNumber: '',
+    street: '',
+    county: '',
+    postcode: '',
     password: '',
     confirmPassword: '',
   });
@@ -37,7 +43,13 @@ function ClientRegisterPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          fullName: form.fullName,
           email: form.email,
+          phone: form.phone,
+          houseNameNumber: form.houseNameNumber,
+          street: form.street,
+          county: form.county,
+          postcode: form.postcode,
           password: form.password,
           userType: 'client',
         }),
@@ -112,6 +124,12 @@ function ClientRegisterPage() {
       <section className="p-6 max-w-xl mx-auto relative z-10">
         <h1 className="text-3xl font-bold text-[#0D9488] mb-4 text-center">Client Registration</h1>
         <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded shadow-md">
+          <input type="text" name="fullName" placeholder="Full Name" value={form.fullName} onChange={handleChange} className="w-full p-2 border rounded bg-white" required />
+          <input type="text" name="phone" placeholder="Phone" value={form.phone} onChange={handleChange} className="w-full p-2 border rounded bg-white" required />
+          <input type="text" name="houseNameNumber" placeholder="House Name/Number" value={form.houseNameNumber} onChange={handleChange} className="w-full p-2 border rounded bg-white" required />
+          <input type="text" name="street" placeholder="Street" value={form.street} onChange={handleChange} className="w-full p-2 border rounded bg-white" required />
+          <input type="text" name="county" placeholder="County" value={form.county} onChange={handleChange} className="w-full p-2 border rounded bg-white" required />
+          <input type="text" name="postcode" placeholder="Postcode" value={form.postcode} onChange={handleChange} className="w-full p-2 border rounded bg-white" required />
           <input type="email" name="email" placeholder="Email" value={form.email} onChange={handleChange} className="w-full p-2 border rounded bg-white" required />
 
           <div className="relative">

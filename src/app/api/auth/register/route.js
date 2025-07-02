@@ -9,10 +9,10 @@ export async function POST(req) {
   console.log('✅ Register route hit');
 
   try {
-    const { email, password, userType } = await req.json();
-    console.log('📥 Received data:', { email, password, userType });
+    const { email, password, userType, fullName, phone, houseNameNumber, street, county, postcode } = await req.json();
+    console.log('📥 Received data:', { email, password, userType, fullName, phone, houseNameNumber, street, county, postcode });
 
-    if (!email || !password || !userType) {
+    if (!email || !password || !userType || !fullName || !phone || !houseNameNumber || !street || !county || !postcode) {
       console.log('❌ Missing fields');
       return new NextResponse(
         JSON.stringify({ success: false, message: 'All fields are required.' }),
@@ -53,7 +53,18 @@ export async function POST(req) {
     if (userType === 'cleaner') {
       newUser = new Cleaner({ email: trimmedEmail, password: hashedPassword });
     } else if (userType === 'client') {
-      newUser = new Client({ email: trimmedEmail, password: hashedPassword });
+      newUser = new Client({
+        fullName,
+        phone,
+        email: trimmedEmail,
+        password: hashedPassword,
+        address: {
+          houseNameNumber,
+          street,
+          county,
+          postcode,
+        },
+      });
     }
 
     console.log('💾 Saving user...');
