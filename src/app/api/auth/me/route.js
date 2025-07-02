@@ -4,22 +4,23 @@ import Client from '@/models/Client';
 import { NextResponse } from 'next/server';
 
 export async function GET(req) {
-  // Use the protectRoute function to validate the token
+  // ✅ Validate the token
   const authResult = await protectRoute(req);
 
   if (authResult.error) {
-    // If there's an error (e.g., invalid or missing token), return a 401 response
+    // ❌ If token is missing or invalid, return 401
     return new NextResponse(
       JSON.stringify({ success: false, message: authResult.error }),
       { status: 401 }
     );
   }
 
-  // Extract user data from decoded token
-  const { id, type } = authResult.user; // id and type (cleaner or client) from token
+  // ✅ Extract user ID and type from decoded token
+  const { id, type } = authResult.user;
 
   let user;
-  // Depending on the user type, fetch the appropriate model
+
+  // ✅ Fetch the correct user from the database based on type
   if (type === 'cleaner') {
     user = await Cleaner.findById(id);
   } else if (type === 'client') {
@@ -38,9 +39,9 @@ export async function GET(req) {
     );
   }
 
-  // Return the user profile data if everything is valid
+  // ✅ Return user profile data AND type
   return new NextResponse(
-    JSON.stringify({ success: true, user }),
+    JSON.stringify({ success: true, user: { ...user.toObject(), type } }),
     { status: 200 }
   );
 }

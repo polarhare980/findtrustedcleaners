@@ -27,13 +27,13 @@ export default function CleanerDashboardComponent() {
           const data = await res.json();
 
           if (!data.success || data.user.type !== 'cleaner') {
-            router.push('/login/cleaners');
+            router.push('/login');
           } else {
             setCleaner(data.user);
           }
         } catch (err) {
           console.error('Error fetching cleaner:', err);
-          router.push('/login/cleaners');
+          router.push('/login');
         } finally {
           setMounted(true);
         }
@@ -46,22 +46,31 @@ export default function CleanerDashboardComponent() {
   useEffect(() => {
     const fetchCleanerDetails = async () => {
       try {
-        const res = await fetch(`/api/cleaners?id=${cleaner.id}`, { credentials: 'include' });
+        console.log('Fetching cleaner details for ID:', cleaner._id);
+
+        const res = await fetch(`/api/cleaners?id=${cleaner._id}`, { credentials: 'include' });
         if (!res.ok) throw new Error('Failed to fetch cleaner');
+
         const data = await res.json();
+
+        // ✅ Defensive check
+        if (!data.cleaner) {
+          throw new Error('Cleaner data missing from response');
+        }
+
         setFormData({
-          ...data,
-          services: data.services || [],
-          availability: data.availability || {},
-          allowPending: data.allowPending || false,
-          googleReviewUrl: data.googleReviewUrl || '',
-          facebookReviewUrl: data.facebookReviewUrl || '',
-          embedCode: data.embedCode || '',
-          image: data.image || '',
+          ...data.cleaner,
+          services: data.cleaner.services || [],
+          availability: data.cleaner.availability || {},
+          allowPending: data.cleaner.allowPending || false,
+          googleReviewUrl: data.cleaner.googleReviewUrl || '',
+          facebookReviewUrl: data.cleaner.facebookReviewUrl || '',
+          embedCode: data.cleaner.embedCode || '',
+          image: data.cleaner.image || '',
         });
       } catch (err) {
         console.error(err);
-        router.push('/login/cleaners');
+        router.push('/login');
       } finally {
         setLoading(false);
       }
@@ -90,7 +99,7 @@ export default function CleanerDashboardComponent() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const res = await fetch(`/api/cleaners/${cleaner.id}`, {
+      const res = await fetch(`/api/cleaners/${cleaner._id}`, {
         method: 'PUT',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },

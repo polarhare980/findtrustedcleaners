@@ -14,11 +14,18 @@ export async function GET(req) {
 
   try {
     if (id) {
+      console.log('🔍 API hit: Cleaner ID received:', id);
+
       const cleaner = await Cleaner.findById(id).select('-password');
+
       if (!cleaner) {
+        console.log('❌ Cleaner not found for ID:', id);
         return NextResponse.json({ success: false, message: 'Cleaner not found' }, { status: 404 });
       }
-      return NextResponse.json({ success: true, cleaners: [cleaner] }, { status: 200 });
+
+      console.log('✅ Cleaner found:', cleaner._id);
+
+      return NextResponse.json({ success: true, cleaner }, { status: 200 });
     }
 
     const query = {};
@@ -39,6 +46,8 @@ export async function GET(req) {
     const cleaners = await Cleaner.find(query)
       .select('-password')
       .sort({ isPremium: -1 }); // Premium first
+
+    console.log('✅ Found', cleaners.length, 'cleaner(s) for search query.');
 
     return NextResponse.json({ success: true, cleaners }, { status: 200 });
   } catch (err) {
@@ -64,13 +73,12 @@ export async function POST(req) {
     const hashedPassword = await bcrypt.hash(data.password, 10);
     data.password = hashedPassword;
 
-    // Ensure the new fields (address and insurance) are saved
     const cleaner = await Cleaner.create({
       realName: data.realName,
       companyName: data.companyName,
-      houseNameNumber: data.houseNameNumber,  // New field
-      street: data.street,                    // New field
-      county: data.county,                    // New field
+      houseNameNumber: data.houseNameNumber,
+      street: data.street,
+      county: data.county,
       postcode: data.postcode,
       email: data.email,
       phone: data.phone,
@@ -78,7 +86,7 @@ export async function POST(req) {
       rates: data.rates,
       availability: data.availability,
       services: data.services,
-      businessInsurance: data.businessInsurance, // New field for business insurance
+      businessInsurance: data.businessInsurance,
     });
 
     console.log('✅ Cleaner created:', cleaner._id);

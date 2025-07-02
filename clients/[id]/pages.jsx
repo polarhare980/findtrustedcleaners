@@ -12,7 +12,10 @@ export default function ClientDashboard({ params }) {
   useEffect(() => {
     const fetchClient = async () => {
       try {
-        const res = await fetch(`/api/clients/${id}`);
+        const res = await fetch(`/api/clients/${id}`, {
+  credentials: 'include'
+});
+
         if (!res.ok) throw new Error('Failed to fetch client');
         const data = await res.json();
         setClient(data);

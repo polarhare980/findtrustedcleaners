@@ -1,5 +1,6 @@
 // File: /src/lib/auth.js
 import jwt from 'jsonwebtoken';
+import { parse } from 'cookie';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_default_secret';
 
@@ -17,21 +18,21 @@ export function verifyToken(token) {
   }
 }
 
-// ✅ Protect Route Example
+// ✅ Protect Route: Read Token from Cookies
 export async function protectRoute(request) {
-  const authHeader = request.headers.get('Authorization');
-  
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  const cookies = request.headers.get('cookie') || '';
+  const parsedCookies = parse(cookies);
+  const token = parsedCookies.token;
+
+  if (!token) {
     return { error: 'Unauthorized' };
   }
 
-  const token = authHeader.split(' ')[1];
   const user = verifyToken(token);
-  
+
   if (!user) {
     return { error: 'Invalid or expired token' };
   }
 
   return { user };
 }
-

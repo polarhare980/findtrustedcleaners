@@ -1,7 +1,7 @@
 import { connectToDatabase } from '@/lib/db';
 import Client from '@/models/Client';
 import bcrypt from 'bcryptjs';
-import { NextResponse } from 'next/server'; // ✅ Correct import
+import { NextResponse } from 'next/server';
 
 export async function POST(req) {
   await connectToDatabase();
@@ -19,7 +19,7 @@ export async function POST(req) {
     const hashedPassword = await bcrypt.hash(data.password, 10);
     data.password = hashedPassword;
 
-    // ✅ Ensure address is stored as an object with the updated address fields
+    // ✅ Store address as an object
     const address = {
       houseNameNumber: data.houseNameNumber,
       street: data.street,
@@ -27,14 +27,15 @@ export async function POST(req) {
       postcode: data.postcode
     };
 
-    // Create the new client with the updated address structure
     const client = await Client.create({
       fullName: data.fullName,
       email: data.email,
       password: data.password,
       phone: data.phone,
-      address, // Address as an object
+      address,
     });
+
+    console.log('✅ Client created:', client._id);
 
     return NextResponse.json({ success: true, id: client._id }, { status: 201 });
   } catch (err) {
@@ -42,3 +43,4 @@ export async function POST(req) {
     return NextResponse.json({ success: false, message: 'Failed to create client.' }, { status: 500 });
   }
 }
+
