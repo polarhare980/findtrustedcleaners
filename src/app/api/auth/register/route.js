@@ -1,3 +1,5 @@
+// File: app/api/auth/register/route.js
+
 import { connectToDatabase } from '@/lib/db';
 import Cleaner from '@/models/Cleaner';
 import Client from '@/models/Client';
@@ -53,7 +55,7 @@ export async function POST(req) {
     let newUser;
 
     if (userType === 'cleaner') {
-      const { realName, companyName, phone, rates, services, address } = body;
+      const { realName, companyName, phone, rates, services, address, availability, businessInsurance } = body;
 
       if (!realName || !companyName || !phone || !rates || !services || !address) {
         console.log('❌ Missing cleaner fields');
@@ -72,6 +74,8 @@ export async function POST(req) {
         rates,
         services,
         address,
+        availability,
+        businessInsurance,
       });
     } else if (userType === 'client') {
       const { fullName, phone, houseNameNumber, street, county, postcode } = body;
