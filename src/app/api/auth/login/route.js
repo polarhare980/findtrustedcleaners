@@ -15,8 +15,6 @@ export async function POST(req) {
   try {
     const { email, password, userType } = await req.json();
     console.log('📥 Login attempt:', { email, userType });
-    console.log('📥 Raw email length:', email.length);
-    console.log('📥 Email with quotes:', `"${email}"`);
 
     if (!email || !password || !userType) {
       console.log('❌ Missing fields');
@@ -26,8 +24,8 @@ export async function POST(req) {
       );
     }
 
-    const trimmedEmail = email.trim().toLowerCase(); // Make case-insensitive
-    console.log('🔍 Searching with trimmed/lowercase email:', `"${trimmedEmail}"`);
+    const trimmedEmail = email.trim().toLowerCase();
+    console.log('🔍 Searching with email:', `"${trimmedEmail}"`);
 
     let user;
     let Model;
@@ -46,12 +44,6 @@ export async function POST(req) {
       );
     }
 
-    // First, let's see ALL users in the collection
-    const allUsers = await Model.find({});
-    console.log('🗃️ Total users in collection:', allUsers.length);
-    console.log('🗃️ All emails in database:', allUsers.map(u => `"${u.email}"`));
-
-    // Try different query approaches
     console.log('🔍 Trying exact match...');
     user = await Model.findOne({ email: trimmedEmail });
 
@@ -67,25 +59,10 @@ export async function POST(req) {
       user = await Model.findOne({ email: email.trim() });
     }
 
-    console.log('👤 User found after all attempts:', user ? 'YES' : 'NO');
-
-    if (user) {
-      console.log('👤 Found user details:', {
-        id: user._id,
-        email: `"${user.email}"`,
-        emailLength: user.email.length,
-        hasPassword: !!user.password,
-        passwordLength: user.password ? user.password.length : 0
-      });
-    } else {
-      const similarEmails = await Model.find({
-        email: { $regex: trimmedEmail.split('@')[0], $options: 'i' }
-      });
-      console.log('🔍 Similar emails found:', similarEmails.map(u => `"${u.email}"`));
-    }
+    console.log('👤 User found:', user ? 'YES' : 'NO');
 
     if (!user) {
-      console.log('❌ User not found after all attempts');
+      console.log('❌ User not found');
       return new NextResponse(
         JSON.stringify({ success: false, message: 'Invalid email or password.' }),
         { status: 401 }
@@ -98,15 +75,15 @@ export async function POST(req) {
 
     if (!isPasswordValid) {
       console.log('❌ Incorrect password');
-      console.log('🔐 Stored hash starts with $2b?', user.password.startsWith('$2b'));
       return new NextResponse(
         JSON.stringify({ success: false, message: 'Invalid email or password.' }),
         { status: 401 }
       );
     }
 
-    // ✅ FIX: Stringify user._id in token
-    const token = createToken({ _id: user._id.toString(), type: userType });
+    // ✅ Stringify user._id correctly
+    const stringifiedUserId = user._id.toString();
+    const token = createToken({ _id: stringifiedUserId, type: userType });
 
     const cookie = serialize('token', token, {
       httpOnly: true,
@@ -116,10 +93,10 @@ export async function POST(req) {
       maxAge: 60 * 60 * 24 * 7, // 7 days
     });
 
-    console.log('✅ Login successful, token created');
+    console.log('✅ Client Login Success, ID:', stringifiedUserId);
 
     return new NextResponse(
-      JSON.stringify({ success: true, id: user._id, type: userType }),
+      JSON.stringify({ success: true, id: stringifiedUserId, type: userType }),
       {
         status: 200,
         headers: { 'Set-Cookie': cookie, 'Content-Type': 'application/json' },
