@@ -8,23 +8,21 @@ export async function GET(req) {
   const authResult = await protectRoute(req);
 
   if (authResult.error) {
-    // ❌ If token is missing or invalid, return 401
     return new NextResponse(
       JSON.stringify({ success: false, message: authResult.error }),
       { status: 401 }
     );
   }
 
-  // ✅ Extract user ID and type from decoded token
-  const { id, type } = authResult.user;
+  // ✅ Correct token extraction
+  const { _id, type } = authResult.user;
 
   let user;
 
-  // ✅ Fetch the correct user from the database based on type
   if (type === 'cleaner') {
-    user = await Cleaner.findById(id);
+    user = await Cleaner.findById(_id);
   } else if (type === 'client') {
-    user = await Client.findById(id);
+    user = await Client.findById(_id);
   } else {
     return new NextResponse(
       JSON.stringify({ success: false, message: 'Invalid user type' }),
@@ -39,7 +37,6 @@ export async function GET(req) {
     );
   }
 
-  // ✅ Return user profile data AND type
   return new NextResponse(
     JSON.stringify({ success: true, user: { ...user.toObject(), type } }),
     { status: 200 }
