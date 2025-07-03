@@ -25,6 +25,9 @@ export default function CleanerRegister() {
     businessInsurance: false,
   });
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState({});
+
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const hours = Array.from({ length: 13 }, (_, i) => 7 + i);
   const servicesList = ['Window Cleaning', 'End of Tenancy', 'Carpet Cleaning', 'Oven Cleaning', 'White Goods'];
@@ -48,6 +51,10 @@ export default function CleanerRegister() {
         services: exists ? prev.services.filter(s => s !== service) : [...prev.services, service]
       };
     });
+    // Clear services error when user selects a service
+    if (errors.services) {
+      setErrors(prev => ({ ...prev, services: '' }));
+    }
   };
 
   const handleChange = (e) => {
@@ -56,57 +63,104 @@ export default function CleanerRegister() {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
+    
+    // Clear field error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    // Check required fields
+    if (!form.realName.trim()) newErrors.realName = 'Real name is required';
+    if (!form.companyName.trim()) newErrors.companyName = 'Company name is required';
+    if (!form.houseNameNumber.trim()) newErrors.houseNameNumber = 'House name/number is required';
+    if (!form.street.trim()) newErrors.street = 'Street is required';
+    if (!form.county.trim()) newErrors.county = 'County is required';
+    if (!form.postcode.trim()) newErrors.postcode = 'Postcode is required';
+    if (!form.email.trim()) newErrors.email = 'Email is required';
+    if (!form.phone.trim()) newErrors.phone = 'Phone is required';
+    if (!form.password) newErrors.password = 'Password is required';
+    if (!form.confirmPassword) newErrors.confirmPassword = 'Please confirm your password';
+    if (!form.rates.trim()) newErrors.rates = 'Hourly rate is required';
+
+    // Check password match
+    if (form.password !== form.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
+
+    // Check services
+    if (form.services.length === 0) {
+      newErrors.services = 'Please select at least one service';
+    }
+
+    // Check rates
+    const parsedRates = parseFloat(form.rates.replace(/[^0-9.]/g, '')) || 0;
+    if (parsedRates <= 0) {
+      newErrors.rates = 'Please enter a valid hourly rate greater than 0';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (form.password !== form.confirmPassword) {
-      alert('Passwords do not match');
+    if (!validateForm()) {
       return;
     }
+
+    setIsSubmitting(true);
+    setErrors({});
 
     const parsedRates = parseFloat(form.rates.replace(/[^0-9.]/g, '')) || 0;
 
     try {
+      console.log('🚀 Submitting form data...');
+      
+      const payload = {
+        realName: form.realName.trim(),
+        companyName: form.companyName.trim(),
+        email: form.email.trim(),
+        password: form.password,
+        phone: form.phone.trim(),
+        rates: parsedRates,
+        services: form.services,
+        address: {
+          houseNameNumber: form.houseNameNumber.trim(),
+          street: form.street.trim(),
+          county: form.county.trim(),
+          postcode: form.postcode.trim()
+        }
+      };
+
+      console.log('📦 Payload:', JSON.stringify(payload, null, 2));
+
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include', // accept the cookie from server
-        body: JSON.stringify({
-          realName: form.realName,
-          companyName: form.companyName,
-          email: form.email,
-          password: form.password,
-          phone: form.phone,
-          rates: parsedRates,
-          services: form.services,
-          address: {
-            houseNameNumber: form.houseNameNumber,
-            street: form.street,
-            county: form.county,
-            postcode: form.postcode
-          },
-          businessInsurance: form.businessInsurance,
-          userType: 'cleaner',  // important!
-        }),
+        credentials: 'include',
+        body: JSON.stringify(payload),
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success) {
-          router.push('/cleaners/dashboard');
-        } else {
-          alert(data.message || 'Something went wrong. Please try again.');
-        }
+      const data = await res.json();
+      console.log('📥 Response:', data);
+
+      if (res.ok && data.success) {
+        console.log('✅ Registration successful');
+        router.push('/cleaners/dashboard');
       } else {
-        const errorText = await res.text();
-        console.error('API Error:', errorText);
-        alert('Failed to register. Please try again.');
+        console.error('❌ Registration failed:', data.message);
+        setErrors({ submit: data.message || 'Registration failed. Please try again.' });
       }
     } catch (err) {
-      console.error('Registration error:', err);
-      alert('An unexpected error occurred. Please try again.');
+      console.error('💥 Registration error:', err);
+      setErrors({ submit: 'An unexpected error occurred. Please try again.' });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -138,36 +192,177 @@ export default function CleanerRegister() {
 
         <section className="max-w-3xl mx-auto p-6">
           <h1 className="text-3xl font-bold text-[#0D9488] mb-4">Register as a Cleaner</h1>
+          
+          {errors.submit && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+              {errors.submit}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
-            <input name="realName" onChange={handleChange} value={form.realName} placeholder="Real Name" className="w-full p-2 border rounded text-[#0D9488] bg-white" required />
-            <input name="companyName" onChange={handleChange} value={form.companyName} placeholder="Company Name" className="w-full p-2 border rounded text-[#0D9488] bg-white" required />
+            <div>
+              <input 
+                name="realName" 
+                onChange={handleChange} 
+                value={form.realName} 
+                placeholder="Real Name" 
+                className={`w-full p-2 border rounded text-[#0D9488] bg-white ${errors.realName ? 'border-red-500' : ''}`}
+                required 
+              />
+              {errors.realName && <p className="text-red-500 text-sm mt-1">{errors.realName}</p>}
+            </div>
+
+            <div>
+              <input 
+                name="companyName" 
+                onChange={handleChange} 
+                value={form.companyName} 
+                placeholder="Company Name" 
+                className={`w-full p-2 border rounded text-[#0D9488] bg-white ${errors.companyName ? 'border-red-500' : ''}`}
+                required 
+              />
+              {errors.companyName && <p className="text-red-500 text-sm mt-1">{errors.companyName}</p>}
+            </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <input name="houseNameNumber" onChange={handleChange} value={form.houseNameNumber} placeholder="House Name/Number" className="w-full p-2 border rounded text-[#0D9488] bg-white" required />
-              <input name="street" onChange={handleChange} value={form.street} placeholder="Street" className="w-full p-2 border rounded text-[#0D9488] bg-white" required />
+              <div>
+                <input 
+                  name="houseNameNumber" 
+                  onChange={handleChange} 
+                  value={form.houseNameNumber} 
+                  placeholder="House Name/Number" 
+                  className={`w-full p-2 border rounded text-[#0D9488] bg-white ${errors.houseNameNumber ? 'border-red-500' : ''}`}
+                  required 
+                />
+                {errors.houseNameNumber && <p className="text-red-500 text-sm mt-1">{errors.houseNameNumber}</p>}
+              </div>
+              <div>
+                <input 
+                  name="street" 
+                  onChange={handleChange} 
+                  value={form.street} 
+                  placeholder="Street" 
+                  className={`w-full p-2 border rounded text-[#0D9488] bg-white ${errors.street ? 'border-red-500' : ''}`}
+                  required 
+                />
+                {errors.street && <p className="text-red-500 text-sm mt-1">{errors.street}</p>}
+              </div>
             </div>
+
             <div className="grid grid-cols-2 gap-4">
-              <input name="county" onChange={handleChange} value={form.county} placeholder="County" className="w-full p-2 border rounded text-[#0D9488] bg-white" required />
-              <input name="postcode" onChange={handleChange} value={form.postcode} placeholder="Postcode" className="w-full p-2 border rounded text-[#0D9488] bg-white" required />
+              <div>
+                <input 
+                  name="county" 
+                  onChange={handleChange} 
+                  value={form.county} 
+                  placeholder="County" 
+                  className={`w-full p-2 border rounded text-[#0D9488] bg-white ${errors.county ? 'border-red-500' : ''}`}
+                  required 
+                />
+                {errors.county && <p className="text-red-500 text-sm mt-1">{errors.county}</p>}
+              </div>
+              <div>
+                <input 
+                  name="postcode" 
+                  onChange={handleChange} 
+                  value={form.postcode} 
+                  placeholder="Postcode" 
+                  className={`w-full p-2 border rounded text-[#0D9488] bg-white ${errors.postcode ? 'border-red-500' : ''}`}
+                  required 
+                />
+                {errors.postcode && <p className="text-red-500 text-sm mt-1">{errors.postcode}</p>}
+              </div>
             </div>
 
-            <input name="email" onChange={handleChange} value={form.email} placeholder="Email" type="email" className="w-full p-2 border rounded text-[#0D9488] bg-white" required />
-            <input name="phone" onChange={handleChange} value={form.phone} placeholder="Phone" type="tel" className="w-full p-2 border rounded text-[#0D9488] bg-white" required />
-            <input name="password" onChange={handleChange} value={form.password} placeholder="Password" type="password" className="w-full p-2 border rounded text-[#0D9488] bg-white" required />
-            <input name="confirmPassword" onChange={handleChange} value={form.confirmPassword} placeholder="Confirm Password" type="password" className="w-full p-2 border rounded text-[#0D9488] bg-white" required />
-            <input name="rates" onChange={handleChange} value={form.rates} placeholder="Hourly Rate (e.g. £15/hr)" className="w-full p-2 border rounded text-[#0D9488] bg-white" required />
+            <div>
+              <input 
+                name="email" 
+                onChange={handleChange} 
+                value={form.email} 
+                placeholder="Email" 
+                type="email" 
+                className={`w-full p-2 border rounded text-[#0D9488] bg-white ${errors.email ? 'border-red-500' : ''}`}
+                required 
+              />
+              {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+            </div>
 
-            <div className="p-4 bg-white rounded border shadow-sm">
-              <h2 className="text-lg font-semibold mb-2 text-gray-600">Extras You Offer</h2>
+            <div>
+              <input 
+                name="phone" 
+                onChange={handleChange} 
+                value={form.phone} 
+                placeholder="Phone" 
+                type="tel" 
+                className={`w-full p-2 border rounded text-[#0D9488] bg-white ${errors.phone ? 'border-red-500' : ''}`}
+                required 
+              />
+              {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
+            </div>
+
+            <div>
+              <input 
+                name="password" 
+                onChange={handleChange} 
+                value={form.password} 
+                placeholder="Password" 
+                type="password" 
+                className={`w-full p-2 border rounded text-[#0D9488] bg-white ${errors.password ? 'border-red-500' : ''}`}
+                required 
+              />
+              {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
+            </div>
+
+            <div>
+              <input 
+                name="confirmPassword" 
+                onChange={handleChange} 
+                value={form.confirmPassword} 
+                placeholder="Confirm Password" 
+                type="password" 
+                className={`w-full p-2 border rounded text-[#0D9488] bg-white ${errors.confirmPassword ? 'border-red-500' : ''}`}
+                required 
+              />
+              {errors.confirmPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>}
+            </div>
+
+            <div>
+              <input 
+                name="rates" 
+                onChange={handleChange} 
+                value={form.rates} 
+                placeholder="Hourly Rate (e.g. £15/hr)" 
+                className={`w-full p-2 border rounded text-[#0D9488] bg-white ${errors.rates ? 'border-red-500' : ''}`}
+                required 
+              />
+              {errors.rates && <p className="text-red-500 text-sm mt-1">{errors.rates}</p>}
+            </div>
+
+            <div className={`p-4 bg-white rounded border shadow-sm ${errors.services ? 'border-red-500' : ''}`}>
+              <h2 className="text-lg font-semibold mb-2 text-gray-600">Services You Offer</h2>
               <div className="grid grid-cols-2 gap-2 text-gray-600">
                 {servicesList.map(service => (
                   <label key={service} className="flex items-center gap-2">
-                    <input type="checkbox" checked={form.services.includes(service)} onChange={() => handleServiceToggle(service)} />
+                    <input 
+                      type="checkbox" 
+                      checked={form.services.includes(service)} 
+                      onChange={() => handleServiceToggle(service)} 
+                    />
                     {service}
                   </label>
                 ))}
+              </div>
+              {errors.services && <p className="text-red-500 text-sm mt-2">{errors.services}</p>}
+              
+              <div className="mt-4 pt-4 border-t">
                 <label className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" name="businessInsurance" checked={form.businessInsurance} onChange={handleChange} className="accent-teal-700" />
+                  <input 
+                    type="checkbox" 
+                    name="businessInsurance" 
+                    checked={form.businessInsurance} 
+                    onChange={handleChange} 
+                    className="accent-teal-700" 
+                  />
                   <span>I have business insurance</span>
                 </label>
               </div>
@@ -213,8 +408,16 @@ export default function CleanerRegister() {
               </span>
             </label>
 
-            <button type="submit" className="mt-4 w-full bg-[#0D9488] text-white py-3 rounded shadow hover:bg-teal-700">
-              Register Cleaner
+            <button 
+              type="submit" 
+              disabled={isSubmitting}
+              className={`mt-4 w-full py-3 rounded shadow text-white font-medium ${
+                isSubmitting 
+                  ? 'bg-gray-400 cursor-not-allowed' 
+                  : 'bg-[#0D9488] hover:bg-teal-700'
+              }`}
+            >
+              {isSubmitting ? 'Registering...' : 'Register Cleaner'}
             </button>
           </form>
         </section>

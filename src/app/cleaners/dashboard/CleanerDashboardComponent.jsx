@@ -16,6 +16,8 @@ export default function CleanerDashboardComponent() {
   const [saving, setSaving] = useState(false);
   const [availabilityChanged, setAvailabilityChanged] = useState(false);
   const [message, setMessage] = useState('');
+  const [editMode, setEditMode] = useState(false);
+  const [editData, setEditData] = useState({});
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -52,12 +54,15 @@ export default function CleanerDashboardComponent() {
         const data = await res.json();
         if (!data.cleaner) throw new Error('Cleaner data missing');
 
-        setFormData({
+        const cleanerData = {
           ...data.cleaner,
           services: data.cleaner.services || [],
           availability: data.cleaner.availability || {},
           businessInsurance: data.cleaner.businessInsurance || false,
-        });
+        };
+
+        setFormData(cleanerData);
+        setEditData(cleanerData);
       } catch (err) {
         console.error(err);
         router.push('/login');
@@ -162,111 +167,294 @@ export default function CleanerDashboardComponent() {
     }
   };
 
+  const handleEditToggle = () => {
+    if (editMode) {
+      // Cancel edit - restore original data
+      setEditData({ ...formData });
+    }
+    setEditMode(!editMode);
+  };
+
+  const handleEditSave = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/cleaners/${cleaner._id}`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editData),
+      });
+      
+      if (!res.ok) throw new Error('Update failed');
+      
+      setFormData({ ...editData });
+      setEditMode(false);
+      setMessage('✅ Profile updated successfully!');
+    } catch (err) {
+      console.error(err);
+      setMessage('❌ Error updating profile.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleInputChange = (field, value) => {
+    if (field.includes('.')) {
+      const [parent, child] = field.split('.');
+      setEditData(prev => ({
+        ...prev,
+        [parent]: {
+          ...prev[parent],
+          [child]: value
+        }
+      }));
+    } else {
+      setEditData(prev => ({
+        ...prev,
+        [field]: value
+      }));
+    }
+  };
+
+  const handleServicesChange = (value) => {
+    const services = value.split(',').map(s => s.trim()).filter(s => s);
+    setEditData(prev => ({
+      ...prev,
+      services
+    }));
+  };
+
   if (!mounted) return null;
   if (loading || !formData) return <LoadingSpinner />;
 
   return (
-    <div className="min-h-screen bg-teal-700 py-10 px-4">
-      <div className="max-w-4xl mx-auto p-6 bg-white shadow rounded-xl">
-        <h1 className="text-3xl font-bold text-teal-700 mb-6 text-center">Cleaner Dashboard</h1>
+    <div className="min-h-screen bg-gradient-to-br from-teal-600 to-teal-800 py-6 px-4">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="bg-white rounded-2xl shadow-xl mb-6 p-6">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-teal-700 mb-2">Cleaner Dashboard</h1>
+              <p className="text-gray-600">Manage your cleaning services and availability</p>
+            </div>
+            <div className="flex gap-3 mt-4 md:mt-0">
+              <button
+                onClick={handleEditToggle}
+                className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium transition-colors"
+              >
+                {editMode ? 'Cancel Edit' : 'Edit Profile'}
+              </button>
+              {editMode && (
+                <button
+                  onClick={handleEditSave}
+                  disabled={saving}
+                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium disabled:opacity-50 transition-colors"
+                >
+                  {saving ? 'Saving...' : 'Save Profile'}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
 
         {message && (
-          <div className={`mb-4 text-center text-white py-2 rounded ${message.includes('✅') ? 'bg-green-600' : 'bg-red-600'}`}>
+          <div className={`mb-6 text-center text-white py-3 px-4 rounded-lg font-medium ${
+            message.includes('✅') ? 'bg-green-500' : 'bg-red-500'
+          }`}>
             {message}
           </div>
         )}
 
-        {/* Profile Info Display */}
-        <section className="mb-8">
-          <h2 className="text-xl font-semibold text-teal-700 mb-4">Profile Information</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-700">
-            <div><strong>Real Name:</strong> {formData.realName}</div>
-            <div><strong>Company Name:</strong> {formData.companyName}</div>
-            <div><strong>Email:</strong> {formData.email}</div>
-            <div><strong>Phone:</strong> {formData.phone}</div>
-            <div><strong>Hourly Rate:</strong> £{formData.rates}</div>
-            <div><strong>Business Insurance:</strong> {formData.businessInsurance ? 'Yes' : 'No'}</div>
-            <div className="sm:col-span-2">
-              <strong>Services Offered:</strong>{' '}
-              {formData.services.length > 0 ? formData.services.join(', ') : 'None'}
+        {/* Profile Information */}
+        <div className="bg-white rounded-2xl shadow-xl mb-6 p-6">
+          <h2 className="text-2xl font-bold text-teal-700 mb-6">Profile Information</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-600">Real Name</label>
+              {editMode ? (
+                <input
+                  type="text"
+                  value={editData.realName || ''}
+                  onChange={(e) => handleInputChange('realName', e.target.value)}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                />
+              ) : (
+                <p className="text-gray-800 font-medium">{formData.realName || 'Not set'}</p>
+              )}
             </div>
-            <div className="sm:col-span-2">
-              <strong>Address:</strong> {formData.address?.houseNameNumber} {formData.address?.street}, {formData.address?.county}, {formData.address?.postcode}
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-600">Company Name</label>
+              {editMode ? (
+                <input
+                  type="text"
+                  value={editData.companyName || ''}
+                  onChange={(e) => handleInputChange('companyName', e.target.value)}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                />
+              ) : (
+                <p className="text-gray-800 font-medium">{formData.companyName || 'Not set'}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-600">Email</label>
+              {editMode ? (
+                <input
+                  type="email"
+                  value={editData.email || ''}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                />
+              ) : (
+                <p className="text-gray-800 font-medium">{formData.email || 'Not set'}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-600">Phone</label>
+              {editMode ? (
+                <input
+                  type="tel"
+                  value={editData.phone || ''}
+                  onChange={(e) => handleInputChange('phone', e.target.value)}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                />
+              ) : (
+                <p className="text-gray-800 font-medium">{formData.phone || 'Not set'}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-600">Hourly Rate (£)</label>
+              {editMode ? (
+                <input
+                  type="number"
+                  value={editData.rates || ''}
+                  onChange={(e) => handleInputChange('rates', e.target.value)}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                />
+              ) : (
+                <p className="text-gray-800 font-medium">£{formData.rates || '0'}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-600">Business Insurance</label>
+              {editMode ? (
+                <select
+                  value={editData.businessInsurance ? 'true' : 'false'}
+                  onChange={(e) => handleInputChange('businessInsurance', e.target.value === 'true')}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                >
+                  <option value="false">No</option>
+                  <option value="true">Yes</option>
+                </select>
+              ) : (
+                <p className="text-gray-800 font-medium">{formData.businessInsurance ? 'Yes' : 'No'}</p>
+              )}
+            </div>
+
+            <div className="space-y-2 md:col-span-2 lg:col-span-3">
+              <label className="text-sm font-medium text-gray-600">Services Offered</label>
+              {editMode ? (
+                <input
+                  type="text"
+                  value={editData.services?.join(', ') || ''}
+                  onChange={(e) => handleServicesChange(e.target.value)}
+                  placeholder="e.g., Deep cleaning, Regular cleaning, Move-in/out"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                />
+              ) : (
+                <p className="text-gray-800 font-medium">
+                  {formData.services?.length > 0 ? formData.services.join(', ') : 'No services listed'}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2 md:col-span-2 lg:col-span-3">
+              <label className="text-sm font-medium text-gray-600">Address</label>
+              {editMode ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                  <input
+                    type="text"
+                    value={editData.address?.houseNameNumber || ''}
+                    onChange={(e) => handleInputChange('address.houseNameNumber', e.target.value)}
+                    placeholder="House/Number"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                  />
+                  <input
+                    type="text"
+                    value={editData.address?.street || ''}
+                    onChange={(e) => handleInputChange('address.street', e.target.value)}
+                    placeholder="Street"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                  />
+                  <input
+                    type="text"
+                    value={editData.address?.county || ''}
+                    onChange={(e) => handleInputChange('address.county', e.target.value)}
+                    placeholder="County"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                  />
+                  <input
+                    type="text"
+                    value={editData.address?.postcode || ''}
+                    onChange={(e) => handleInputChange('address.postcode', e.target.value)}
+                    placeholder="Postcode"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                  />
+                </div>
+              ) : (
+                <p className="text-gray-800 font-medium">
+                  {formData.address?.houseNameNumber} {formData.address?.street}, {formData.address?.county}, {formData.address?.postcode}
+                </p>
+              )}
             </div>
           </div>
-        </section>
+        </div>
 
         {/* Availability Grid */}
-        <section className="mb-6">
-          <h2 className="text-xl font-semibold text-teal-700 mb-2">Availability Grid</h2>
+        <div className="bg-white rounded-2xl shadow-xl p-6">
+          <h2 className="text-2xl font-bold text-teal-700 mb-6">Availability Grid</h2>
+          
+          {/* Desktop View */}
+          <div className="hidden lg:block overflow-x-auto">
+            <div className="grid grid-cols-[120px_repeat(13,_minmax(70px,_1fr))] gap-1 text-sm">
+              <div className="p-2 font-bold text-center text-gray-700"></div>
+              {hours.map(hour => (
+                <div key={hour} className="p-2 text-center font-bold text-gray-700 bg-gray-50 rounded">
+                  {hour}:00
+                </div>
+              ))}
 
-          <div className="hidden sm:grid grid-cols-[80px_repeat(13,_1fr)] gap-0.5 text-xs">
-            <div></div>
-            {hours.map(hour => (
-              <div key={hour} className="text-center font-bold text-gray-700">{hour}:00</div>
-            ))}
-
-            {days.map(day => (
-              <React.Fragment key={day}>
-                <div className="font-semibold text-gray-800">{day}</div>
-                {hours.map(hour => {
-                  const slot = formData.availability?.[day]?.[hour];
-                  const status = typeof slot === 'object' ? slot.status : slot;
-
-                  if (status === 'pending') {
-                    return (
-                      <div key={`${day}-${hour}`} className="flex flex-col items-center justify-center bg-yellow-400 text-white rounded p-1">
-                        <span>Pending</span>
-                        <div className="flex space-x-1 mt-1">
-                          <button className="bg-green-600 px-1 rounded" onClick={() => handleConfirm(day, hour)}>✔️</button>
-                          <button className="bg-red-600 px-1 rounded" onClick={() => handleDecline(day, hour)}>❌</button>
-                        </div>
-                      </div>
-                    );
-                  }
-
-                  const isBooked = status === false;
-                  const isAvailable = status === true;
-                  const isUnavailable = status === 'unavailable';
-
-                  return (
-                    <div
-                      key={`${day}-${hour}`}
-                      className={`h-5 w-full flex items-center justify-center rounded cursor-pointer ${isBooked
-                        ? 'bg-red-700 text-white cursor-not-allowed'
-                        : isUnavailable
-                          ? 'bg-red-500 text-white'
-                          : isAvailable
-                            ? 'bg-green-500 text-white'
-                            : 'bg-gray-300'
-                        }`}
-                      onClick={() => toggleAvailability(day, hour)}
-                    >
-                      {isBooked ? 'Booked' : isUnavailable ? '❌' : isAvailable ? '✔️' : 'Unavailable'}
-                    </div>
-                  );
-                })}
-              </React.Fragment>
-            ))}
-          </div>
-
-          {/* Mobile View */}
-          <div className="sm:hidden space-y-4 mt-4">
-            {days.map(day => (
-              <div key={day}>
-                <h3 className="text-md font-semibold text-gray-700">{day}</h3>
-                <div className="grid grid-cols-3 gap-1 text-xs">
+              {days.map(day => (
+                <React.Fragment key={day}>
+                  <div className="p-2 font-bold text-gray-800 bg-gray-50 rounded flex items-center">
+                    {day}
+                  </div>
                   {hours.map(hour => {
                     const slot = formData.availability?.[day]?.[hour];
                     const status = typeof slot === 'object' ? slot.status : slot;
 
                     if (status === 'pending') {
                       return (
-                        <div key={`${day}-${hour}`} className="flex flex-col items-center justify-center bg-yellow-400 text-white rounded p-1">
-                          <span>Pending</span>
-                          <div className="flex space-x-1 mt-1">
-                            <button className="bg-green-600 px-1 rounded" onClick={() => handleConfirm(day, hour)}>✔️</button>
-                            <button className="bg-red-600 px-1 rounded" onClick={() => handleDecline(day, hour)}>❌</button>
+                        <div key={`${day}-${hour}`} className="p-2 bg-yellow-400 text-white rounded flex flex-col items-center justify-center min-h-[60px]">
+                          <span className="text-xs font-medium mb-1">Pending</span>
+                          <div className="flex space-x-1">
+                            <button 
+                              className="bg-green-600 hover:bg-green-700 px-2 py-1 rounded text-xs transition-colors" 
+                              onClick={() => handleConfirm(day, hour)}
+                            >
+                              ✔️
+                            </button>
+                            <button 
+                              className="bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-xs transition-colors" 
+                              onClick={() => handleDecline(day, hour)}
+                            >
+                              ❌
+                            </button>
                           </div>
                         </div>
                       );
@@ -279,17 +467,81 @@ export default function CleanerDashboardComponent() {
                     return (
                       <div
                         key={`${day}-${hour}`}
-                        className={`w-full py-0.5 text-center rounded cursor-pointer ${isBooked
-                          ? 'bg-red-700 text-white cursor-not-allowed'
-                          : isUnavailable
-                            ? 'bg-red-500 text-white'
-                            : isAvailable
-                              ? 'bg-green-500 text-white'
-                              : 'bg-gray-300'
-                          }`}
+                        className={`p-2 min-h-[60px] flex items-center justify-center rounded cursor-pointer transition-all font-medium text-sm ${
+                          isBooked
+                            ? 'bg-red-600 text-white cursor-not-allowed'
+                            : isUnavailable
+                              ? 'bg-red-400 text-white hover:bg-red-500'
+                              : isAvailable
+                                ? 'bg-green-500 text-white hover:bg-green-600'
+                                : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
+                        }`}
                         onClick={() => toggleAvailability(day, hour)}
                       >
-                        {isBooked ? `${hour}:00 Booked` : isUnavailable ? `${hour}:00 ❌` : isAvailable ? `${hour}:00 ✔️` : `${hour}:00 Unavailable`}
+                        {isBooked ? 'Booked' : isUnavailable ? 'Unavailable' : isAvailable ? 'Available' : 'Set'}
+                      </div>
+                    );
+                  })}
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
+
+          {/* Mobile/Tablet View */}
+          <div className="lg:hidden space-y-6">
+            {days.map(day => (
+              <div key={day} className="bg-gray-50 rounded-lg p-4">
+                <h3 className="text-lg font-bold text-gray-800 mb-3">{day}</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                  {hours.map(hour => {
+                    const slot = formData.availability?.[day]?.[hour];
+                    const status = typeof slot === 'object' ? slot.status : slot;
+
+                    if (status === 'pending') {
+                      return (
+                        <div key={`${day}-${hour}`} className="p-3 bg-yellow-400 text-white rounded-lg flex flex-col items-center justify-center">
+                          <span className="text-xs font-medium mb-2">{hour}:00</span>
+                          <span className="text-xs mb-2">Pending</span>
+                          <div className="flex space-x-1">
+                            <button 
+                              className="bg-green-600 hover:bg-green-700 px-2 py-1 rounded text-xs transition-colors" 
+                              onClick={() => handleConfirm(day, hour)}
+                            >
+                              ✔️
+                            </button>
+                            <button 
+                              className="bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-xs transition-colors" 
+                              onClick={() => handleDecline(day, hour)}
+                            >
+                              ❌
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    const isBooked = status === false;
+                    const isAvailable = status === true;
+                    const isUnavailable = status === 'unavailable';
+
+                    return (
+                      <div
+                        key={`${day}-${hour}`}
+                        className={`p-3 rounded-lg cursor-pointer transition-all text-center font-medium ${
+                          isBooked
+                            ? 'bg-red-600 text-white cursor-not-allowed'
+                            : isUnavailable
+                              ? 'bg-red-400 text-white hover:bg-red-500'
+                              : isAvailable
+                                ? 'bg-green-500 text-white hover:bg-green-600'
+                                : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
+                        }`}
+                        onClick={() => toggleAvailability(day, hour)}
+                      >
+                        <div className="text-xs font-bold mb-1">{hour}:00</div>
+                        <div className="text-xs">
+                          {isBooked ? 'Booked' : isUnavailable ? 'Unavailable' : isAvailable ? 'Available' : 'Set'}
+                        </div>
                       </div>
                     );
                   })}
@@ -297,17 +549,17 @@ export default function CleanerDashboardComponent() {
               </div>
             ))}
           </div>
-        </section>
 
-        {/* Save Button */}
-        <div className="flex justify-end">
-          <button
-            onClick={handleSave}
-            className="bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-lg shadow disabled:opacity-50"
-            disabled={!availabilityChanged || saving}
-          >
-            {saving ? 'Saving...' : 'Save Changes'}
-          </button>
+          {/* Save Button */}
+          <div className="flex justify-end mt-6">
+            <button
+              onClick={handleSave}
+              className="bg-teal-600 hover:bg-teal-700 text-white px-8 py-3 rounded-lg font-medium shadow-lg disabled:opacity-50 transition-all"
+              disabled={!availabilityChanged || saving}
+            >
+              {saving ? 'Saving...' : 'Save Availability Changes'}
+            </button>
+          </div>
         </div>
       </div>
     </div>
