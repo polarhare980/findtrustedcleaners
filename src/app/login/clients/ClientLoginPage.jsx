@@ -17,7 +17,8 @@ export default function ClientLoginPage() {
       const res = await fetch('/api/clients/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password }),
+        credentials: 'include' // ✅ This is essential to save the cookie
       });
 
       const data = await res.json();
@@ -32,11 +33,11 @@ export default function ClientLoginPage() {
           router.push('/clients/dashboard');
         }
       } else {
-        alert(data.message || 'Login failed');
+        alert(data.message || 'Login failed.');
       }
     } catch (err) {
       console.error('Login error:', err);
-      alert('Something went wrong.');
+      alert('Something went wrong. Please try again.');
     }
   };
 
