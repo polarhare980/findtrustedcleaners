@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
-import { cookies } from 'next/headers';
+import { NextResponse } from 'next/server';
 
-// 🔒 Example Secret (replace in production)
+// ✅ Example Secret (replace in production)
 const JWT_SECRET = 'super_secret_debug_key';
 
 // ✅ Create Token
@@ -18,15 +18,17 @@ export function verifyToken(token) {
   }
 }
 
-// ✅ Corrected Protect Route
+// ✅ Stable Protect Route - Reads Cookie Directly
 export async function protectRoute(req) {
-  const cookieStore = cookies();
-  const token = cookieStore.get('token')?.value;
+  // Read cookies directly from request headers
+  const cookieHeader = req.headers.get('cookie') || '';
+  const tokenMatch = cookieHeader.match(/token=([^;]+)/);
+  const token = tokenMatch ? tokenMatch[1] : null;
 
   if (!token) {
     return {
       valid: false,
-      response: new NextResponse(JSON.stringify({ success: false, message: 'Unauthorized' }), { status: 401 }),
+      response: new NextResponse(JSON.stringify({ success: false, message: 'Unauthorized - No token' }), { status: 401 }),
     };
   }
 
