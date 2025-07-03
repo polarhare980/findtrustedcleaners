@@ -20,28 +20,40 @@ export default function CleanerDashboardComponent() {
   const [editData, setEditData] = useState({});
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const fetchCleaner = async () => {
-        try {
-          const res = await fetch('/api/auth/me', { credentials: 'include' });
-          const data = await res.json();
+  if (typeof window !== 'undefined') {
+    const fetchCleaner = async () => {
+      try {
+        const res = await fetch('/api/auth/me', { credentials: 'include' });
+        const data = await res.json();
 
-          if (!data.success || data.user.type !== 'cleaner') {
-            router.push('/login');
-            return;
-          }
-
-          setCleaner(data.user);
-        } catch {
+        if (!data.success || data.user.type !== 'cleaner') {
           router.push('/login');
-        } finally {
-          setMounted(true);
+          return;
         }
-      };
 
-      fetchCleaner();
-    }
-  }, [router]);
+        setCleaner(data.user);
+        // ✅ Directly set formData from the returned user
+        const cleanerData = {
+          ...data.user,
+          services: data.user.services || [],
+          availability: data.user.availability || {},
+          businessInsurance: data.user.businessInsurance || false,
+        };
+
+        setFormData(cleanerData);
+        setEditData(cleanerData);
+      } catch {
+        router.push('/login');
+      } finally {
+        setMounted(true);
+        setLoading(false);
+      }
+    };
+
+    fetchCleaner();
+  }
+}, [router]);
+
 
   useEffect(() => {
     if (!cleaner) return;

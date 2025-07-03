@@ -1,6 +1,5 @@
 import jwt from 'jsonwebtoken';
 import { cookies } from 'next/headers';
-import { NextResponse } from 'next/server';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_default_secret';
 
@@ -18,28 +17,20 @@ export function verifyToken(token) {
   }
 }
 
-// ✅ Protect Route: Read Token from Cookies (Next.js 13+ App Router Syntax)
+// ✅ Protect Route (Correct format for your existing routes)
 export async function protectRoute() {
   const cookieStore = cookies();
   const token = cookieStore.get('token')?.value;
 
   if (!token) {
-    return {
-      valid: false,
-      user: null,
-      response: NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 }),
-    };
+    return { error: 'Unauthorized' };
   }
 
   const user = verifyToken(token);
 
   if (!user) {
-    return {
-      valid: false,
-      user: null,
-      response: NextResponse.json({ success: false, message: 'Invalid or expired token' }, { status: 401 }),
-    };
+    return { error: 'Invalid or expired token' };
   }
 
-  return { valid: true, user };
+  return { user };
 }

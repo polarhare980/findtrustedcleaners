@@ -140,12 +140,13 @@ export default function CleanerRegister() {
 
     console.log('📦 Payload:', JSON.stringify(payload, null, 2));
 
-    const res = await fetch('/api/cleaners/register', {  // ✅ New endpoint
+    const res = await fetch('/api/auth/register', {  // 🔥 Change to unified route
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   credentials: 'include',
   body: JSON.stringify(payload),
 });
+
 
     const data = await res.json();
     console.log('📥 Response:', data);
