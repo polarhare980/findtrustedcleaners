@@ -5,6 +5,8 @@ import Cleaner from '@/models/Cleaner';
 import Client from '@/models/Client';
 import bcrypt from 'bcryptjs';
 import { NextResponse } from 'next/server';
+import { createToken } from '@/lib/auth';
+import { serialize } from 'cookie';
 
 export async function POST(req) {
   await connectToDatabase();
@@ -106,9 +108,24 @@ export async function POST(req) {
     await newUser.save();
     console.log('✅ User saved successfully');
 
+    // Create token & cookie for automatic login
+    const stringifiedUserId = newUser._id.toString();
+    const token = createToken({ _id: stringifiedUserId, type: userType });
+
+    const cookie = serialize('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      path: '/',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+    });
+
     return new NextResponse(
-      JSON.stringify({ success: true, message: 'User registered successfully.' }),
-      { status: 201 }
+      JSON.stringify({ success: true, id: stringifiedUserId, type: userType }),
+      {
+        status: 201,
+        headers: { 'Set-Cookie': cookie, 'Content-Type': 'application/json' },
+      }
     );
   } catch (err) {
     console.error('❌ Registration error:', err);

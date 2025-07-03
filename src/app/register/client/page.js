@@ -53,36 +53,19 @@ function ClientRegisterPage() {
           password: form.password,
           userType: 'client',
         }),
+        credentials: 'include',  // important to accept set-cookie from API
       });
 
       if (res.ok) {
         const data = await res.json();
 
         if (data.success) {
-          // ✅ Auto-login after successful registration
-          const loginRes = await fetch('/api/auth/login', {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              email: form.email,
-              password: form.password,
-              userType: 'client',
-            }),
-          });
-
-          const loginData = await loginRes.json();
-
-          if (loginRes.ok && loginData.success) {
-            const nextUrl = searchParams.get('next');
-            if (nextUrl) {
-              router.push(nextUrl);
-            } else {
-              router.push('/clients/dashboard');
-            }
+          // Registration sets cookie, so user is logged in
+          const nextUrl = searchParams.get('next');
+          if (nextUrl) {
+            router.push(nextUrl);
           } else {
-            setMessage('Registration successful, but login failed. Please log in manually.');
-            router.push('/login');
+            router.push('/clients/dashboard');
           }
         } else {
           setMessage('Registration failed. Please try again.');

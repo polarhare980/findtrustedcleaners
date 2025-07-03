@@ -66,13 +66,13 @@ export default function CleanerRegister() {
       return;
     }
 
-    // Parse rates to a number (remove £ and other chars)
     const parsedRates = parseFloat(form.rates.replace(/[^0-9.]/g, '')) || 0;
 
     try {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // accept the cookie from server
         body: JSON.stringify({
           realName: form.realName,
           companyName: form.companyName,
@@ -86,14 +86,16 @@ export default function CleanerRegister() {
             street: form.street,
             county: form.county,
             postcode: form.postcode
-          }
+          },
+          businessInsurance: form.businessInsurance,
+          userType: 'cleaner',  // important!
         }),
       });
 
       if (res.ok) {
         const data = await res.json();
         if (data.success) {
-          router.push(`/cleaners/success`);
+          router.push('/cleaners/dashboard');
         } else {
           alert(data.message || 'Something went wrong. Please try again.');
         }
