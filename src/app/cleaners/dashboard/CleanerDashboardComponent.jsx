@@ -55,36 +55,7 @@ export default function CleanerDashboardComponent() {
 }, [router]);
 
 
-  useEffect(() => {
-    if (!cleaner) return;
-
-    const fetchCleanerDetails = async () => {
-      try {
-        const res = await fetch('/api/cleaners/me', { credentials: 'include' });
-        if (!res.ok) throw new Error('Failed to fetch cleaner details');
-
-        const data = await res.json();
-        if (!data.cleaner) throw new Error('Cleaner data missing');
-
-        const cleanerData = {
-          ...data.cleaner,
-          services: data.cleaner.services || [],
-          availability: data.cleaner.availability || {},
-          businessInsurance: data.cleaner.businessInsurance || false,
-        };
-
-        setFormData(cleanerData);
-        setEditData(cleanerData);
-      } catch (err) {
-        console.error(err);
-        router.push('/login');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCleanerDetails();
-  }, [cleaner, router]);
+  
 
   const toggleAvailability = (day, hour) => {
     const slot = formData.availability?.[day]?.[hour];
