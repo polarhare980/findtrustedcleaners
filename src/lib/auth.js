@@ -1,7 +1,8 @@
 import jwt from 'jsonwebtoken';
 import { cookies } from 'next/headers';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your_default_secret';
+// 🔒 Example Secret (replace in production)
+const JWT_SECRET = 'super_secret_debug_key';
 
 // ✅ Create Token
 export function createToken(payload) {
@@ -17,20 +18,26 @@ export function verifyToken(token) {
   }
 }
 
-// ✅ Protect Route (Correct format for your existing routes)
-export async function protectRoute() {
+// ✅ Corrected Protect Route
+export async function protectRoute(req) {
   const cookieStore = cookies();
   const token = cookieStore.get('token')?.value;
 
   if (!token) {
-    return { error: 'Unauthorized' };
+    return {
+      valid: false,
+      response: new NextResponse(JSON.stringify({ success: false, message: 'Unauthorized' }), { status: 401 }),
+    };
   }
 
   const user = verifyToken(token);
 
   if (!user) {
-    return { error: 'Invalid or expired token' };
+    return {
+      valid: false,
+      response: new NextResponse(JSON.stringify({ success: false, message: 'Invalid or expired token' }), { status: 401 }),
+    };
   }
 
-  return { user };
+  return { valid: true, user };
 }
