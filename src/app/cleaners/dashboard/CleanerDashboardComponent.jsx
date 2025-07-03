@@ -147,25 +147,25 @@ export default function CleanerDashboardComponent() {
     }
   };
 
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      const res = await fetch('/api/cleaners/me', {
-        method: 'PUT',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-      if (!res.ok) throw new Error('Update failed');
-      setMessage('✅ Changes saved successfully!');
-      setAvailabilityChanged(false);
-    } catch (err) {
-      console.error(err);
-      setMessage('❌ Error saving changes.');
-    } finally {
-      setSaving(false);
-    }
-  };
+const handleSave = async () => {
+  setSaving(true);
+  try {
+    const res = await fetch(`/api/cleaners/${cleaner._id}`, {  // ✅ Updated path
+      method: 'PUT',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData),
+    });
+    if (!res.ok) throw new Error('Update failed');
+    setMessage('✅ Changes saved successfully!');
+    setAvailabilityChanged(false);
+  } catch (err) {
+    console.error(err);
+    setMessage('❌ Error saving changes.');
+  } finally {
+    setSaving(false);
+  }
+};
 
   const handleEditToggle = () => {
     if (editMode) {
@@ -175,27 +175,28 @@ export default function CleanerDashboardComponent() {
   };
 
   const handleEditSave = async () => {
-    setSaving(true);
-    try {
-      const res = await fetch('/api/cleaners/me', {
-        method: 'PUT',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editData),
-      });
+  setSaving(true);
+  try {
+    const res = await fetch(`/api/cleaners/${cleaner._id}`, {  // ✅ Updated path
+      method: 'PUT',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(editData),
+    });
 
-      if (!res.ok) throw new Error('Update failed');
+    if (!res.ok) throw new Error('Update failed');
 
-      setFormData({ ...editData });
-      setEditMode(false);
-      setMessage('✅ Profile updated successfully!');
-    } catch (err) {
-      console.error(err);
-      setMessage('❌ Error updating profile.');
-    } finally {
-      setSaving(false);
-    }
-  };
+    setFormData({ ...editData });
+    setEditMode(false);
+    setMessage('✅ Profile updated successfully!');
+  } catch (err) {
+    console.error(err);
+    setMessage('❌ Error updating profile.');
+  } finally {
+    setSaving(false);
+  }
+};
+
 
   const handleInputChange = (field, value) => {
     if (field.includes('.')) {
