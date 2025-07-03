@@ -106,63 +106,67 @@ export default function CleanerRegister() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+ const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    if (!validateForm()) {
-      return;
+  if (!validateForm()) {
+    return;
+  }
+
+  setIsSubmitting(true);
+  setErrors({});
+
+  const parsedRates = parseFloat(form.rates.replace(/[^0-9.]/g, '')) || 0;
+
+  try {
+    console.log('🚀 Submitting form data...');
+
+    const payload = {
+      realName: form.realName.trim(),
+      companyName: form.companyName.trim(),
+      email: form.email.trim(),
+      password: form.password,
+      phone: form.phone.trim(),
+      rates: parsedRates,
+      services: form.services,
+      address: {
+        houseNameNumber: form.houseNameNumber.trim(),
+        street: form.street.trim(),
+        county: form.county.trim(),
+        postcode: form.postcode.trim()
+      },
+      availability: form.availability,
+      businessInsurance: form.businessInsurance,
+      userType: 'cleaner' // ✅ This is what was missing
+    };
+
+    console.log('📦 Payload:', JSON.stringify(payload, null, 2));
+
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+    console.log('📥 Response:', data);
+
+    if (res.ok && data.success) {
+      console.log('✅ Registration successful');
+      router.push('/cleaners/dashboard');
+    } else {
+      console.error('❌ Registration failed:', data.message);
+      setErrors({ submit: data.message || 'Registration failed. Please try again.' });
     }
+  } catch (err) {
+    console.error('💥 Registration error:', err);
+    setErrors({ submit: 'An unexpected error occurred. Please try again.' });
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
-    setIsSubmitting(true);
-    setErrors({});
-
-    const parsedRates = parseFloat(form.rates.replace(/[^0-9.]/g, '')) || 0;
-
-    try {
-      console.log('🚀 Submitting form data...');
-      
-      const payload = {
-        realName: form.realName.trim(),
-        companyName: form.companyName.trim(),
-        email: form.email.trim(),
-        password: form.password,
-        phone: form.phone.trim(),
-        rates: parsedRates,
-        services: form.services,
-        address: {
-          houseNameNumber: form.houseNameNumber.trim(),
-          street: form.street.trim(),
-          county: form.county.trim(),
-          postcode: form.postcode.trim()
-        }
-      };
-
-      console.log('📦 Payload:', JSON.stringify(payload, null, 2));
-
-      const res = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json();
-      console.log('📥 Response:', data);
-
-      if (res.ok && data.success) {
-        console.log('✅ Registration successful');
-        router.push('/cleaners/dashboard');
-      } else {
-        console.error('❌ Registration failed:', data.message);
-        setErrors({ submit: data.message || 'Registration failed. Please try again.' });
-      }
-    } catch (err) {
-      console.error('💥 Registration error:', err);
-      setErrors({ submit: 'An unexpected error occurred. Please try again.' });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   return (
     <>
