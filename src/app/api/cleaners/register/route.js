@@ -1,8 +1,8 @@
 import { connectToDatabase } from '@/lib/db';
 import Cleaner from '@/models/Cleaner';
 import { createToken } from '@/lib/auth';
-import bcrypt from 'bcryptjs';
 import { serialize } from 'cookie';
+import bcrypt from 'bcryptjs';
 import { NextResponse } from 'next/server';
 
 export async function POST(req) {
@@ -10,20 +10,10 @@ export async function POST(req) {
 
   try {
     const body = await req.json();
-    console.log('📥 Received registration data:', JSON.stringify(body, null, 2));
+    console.log('📥 Received cleaner registration data:', JSON.stringify(body, null, 2));
 
     const { realName, companyName, email, password, phone, rates, services, houseNameNumber, street, county, postcode, availability, businessInsurance } = body;
 
-    // Enhanced logging for debugging
-    console.log('🔍 Field validation check:');
-    console.log('realName:', realName, 'companyName:', companyName);
-    console.log('email:', email, 'password:', password ? '[PROVIDED]' : '[MISSING]');
-    console.log('phone:', phone);
-    console.log('rates:', rates);
-    console.log('services:', services);
-    console.log('houseNameNumber:', houseNameNumber, 'street:', street, 'county:', county, 'postcode:', postcode);
-
-    // Validate input
     const validationErrors = [];
 
     if (!realName?.trim()) validationErrors.push('Real name is required');
@@ -41,34 +31,22 @@ export async function POST(req) {
 
     if (validationErrors.length > 0) {
       console.log('❌ Validation failed:', validationErrors);
-      return new NextResponse(
-        JSON.stringify({
-          success: false,
-          message: 'Please fill in all required fields correctly.',
-          errors: validationErrors
-        }),
-        { status: 400 }
-      );
+      return NextResponse.json({
+        success: false,
+        message: 'Please fill in all required fields correctly.',
+        errors: validationErrors
+      }, { status: 400 });
     }
 
-    console.log('✅ All validation checks passed');
-
-    // Check if cleaner already exists
     const existingCleaner = await Cleaner.findOne({ email: email.trim().toLowerCase() });
     if (existingCleaner) {
       console.log('❌ Cleaner already exists with email:', email);
-      return new NextResponse(
-        JSON.stringify({ success: false, message: 'A cleaner with this email already exists.' }),
-        { status: 409 }
-      );
+      return NextResponse.json({ success: false, message: 'A cleaner with this email already exists.' }, { status: 409 });
     }
 
-    // Hash the password
     console.log('🔐 Hashing password...');
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Create new cleaner
-    console.log('💾 Creating new cleaner...');
     const newCleaner = new Cleaner({
       realName: realName.trim(),
       companyName: companyName.trim(),
@@ -76,7 +54,7 @@ export async function POST(req) {
       password: hashedPassword,
       phone: phone.trim(),
       rates: Number(rates),
-      services: services,
+      services,
       houseNameNumber: houseNameNumber.trim(),
       street: street.trim(),
       county: county.trim(),
@@ -88,9 +66,7 @@ export async function POST(req) {
     await newCleaner.save();
     console.log('✅ Cleaner saved to database');
 
-    // Create login token
-    const stringifiedUserId = newCleaner._id.toString();
-    const token = createToken({ _id: stringifiedUserId, type: 'cleaner' });
+    const token = createToken({ _id: newCleaner._id.toString(), type: 'cleaner' });
 
     const cookie = serialize('token', token, {
       httpOnly: true,
@@ -100,55 +76,29 @@ export async function POST(req) {
       maxAge: 60 * 60 * 24 * 7, // 7 days
     });
 
-    console.log('🎉 Cleaner registered and logged in successfully:', stringifiedUserId);
-
-    return new NextResponse(
-      JSON.stringify({
-        success: true,
-        message: 'Registration successful!',
-        id: stringifiedUserId,
-        type: 'cleaner'
-      }),
-      {
-        status: 201,
-        headers: {
-          'Set-Cookie': cookie,
-          'Content-Type': 'application/json'
-        },
-      }
-    );
+    return NextResponse.json({
+      success: true,
+      message: 'Registration successful!',
+      id: newCleaner._id.toString(),
+      type: 'cleaner'
+    }, {
+      status: 201,
+      headers: { 'Set-Cookie': cookie }
+    });
 
   } catch (err) {
     console.error('💥 Error during cleaner registration:', err);
 
     if (err.code === 11000) {
-      return new NextResponse(
-        JSON.stringify({
-          success: false,
-          message: 'A cleaner with this email already exists.'
-        }),
-        { status: 409 }
-      );
-    }
-
-    if (err.name === 'ValidationError') {
-      const validationErrors = Object.values(err.errors).map(e => e.message);
-      return new NextResponse(
-        JSON.stringify({
-          success: false,
-          message: 'Please check your input and try again.',
-          errors: validationErrors
-        }),
-        { status: 400 }
-      );
-    }
-
-    return new NextResponse(
-      JSON.stringify({
+      return NextResponse.json({
         success: false,
-        message: 'An unexpected error occurred. Please try again.'
-      }),
-      { status: 500 }
-    );
+        message: 'A cleaner with this email already exists.'
+      }, { status: 409 });
+    }
+
+    return NextResponse.json({
+      success: false,
+      message: 'An unexpected error occurred. Please try again.'
+    }, { status: 500 });
   }
 }

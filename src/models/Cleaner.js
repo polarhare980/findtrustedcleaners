@@ -1,11 +1,11 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
-// Availability schema remains flexible
+// Flexible availability schema
 const availabilitySchema = new mongoose.Schema({
   monday: { type: Boolean, default: false },
   tuesday: { type: Boolean, default: false },
-  // More days...
+  // Add more days if needed
 }, { _id: false });
 
 const cleanerSchema = new mongoose.Schema({
@@ -24,11 +24,11 @@ const cleanerSchema = new mongoose.Schema({
   phone: {
     type: String,
     required: true,
-    match: [/^\d{10}$/, 'Please enter a valid 10-digit phone number'],
+    match: [/^(?:0(?:7\d{9}|[123]\d{8,9}))$/, 'Please enter a valid UK mobile or landline number'],
   },
   password: { type: String, required: true },
   rates: { type: Number, required: true },
-  availability: availabilitySchema, // Availability schema, flexible
+  availability: availabilitySchema, // Flexible availability schema
   services: { type: [String], required: true },
   image: { type: String },
   allowPending: { type: Boolean, default: false },
@@ -36,25 +36,23 @@ const cleanerSchema = new mongoose.Schema({
   facebookReviewUrl: { type: String, default: '' },
   embedCode: { type: String, default: '' },
   premium: { type: Boolean, default: false },
-  businessInsurance: { type: Boolean, default: false }, // Business insurance status
+  businessInsurance: { type: Boolean, default: false },
 }, { timestamps: true });
 
-// Hash the password before saving it to the database
-cleanerSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next(); // Only hash if password is modified
-  this.password = await bcrypt.hash(this.password, 10); // Hash password with bcrypt
+// Password hashing before save
+cleanerSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
+  this.password = await bcrypt.hash(this.password, 10);
   next();
 });
 
-// Method to compare entered password with the stored hashed password
-cleanerSchema.methods.comparePassword = async function(password) {
-  return await bcrypt.compare(password, this.password); // Compare hashed password
+// Password comparison method
+cleanerSchema.methods.comparePassword = async function (password) {
+  return await bcrypt.compare(password, this.password);
 };
 
-// Add index for faster phone queries
+// Indexes for efficient queries
 cleanerSchema.index({ phone: 1 });
-
-// Add index for services field if querying frequently by services
 cleanerSchema.index({ services: 1 });
 
 export default mongoose.models.Cleaner || mongoose.model('Cleaner', cleanerSchema);

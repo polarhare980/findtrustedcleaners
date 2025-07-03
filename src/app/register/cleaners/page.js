@@ -129,25 +129,23 @@ export default function CleanerRegister() {
       phone: form.phone.trim(),
       rates: parsedRates,
       services: form.services,
-      address: {
-        houseNameNumber: form.houseNameNumber.trim(),
-        street: form.street.trim(),
-        county: form.county.trim(),
-        postcode: form.postcode.trim()
-      },
+      houseNameNumber: form.houseNameNumber.trim(),
+      street: form.street.trim(),
+      county: form.county.trim(),
+      postcode: form.postcode.trim(),
       availability: form.availability,
       businessInsurance: form.businessInsurance,
-      userType: 'cleaner' // ✅ This is what was missing
+      userType: 'cleaner'
     };
 
     console.log('📦 Payload:', JSON.stringify(payload, null, 2));
 
-    const res = await fetch('/api/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(payload),
-    });
+    const res = await fetch('/api/cleaners/register', {  // ✅ New endpoint
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  credentials: 'include',
+  body: JSON.stringify(payload),
+});
 
     const data = await res.json();
     console.log('📥 Response:', data);
@@ -166,6 +164,7 @@ export default function CleanerRegister() {
     setIsSubmitting(false);
   }
 };
+
 
 
   return (
