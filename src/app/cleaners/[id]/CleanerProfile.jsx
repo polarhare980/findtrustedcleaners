@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import React from 'react';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import BookingPaymentWrapper from '@/components/BookingPaymentForm';
 
 // ✅ Sanitation for embed code
 function isSafeEmbed(code) {
@@ -22,7 +23,7 @@ export default function CleanerProfile() {
   const [cleaner, setCleaner] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [selectedSlot, setSelectedSlot] = useState(null); // New state to control payment form display
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -59,36 +60,6 @@ export default function CleanerProfile() {
     fetchCleaner();
   }, [id]);
 
-  const handleStripeCheckout = async (day, time, price) => {
-    try {
-      const authRes = await fetch('/api/auth/me', { credentials: 'include' });
-      const authData = await authRes.json();
-
-      if (!authData.success || authData.user.type !== 'client') {
-        alert('Please log in as a client to make a booking.');
-        router.push('/login/clients');
-        return;
-      }
-
-      const res = await fetch('/api/stripe/session', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cleanerId: cleaner._id, day, time, price }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) throw new Error('Stripe session failed');
-
-      setSuccess('Redirecting to Stripe...');
-      window.location.href = data.url;
-    } catch (err) {
-      console.error('❌ Stripe Checkout Error:', err.message);
-      alert('There was a problem connecting to Stripe.');
-    }
-  };
-
   if (!mounted) return null;
   if (loading) return <LoadingSpinner />;
 
@@ -103,12 +74,6 @@ export default function CleanerProfile() {
 
   return (
     <div className="max-w-xl mx-auto p-6 border shadow rounded-xl mt-6 bg-white">
-      {success && (
-        <div className="p-4 mb-4 text-green-700 bg-green-50 border border-green-200 rounded text-center">
-          {success}
-        </div>
-      )}
-
       {cleaner.image && (
         <div className="flex justify-center mb-6">
           <img src={cleaner.image} alt={cleaner.realName} className="w-32 h-32 object-cover rounded-full border" />
@@ -187,7 +152,7 @@ export default function CleanerProfile() {
                   <div key={hourKey} className="h-8 w-full">
                     {isAvailable ? (
                       <button
-                        onClick={() => handleStripeCheckout(day, hourKey, cleaner.rate)}
+                        onClick={() => setSelectedSlot({ day, hour: hourKey })}
                         className="w-full h-full bg-green-500 hover:bg-green-600 text-white rounded"
                       >
                         Book
@@ -216,7 +181,7 @@ export default function CleanerProfile() {
                     <div key={hour} className="w-full">
                       {isAvailable ? (
                         <button
-                          onClick={() => handleStripeCheckout(day, hour, cleaner.rate)}
+                          onClick={() => setSelectedSlot({ day, hour: `${hour}` })}
                           className="w-full bg-green-500 hover:bg-green-600 text-white rounded py-1"
                         >
                           {hour}:00 Book
@@ -234,6 +199,21 @@ export default function CleanerProfile() {
           ))}
         </div>
       </div>
+
+      {/* ✅ Stripe Payment Form: Show When Slot is Selected */}
+      {selectedSlot && (
+        <div className="mt-6">
+          <h2 className="font-semibold mb-2 text-center">
+            Booking for {selectedSlot.day} at {selectedSlot.hour}:00
+          </h2>
+          <BookingPaymentWrapper
+            cleanerId={cleaner._id}
+            day={selectedSlot.day}
+            time={selectedSlot.hour}
+            price={cleaner.rate}
+          />
+        </div>
+      )}
     </div>
   );
 }

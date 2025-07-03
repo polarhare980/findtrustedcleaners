@@ -35,9 +35,9 @@ export async function POST(req) {
 
     // ✅ Create Stripe Payment Intent with delayed capture
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: price * 100, // in pence
+      amount: price * 100,
       currency: 'gbp',
-      capture_method: 'manual', // ✅ Hold the funds
+      capture_method: 'manual', // Hold payment
       metadata: {
         bookingId: newBooking._id.toString(),
         cleanerId: cleanerId,
@@ -45,13 +45,13 @@ export async function POST(req) {
       },
     });
 
-    // ✅ Save PaymentIntent ID to the booking
+    // ✅ Save Payment Intent ID to booking
     newBooking.stripePaymentIntentId = paymentIntent.id;
     await newBooking.save();
 
     return NextResponse.json({
       success: true,
-      clientSecret: paymentIntent.client_secret, // ✅ Send this to client for payment input
+      clientSecret: paymentIntent.client_secret,
       bookingId: newBooking._id.toString(),
     });
   } catch (err) {

@@ -22,7 +22,7 @@ export default function CleanerRegister() {
     rates: '',
     availability: {},
     services: [],
-    businessInsurance: false, // Moved business insurance checkbox here
+    businessInsurance: false,
   });
 
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -58,6 +58,7 @@ export default function CleanerRegister() {
     }));
   };
 
+  // ✅ Fully updated submit function
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -66,14 +67,24 @@ export default function CleanerRegister() {
       return;
     }
 
- try {
+    try {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          realName: form.realName,
+          companyName: form.companyName,
           email: form.email,
           password: form.password,
-          userType: 'cleaner',
+          phone: form.phone,
+          rates: form.rates,
+          services: form.services,
+          address: {
+            houseNameNumber: form.houseNameNumber,
+            street: form.street,
+            county: form.county,
+            postcode: form.postcode
+          }
         }),
       });
 
@@ -127,7 +138,6 @@ export default function CleanerRegister() {
             <input name="realName" onChange={handleChange} value={form.realName} placeholder="Real Name" className="w-full p-2 border rounded text-[#0D9488] bg-white" required />
             <input name="companyName" onChange={handleChange} value={form.companyName} placeholder="Company Name" className="w-full p-2 border rounded text-[#0D9488] bg-white" required />
 
-            {/* Address Fields */}
             <div className="grid grid-cols-2 gap-4">
               <input name="houseNameNumber" onChange={handleChange} value={form.houseNameNumber} placeholder="House Name/Number" className="w-full p-2 border rounded text-[#0D9488] bg-white" required />
               <input name="street" onChange={handleChange} value={form.street} placeholder="Street" className="w-full p-2 border rounded text-[#0D9488] bg-white" required />
@@ -143,7 +153,6 @@ export default function CleanerRegister() {
             <input name="confirmPassword" onChange={handleChange} value={form.confirmPassword} placeholder="Confirm Password" type="password" className="w-full p-2 border rounded text-[#0D9488] bg-white" required />
             <input name="rates" onChange={handleChange} value={form.rates} placeholder="Hourly Rate (e.g. £15/hr)" className="w-full p-2 border rounded text-[#0D9488] bg-white" required />
 
-            {/* Extras You Offer Section in White Box */}
             <div className="p-4 bg-white rounded border shadow-sm">
               <h2 className="text-lg font-semibold mb-2 text-gray-600">Extras You Offer</h2>
               <div className="grid grid-cols-2 gap-2 text-gray-600">
@@ -153,7 +162,6 @@ export default function CleanerRegister() {
                     {service}
                   </label>
                 ))}
-                {/* Business Insurance Checkbox moved here */}
                 <label className="flex items-center gap-2 text-sm">
                   <input type="checkbox" name="businessInsurance" checked={form.businessInsurance} onChange={handleChange} className="accent-teal-700" />
                   <span>I have business insurance</span>

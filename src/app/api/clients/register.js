@@ -1,6 +1,9 @@
 import { connectToDatabase } from '@/lib/db';
 import Client from '@/models/Client';
+import { createToken } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
+import { serialize } from 'cookie';
+import { NextResponse } from 'next/server';
 
 export async function POST(req) {
   await connectToDatabase();
@@ -8,7 +11,6 @@ export async function POST(req) {
   try {
     const { fullName, email, password, phone, address } = await req.json();
 
-    // Validate input
     if (!fullName || !email || !password || !phone || !address) {
       return new NextResponse(
         JSON.stringify({ success: false, message: 'All fields are required' }),
@@ -16,7 +18,6 @@ export async function POST(req) {
       );
     }
 
-    // Check if client already exists
     const existingClient = await Client.findOne({ email });
     if (existingClient) {
       return new NextResponse(
@@ -25,23 +26,38 @@ export async function POST(req) {
       );
     }
 
-    // Hash the password before saving
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create new client with hashed password
     const newClient = new Client({
       fullName,
       email,
-      password: hashedPassword, // Save the hashed password
+      password: hashedPassword,
       phone,
       address,
     });
 
     await newClient.save();
 
+    // 🔑 Create login token
+    const stringifiedUserId = newClient._id.toString();
+    const token = createToken({ _id: stringifiedUserId, type: 'client' });
+
+    const cookie = serialize('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      path: '/',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+    });
+
+    console.log('✅ Client registered and logged in:', stringifiedUserId);
+
     return new NextResponse(
-      JSON.stringify({ success: true, message: 'Client registered successfully' }),
-      { status: 200 }
+      JSON.stringify({ success: true, id: stringifiedUserId, type: 'client' }),
+      {
+        status: 200,
+        headers: { 'Set-Cookie': cookie, 'Content-Type': 'application/json' },
+      }
     );
   } catch (err) {
     console.error('Error during client registration:', err);

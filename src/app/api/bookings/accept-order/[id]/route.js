@@ -1,5 +1,6 @@
 import { connectToDatabase } from '@/lib/db';
 import Booking from '@/models/booking';
+import Cleaner from '@/models/Cleaner';
 import { NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 import Stripe from 'stripe';
@@ -23,43 +24,37 @@ export async function PUT(req, { params }) {
       return NextResponse.json({ success: false, message: 'Access denied.' }, { status: 403 });
     }
 
-    // ✅ Update booking status to accepted
-    const updatedBooking = await Booking.findByIdAndUpdate(id, {
-      status: 'accepted',
-      acceptedBy: user.id,
-    }, { new: true });
+    const booking = await Booking.findById(id);
 
-    if (!updatedBooking) {
+    if (!booking) {
       return NextResponse.json({ success: false, message: 'Booking not found.' }, { status: 404 });
     }
 
-    // ✅ Create Stripe Checkout Session
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      mode: 'payment',
-      line_items: [
-        {
-          price_data: {
-            currency: 'gbp',
-            product_data: {
-              name: `Booking with Cleaner`,
-            },
-            unit_amount: 5000, // £50.00 in pennies
-          },
-          quantity: 1,
-        },
-      ],
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/booking/confirmation?bookingId=${updatedBooking._id}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/booking/cancelled`,
-      metadata: {
-        bookingId: updatedBooking._id.toString(),
-      },
-    });
+    if (booking.cleanerId.toString() !== user.id) {
+      return NextResponse.json({ success: false, message: 'You can only accept your own bookings.' }, { status: 403 });
+    }
+
+    if (booking.status !== 'pending') {
+      return NextResponse.json({ success: false, message: 'Booking is not pending.' }, { status: 400 });
+    }
+
+    // ✅ Capture the held payment
+    await stripe.paymentIntents.capture(booking.stripePaymentIntentId);
+
+    // ✅ Update booking to confirmed
+    booking.status = 'confirmed';
+    booking.acceptedBy = user.id;
+    await booking.save();
+
+    // ✅ Update cleaner availability to fully booked
+    const cleaner = await Cleaner.findById(booking.cleanerId);
+    if (!cleaner.availability[booking.day]) cleaner.availability[booking.day] = {};
+    cleaner.availability[booking.day][booking.time] = false; // Fully booked
+    await cleaner.save();
 
     return NextResponse.json({
       success: true,
-      message: 'Order accepted. Proceed to payment.',
-      checkoutUrl: session.url,
+      message: 'Booking accepted and payment captured successfully.',
     });
   } catch (err) {
     console.error('❌ Booking acceptance error:', err.message);

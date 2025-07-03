@@ -31,33 +31,32 @@ export async function PUT(req, { params }) {
     }
 
     if (booking.cleanerId.toString() !== user.id) {
-      return NextResponse.json({ success: false, message: 'You can only accept your own bookings.' }, { status: 403 });
+      return NextResponse.json({ success: false, message: 'You can only decline your own bookings.' }, { status: 403 });
     }
 
     if (booking.status !== 'pending') {
       return NextResponse.json({ success: false, message: 'Booking is not pending.' }, { status: 400 });
     }
 
-    // ✅ Capture the held payment
-    await stripe.paymentIntents.capture(booking.stripePaymentIntentId);
+    // ✅ Cancel the held payment
+    await stripe.paymentIntents.cancel(booking.stripePaymentIntentId);
 
-    // ✅ Update booking to confirmed
-    booking.status = 'confirmed';
-    booking.acceptedBy = user.id;
+    // ✅ Update booking to declined
+    booking.status = 'declined';
     await booking.save();
 
-    // ✅ Update cleaner availability to fully booked
+    // ✅ Free up cleaner availability
     const cleaner = await Cleaner.findById(booking.cleanerId);
     if (!cleaner.availability[booking.day]) cleaner.availability[booking.day] = {};
-    cleaner.availability[booking.day][booking.time] = false; // Fully booked
+    cleaner.availability[booking.day][booking.time] = true; // Mark slot as available again
     await cleaner.save();
 
     return NextResponse.json({
       success: true,
-      message: 'Booking accepted and payment captured successfully.',
+      message: 'Booking declined and payment cancelled.',
     });
   } catch (err) {
-    console.error('❌ Booking acceptance error:', err.message);
+    console.error('❌ Decline booking error:', err.message);
     return NextResponse.json({ success: false, message: 'Server error.' }, { status: 500 });
   }
 }

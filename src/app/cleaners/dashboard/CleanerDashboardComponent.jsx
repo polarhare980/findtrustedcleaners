@@ -1,5 +1,3 @@
-// File: src/app/cleaners/dashboard/CleanerDashboardComponent.jsx
-
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -46,27 +44,17 @@ export default function CleanerDashboardComponent() {
   useEffect(() => {
     const fetchCleanerDetails = async () => {
       try {
-        console.log('Fetching cleaner details for ID:', cleaner._id);
-
         const res = await fetch(`/api/cleaners?id=${cleaner._id}`, { credentials: 'include' });
         if (!res.ok) throw new Error('Failed to fetch cleaner');
 
         const data = await res.json();
 
-        // ✅ Defensive check
-        if (!data.cleaner) {
-          throw new Error('Cleaner data missing from response');
-        }
+        if (!data.cleaner) throw new Error('Cleaner data missing from response');
 
         setFormData({
           ...data.cleaner,
           services: data.cleaner.services || [],
           availability: data.cleaner.availability || {},
-          allowPending: data.cleaner.allowPending || false,
-          googleReviewUrl: data.cleaner.googleReviewUrl || '',
-          facebookReviewUrl: data.cleaner.facebookReviewUrl || '',
-          embedCode: data.cleaner.embedCode || '',
-          image: data.cleaner.image || '',
         });
       } catch (err) {
         console.error(err);
@@ -80,20 +68,80 @@ export default function CleanerDashboardComponent() {
   }, [cleaner, router]);
 
   const toggleAvailability = (day, hour) => {
-    const isBooked = formData.availability?.[day]?.[hour] === false;
-    if (isBooked) return;
+    const slot = formData.availability?.[day]?.[hour];
+    const status = typeof slot === 'object' ? slot.status : slot;
+
+    if (status === false || status === 'pending') return; // Booked or pending, cannot change
 
     setFormData(prev => {
       const updated = { ...prev.availability };
-      if (!updated[day]) {
-        updated[day] = {};
-      }
+      if (!updated[day]) updated[day] = {};
       updated[day][hour] = updated[day][hour] === true ? 'unavailable' : true;
       return { ...prev, availability: updated };
     });
 
     setAvailabilityChanged(true);
     setMessage('');
+  };
+
+  const handleConfirm = async (day, hour) => {
+    try {
+      const slot = formData.availability?.[day]?.[hour];
+      const bookingId = slot?.bookingId;
+
+      const res = await fetch(`/api/booking/accept-order/${bookingId}`, {
+        method: 'PUT',
+        credentials: 'include',
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        setFormData(prev => {
+          const updated = { ...prev.availability };
+          updated[day][hour] = false; // Fully booked
+          return { ...prev, availability: updated };
+        });
+
+        setAvailabilityChanged(true);
+        setMessage('✅ Booking accepted and payment captured!');
+      } else {
+        alert(data.message || 'Error accepting booking.');
+      }
+    } catch (err) {
+      console.error('❌ Accept booking error:', err);
+      alert('Server error.');
+    }
+  };
+
+  const handleDecline = async (day, hour) => {
+    try {
+      const slot = formData.availability?.[day]?.[hour];
+      const bookingId = slot?.bookingId;
+
+      const res = await fetch(`/api/booking/decline-order/${bookingId}`, {
+        method: 'PUT',
+        credentials: 'include',
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        setFormData(prev => {
+          const updated = { ...prev.availability };
+          updated[day][hour] = true; // Available again
+          return { ...prev, availability: updated };
+        });
+
+        setAvailabilityChanged(true);
+        setMessage('✅ Booking declined and slot freed.');
+      } else {
+        alert(data.message || 'Error declining booking.');
+      }
+    } catch (err) {
+      console.error('❌ Decline booking error:', err);
+      alert('Server error.');
+    }
   };
 
   const handleSave = async () => {
@@ -142,21 +190,39 @@ export default function CleanerDashboardComponent() {
             <React.Fragment key={day}>
               <div className="font-semibold text-gray-800">{day}</div>
               {hours.map(hour => {
-                const isAvailable = formData.availability?.[day]?.[hour] === true;
-                const isBooked = formData.availability?.[day]?.[hour] === false;
+                const slot = formData.availability?.[day]?.[hour];
+                const status = typeof slot === 'object' ? slot.status : slot;
+
+                if (status === 'pending') {
+                  return (
+                    <div key={`${day}-${hour}`} className="flex flex-col items-center justify-center bg-yellow-400 text-white rounded p-1">
+                      <span>Pending</span>
+                      <div className="flex space-x-1 mt-1">
+                        <button className="bg-green-600 px-1 rounded" onClick={() => handleConfirm(day, hour)}>✔️</button>
+                        <button className="bg-red-600 px-1 rounded" onClick={() => handleDecline(day, hour)}>❌</button>
+                      </div>
+                    </div>
+                  );
+                }
+
+                const isBooked = status === false;
+                const isAvailable = status === true;
+                const isUnavailable = status === 'unavailable';
 
                 return (
                   <div
                     key={`${day}-${hour}`}
                     className={`h-8 w-full flex items-center justify-center rounded cursor-pointer ${isBooked
-                      ? 'bg-red-500 text-white cursor-not-allowed'
-                      : isAvailable
-                        ? 'bg-green-500 text-white'
-                        : 'bg-gray-300'
+                      ? 'bg-red-700 text-white cursor-not-allowed'
+                      : isUnavailable
+                        ? 'bg-red-500 text-white'
+                        : isAvailable
+                          ? 'bg-green-500 text-white'
+                          : 'bg-gray-300'
                       }`}
                     onClick={() => toggleAvailability(day, hour)}
                   >
-                    {isBooked ? 'Booked' : isAvailable ? 'Available' : 'Unavailable'}
+                    {isBooked ? 'Booked' : isUnavailable ? '❌' : isAvailable ? '✔️' : 'Unavailable'}
                   </div>
                 );
               })}
@@ -171,21 +237,39 @@ export default function CleanerDashboardComponent() {
               <h3 className="text-md font-semibold text-gray-700">{day}</h3>
               <div className="grid grid-cols-3 gap-2 text-sm">
                 {hours.map(hour => {
-                  const isAvailable = formData.availability?.[day]?.[hour] === true;
-                  const isBooked = formData.availability?.[day]?.[hour] === false;
+                  const slot = formData.availability?.[day]?.[hour];
+                  const status = typeof slot === 'object' ? slot.status : slot;
+
+                  if (status === 'pending') {
+                    return (
+                      <div key={`${day}-${hour}`} className="flex flex-col items-center justify-center bg-yellow-400 text-white rounded p-1">
+                        <span>Pending</span>
+                        <div className="flex space-x-1 mt-1">
+                          <button className="bg-green-600 px-1 rounded" onClick={() => handleConfirm(day, hour)}>✔️</button>
+                          <button className="bg-red-600 px-1 rounded" onClick={() => handleDecline(day, hour)}>❌</button>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  const isBooked = status === false;
+                  const isAvailable = status === true;
+                  const isUnavailable = status === 'unavailable';
 
                   return (
                     <div
                       key={`${day}-${hour}`}
                       className={`w-full py-1 text-center rounded cursor-pointer ${isBooked
-                        ? 'bg-red-500 text-white cursor-not-allowed'
-                        : isAvailable
-                          ? 'bg-green-500 text-white'
-                          : 'bg-gray-300'
+                        ? 'bg-red-700 text-white cursor-not-allowed'
+                        : isUnavailable
+                          ? 'bg-red-500 text-white'
+                          : isAvailable
+                            ? 'bg-green-500 text-white'
+                            : 'bg-gray-300'
                         }`}
                       onClick={() => toggleAvailability(day, hour)}
                     >
-                      {isBooked ? `${hour}:00 Booked` : isAvailable ? `${hour}:00 Available` : `${hour}:00 Unavailable`}
+                      {isBooked ? `${hour}:00 Booked` : isUnavailable ? `${hour}:00 ❌` : isAvailable ? `${hour}:00 ✔️` : `${hour}:00 Unavailable`}
                     </div>
                   );
                 })}
