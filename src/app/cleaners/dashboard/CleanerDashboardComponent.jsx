@@ -48,7 +48,7 @@ export default function CleanerDashboardComponent() {
 
     const fetchCleanerDetails = async () => {
       try {
-        const res = await fetch(`/api/cleaners?id=${cleaner._id}`, { credentials: 'include' });
+        const res = await fetch('/api/cleaners/me', { credentials: 'include' });
         if (!res.ok) throw new Error('Failed to fetch cleaner details');
 
         const data = await res.json();
@@ -78,7 +78,7 @@ export default function CleanerDashboardComponent() {
     const slot = formData.availability?.[day]?.[hour];
     const status = typeof slot === 'object' ? slot.status : slot;
 
-    if (status === false || status === 'pending') return; // Can't change booked/pending
+    if (status === false || status === 'pending') return;
 
     setFormData(prev => {
       const updated = { ...prev.availability };
@@ -105,7 +105,7 @@ export default function CleanerDashboardComponent() {
       if (res.ok && data.success) {
         setFormData(prev => {
           const updated = { ...prev.availability };
-          updated[day][hour] = false; // booked
+          updated[day][hour] = false;
           return { ...prev, availability: updated };
         });
         setAvailabilityChanged(true);
@@ -133,7 +133,7 @@ export default function CleanerDashboardComponent() {
       if (res.ok && data.success) {
         setFormData(prev => {
           const updated = { ...prev.availability };
-          updated[day][hour] = true; // available again
+          updated[day][hour] = true;
           return { ...prev, availability: updated };
         });
         setAvailabilityChanged(true);
@@ -150,7 +150,7 @@ export default function CleanerDashboardComponent() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const res = await fetch(`/api/cleaners/${cleaner._id}`, {
+      const res = await fetch('/api/cleaners/me', {
         method: 'PUT',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -169,7 +169,6 @@ export default function CleanerDashboardComponent() {
 
   const handleEditToggle = () => {
     if (editMode) {
-      // Cancel edit - restore original data
       setEditData({ ...formData });
     }
     setEditMode(!editMode);
@@ -178,15 +177,15 @@ export default function CleanerDashboardComponent() {
   const handleEditSave = async () => {
     setSaving(true);
     try {
-      const res = await fetch(`/api/cleaners/${cleaner._id}`, {
+      const res = await fetch('/api/cleaners/me', {
         method: 'PUT',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editData),
       });
-      
+
       if (!res.ok) throw new Error('Update failed');
-      
+
       setFormData({ ...editData });
       setEditMode(false);
       setMessage('✅ Profile updated successfully!');

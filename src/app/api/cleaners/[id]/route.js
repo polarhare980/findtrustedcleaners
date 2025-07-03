@@ -1,6 +1,6 @@
 import { connectToDatabase } from '@/lib/db';
 import Cleaner from '@/models/Cleaner';
-import Purchase from '@/models/Purchase'; // ✅ New: Purchase Model
+import Purchase from '@/models/Purchase';
 import { NextResponse } from 'next/server';
 import { protectRoute } from '@/lib/auth';
 
@@ -10,12 +10,15 @@ export async function PUT(req, { params }) {
   const { id } = params;
   const body = await req.json();
 
-  // 🔐 Validate JWT token using protectRoute
   const { valid, user, response } = await protectRoute();
   if (!valid) return response;
 
-  // ✅ Only the owner or admin can update
-  if (user.id !== id && user.type !== 'admin') {
+  console.log('🔐 PUT Access Check:');
+  console.log('Session User ID:', user._id?.toString());
+  console.log('Requested Param ID:', id);
+
+  if (String(user._id?.toString()) !== String(id) && user.type !== 'admin') {
+    console.log('🔐 PUT Access Denied: ID Mismatch');
     return NextResponse.json({ success: false, message: 'Access denied.' }, { status: 403 });
   }
 
@@ -53,7 +56,6 @@ export async function GET(req, { params }) {
       return NextResponse.json({ success: false, message: 'Cleaner not found' }, { status: 404 });
     }
 
-    // Public Data
     const publicData = {
       realName: cleaner.realName,
       postcode: cleaner.postcode,
@@ -63,15 +65,13 @@ export async function GET(req, { params }) {
       profileImage: cleaner.profileImage || '/profile-placeholder.png',
     };
 
-    // By default, only return public data
     let responseData = { ...publicData };
     let hasAccess = false;
 
-    // 🔐 Check if the user has purchased access
     const { valid, user } = await protectRoute();
 
     if (valid && user && user.type === 'client') {
-      const purchase = await Purchase.findOne({ clientId: user.id, cleanerId: id });
+      const purchase = await Purchase.findOne({ clientId: user._id, cleanerId: id });
 
       if (purchase) {
         hasAccess = true;
