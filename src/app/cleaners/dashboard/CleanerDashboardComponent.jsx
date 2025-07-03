@@ -11,7 +11,7 @@ export default function CleanerDashboardComponent() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [cleaner, setCleaner] = useState(null);
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [availabilityChanged, setAvailabilityChanged] = useState(false);
@@ -26,11 +26,11 @@ export default function CleanerDashboardComponent() {
 
           if (!data.success || data.user.type !== 'cleaner') {
             router.push('/login');
-          } else {
-            setCleaner(data.user);
+            return;
           }
-        } catch (err) {
-          console.error('Error fetching cleaner:', err);
+
+          setCleaner(data.user);
+        } catch {
           router.push('/login');
         } finally {
           setMounted(true);
@@ -42,19 +42,21 @@ export default function CleanerDashboardComponent() {
   }, [router]);
 
   useEffect(() => {
+    if (!cleaner) return;
+
     const fetchCleanerDetails = async () => {
       try {
         const res = await fetch(`/api/cleaners?id=${cleaner._id}`, { credentials: 'include' });
-        if (!res.ok) throw new Error('Failed to fetch cleaner');
+        if (!res.ok) throw new Error('Failed to fetch cleaner details');
 
         const data = await res.json();
-
-        if (!data.cleaner) throw new Error('Cleaner data missing from response');
+        if (!data.cleaner) throw new Error('Cleaner data missing');
 
         setFormData({
           ...data.cleaner,
           services: data.cleaner.services || [],
           availability: data.cleaner.availability || {},
+          businessInsurance: data.cleaner.businessInsurance || false,
         });
       } catch (err) {
         console.error(err);
@@ -64,14 +66,14 @@ export default function CleanerDashboardComponent() {
       }
     };
 
-    if (cleaner) fetchCleanerDetails();
+    fetchCleanerDetails();
   }, [cleaner, router]);
 
   const toggleAvailability = (day, hour) => {
     const slot = formData.availability?.[day]?.[hour];
     const status = typeof slot === 'object' ? slot.status : slot;
 
-    if (status === false || status === 'pending') return; // Booked or pending, cannot change
+    if (status === false || status === 'pending') return; // Can't change booked/pending
 
     setFormData(prev => {
       const updated = { ...prev.availability };
@@ -93,23 +95,21 @@ export default function CleanerDashboardComponent() {
         method: 'PUT',
         credentials: 'include',
       });
-
       const data = await res.json();
 
       if (res.ok && data.success) {
         setFormData(prev => {
           const updated = { ...prev.availability };
-          updated[day][hour] = false; // Fully booked
+          updated[day][hour] = false; // booked
           return { ...prev, availability: updated };
         });
-
         setAvailabilityChanged(true);
         setMessage('✅ Booking accepted and payment captured!');
       } else {
         alert(data.message || 'Error accepting booking.');
       }
     } catch (err) {
-      console.error('❌ Accept booking error:', err);
+      console.error('Accept booking error:', err);
       alert('Server error.');
     }
   };
@@ -123,23 +123,21 @@ export default function CleanerDashboardComponent() {
         method: 'PUT',
         credentials: 'include',
       });
-
       const data = await res.json();
 
       if (res.ok && data.success) {
         setFormData(prev => {
           const updated = { ...prev.availability };
-          updated[day][hour] = true; // Available again
+          updated[day][hour] = true; // available again
           return { ...prev, availability: updated };
         });
-
         setAvailabilityChanged(true);
         setMessage('✅ Booking declined and slot freed.');
       } else {
         alert(data.message || 'Error declining booking.');
       }
     } catch (err) {
-      console.error('❌ Decline booking error:', err);
+      console.error('Decline booking error:', err);
       alert('Server error.');
     }
   };
@@ -177,7 +175,28 @@ export default function CleanerDashboardComponent() {
         </div>
       )}
 
-      <div className="mb-6">
+      {/* Profile Info Display */}
+      <section className="mb-8">
+        <h2 className="text-xl font-semibold text-teal-700 mb-4">Profile Information</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-700">
+          <div><strong>Real Name:</strong> {formData.realName}</div>
+          <div><strong>Company Name:</strong> {formData.companyName}</div>
+          <div><strong>Email:</strong> {formData.email}</div>
+          <div><strong>Phone:</strong> {formData.phone}</div>
+          <div><strong>Hourly Rate:</strong> £{formData.rates}</div>
+          <div><strong>Business Insurance:</strong> {formData.businessInsurance ? 'Yes' : 'No'}</div>
+          <div className="sm:col-span-2">
+            <strong>Services Offered:</strong>{' '}
+            {formData.services.length > 0 ? formData.services.join(', ') : 'None'}
+          </div>
+          <div className="sm:col-span-2">
+            <strong>Address:</strong> {formData.address?.houseNameNumber} {formData.address?.street}, {formData.address?.county}, {formData.address?.postcode}
+          </div>
+        </div>
+      </section>
+
+      {/* Availability Grid */}
+      <section className="mb-6">
         <h2 className="text-xl font-semibold text-teal-700 mb-2">Availability Grid</h2>
 
         <div className="hidden sm:grid grid-cols-[80px_repeat(13,_1fr)] gap-1 text-sm">
@@ -277,8 +296,9 @@ export default function CleanerDashboardComponent() {
             </div>
           ))}
         </div>
-      </div>
+      </section>
 
+      {/* Save Button */}
       <div className="flex justify-end">
         <button
           onClick={handleSave}

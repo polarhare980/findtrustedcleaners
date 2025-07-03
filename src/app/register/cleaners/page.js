@@ -58,7 +58,6 @@ export default function CleanerRegister() {
     }));
   };
 
-  // ✅ Fully updated submit function
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -66,6 +65,9 @@ export default function CleanerRegister() {
       alert('Passwords do not match');
       return;
     }
+
+    // Parse rates to a number (remove £ and other chars)
+    const parsedRates = parseFloat(form.rates.replace(/[^0-9.]/g, '')) || 0;
 
     try {
       const res = await fetch('/api/auth/register', {
@@ -77,7 +79,7 @@ export default function CleanerRegister() {
           email: form.email,
           password: form.password,
           phone: form.phone,
-          rates: form.rates,
+          rates: parsedRates,
           services: form.services,
           address: {
             houseNameNumber: form.houseNameNumber,
