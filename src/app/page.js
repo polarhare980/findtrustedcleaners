@@ -83,7 +83,7 @@ export default function HomePage() {
         </div>
 
         {/* Header with glass morphism */}
-        <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/10 border-b border-white/20 shadow-lg">
+        <header className="sticky top-0 z-50 bg-gray-200 border-b border-gray-300 shadow-lg">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between px-6 py-4 space-y-2 sm:space-y-0">
             <Link href="/" className="group">
               <img src="/findtrusted-logo.png" alt="Logo" className="w-32 h-auto transition-all duration-300 group-hover:scale-105" />
@@ -258,7 +258,7 @@ export default function HomePage() {
         {/* Free Cleaners Section */}
         <section className="px-6 py-12">
           <div className="container mx-auto">
-            <h2 className="text-3xl font-bold mb-8 text-center text-white drop-shadow-lg">
+            <h2 className="text-3xl font-bold mb-8 text-center text-grey drop-shadow-lg">
               Free Listed Cleaners
             </h2>
 

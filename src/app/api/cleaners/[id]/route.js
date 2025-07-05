@@ -47,6 +47,7 @@ export async function PUT(req, { params }) {
 
 
 // GET - Fetch single cleaner profile (💬 Public with Private Split)
+// GET - Fetch single cleaner profile (💬 Public with Private Split)
 export async function GET(req, { params }) {
   await connectToDatabase();
   const { id } = params;
@@ -69,7 +70,7 @@ export async function GET(req, { params }) {
     let responseData = { ...publicData };
     let hasAccess = false;
 
-    const { valid, user } = await protectRoute();
+    const { valid, user } = await protectRoute(req); // ✅ Pass req here
 
     if (valid && user && user.type === 'client') {
       const purchase = await Purchase.findOne({ clientId: user._id, cleanerId: id });
