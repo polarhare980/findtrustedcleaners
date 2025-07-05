@@ -145,6 +145,16 @@ export default function ClientDashboardComponent() {
 
   return (
     <main className="p-6 max-w-4xl mx-auto">
+      {/* Back to Search Button */}
+      <div className="mb-6">
+        <button
+          onClick={() => router.push('/')}
+          className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded"
+        >
+          🔍 Back to Search
+        </button>
+      </div>
+
       <h1 className="text-2xl font-bold text-teal-700 mb-4">Client Dashboard</h1>
 
       {success && (

@@ -1,18 +1,37 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function PurchaseButton({ cleanerId, onPurchaseSuccess }) {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
 
   const handlePurchase = async () => {
+    if (!cleanerId) {
+      setError('Missing cleaner ID. Please try again.');
+      return;
+    }
+
     setLoading(true);
     setError('');
 
     try {
+      // ✅ Check if user is logged in as a client
+      const authRes = await fetch('/api/auth/me', { credentials: 'include' });
+      const authData = await authRes.json();
+
+      if (!authData.success || authData.user.type !== 'client') {
+        // Save intended return path and redirect to login
+        localStorage.setItem('redirectAfterLogin', `/cleaners/${cleanerId}`);
+        router.push('/login/clients');
+        return;
+      }
+
+      // ✅ Proceed with purchase
       const res = await fetch('/api/purchases', {
         method: 'POST',
         credentials: 'include',
@@ -32,7 +51,7 @@ export default function PurchaseButton({ cleanerId, onPurchaseSuccess }) {
       }
     } catch (err) {
       console.error('Purchase error:', err);
-      setError('Server error.');
+      setError('Server error. Please try again later.');
     } finally {
       setLoading(false);
     }

@@ -26,8 +26,11 @@ export default function ClientLoginPage() {
       if (res.ok && data.id) {
         localStorage.setItem('clientId', data.id);
 
-        const nextUrl = searchParams.get('next');
+        // ✅ Prioritise 'next' from URL, fallback to 'redirectAfterLogin' from localStorage
+        const nextUrl = searchParams.get('next') || localStorage.getItem('redirectAfterLogin');
+
         if (nextUrl) {
+          localStorage.removeItem('redirectAfterLogin'); // ✅ Clean up
           router.push(nextUrl);
         } else {
           router.push('/clients/dashboard');

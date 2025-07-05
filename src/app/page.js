@@ -83,7 +83,7 @@ export default function HomePage() {
         </div>
 
         {/* Header with glass morphism */}
-        <header className="sticky top-0 z-50 bg-gray-200 border-b border-gray-300 shadow-lg">
+        <header className="sticky top-0 z-50 bg-gray-600 border-b border-gray-300 shadow-lg">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between px-6 py-4 space-y-2 sm:space-y-0">
             <Link href="/" className="group">
               <img src="/findtrusted-logo.png" alt="Logo" className="w-32 h-auto transition-all duration-300 group-hover:scale-105" />
@@ -166,7 +166,7 @@ export default function HomePage() {
         {/* Premium Cleaners */}
         <section className="px-6 py-12">
           <div className="container mx-auto">
-            <h2 className="text-3xl font-bold mb-8 text-center text-white drop-shadow-lg">
+            <h2 className="text-3xl font-bold mb-8 text-center text-black drop-shadow-lg">
               Featured Premium Cleaners
             </h2>
 
@@ -685,22 +685,28 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
         }
 
         .btn-view-profile {
-          background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
-          color: white;
-          text-decoration: none;
-          text-align: center;
-          padding: 10px 16px;
-          border-radius: 8px;
-          font-size: 14px;
-          font-weight: 500;
-          transition: all 0.3s ease;
-          box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
-        }
+  background: linear-gradient(135deg, #F97316 0%, #EA580C 100%);
+  color: white;
+  text-decoration: none;
+  text-align: center;
+  padding: 10px 16px;
+  border: 2px solid #EA580C;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(234, 88, 12, 0.3);
+}
 
-        .btn-view-profile:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-        }
+.btn-view-profile:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.4);
+}
+
+.btn-view-profile:active {
+  transform: translateY(0);
+}
+
 
         .btn-request-booking {
           background: linear-gradient(135deg, #10B981 0%, #059669 100%);
