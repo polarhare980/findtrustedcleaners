@@ -52,9 +52,11 @@ export async function PUT(req, { params }) {
     cleaner.availability[booking.day][booking.time] = false; // Fully booked
     await cleaner.save();
 
+    // ✅ Return the updated booking for instant frontend update
     return NextResponse.json({
       success: true,
       message: 'Booking accepted and payment captured successfully.',
+      booking, // Return the updated booking object
     });
   } catch (err) {
     console.error('❌ Booking acceptance error:', err.message);

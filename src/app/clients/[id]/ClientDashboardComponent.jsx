@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import Link from 'next/link';
 
 export default function ClientDashboardComponent() {
   const router = useRouter();
@@ -16,13 +17,11 @@ export default function ClientDashboardComponent() {
   const [formData, setFormData] = useState({
     fullName: '',
     phone: '',
-    address: {
-      houseNameNumber: '',
-      street: '',
-      county: '',
-      postcode: '',
-    },
+    address: { houseNameNumber: '', street: '', county: '', postcode: '' },
   });
+
+  const [bookings, setBookings] = useState([]);
+  const [purchases, setPurchases] = useState([]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -31,24 +30,34 @@ export default function ClientDashboardComponent() {
           const res = await fetch('/api/auth/me', { credentials: 'include' });
           const data = await res.json();
 
-          if (!data.success || data.user.role !== 'client') {
+          if (!data.success || data.user.type !== 'client') {
             setError('Access denied. Please log in.');
             router.push('/login/clients');
-          } else {
-            setClient(data.user);
-            setFormData({
-              fullName: data.user.fullName,
-              phone: data.user.phone,
-              address: {
-                houseNameNumber: data.user.address?.houseNameNumber || '',
-                street: data.user.address?.street || '',
-                county: data.user.address?.county || '',
-                postcode: data.user.address?.postcode || '',
-              },
-            });
+            return;
           }
+
+          setClient(data.user);
+          setFormData({
+            fullName: data.user.fullName,
+            phone: data.user.phone,
+            address: {
+              houseNameNumber: data.user.address?.houseNameNumber || '',
+              street: data.user.address?.street || '',
+              county: data.user.address?.county || '',
+              postcode: data.user.address?.postcode || '',
+            },
+          });
+
+          const bookingsRes = await fetch('/api/clients/bookings', { credentials: 'include' });
+          const bookingsData = await bookingsRes.json();
+          if (bookingsData.success) setBookings(bookingsData.bookings);
+
+          const purchasesRes = await fetch('/api/clients/purchases', { credentials: 'include' });
+          const purchasesData = await purchasesRes.json();
+          if (purchasesData.success) setPurchases(purchasesData.purchases);
+
         } catch (err) {
-          console.error('Error fetching client:', err);
+          console.error('Error fetching client data:', err);
           setError('Failed to fetch client data.');
           router.push('/login/clients');
         } finally {
@@ -63,8 +72,6 @@ export default function ClientDashboardComponent() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-
-    // Handle address fields separately
     if (['houseNameNumber', 'street', 'county', 'postcode'].includes(name)) {
       setFormData((prev) => ({
         ...prev,
@@ -125,7 +132,6 @@ export default function ClientDashboardComponent() {
   };
 
   if (!mounted) return null;
-
   if (loading) return <LoadingSpinner />;
 
   if (error) {
@@ -138,7 +144,7 @@ export default function ClientDashboardComponent() {
   }
 
   return (
-    <main className="p-6">
+    <main className="p-6 max-w-4xl mx-auto">
       <h1 className="text-2xl font-bold text-teal-700 mb-4">Client Dashboard</h1>
 
       {success && (
@@ -150,17 +156,10 @@ export default function ClientDashboardComponent() {
       {client && (
         <>
           <div className="space-y-4 mb-4">
-            {/* Render form fields */}
             <div>
               <label className="block text-sm font-semibold text-teal-700 mb-1">Full Name</label>
               {isEditing ? (
-                <input
-                  type="text"
-                  name="fullName"
-                  value={formData.fullName}
-                  onChange={handleChange}
-                  className="w-full p-2 border border-gray-300 rounded"
-                />
+                <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} className="w-full p-2 border rounded" />
               ) : (
                 <p className="text-gray-800">{formData.fullName}</p>
               )}
@@ -169,13 +168,7 @@ export default function ClientDashboardComponent() {
             <div>
               <label className="block text-sm font-semibold text-teal-700 mb-1">Phone</label>
               {isEditing ? (
-                <input
-                  type="text"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  className="w-full p-2 border border-gray-300 rounded"
-                />
+                <input type="text" name="phone" value={formData.phone} onChange={handleChange} className="w-full p-2 border rounded" />
               ) : (
                 <p className="text-gray-800">{formData.phone}</p>
               )}
@@ -183,17 +176,9 @@ export default function ClientDashboardComponent() {
 
             {['houseNameNumber', 'street', 'county', 'postcode'].map((field) => (
               <div key={field}>
-                <label className="block text-sm font-semibold text-teal-700 mb-1 capitalize">
-                  {field.replace(/([A-Z])/g, ' $1')}
-                </label>
+                <label className="block text-sm font-semibold text-teal-700 mb-1 capitalize">{field.replace(/([A-Z])/g, ' $1')}</label>
                 {isEditing ? (
-                  <input
-                    type="text"
-                    name={field}
-                    value={formData.address[field]}
-                    onChange={handleChange}
-                    className="w-full p-2 border border-gray-300 rounded"
-                  />
+                  <input type="text" name={field} value={formData.address[field]} onChange={handleChange} className="w-full p-2 border rounded" />
                 ) : (
                   <p className="text-gray-800">{formData.address[field]}</p>
                 )}
@@ -201,33 +186,55 @@ export default function ClientDashboardComponent() {
             ))}
           </div>
 
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-wrap gap-4 mb-8">
             {!isEditing ? (
-              <button
-                onClick={() => setIsEditing(true)}
-                className="bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-700"
-              >
-                Edit Profile
-              </button>
+              <button onClick={() => setIsEditing(true)} className="bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-700">Edit Profile</button>
             ) : (
-              <button
-                onClick={handleSave}
-                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:opacity-50"
-                disabled={saving}
-              >
+              <button onClick={handleSave} className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:opacity-50" disabled={saving}>
                 {saving ? 'Saving...' : 'Save Changes'}
               </button>
             )}
 
-            <button
-              onClick={handleDeleteAccount}
-              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-            >
-              Delete Account
-            </button>
+            <button onClick={handleDeleteAccount} className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">Delete Account</button>
           </div>
         </>
       )}
+
+      <div className="mb-8">
+        <h2 className="text-xl font-bold text-teal-700 mb-4">Your Bookings</h2>
+        {bookings.length > 0 ? (
+          <ul className="space-y-4">
+            {bookings.map((booking) => (
+              <li key={booking._id} className="p-4 border rounded shadow">
+                <p><strong>Cleaner:</strong> {booking.cleanerName}</p>
+                <p><strong>Day:</strong> {booking.day}</p>
+                <p><strong>Time:</strong> {booking.time}:00</p>
+                <p><strong>Status:</strong> {booking.status}</p>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-gray-600">You have no bookings.</p>
+        )}
+      </div>
+
+      <div>
+        <h2 className="text-xl font-bold text-teal-700 mb-4">Unlocked Cleaners</h2>
+        {purchases.length > 0 ? (
+          <ul className="space-y-4">
+            {purchases.map((purchase) => (
+              <li key={purchase.cleanerId} className="p-4 border rounded shadow">
+                <p><strong>Cleaner:</strong> {purchase.cleanerName}</p>
+                <p><strong>Phone:</strong> {purchase.phone}</p>
+                <p><strong>Email:</strong> {purchase.email}</p>
+                <Link href={`/cleaners/${purchase.cleanerId}`} className="text-teal-600 hover:underline mt-2 block">View Profile</Link>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-gray-600">You have not unlocked any cleaners yet.</p>
+        )}
+      </div>
     </main>
   );
 }

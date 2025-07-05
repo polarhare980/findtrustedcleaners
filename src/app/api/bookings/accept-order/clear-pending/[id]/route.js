@@ -41,7 +41,7 @@ export async function PUT(req, { params }) {
     // ✅ Cancel the held payment
     await stripe.paymentIntents.cancel(booking.stripePaymentIntentId);
 
-    // ✅ Update booking to 'cleared' or 'cancelled'
+    // ✅ Update booking to 'cleared'
     booking.status = 'cleared';
     await booking.save();
 
@@ -54,11 +54,11 @@ export async function PUT(req, { params }) {
     return NextResponse.json({
       success: true,
       message: 'Pending slot cleared successfully.',
+      booking, // ✅ Return the updated booking
+      updatedAvailability: cleaner.availability // ✅ Return the updated availability grid
     });
   } catch (err) {
     console.error('❌ Clear pending error:', err.message);
     return NextResponse.json({ success: false, message: 'Server error.' }, { status: 500 });
   }
 }
-
-

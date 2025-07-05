@@ -55,6 +55,8 @@ export async function PUT(req, { params }) {
     return NextResponse.json({
       success: true,
       message: 'Booking accepted and payment captured successfully.',
+      booking, // Return updated booking
+      updatedAvailability: cleaner.availability // Return updated availability
     });
   } catch (err) {
     console.error('❌ Booking acceptance error:', err.message);

@@ -1,3 +1,7 @@
+// Here's your full updated CleanerDashboardComponent with
+// updated handleConfirm and handleDecline to fully replace
+// the local availability grid using the updated API responses.
+
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -20,42 +24,38 @@ export default function CleanerDashboardComponent() {
   const [editData, setEditData] = useState({});
 
   useEffect(() => {
-  if (typeof window !== 'undefined') {
-    const fetchCleaner = async () => {
-      try {
-        const res = await fetch('/api/auth/me', { credentials: 'include' });
-        const data = await res.json();
+    if (typeof window !== 'undefined') {
+      const fetchCleaner = async () => {
+        try {
+          const res = await fetch('/api/auth/me', { credentials: 'include' });
+          const data = await res.json();
 
-        if (!data.success || data.user.type !== 'cleaner') {
+          if (!data.success || data.user.type !== 'cleaner') {
+            router.push('/login');
+            return;
+          }
+
+          setCleaner(data.user);
+          const cleanerData = {
+            ...data.user,
+            services: data.user.services || [],
+            availability: data.user.availability || {},
+            businessInsurance: data.user.businessInsurance || false,
+          };
+
+          setFormData(cleanerData);
+          setEditData(cleanerData);
+        } catch {
           router.push('/login');
-          return;
+        } finally {
+          setMounted(true);
+          setLoading(false);
         }
+      };
 
-        setCleaner(data.user);
-        // ✅ Directly set formData from the returned user
-        const cleanerData = {
-          ...data.user,
-          services: data.user.services || [],
-          availability: data.user.availability || {},
-          businessInsurance: data.user.businessInsurance || false,
-        };
-
-        setFormData(cleanerData);
-        setEditData(cleanerData);
-      } catch {
-        router.push('/login');
-      } finally {
-        setMounted(true);
-        setLoading(false);
-      }
-    };
-
-    fetchCleaner();
-  }
-}, [router]);
-
-
-  
+      fetchCleaner();
+    }
+  }, [router]);
 
   const toggleAvailability = (day, hour) => {
     const slot = formData.availability?.[day]?.[hour];
@@ -86,11 +86,7 @@ export default function CleanerDashboardComponent() {
       const data = await res.json();
 
       if (res.ok && data.success) {
-        setFormData(prev => {
-          const updated = { ...prev.availability };
-          updated[day][hour] = false;
-          return { ...prev, availability: updated };
-        });
+        setFormData(prev => ({ ...prev, availability: data.updatedAvailability }));
         setAvailabilityChanged(true);
         setMessage('✅ Booking accepted and payment captured!');
       } else {
@@ -114,11 +110,7 @@ export default function CleanerDashboardComponent() {
       const data = await res.json();
 
       if (res.ok && data.success) {
-        setFormData(prev => {
-          const updated = { ...prev.availability };
-          updated[day][hour] = true;
-          return { ...prev, availability: updated };
-        });
+        setFormData(prev => ({ ...prev, availability: data.updatedAvailability }));
         setAvailabilityChanged(true);
         setMessage('✅ Booking declined and slot freed.');
       } else {
@@ -128,7 +120,14 @@ export default function CleanerDashboardComponent() {
       console.error('Decline booking error:', err);
       alert('Server error.');
     }
-  };
+  
+
+  // Rest of your file remains unchanged, all other functions stay as they are.
+
+  // Your full file has been structured to refresh the availability grid
+  // directly from the API response for a more accurate and synced UI.
+}
+
 
 const handleSave = async () => {
   setSaving(true);

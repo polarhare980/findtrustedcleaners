@@ -1,12 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import React from 'react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import BookingPaymentWrapper from '@/components/BookingPaymentForm';
+import PurchaseButton from '@/components/PurchaseButton';
 
-// ✅ Sanitation for embed code
 function isSafeEmbed(code) {
   const hasIframe = code.includes('<iframe') && code.includes('src=');
   const forbidden = ['<script', '<style', 'onerror', 'onload', 'javascript:'];
@@ -17,13 +17,13 @@ function isSafeEmbed(code) {
 
 export default function CleanerProfile() {
   const { id } = useParams();
-  const router = useRouter();
 
   const [mounted, setMounted] = useState(false);
   const [cleaner, setCleaner] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [selectedSlot, setSelectedSlot] = useState(null); // New state to control payment form display
+  const [selectedSlot, setSelectedSlot] = useState(null);
+  const [hasAccess, setHasAccess] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -34,7 +34,7 @@ export default function CleanerProfile() {
   useEffect(() => {
     const fetchCleaner = async () => {
       try {
-        const res = await fetch(`/api/cleaners/${id}`, { credentials: 'include' }); // ✅ Fixed fetch URL
+        const res = await fetch(`/api/cleaners/${id}`, { credentials: 'include' });
 
         if (!res.ok) {
           setError('Cleaner not found or server error.');
@@ -49,6 +49,7 @@ export default function CleanerProfile() {
         }
 
         setCleaner(data.cleaner);
+        setHasAccess(data.hasAccess);
       } catch (err) {
         console.error('Failed to load cleaner profile', err);
         setError('Failed to fetch cleaner profile.');
@@ -84,20 +85,29 @@ export default function CleanerProfile() {
       <p><strong>Postcode:</strong> {cleaner.postcode}</p>
       <p><strong>Hourly Rate:</strong> £{cleaner.rate || 'Not set'}</p>
 
-      {/* ✅ New: Contact Info / Paywall Message */}
-      {cleaner.phone ? (
-        <p><strong>Phone:</strong> {cleaner.phone}</p>
+      {hasAccess ? (
+        <>
+          <p><strong>Phone:</strong> {cleaner.phone}</p>
+          <p><strong>Email:</strong> {cleaner.email}</p>
+          <p><strong>Company Name:</strong> {cleaner.companyName}</p>
+        </>
       ) : (
-        <p className="text-gray-500 italic">Contact details available after purchase.</p>
+        <>
+          <p className="text-gray-500 italic mb-4">Contact details are locked. Unlock to view and book.</p>
+          <PurchaseButton
+            cleanerId={cleaner._id}
+            onPurchaseSuccess={(cleanerData) => {
+              setHasAccess(true);
+              setCleaner((prev) => ({
+                ...prev,
+                phone: cleanerData.phone,
+                email: cleanerData.email,
+                companyName: cleanerData.cleanerName,
+              }));
+            }}
+          />
+        </>
       )}
-
-      {cleaner.email ? (
-        <p><strong>Email:</strong> {cleaner.email}</p>
-      ) : null}
-
-      {cleaner.companyName ? (
-        <p><strong>Company Name:</strong> {cleaner.companyName}</p>
-      ) : null}
 
       <div className="mt-4">
         <h2 className="font-semibold">Services Offered:</h2>
@@ -145,78 +155,77 @@ export default function CleanerProfile() {
         </div>
       )}
 
-      {/* ✅ Availability Grid - Desktop View */}
-      <div className="mt-6">
-        <h2 className="font-semibold mb-2">Availability:</h2>
+      {hasAccess && (
+        <div className="mt-6">
+          <h2 className="font-semibold mb-2">Availability:</h2>
 
-        <div className="hidden sm:grid grid-cols-[80px_repeat(13,_1fr)] gap-1 text-sm">
-          <div></div>
-          {[...Array(13)].map((_, hour) => (
-            <div key={hour} className="text-center font-bold text-gray-700">
-              {7 + hour}:00
-            </div>
-          ))}
-          {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => (
-            <React.Fragment key={day}>
-              <div className="font-semibold text-gray-800">{day}</div>
-              {[...Array(13)].map((_, hourIndex) => {
-                const hourKey = `${7 + hourIndex}`;
-                const isAvailable = cleaner.availability?.[day]?.[hourKey] === true;
-
-                return (
-                  <div key={hourKey} className="h-8 w-full">
-                    {isAvailable ? (
-                      <button
-                        onClick={() => setSelectedSlot({ day, hour: hourKey })}
-                        className="w-full h-full bg-green-500 hover:bg-green-600 text-white rounded"
-                      >
-                        Book
-                      </button>
-                    ) : (
-                      <div className="w-full h-full bg-red-300 text-center rounded">✖</div>
-                    )}
-                  </div>
-                );
-              })}
-            </React.Fragment>
-          ))}
-        </div>
-
-        {/* ✅ Mobile View */}
-        <div className="sm:hidden space-y-4 mt-4">
-          {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => (
-            <div key={day}>
-              <h3 className="text-md font-semibold text-gray-700">{day}</h3>
-              <div className="grid grid-cols-3 gap-2 text-sm">
+          <div className="hidden sm:grid grid-cols-[80px_repeat(13,_1fr)] gap-1 text-sm">
+            <div></div>
+            {[...Array(13)].map((_, hour) => (
+              <div key={hour} className="text-center font-bold text-gray-700">
+                {7 + hour}:00
+              </div>
+            ))}
+            {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => (
+              <React.Fragment key={day}>
+                <div className="font-semibold text-gray-800">{day}</div>
                 {[...Array(13)].map((_, hourIndex) => {
-                  const hour = 7 + hourIndex;
-                  const isAvailable = cleaner.availability?.[day]?.[`${hour}`] === true;
+                  const hourKey = `${7 + hourIndex}`;
+                  const isAvailable = cleaner.availability?.[day]?.[hourKey] === true;
 
                   return (
-                    <div key={hour} className="w-full">
+                    <div key={hourKey} className="h-8 w-full">
                       {isAvailable ? (
                         <button
-                          onClick={() => setSelectedSlot({ day, hour: `${hour}` })}
-                          className="w-full bg-green-500 hover:bg-green-600 text-white rounded py-1"
+                          onClick={() => setSelectedSlot({ day, hour: hourKey })}
+                          className="w-full h-full bg-green-500 hover:bg-green-600 text-white rounded"
                         >
-                          {hour}:00 Book
+                          Book
                         </button>
                       ) : (
-                        <div className="w-full bg-red-300 text-center rounded py-1">
-                          {hour}:00 ✖
-                        </div>
+                        <div className="w-full h-full bg-red-300 text-center rounded">✖</div>
                       )}
                     </div>
                   );
                 })}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+              </React.Fragment>
+            ))}
+          </div>
 
-      {/* ✅ Stripe Payment Form: Show When Slot is Selected */}
-      {selectedSlot && (
+          <div className="sm:hidden space-y-4 mt-4">
+            {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => (
+              <div key={day}>
+                <h3 className="text-md font-semibold text-gray-700">{day}</h3>
+                <div className="grid grid-cols-3 gap-2 text-sm">
+                  {[...Array(13)].map((_, hourIndex) => {
+                    const hour = 7 + hourIndex;
+                    const isAvailable = cleaner.availability?.[day]?.[`${hour}`] === true;
+
+                    return (
+                      <div key={hour} className="w-full">
+                        {isAvailable ? (
+                          <button
+                            onClick={() => setSelectedSlot({ day, hour: `${hour}` })}
+                            className="w-full bg-green-500 hover:bg-green-600 text-white rounded py-1"
+                          >
+                            {hour}:00 Book
+                          </button>
+                        ) : (
+                          <div className="w-full bg-red-300 text-center rounded py-1">
+                            {hour}:00 ✖
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {hasAccess && selectedSlot && (
         <div className="mt-6">
           <h2 className="font-semibold mb-2 text-center">
             Booking for {selectedSlot.day} at {selectedSlot.hour}:00

@@ -4,13 +4,13 @@ import Purchase from '@/models/Purchase';
 import { NextResponse } from 'next/server';
 import { protectRoute } from '@/lib/auth';
 
-// PUT - Update cleaner profile (🔒 Protected)
+// 🔒 PUT - Update cleaner profile (Protected)
 export async function PUT(req, { params }) {
   await connectToDatabase();
   const { id } = params;
   const body = await req.json();
 
-  const { valid, user, response } = await protectRoute(req); // ✅ FIXED: Pass req
+  const { valid, user, response } = await protectRoute(req);
   if (!valid) return response;
 
   console.log('🔐 PUT Access Check:');
@@ -45,9 +45,7 @@ export async function PUT(req, { params }) {
   }
 }
 
-
-// GET - Fetch single cleaner profile (💬 Public with Private Split)
-// GET - Fetch single cleaner profile (💬 Public with Private Split)
+// 💬 GET - Fetch single cleaner profile (Public View + Private Unlock Check)
 export async function GET(req, { params }) {
   await connectToDatabase();
   const { id } = params;
@@ -58,6 +56,7 @@ export async function GET(req, { params }) {
       return NextResponse.json({ success: false, message: 'Cleaner not found' }, { status: 404 });
     }
 
+    // Base public data
     const publicData = {
       realName: cleaner.realName,
       postcode: cleaner.postcode,
@@ -70,7 +69,8 @@ export async function GET(req, { params }) {
     let responseData = { ...publicData };
     let hasAccess = false;
 
-    const { valid, user } = await protectRoute(req); // ✅ Pass req here
+    // Check session and purchase
+    const { valid, user } = await protectRoute(req);
 
     if (valid && user && user.type === 'client') {
       const purchase = await Purchase.findOne({ clientId: user._id, cleanerId: id });

@@ -54,6 +54,8 @@ export async function PUT(req, { params }) {
     return NextResponse.json({
       success: true,
       message: 'Booking declined and payment cancelled.',
+      booking, // ✅ Return the updated booking
+      updatedAvailability: cleaner.availability // ✅ Return the updated availability
     });
   } catch (err) {
     console.error('❌ Decline booking error:', err.message);
