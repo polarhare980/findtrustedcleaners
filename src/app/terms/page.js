@@ -41,7 +41,7 @@ export default function TermsAndConditions() {
 
       <section className="py-12 px-6 max-w-4xl mx-auto relative z-10">
         {/* Hero section with glass morphism */}
-        <div className="backdrop-blur-md bg-white/25 border border-white/20 rounded-[20px] p-8 mb-8 shadow-xl animate-fade-in">
+        <div className="backdrop-blur-md bg-white/25 border border-white/20 rounded-[20px] p-8 mb-8 shadow-xl opacity-0 animate-[fadeIn_0.8s_ease-out_forwards]">
           <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-teal-600 to-teal-700 bg-clip-text text-transparent mb-4">
             Terms and Conditions
           </h1>
@@ -52,7 +52,7 @@ export default function TermsAndConditions() {
 
         {/* Terms content in glass morphism cards */}
         <div className="space-y-6">
-          <div className="backdrop-blur-md bg-white/25 border border-white/20 rounded-[20px] p-8 shadow-xl hover:shadow-2xl hover:transform hover:-translate-y-1 transition-all duration-300 animate-slide-up">
+          <div className="backdrop-blur-md bg-white/25 border border-white/20 rounded-[20px] p-8 shadow-xl hover:shadow-2xl hover:transform hover:-translate-y-1 transition-all duration-300 opacity-0 animate-[slideUp_0.5s_ease-out_forwards]">
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 bg-gradient-to-r from-teal-600 to-teal-700 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg">
                 1
@@ -66,7 +66,7 @@ export default function TermsAndConditions() {
             </div>
           </div>
 
-          <div className="backdrop-blur-md bg-white/25 border border-white/20 rounded-[20px] p-8 shadow-xl hover:shadow-2xl hover:transform hover:-translate-y-1 transition-all duration-300 animate-slide-up" style={{animationDelay: '0.1s'}}>
+          <div className="backdrop-blur-md bg-white/25 border border-white/20 rounded-[20px] p-8 shadow-xl hover:shadow-2xl hover:transform hover:-translate-y-1 transition-all duration-300 opacity-0 animate-[slideUp_0.5s_ease-out_0.1s_forwards]">
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 bg-gradient-to-r from-teal-600 to-teal-700 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg">
                 2
@@ -185,7 +185,7 @@ export default function TermsAndConditions() {
         </div>
 
         {/* Call to action section */}
-        <div className="backdrop-blur-md bg-white/25 border border-white/20 rounded-[20px] p-8 mt-12 shadow-xl text-center animate-slide-up" style={{animationDelay: '0.9s'}}>
+        <div className="backdrop-blur-md bg-white/25 border border-white/20 rounded-[20px] p-8 mt-12 shadow-xl text-center opacity-0 animate-[slideUp_0.5s_ease-out_0.9s_forwards]">
           <h3 className="text-2xl font-semibold text-teal-800 mb-4">Ready to Get Started?</h3>
           <p className="text-gray-700 mb-6">
             By using our platform, you agree to these terms and conditions. Join thousands of satisfied customers today!
@@ -232,38 +232,7 @@ export default function TermsAndConditions() {
         </p>
       </footer>
 
-      <style jsx>{`
-        @keyframes fade-in {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
 
-        @keyframes slide-up {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        .animate-fade-in {
-          animation: fade-in 0.8s ease-out;
-        }
-
-        .animate-slide-up {
-          animation: slide-up 0.5s ease-out;
-          animation-fill-mode: both;
-        }
-      `}</style>
     </main>
   );
 }

@@ -1,25 +1,24 @@
 'use client';
 
 import Link from 'next/link';
-import Head from 'next/head';
 import Image from 'next/image';
 
 export default function HowItWorks() {
   return (
     <>
-      <Head>
-        <title>How It Works | Find Trusted Cleaners</title>
-        <meta name="description" content="Learn how Find Trusted Cleaners connects clients with reliable local cleaning professionals. Simple, transparent, and effective." />
-        <meta name="keywords" content="how Find Trusted Cleaners works, cleaning service platform, hire cleaners, list cleaning business" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
-      </Head>
-
       <main className="min-h-screen bg-gradient-to-br from-teal-900/20 to-teal-700/10 text-gray-700" style={{ fontFamily: "'Inter', sans-serif" }}>
         {/* Glass Morphism Header */}
         <header className="sticky top-0 z-50 bg-white/25 backdrop-blur-xl border-b border-white/20 shadow-lg">
           <div className="flex items-center justify-between px-6 py-4 max-w-7xl mx-auto">
             <Link href="/" className="transition-transform duration-300 hover:scale-105">
-              <Image src="/findtrusted-logo.png" alt="Find Trusted Cleaners Logo" className="w-32 h-auto" width={128} height={40} />
+              <Image 
+                src="/findtrusted-logo.png" 
+                alt="Find Trusted Cleaners Logo" 
+                className="w-32 h-auto" 
+                width={128} 
+                height={40} 
+                priority
+              />
             </Link>
             <nav className="hidden md:flex space-x-8 text-sm font-medium">
               <Link href="/" className="text-gray-700 hover:text-teal-600 transition-colors duration-300 hover:scale-105">Home</Link>
