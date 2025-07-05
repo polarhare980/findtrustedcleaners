@@ -34,7 +34,7 @@ export default function CleanerProfile() {
   useEffect(() => {
     const fetchCleaner = async () => {
       try {
-        const res = await fetch(`/api/public-cleaners/${id}`);
+        const res = await fetch(`/api/cleaners/${id}`, { credentials: 'include' }); // ✅ Fixed fetch URL
 
         if (!res.ok) {
           setError('Cleaner not found or server error.');
@@ -83,6 +83,21 @@ export default function CleanerProfile() {
       <h1 className="text-2xl font-bold mb-4 text-teal-700">{cleaner.realName}</h1>
       <p><strong>Postcode:</strong> {cleaner.postcode}</p>
       <p><strong>Hourly Rate:</strong> £{cleaner.rate || 'Not set'}</p>
+
+      {/* ✅ New: Contact Info / Paywall Message */}
+      {cleaner.phone ? (
+        <p><strong>Phone:</strong> {cleaner.phone}</p>
+      ) : (
+        <p className="text-gray-500 italic">Contact details available after purchase.</p>
+      )}
+
+      {cleaner.email ? (
+        <p><strong>Email:</strong> {cleaner.email}</p>
+      ) : null}
+
+      {cleaner.companyName ? (
+        <p><strong>Company Name:</strong> {cleaner.companyName}</p>
+      ) : null}
 
       <div className="mt-4">
         <h2 className="font-semibold">Services Offered:</h2>
