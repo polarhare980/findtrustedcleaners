@@ -155,75 +155,85 @@ export default function CleanerProfile() {
         </div>
       )}
 
-      {hasAccess && (
-        <div className="mt-6">
-          <h2 className="font-semibold mb-2">Availability:</h2>
+      <div className="mt-6">
+  <h2 className="font-semibold mb-2">Availability:</h2>
 
-          <div className="hidden sm:grid grid-cols-[80px_repeat(13,_1fr)] gap-1 text-sm">
-            <div></div>
-            {[...Array(13)].map((_, hour) => (
-              <div key={hour} className="text-center font-bold text-gray-700">
-                {7 + hour}:00
-              </div>
-            ))}
-            {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => (
-              <React.Fragment key={day}>
-                <div className="font-semibold text-gray-800">{day}</div>
-                {[...Array(13)].map((_, hourIndex) => {
-                  const hourKey = `${7 + hourIndex}`;
-                  const isAvailable = cleaner.availability?.[day]?.[hourKey] === true;
+  <div className="hidden sm:grid grid-cols-[80px_repeat(13,_1fr)] gap-1 text-sm">
+    <div></div>
+    {[...Array(13)].map((_, hour) => (
+      <div key={hour} className="text-center font-bold text-gray-700">
+        {7 + hour}:00
+      </div>
+    ))}
+    {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => (
+      <React.Fragment key={day}>
+        <div className="font-semibold text-gray-800">{day}</div>
+        {[...Array(13)].map((_, hourIndex) => {
+          const hourKey = `${7 + hourIndex}`;
+          const isAvailable = cleaner.availability?.[day]?.[hourKey] === true;
 
-                  return (
-                    <div key={hourKey} className="h-8 w-full">
-                      {isAvailable ? (
-                        <button
-                          onClick={() => setSelectedSlot({ day, hour: hourKey })}
-                          className="w-full h-full bg-green-500 hover:bg-green-600 text-white rounded"
-                        >
-                          Book
-                        </button>
-                      ) : (
-                        <div className="w-full h-full bg-red-300 text-center rounded">✖</div>
-                      )}
+          return (
+            <div key={hourKey} className="h-8 w-full">
+              {isAvailable ? (
+                hasAccess ? (
+                  <button
+                    onClick={() => setSelectedSlot({ day, hour: hourKey })}
+                    className="w-full h-full bg-green-500 hover:bg-green-600 text-white rounded"
+                  >
+                    Book
+                  </button>
+                ) : (
+                  <div className="w-full h-full bg-green-300 text-center rounded">✔ Available</div>
+                )
+              ) : (
+                <div className="w-full h-full bg-red-300 text-center rounded">✖</div>
+              )}
+            </div>
+          );
+        })}
+      </React.Fragment>
+    ))}
+  </div>
+
+  {/* Mobile View */}
+  <div className="sm:hidden space-y-4 mt-4">
+    {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => (
+      <div key={day}>
+        <h3 className="text-md font-semibold text-gray-700">{day}</h3>
+        <div className="grid grid-cols-3 gap-2 text-sm">
+          {[...Array(13)].map((_, hourIndex) => {
+            const hour = 7 + hourIndex;
+            const isAvailable = cleaner.availability?.[day]?.[`${hour}`] === true;
+
+            return (
+              <div key={hour} className="w-full">
+                {isAvailable ? (
+                  hasAccess ? (
+                    <button
+                      onClick={() => setSelectedSlot({ day, hour: `${hour}` })}
+                      className="w-full bg-green-500 hover:bg-green-600 text-white rounded py-1"
+                    >
+                      {hour}:00 Book
+                    </button>
+                  ) : (
+                    <div className="w-full bg-green-300 text-center rounded py-1">
+                      {hour}:00 ✔
                     </div>
-                  );
-                })}
-              </React.Fragment>
-            ))}
-          </div>
-
-          <div className="sm:hidden space-y-4 mt-4">
-            {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => (
-              <div key={day}>
-                <h3 className="text-md font-semibold text-gray-700">{day}</h3>
-                <div className="grid grid-cols-3 gap-2 text-sm">
-                  {[...Array(13)].map((_, hourIndex) => {
-                    const hour = 7 + hourIndex;
-                    const isAvailable = cleaner.availability?.[day]?.[`${hour}`] === true;
-
-                    return (
-                      <div key={hour} className="w-full">
-                        {isAvailable ? (
-                          <button
-                            onClick={() => setSelectedSlot({ day, hour: `${hour}` })}
-                            className="w-full bg-green-500 hover:bg-green-600 text-white rounded py-1"
-                          >
-                            {hour}:00 Book
-                          </button>
-                        ) : (
-                          <div className="w-full bg-red-300 text-center rounded py-1">
-                            {hour}:00 ✖
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
+                  )
+                ) : (
+                  <div className="w-full bg-red-300 text-center rounded py-1">
+                    {hour}:00 ✖
+                  </div>
+                )}
               </div>
-            ))}
-          </div>
+            );
+          })}
         </div>
-      )}
+      </div>
+    ))}
+  </div>
+</div>
+
 
       {hasAccess && selectedSlot && (
         <div className="mt-6">
