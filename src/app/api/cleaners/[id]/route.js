@@ -10,7 +10,7 @@ export async function PUT(req, { params }) {
   const { id } = params;
   const body = await req.json();
 
-  const { valid, user, response } = await protectRoute();
+  const { valid, user, response } = await protectRoute(req); // ✅ FIXED: Pass req
   if (!valid) return response;
 
   console.log('🔐 PUT Access Check:');
@@ -44,6 +44,7 @@ export async function PUT(req, { params }) {
     return NextResponse.json({ success: false, message: 'Server error.' }, { status: 500 });
   }
 }
+
 
 // GET - Fetch single cleaner profile (💬 Public with Private Split)
 export async function GET(req, { params }) {
