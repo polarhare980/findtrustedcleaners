@@ -142,14 +142,13 @@ export default function ClientDashboard() {
         }),
       });
 
-    if (!res.ok) {
-  const errorText = await res.text(); // ✅ This will show the real API response
-  console.error('API Response:', errorText);
-  throw new Error('Failed to update profile');
-}
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('API Response:', errorText);
+        throw new Error('Failed to update profile');
+      }
 
-
-      await fetchClient(); // ✅ Re-fetch to get updated data
+      await fetchClient(); // ✅ Re-fetch updated data
       alert('Profile updated successfully');
       setIsEditing(false);
     } catch (err) {
@@ -167,6 +166,24 @@ export default function ClientDashboard() {
   return (
     <div className="min-h-screen bg-teal-600 flex items-center justify-center p-4">
       <div className="w-full max-w-2xl bg-white shadow-lg rounded-2xl p-8">
+
+        {/* 🔍 Home Button */}
+        <div className="mb-6 flex justify-between">
+          <button
+            onClick={() => router.push('/')}
+            className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded"
+          >
+            🔍 Back to Search
+          </button>
+
+          <button
+            onClick={handleLogout}
+            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
+          >
+            🚪 Logout
+          </button>
+        </div>
+
         <h1 className="text-3xl font-bold text-teal-700 mb-6 text-center">Welcome, {formData.fullName}</h1>
 
         <div className="space-y-6">
@@ -220,7 +237,7 @@ export default function ClientDashboard() {
           ))}
         </div>
 
-        <div className="flex justify-between mt-8">
+        <div className="flex justify-center mt-8">
           {!isEditing ? (
             <button
               onClick={() => setIsEditing(true)}
@@ -237,13 +254,6 @@ export default function ClientDashboard() {
               {saving ? 'Saving...' : 'Save Changes'}
             </button>
           )}
-
-          <button
-            onClick={handleLogout}
-            className="bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600 transition"
-          >
-            Logout
-          </button>
         </div>
 
         <div className="mt-12">

@@ -1,7 +1,6 @@
 // Here's your full updated CleanerDashboardComponent with
 // updated handleConfirm and handleDecline to fully replace
 // the local availability grid using the updated API responses.
-
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -120,34 +119,27 @@ export default function CleanerDashboardComponent() {
       console.error('Decline booking error:', err);
       alert('Server error.');
     }
-  
+  };
 
-  // Rest of your file remains unchanged, all other functions stay as they are.
-
-  // Your full file has been structured to refresh the availability grid
-  // directly from the API response for a more accurate and synced UI.
-}
-
-
-const handleSave = async () => {
-  setSaving(true);
-  try {
-    const res = await fetch(`/api/cleaners/${cleaner._id}`, {  // ✅ Updated path
-      method: 'PUT',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData),
-    });
-    if (!res.ok) throw new Error('Update failed');
-    setMessage('✅ Changes saved successfully!');
-    setAvailabilityChanged(false);
-  } catch (err) {
-    console.error(err);
-    setMessage('❌ Error saving changes.');
-  } finally {
-    setSaving(false);
-  }
-};
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/cleaners/${cleaner._id}`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      if (!res.ok) throw new Error('Update failed');
+      setMessage('✅ Changes saved successfully!');
+      setAvailabilityChanged(false);
+    } catch (err) {
+      console.error(err);
+      setMessage('❌ Error saving changes.');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleEditToggle = () => {
     if (editMode) {
@@ -157,28 +149,27 @@ const handleSave = async () => {
   };
 
   const handleEditSave = async () => {
-  setSaving(true);
-  try {
-    const res = await fetch(`/api/cleaners/${cleaner._id}`, {  // ✅ Updated path
-      method: 'PUT',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(editData),
-    });
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/cleaners/${cleaner._id}`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editData),
+      });
 
-    if (!res.ok) throw new Error('Update failed');
+      if (!res.ok) throw new Error('Update failed');
 
-    setFormData({ ...editData });
-    setEditMode(false);
-    setMessage('✅ Profile updated successfully!');
-  } catch (err) {
-    console.error(err);
-    setMessage('❌ Error updating profile.');
-  } finally {
-    setSaving(false);
-  }
-};
-
+      setFormData({ ...editData });
+      setEditMode(false);
+      setMessage('✅ Profile updated successfully!');
+    } catch (err) {
+      console.error(err);
+      setMessage('❌ Error updating profile.');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleInputChange = (field, value) => {
     if (field.includes('.')) {
@@ -206,6 +197,24 @@ const handleSave = async () => {
     }));
   };
 
+  // Navigation functions
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { 
+        method: 'POST', 
+        credentials: 'include' 
+      });
+      router.push('/login');
+    } catch (err) {
+      console.error('Logout error:', err);
+      router.push('/login');
+    }
+  };
+
+  const handleGoHome = () => {
+    router.push('/');
+  };
+
   if (!mounted) return null;
   if (loading || !formData) return <LoadingSpinner />;
 
@@ -219,7 +228,21 @@ const handleSave = async () => {
               <h1 className="text-3xl font-bold text-teal-700 mb-2">Cleaner Dashboard</h1>
               <p className="text-gray-600">Manage your cleaning services and availability</p>
             </div>
-            <div className="flex gap-3 mt-4 md:mt-0">
+            <div className="flex flex-wrap gap-3 mt-4 md:mt-0">
+              {/* Navigation Buttons */}
+              <button
+                onClick={handleGoHome}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+              >
+                🏠 Home
+              </button>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
+              >
+                🔐 Logout
+              </button>
+              {/* Profile Edit Buttons */}
               <button
                 onClick={handleEditToggle}
                 className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium transition-colors"

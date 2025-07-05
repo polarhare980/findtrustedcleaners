@@ -652,7 +652,8 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
           margin-bottom: 8px;
         }
 
-        .cleaner-rating, .cleaner-rate {
+        .cleaner-rating,
+        .cleaner-rate {
           color: #4B5563;
           margin-bottom: 4px;
           font-size: 14px;
@@ -680,45 +681,49 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
         .cleaner-actions {
           display: flex;
           flex-direction: column;
-          gap: 8px;
+          align-items: center; /* Center buttons */
+          gap: 12px;
           margin-top: 16px;
         }
 
         .btn-view-profile {
-  background: linear-gradient(135deg, #F97316 0%, #EA580C 100%);
-  color: white;
-  text-decoration: none;
-  text-align: center;
-  padding: 10px 16px;
-  border: 2px solid #EA580C;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(234, 88, 12, 0.3);
-}
+          background: white;
+          color: #EA580C;
+          text-decoration: none;
+          text-align: center;
+          padding: 12px 20px;
+          border: 3px solid #EA580C;
+          border-radius: 8px;
+          font-size: 16px;
+          font-weight: 600;
+          transition: all 0.3s ease;
+          box-shadow: 0 2px 8px rgba(234, 88, 12, 0.3);
+          width: 160px; /* Consistent box width */
+        }
 
-.btn-view-profile:hover {
-  transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.4);
-}
+        .btn-view-profile:hover {
+          background: #EA580C;
+          color: white;
+          transform: translateY(-2px) scale(1.05);
+          box-shadow: 0 4px 12px rgba(234, 88, 12, 0.4);
+        }
 
-.btn-view-profile:active {
-  transform: translateY(0);
-}
-
+        .btn-view-profile:active {
+          transform: translateY(0);
+        }
 
         .btn-request-booking {
           background: linear-gradient(135deg, #10B981 0%, #059669 100%);
           color: white;
           border: none;
-          padding: 10px 16px;
+          padding: 12px 20px;
           border-radius: 8px;
-          font-size: 14px;
-          font-weight: 500;
+          font-size: 16px;
+          font-weight: 600;
           cursor: pointer;
           transition: all 0.3s ease;
           box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+          width: 160px; /* Match View Profile button width */
         }
 
         .btn-request-booking:hover {
@@ -733,3 +738,4 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
     </div>
   );
 }
+
