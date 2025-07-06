@@ -8,7 +8,7 @@ export default function BookingConfirmationPage() {
     <main className="min-h-screen relative flex flex-col items-center justify-center p-6 text-center">
       {/* Background with gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-teal-900/20 via-teal-800/15 to-teal-700/10"></div>
-      
+
       {/* Main content */}
       <div className="relative z-10 max-w-xl">
         {/* Glass morphism card */}
@@ -71,7 +71,7 @@ export default function BookingConfirmationPage() {
             </svg>
           </div>
           <p className="mt-3 text-sm text-gray-600">
-            We'll contact you shortly to confirm your booking details.
+            We&apos;ll contact you shortly to confirm your booking details.
           </p>
         </motion.div>
       </div>
