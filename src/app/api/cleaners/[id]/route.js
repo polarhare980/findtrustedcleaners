@@ -23,6 +23,7 @@ export async function PUT(req, { params }) {
   }
 
   try {
+    // ✅ Fully allow all updates including image
     const updated = await Cleaner.findByIdAndUpdate(
       id,
       {
@@ -30,6 +31,7 @@ export async function PUT(req, { params }) {
         googleReviewUrl: body.googleReviewUrl || '',
         facebookReviewUrl: body.facebookReviewUrl || '',
         embedCode: body.embedCode || '',
+        image: body.image || '', // ✅ Support updating image
       },
       { new: true }
     );
@@ -63,7 +65,7 @@ export async function GET(req, { params }) {
       rates: cleaner.rates,
       services: cleaner.services,
       availability: cleaner.availability,
-      profileImage: cleaner.profileImage || '/profile-placeholder.png',
+      image: cleaner.image || '/profile-placeholder.png', // ✅ Use correct field
     };
 
     let responseData = { ...publicData };
@@ -93,3 +95,4 @@ export async function GET(req, { params }) {
     return NextResponse.json({ success: false, message: 'Error fetching cleaner' }, { status: 500 });
   }
 }
+

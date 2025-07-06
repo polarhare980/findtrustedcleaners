@@ -566,7 +566,7 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
       <div className="cleaner-info">
         <h3 className="cleaner-name">{cleaner.realName}</h3>
         <p className="cleaner-rating">⭐ {cleaner.rating || 'Not rated yet'}</p>
-        <p className="cleaner-rate">💷 {cleaner.rate ? `£${cleaner.rates}/hr` : 'Rate not set'}</p>
+        <p className="cleaner-rate">💷 {cleaner.rates ? `£${cleaner.rates}/hr` : 'Rate not set'}</p>
 
         {(cleaner.googleReviewUrl || cleaner.facebookReviewUrl) && (
           <div className="cleaner-reviews">

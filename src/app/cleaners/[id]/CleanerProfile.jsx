@@ -116,7 +116,7 @@ export default function CleanerProfile() {
                     <span className="text-teal-600 font-semibold">💰</span>
                     <div>
                       <span className="font-semibold text-teal-800">Hourly Rate:</span>
-                      <div className="text-lg font-bold text-teal-700">£{<cleaner className="rates"></cleaner> || 'Not set'}</div>
+                      <div className="text-lg font-bold text-teal-700">£{cleaner.rates || 'Not set'}</div>
                     </div>
                   </div>
                 </div>
@@ -234,7 +234,7 @@ export default function CleanerProfile() {
                     {7 + hour}:00
                   </div>
                 ))}
-                {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => (
+                {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
                   <React.Fragment key={day}>
                     <div className="font-semibold text-teal-800 py-2 flex items-center">{day}</div>
                     {[...Array(13)].map((_, hourIndex) => {
@@ -272,7 +272,7 @@ export default function CleanerProfile() {
 
             {/* Mobile/Tablet View */}
             <div className="lg:hidden space-y-6">
-              {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => (
+              {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
                 <div key={day} className="bg-white/40 backdrop-blur-sm rounded-xl p-4 border border-white/30">
                   <h3 className="text-lg font-bold text-teal-800 mb-3 flex items-center gap-2">
                     <span className="text-teal-600">📅</span>

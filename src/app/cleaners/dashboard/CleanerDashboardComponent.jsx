@@ -1,6 +1,3 @@
-// Here's your full updated CleanerDashboardComponent with
-// updated handleConfirm and handleDecline to fully replace
-// the local availability grid using the updated API responses.
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -21,6 +18,10 @@ export default function CleanerDashboardComponent() {
   const [message, setMessage] = useState('');
   const [editMode, setEditMode] = useState(false);
   const [editData, setEditData] = useState({});
+  
+  // Image upload states
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState('');
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -144,6 +145,9 @@ export default function CleanerDashboardComponent() {
   const handleEditToggle = () => {
     if (editMode) {
       setEditData({ ...formData });
+      // Reset image upload states when canceling edit
+      setSelectedFile(null);
+      setImagePreview('');
     }
     setEditMode(!editMode);
   };
@@ -163,6 +167,9 @@ export default function CleanerDashboardComponent() {
       setFormData({ ...editData });
       setEditMode(false);
       setMessage('✅ Profile updated successfully!');
+      // Reset image upload states after saving
+      setSelectedFile(null);
+      setImagePreview('');
     } catch (err) {
       console.error(err);
       setMessage('❌ Error updating profile.');
@@ -195,6 +202,46 @@ export default function CleanerDashboardComponent() {
       ...prev,
       services
     }));
+  };
+
+  // Image upload handler
+  const handleUpload = async () => {
+    if (!selectedFile) return alert('Please select a file.');
+    
+    const formDataUpload = new FormData();
+    formDataUpload.append('file', selectedFile);
+    
+    try {
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formDataUpload,
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        const updateRes = await fetch(`/api/cleaners/${cleaner._id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ image: data.url }),
+        });
+        
+        if (updateRes.ok) {
+          alert('Profile picture uploaded successfully!');
+          setFormData((prev) => ({ ...prev, image: data.url }));
+          setEditData((prev) => ({ ...prev, image: data.url }));
+          setImagePreview('');
+          setSelectedFile(null);
+        } else {
+          alert('Failed to update profile with image.');
+        }
+      } else {
+        alert('Image upload failed.');
+      }
+    } catch (err) {
+      console.error('Upload error:', err);
+      alert('Upload failed.');
+    }
   };
 
   // Navigation functions
@@ -375,6 +422,66 @@ export default function CleanerDashboardComponent() {
                 <p className="text-gray-800 font-medium">
                   {formData.services?.length > 0 ? formData.services.join(', ') : 'No services listed'}
                 </p>
+              )}
+            </div>
+
+            {/* Profile Image Upload */}
+            <div className="space-y-2 md:col-span-2 lg:col-span-3">
+              <label className="text-sm font-medium text-gray-600">Profile Picture</label>
+              
+              {formData.image && !editMode && (
+                <img 
+                  src={formData.image} 
+                  alt="Profile" 
+                  className="w-32 h-32 object-cover rounded-full mb-4 border-4 border-teal-200" 
+                />
+              )}
+              
+              {editMode && (
+                <>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        setSelectedFile(file);
+                        setImagePreview(URL.createObjectURL(file));
+                      }
+                    }}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                  />
+                  
+                  {imagePreview && (
+                    <div className="mt-4">
+                      <p className="text-sm text-gray-600 mb-2">Preview:</p>
+                      <img 
+                        src={imagePreview} 
+                        alt="Preview" 
+                        className="w-32 h-32 object-cover rounded-full border-4 border-teal-200" 
+                      />
+                    </div>
+                  )}
+                  
+                  {formData.image && !imagePreview && (
+                    <div className="mt-4">
+                      <p className="text-sm text-gray-600 mb-2">Current Profile Picture:</p>
+                      <img 
+                        src={formData.image} 
+                        alt="Current Profile" 
+                        className="w-32 h-32 object-cover rounded-full border-4 border-teal-200" 
+                      />
+                    </div>
+                  )}
+                  
+                  <button
+                    onClick={handleUpload}
+                    disabled={!selectedFile}
+                    className="mt-4 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Upload Profile Picture
+                  </button>
+                </>
               )}
             </div>
 
