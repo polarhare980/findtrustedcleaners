@@ -88,7 +88,7 @@ export default function AboutPage() {
         <div className="bg-white/25 backdrop-blur-xl border border-white/20 rounded-3xl p-8 shadow-2xl mb-8">
           <div className="space-y-6 text-lg leading-relaxed">
             <p>
-              Hi there – we're the same friendly folks behind{' '}
+              Hi there – we&apos;re the same friendly folks behind{' '}
               <a 
                 href="https://www.ovendetailing.com" 
                 className="text-teal-600 hover:text-teal-800 underline font-medium transition-colors duration-300" 
@@ -101,7 +101,7 @@ export default function AboutPage() {
             </p>
 
             <p>
-              Over the years, we've been asked again and again: <strong>"Do you know a good cleaner?"</strong> It turns out <em>a lot</em> of people are searching for help they can actually trust – and many great local cleaners are trying to find regular work without signing up to expensive apps or bidding against each other for jobs.
+              Over the years, we&apos;ve been asked again and again: <strong>&ldquo;Do you know a good cleaner?&rdquo;</strong> It turns out <em>a lot</em> of people are searching for help they can actually trust – and many great local cleaners are trying to find regular work without signing up to expensive apps or bidding against each other for jobs.
             </p>
 
             <p>
@@ -132,7 +132,7 @@ export default function AboutPage() {
               <h2 className="text-3xl font-bold text-teal-800">Who We Are</h2>
             </div>
             <p className="text-gray-700 leading-relaxed">
-              We're not a faceless corporation. We're a small, family-run team from West Sussex trying to make life easier for cleaners and families alike.
+              We&apos;re not a faceless corporation. We&apos;re a small, family-run team from West Sussex trying to make life easier for cleaners and families alike.
             </p>
           </div>
         </div>
@@ -177,11 +177,11 @@ export default function AboutPage() {
           
           <div className="space-y-6 text-lg leading-relaxed">
             <p>
-              We know what it's like to juggle work, family, and cleaning. We also know what it's like to run a local service business, doing the graft and hoping the next job will come through.
+              We know what it&apos;s like to juggle work, family, and cleaning. We also know what it&apos;s like to run a local service business, doing the graft and hoping the next job will come through.
             </p>
 
             <p>
-              <strong>FindTrustedCleaners</strong> bridges that gap. It's a space where:
+              <strong>FindTrustedCleaners</strong> bridges that gap. It&apos;s a space where:
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -189,13 +189,13 @@ export default function AboutPage() {
                 <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-teal-600 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
                   ✓
                 </div>
-                <p className="text-gray-700">Cleaners don't have to pay to list or fight over leads.</p>
+                <p className="text-gray-700">Cleaners don&apos;t have to pay to list or fight over leads.</p>
               </div>
               <div className="flex items-start gap-3 p-4 bg-white/40 backdrop-blur-sm rounded-2xl border border-white/30">
                 <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-teal-600 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
                   ✓
                 </div>
-                <p className="text-gray-700">Clients don't have to endlessly message or second guess who to trust.</p>
+                <p className="text-gray-700">Clients don&apos;t have to endlessly message or second guess who to trust.</p>
               </div>
             </div>
 
@@ -215,7 +215,7 @@ export default function AboutPage() {
           </div>
           
           <p className="text-lg text-gray-700 mb-6 leading-relaxed">
-            Thanks for stopping by. Whether you're booking a cleaner or listing your services – we're genuinely glad you're here.
+            Thanks for stopping by. Whether you&apos;re booking a cleaner or listing your services – we&apos;re genuinely glad you&apos;re here.
           </p>
           
           <div className="flex flex-col sm:flex-row justify-center gap-4 text-lg">
