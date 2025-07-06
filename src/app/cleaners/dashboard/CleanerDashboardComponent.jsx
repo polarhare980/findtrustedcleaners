@@ -123,24 +123,43 @@ export default function CleanerDashboardComponent() {
   };
 
   const handleSave = async () => {
-    setSaving(true);
-    try {
-      const res = await fetch(`/api/cleaners/${cleaner._id}`, {
-        method: 'PUT',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-      if (!res.ok) throw new Error('Update failed');
-      setMessage('✅ Changes saved successfully!');
-      setAvailabilityChanged(false);
-    } catch (err) {
-      console.error(err);
-      setMessage('❌ Error saving changes.');
-    } finally {
-      setSaving(false);
+  setSaving(true);
+
+  // 🛠️ Reformat availability before saving
+  const reformattedAvailability = {};
+
+  for (const day of days) {
+    reformattedAvailability[day] = {};
+    for (const hour of hours) {
+      const key = `${day}-${hour}`;
+      if (formData.availability?.[key]) {
+        reformattedAvailability[day][hour] = formData.availability[key];
+      }
     }
-  };
+  }
+
+  try {
+    const res = await fetch(`/api/cleaners/${cleaner._id}`, {
+      method: 'PUT',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...formData,
+        availability: reformattedAvailability, // 🔥 Use the fixed format
+      }),
+    });
+
+    if (!res.ok) throw new Error('Update failed');
+    setMessage('✅ Changes saved successfully!');
+    setAvailabilityChanged(false);
+  } catch (err) {
+    console.error(err);
+    setMessage('❌ Error saving changes.');
+  } finally {
+    setSaving(false);
+  }
+};
+
 
   const handleEditToggle = () => {
     if (editMode) {
