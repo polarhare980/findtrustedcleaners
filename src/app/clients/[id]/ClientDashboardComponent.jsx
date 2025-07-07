@@ -83,32 +83,58 @@ export default function ClientDashboardComponent() {
   };
 
   const handleSave = async () => {
-    setSaving(true);
-    try {
-      const res = await fetch(`/api/clients/${client._id}`, {
-        method: 'PUT',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fullName: formData.fullName,
-          phone: formData.phone,
-          address: formData.address,
-        }),
-      });
+  setSaving(true);
 
-      if (res.ok) {
-        setSuccess('Profile updated successfully.');
-        setIsEditing(false);
-      } else {
-        setError('Failed to update profile.');
+  // ✅ Reformat the availability into nested structure (this is the key fix)
+  const reformattedAvailability = {};
+
+  for (const day of days) {
+    reformattedAvailability[day] = {};
+    for (const hour of hours) {
+      // Only include slots that are actually set (true, false, or pending)
+      if (formData.availability?.[day]?.[hour] !== undefined) {
+        reformattedAvailability[day][hour] = formData.availability[day][hour];
       }
-    } catch (err) {
-      console.error('Error saving profile:', err);
-      setError('An error occurred while saving.');
-    } finally {
-      setSaving(false);
     }
-  };
+  }
+
+  try {
+    const res = await fetch(`/api/cleaners/${cleaner._id}`, {
+      method: 'PUT',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        availability: reformattedAvailability,
+        googleReviewUrl: formData.googleReviewUrl,
+        facebookReviewUrl: formData.facebookReviewUrl,
+        embedCode: formData.embedCode,
+        image: formData.image,
+        rates: formData.rates,
+        services: formData.services,
+        phone: formData.phone,
+        email: formData.email,
+        companyName: formData.companyName,
+        businessInsurance: formData.businessInsurance,
+        address: formData.address
+      }),
+    });
+
+    if (!res.ok) throw new Error('Update failed');
+
+    const data = await res.json();
+
+    // ✅ Update dashboard state with the API response
+    setFormData(data.cleaner);
+    setMessage('✅ Changes saved successfully!');
+    setAvailabilityChanged(false);
+  } catch (err) {
+    console.error(err);
+    setMessage('❌ Error saving changes.');
+  } finally {
+    setSaving(false);
+  }
+};
+
 
   const handleDeleteAccount = async () => {
     if (!confirm('Are you sure you want to delete your account? This cannot be undone.')) return;

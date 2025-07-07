@@ -697,7 +697,7 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 2px 8px rgba(234, 88, 12, 0.3);
-  width: 160px; /* Match the teal button width */
+  width: 160px;
 }
 
 .btn-view-profile:hover {
@@ -708,6 +708,8 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
 .btn-view-profile:active {
   transform: translateY(0);
 }
+
+
 
 
         .btn-request-booking {
