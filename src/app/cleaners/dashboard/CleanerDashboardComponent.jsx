@@ -146,19 +146,7 @@ export default function CleanerDashboardComponent() {
     setSaving(false);
   }
 };
-
-
-    if (!res.ok) throw new Error('Update failed');
-    setMessage('✅ Changes saved successfully!');
-    setAvailabilityChanged(false);
-  } catch (err) {
-    console.error(err);
-    setMessage('❌ Error saving changes.');
-  } finally {
-    setSaving(false);
-  }
-};
-
+;
 
   const handleEditToggle = () => {
     if (editMode) {
