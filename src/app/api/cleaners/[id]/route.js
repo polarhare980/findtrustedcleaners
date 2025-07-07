@@ -25,16 +25,18 @@ export async function PUT(req, { params }) {
   try {
     // ✅ Fully allow all updates including image
     const updated = await Cleaner.findByIdAndUpdate(
-      id,
-      {
-        ...body,
-        googleReviewUrl: body.googleReviewUrl || '',
-        facebookReviewUrl: body.facebookReviewUrl || '',
-        embedCode: body.embedCode || '',
-        image: body.image || '', // ✅ Support updating image
-      },
-      { new: true }
-    );
+  id,
+  {
+    ...body,
+    availability: body.availability || {}, // ✅ Add this line
+    googleReviewUrl: body.googleReviewUrl || '',
+    facebookReviewUrl: body.facebookReviewUrl || '',
+    embedCode: body.embedCode || '',
+    image: body.image || '',
+  },
+  { new: true }
+);
+
 
     if (!updated) {
       return NextResponse.json({ success: false, message: 'Cleaner not found' }, { status: 404 });

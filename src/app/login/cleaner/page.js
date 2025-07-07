@@ -58,7 +58,7 @@ export default function CleanerProfile() {
 
     setSaveStatus('Saving...');
     try {
-      const res = await fetch(`/api/cleaners/${id}/availability`, {
+      const res = await fetch(`/api/cleaners/${id}`, {
         method: 'PUT',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
