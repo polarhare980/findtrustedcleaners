@@ -239,7 +239,7 @@ export default function CleanerProfile() {
                     <div className="font-semibold text-teal-800 py-2 flex items-center">{day}</div>
                     {[...Array(13)].map((_, hourIndex) => {
                       const hourKey = `${7 + hourIndex}`;
-                      const isAvailable = cleaner.availability?.[`${day}-${hourKey}`] === true;
+                      const isAvailable = cleaner.availability?.[day]?.[hourKey] === true;
 
 
                       return (
@@ -281,7 +281,7 @@ export default function CleanerProfile() {
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                     {[...Array(13)].map((_, hourIndex) => {
                       const hour = 7 + hourIndex;
-                      const isAvailable = cleaner.availability?.[`${day}-${hour}`] === true;
+                      const isAvailable = cleaner.availability?.[day]?.[hour] === true;
 
 
                       return (
