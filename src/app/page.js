@@ -687,7 +687,7 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
         }
 
         .btn-view-profile {
-          background: white;
+          background: #EA580C;
           color: #EA580C;
           text-decoration: none;
           text-align: center;
@@ -703,7 +703,7 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
 
         .btn-view-profile:hover {
           background: #EA580C;
-          color: white;
+          color:rgb(254, 254, 254);
           transform: translateY(-2px) scale(1.05);
           box-shadow: 0 4px 12px rgba(234, 88, 12, 0.4);
         }
