@@ -132,11 +132,16 @@ export default function CleanerDashboardComponent() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         ...formData,
-        availability: formData.availability, // ✅ Send as-is (no reformatting)
+        availability: formData.availability, // ✅ Send as-is
       }),
     });
 
     if (!res.ok) throw new Error('Update failed');
+
+    const data = await res.json();
+
+    // ✅ Update local formData with server response
+    setFormData(data.cleaner);
     setMessage('✅ Changes saved successfully!');
     setAvailabilityChanged(false);
   } catch (err) {
