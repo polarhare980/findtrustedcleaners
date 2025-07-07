@@ -698,11 +698,15 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
   transition: all 0.3s ease;
   box-shadow: 0 2px 8px rgba(234, 88, 12, 0.3);
   width: 160px;
+  text-decoration: none; /* Remove underline */
+  display: inline-block; /* Make it behave like a button */
+  text-align: center; /* Center the text */
 }
 
 .btn-view-profile:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(234, 88, 12, 0.4);
+  color: white; /* Ensure text stays white on hover */
 }
 
 .btn-view-profile:active {
