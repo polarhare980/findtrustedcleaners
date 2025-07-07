@@ -687,30 +687,28 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
         }
 
         .btn-view-profile {
-          background: #EA580C;
-          color: #EA580C;
-          text-decoration: none;
-          text-align: center;
-          padding: 12px 20px;
-          border: 3px solid #EA580C;
-          border-radius: 8px;
-          font-size: 16px;
-          font-weight: 600;
-          transition: all 0.3s ease;
-          box-shadow: 0 2px 8px rgba(234, 88, 12, 0.3);
-          width: 160px; /* Consistent box width */
-        }
+  background: linear-gradient(135deg, #EA580C 0%, #C2410C 100%);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(234, 88, 12, 0.3);
+  width: 160px; /* Match the teal button width */
+}
 
-        .btn-view-profile:hover {
-          background: #EA580C;
-          color:rgb(254, 254, 254);
-          transform: translateY(-2px) scale(1.05);
-          box-shadow: 0 4px 12px rgba(234, 88, 12, 0.4);
-        }
+.btn-view-profile:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.4);
+}
 
-        .btn-view-profile:active {
-          transform: translateY(0);
-        }
+.btn-view-profile:active {
+  transform: translateY(0);
+}
+
 
         .btn-request-booking {
           background: linear-gradient(135deg, #10B981 0%, #059669 100%);

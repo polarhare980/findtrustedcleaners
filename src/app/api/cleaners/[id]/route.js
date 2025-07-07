@@ -23,20 +23,40 @@ export async function PUT(req, { params }) {
   }
 
   try {
-    // ✅ Fully allow all updates including image
-    const updated = await Cleaner.findByIdAndUpdate(
-  id,
-  {
-    ...body,
-    availability: body.availability || {}, // ✅ Add this line
-    googleReviewUrl: body.googleReviewUrl || '',
-    facebookReviewUrl: body.facebookReviewUrl || '',
-    embedCode: body.embedCode || '',
-    image: body.image || '',
-  },
-  { new: true }
-);
+    // ✅ Only update allowed fields to avoid database rejection
+    const {
+      availability,
+      googleReviewUrl,
+      facebookReviewUrl,
+      embedCode,
+      image,
+      rates,
+      services,
+      phone,
+      email,
+      companyName,
+      businessInsurance,
+      address
+    } = body;
 
+    const updated = await Cleaner.findByIdAndUpdate(
+      id,
+      {
+        availability: availability || {},
+        googleReviewUrl: googleReviewUrl || '',
+        facebookReviewUrl: facebookReviewUrl || '',
+        embedCode: embedCode || '',
+        image: image || '',
+        rates: rates || '',
+        services: services || [],
+        phone: phone || '',
+        email: email || '',
+        companyName: companyName || '',
+        businessInsurance: businessInsurance || false,
+        address: address || {}
+      },
+      { new: true }
+    );
 
     if (!updated) {
       return NextResponse.json({ success: false, message: 'Cleaner not found' }, { status: 404 });
@@ -67,7 +87,7 @@ export async function GET(req, { params }) {
       rates: cleaner.rates,
       services: cleaner.services,
       availability: cleaner.availability,
-      image: cleaner.image || '/profile-placeholder.png', // ✅ Use correct field
+      image: cleaner.image || '/profile-placeholder.png',
     };
 
     let responseData = { ...publicData };
@@ -97,4 +117,3 @@ export async function GET(req, { params }) {
     return NextResponse.json({ success: false, message: 'Error fetching cleaner' }, { status: 500 });
   }
 }
-
