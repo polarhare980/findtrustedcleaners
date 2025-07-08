@@ -1,12 +1,8 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
-// Flexible availability schema
-const availabilitySchema = new mongoose.Schema({
-  monday: { type: Boolean, default: false },
-  tuesday: { type: Boolean, default: false },
-  // Add more days if needed
-}, { _id: false });
+// ✅ Flexible per-hour availability schema
+const availabilitySchema = new mongoose.Schema({}, { strict: false, _id: false });
 
 const cleanerSchema = new mongoose.Schema({
   realName: { type: String, required: true },
@@ -28,7 +24,10 @@ const cleanerSchema = new mongoose.Schema({
   },
   password: { type: String, required: true },
   rates: { type: Number, required: true },
-  availability: availabilitySchema, // Flexible availability schema
+
+  // ✅ Updated availability
+  availability: availabilitySchema,
+
   services: { type: [String], required: true },
   image: { type: String },
   allowPending: { type: Boolean, default: false },
@@ -39,19 +38,19 @@ const cleanerSchema = new mongoose.Schema({
   businessInsurance: { type: Boolean, default: false },
 }, { timestamps: true });
 
-// Password hashing before save
+// 🔐 Password hashing before saving
 cleanerSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
   this.password = await bcrypt.hash(this.password, 10);
   next();
 });
 
-// Password comparison method
+// 🔍 Password comparison
 cleanerSchema.methods.comparePassword = async function (password) {
   return await bcrypt.compare(password, this.password);
 };
 
-// Indexes for efficient queries
+// 📌 Useful indexes
 cleanerSchema.index({ phone: 1 });
 cleanerSchema.index({ services: 1 });
 
