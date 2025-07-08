@@ -152,9 +152,10 @@ export default function BlogListPage() {
                       
                       <div className="flex-shrink-0">
                         <Link
-                          href={`/blog/${blog.slug}`}
-                          className="inline-flex items-center bg-gradient-to-r from-teal-600 to-teal-700 text-white px-6 py-3 rounded-full shadow-lg hover:shadow-xl hover:-translate-y-0.5 hover:scale-105 transition-all duration-300 ease-in-out font-medium group"
-                        >
+  href={`/blog/${blog.slug.replace(/^blog\//, '')}`}
+  className="inline-flex items-center bg-gradient-to-r from-teal-600 to-teal-700 text-white px-6 py-3 rounded-full shadow-lg hover:shadow-xl hover:-translate-y-0.5 hover:scale-105 transition-all duration-300 ease-in-out font-medium group"
+>
+
                           Read More
                           <svg className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>

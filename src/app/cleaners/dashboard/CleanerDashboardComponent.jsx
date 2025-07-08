@@ -140,6 +140,7 @@ for (const day of days) {
 }
 
 
+
   try {
     const res = await fetch(`/api/cleaners/${cleaner._id}`, {
       method: 'PUT',
