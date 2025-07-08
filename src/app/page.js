@@ -560,9 +560,11 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
           <span className="text-xs font-semibold">Premium Cleaner</span>
         </div>
       )}
+
       <div className="cleaner-image">
         <img src={cleaner.image || '/profile-placeholder.png'} alt={cleaner.realName} />
       </div>
+
       <div className="cleaner-info">
         <h3 className="cleaner-name">{cleaner.realName}</h3>
         <p className="cleaner-rating">⭐ {cleaner.rating || 'Not rated yet'}</p>
@@ -583,7 +585,38 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
           </div>
         )}
 
-        <div className="cleaner-actions">
+        {cleaner.availability && (
+          <div className="availability-grid mt-4">
+            <h4 className="font-semibold text-teal-700 mb-2 text-center">Availability</h4>
+            <div className="grid grid-cols-[60px_repeat(13,1fr)] text-xs border border-gray-200 rounded overflow-hidden">
+              <div className="bg-gray-100 p-1 font-bold text-center">Day</div>
+              {Array.from({ length: 13 }, (_, i) => (
+                <div key={`hour-head-${i}`} className="bg-gray-100 p-1 text-center">{7 + i}</div>
+              ))}
+              {Object.entries(cleaner.availability).map(([day, slots]) => (
+                <React.Fragment key={day}>
+                  <div className="bg-gray-50 p-1 font-medium text-center">{day.slice(0, 3)}</div>
+                  {Array.from({ length: 13 }, (_, i) => {
+                    const hour = (7 + i).toString();
+                    const status = slots?.[hour] || 'unavailable';
+                    return (
+                      <div
+                        key={`${day}-${hour}`}
+                        className={`p-1 text-center ${
+                          status === 'available' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }`}
+                      >
+                        {status === 'available' ? '✅' : '❌'}
+                      </div>
+                    );
+                  })}
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="cleaner-actions mt-4">
           <Link href={`/cleaners/${cleaner._id}`} className="btn-view-profile">
             View Profile
           </Link>
@@ -593,7 +626,9 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
         </div>
       </div>
 
+      {/* ✅ Styles go inside the return */}
       <style jsx>{`
+        /* Put all your cleaner-card styles here (same as before) */
         .cleaner-card {
           min-width: 280px;
           background: rgba(255, 255, 255, 0.95);
@@ -686,7 +721,6 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
           margin-top: 16px;
         }
 
-        /* Orange View Profile Button - Fixed */
         .btn-view-profile {
           background: linear-gradient(135deg, #EA580C 0%, #C2410C 100%) !important;
           color: white !important;
@@ -710,11 +744,6 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
           color: white !important;
         }
 
-        .btn-view-profile:active {
-          transform: translateY(0) !important;
-        }
-
-        /* Green Request Booking Button */
         .btn-request-booking {
           background: linear-gradient(135deg, #10B981 0%, #059669 100%) !important;
           color: white !important;
@@ -733,11 +762,9 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
           transform: translateY(-1px) !important;
           box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4) !important;
         }
-
-        .btn-request-booking:active {
-          transform: translateY(0) !important;
-        }
       `}</style>
     </div>
   );
 }
+
+
