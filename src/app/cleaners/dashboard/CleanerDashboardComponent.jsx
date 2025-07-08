@@ -128,15 +128,17 @@ export default function CleanerDashboardComponent() {
 
   // ✅ Reformat availability into { Monday: { 7: true }, ... }
   const reformattedAvailability = {};
-  for (const day of days) {
-    reformattedAvailability[day] = {};
-    for (const hour of hours) {
-      const value = formData.availability?.[day]?.[hour];
-      if (value !== undefined) {
-        reformattedAvailability[day][hour] = value;
-      }
+for (const day of days) {
+  reformattedAvailability[day] = {};
+  for (const hour of hours) {
+    const value = formData.availability?.[day]?.[hour];
+    if (value !== undefined) {
+      // Ensure key is string — not number
+      reformattedAvailability[day][hour.toString()] = value;
     }
   }
+}
+
 
   try {
     const res = await fetch(`/api/cleaners/${cleaner._id}`, {
