@@ -124,6 +124,19 @@ export default function CleanerDashboardComponent() {
 
   const handleSave = async () => {
   setSaving(true);
+  console.log('Saving availability...');
+
+  // ✅ Reformat availability into { Monday: { 7: true }, ... }
+  const reformattedAvailability = {};
+  for (const day of days) {
+    reformattedAvailability[day] = {};
+    for (const hour of hours) {
+      const value = formData.availability?.[day]?.[hour];
+      if (value !== undefined) {
+        reformattedAvailability[day][hour] = value;
+      }
+    }
+  }
 
   try {
     const res = await fetch(`/api/cleaners/${cleaner._id}`, {
@@ -132,26 +145,24 @@ export default function CleanerDashboardComponent() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         ...formData,
-        availability: formData.availability, // ✅ Send as-is
+        availability: reformattedAvailability, // 🧠 THIS is what needs saving
       }),
     });
 
     if (!res.ok) throw new Error('Update failed');
 
     const data = await res.json();
-
-    // ✅ Update local formData with server response
-    setFormData(data.cleaner);
+    setFormData(data.cleaner); // 🧠 Refresh the state
     setMessage('✅ Changes saved successfully!');
     setAvailabilityChanged(false);
   } catch (err) {
-    console.error(err);
+    console.error('Save error:', err);
     setMessage('❌ Error saving changes.');
   } finally {
     setSaving(false);
   }
 };
-;
+
 
   const handleEditToggle = () => {
     if (editMode) {
