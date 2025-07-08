@@ -25,7 +25,22 @@ export async function GET(req) {
 
       console.log('✅ Cleaner found:', cleaner._id);
 
-      return NextResponse.json({ success: true, cleaner }, { status: 200 });
+      // ✅ Return only public fields
+      const publicCleaner = {
+        _id: cleaner._id,
+        realName: cleaner.realName,
+        companyName: cleaner.companyName,
+        postcode: cleaner.postcode,
+        image: cleaner.image || '/profile-placeholder.png',
+        rates: cleaner.rates,
+        isPremium: cleaner.isPremium,
+        rating: cleaner.rating || null,
+        availability: cleaner.availability || {},
+        googleReviewUrl: cleaner.googleReviewUrl || null,
+        facebookReviewUrl: cleaner.facebookReviewUrl || null,
+      };
+
+      return NextResponse.json({ success: true, cleaner: publicCleaner }, { status: 200 });
     }
 
     const query = {};
@@ -42,10 +57,23 @@ export async function GET(req) {
       query.bookingStatus = bookingStatus;
     }
 
-    // ✅ Prioritise premium cleaners first
-    const cleaners = await Cleaner.find(query)
+    const rawCleaners = await Cleaner.find(query)
       .select('-password')
       .sort({ isPremium: -1 }); // Premium first
+
+    const cleaners = rawCleaners.map(c => ({
+      _id: c._id,
+      realName: c.realName,
+      companyName: c.companyName,
+      postcode: c.postcode,
+      image: c.image || '/profile-placeholder.png',
+      rates: c.rates,
+      isPremium: c.isPremium,
+      rating: c.rating || null,
+      availability: c.availability || {}, // ✅ include it
+      googleReviewUrl: c.googleReviewUrl || null,
+      facebookReviewUrl: c.facebookReviewUrl || null,
+    }));
 
     console.log('✅ Found', cleaners.length, 'cleaner(s) for search query.');
 
