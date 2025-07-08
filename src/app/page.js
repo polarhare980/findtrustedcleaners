@@ -681,65 +681,63 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
         .cleaner-actions {
           display: flex;
           flex-direction: column;
-          align-items: center; /* Center buttons */
+          align-items: center;
           gap: 12px;
           margin-top: 16px;
         }
 
+        /* Orange View Profile Button - Fixed */
         .btn-view-profile {
-  background: linear-gradient(135deg, #EA580C 0%, #C2410C 100%);
-  color: white;
-  border: none;
-  padding: 12px 20px;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(234, 88, 12, 0.3);
-  width: 160px;
-  text-decoration: none; /* Remove underline */
-  display: inline-block; /* Make it behave like a button */
-  text-align: center; /* Center the text */
-}
+          background: linear-gradient(135deg, #EA580C 0%, #C2410C 100%) !important;
+          color: white !important;
+          border: none !important;
+          padding: 12px 20px !important;
+          border-radius: 8px !important;
+          font-size: 16px !important;
+          font-weight: 600 !important;
+          cursor: pointer !important;
+          transition: all 0.3s ease !important;
+          box-shadow: 0 2px 8px rgba(234, 88, 12, 0.3) !important;
+          width: 160px !important;
+          text-decoration: none !important;
+          display: inline-block !important;
+          text-align: center !important;
+        }
 
-.btn-view-profile:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.4);
-  color: white; /* Ensure text stays white on hover */
-}
+        .btn-view-profile:hover {
+          transform: translateY(-1px) !important;
+          box-shadow: 0 4px 12px rgba(234, 88, 12, 0.4) !important;
+          color: white !important;
+        }
 
-.btn-view-profile:active {
-  transform: translateY(0);
-}
+        .btn-view-profile:active {
+          transform: translateY(0) !important;
+        }
 
-
-
-
+        /* Green Request Booking Button */
         .btn-request-booking {
-          background: linear-gradient(135deg, #10B981 0%, #059669 100%);
-          color: white;
-          border: none;
-          padding: 12px 20px;
-          border-radius: 8px;
-          font-size: 16px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
-          width: 160px; /* Match View Profile button width */
+          background: linear-gradient(135deg, #10B981 0%, #059669 100%) !important;
+          color: white !important;
+          border: none !important;
+          padding: 12px 20px !important;
+          border-radius: 8px !important;
+          font-size: 16px !important;
+          font-weight: 600 !important;
+          cursor: pointer !important;
+          transition: all 0.3s ease !important;
+          box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3) !important;
+          width: 160px !important;
         }
 
         .btn-request-booking:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+          transform: translateY(-1px) !important;
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4) !important;
         }
 
         .btn-request-booking:active {
-          transform: translateY(0);
+          transform: translateY(0) !important;
         }
       `}</style>
     </div>
   );
 }
-
