@@ -25,7 +25,13 @@ export async function GET(req) {
       return NextResponse.json({ success: false, message: 'User not found.' }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, user: { ...foundUser.toObject(), type: user.type } });
+    // ✅ Use .toObject() only if available (safe fallback)
+    const userObject = typeof foundUser.toObject === 'function' ? foundUser.toObject() : foundUser;
+
+    return NextResponse.json({
+      success: true,
+      user: { ...userObject, type: user.type }
+    });
   } catch (err) {
     console.error('❌ Error fetching user:', err.message);
     return NextResponse.json({ success: false, message: 'Server error.' }, { status: 500 });
