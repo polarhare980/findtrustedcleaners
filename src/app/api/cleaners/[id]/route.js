@@ -23,7 +23,6 @@ export async function PUT(req, { params }) {
   }
 
   try {
-    // ✅ Only update allowed fields to avoid database rejection
     const {
       availability,
       googleReviewUrl,
@@ -39,24 +38,27 @@ export async function PUT(req, { params }) {
       address
     } = body;
 
-    const updated = await Cleaner.findByIdAndUpdate(
-      id,
-      {
-        availability: availability || {},
-        googleReviewUrl: googleReviewUrl || '',
-        facebookReviewUrl: facebookReviewUrl || '',
-        embedCode: embedCode || '',
-        image: image || '',
-        rates: rates || '',
-        services: services || [],
-        phone: phone || '',
-        email: email || '',
-        companyName: companyName || '',
-        businessInsurance: businessInsurance || false,
-        address: address || {}
-      },
-      { new: true }
-    );
+    const updateFields = {
+      googleReviewUrl: googleReviewUrl || '',
+      facebookReviewUrl: facebookReviewUrl || '',
+      embedCode: embedCode || '',
+      image: image || '',
+      rates: rates || '',
+      services: services || [],
+      phone: phone || '',
+      email: email || '',
+      companyName: companyName || '',
+      businessInsurance: businessInsurance || false,
+      address: address || {}
+    };
+
+    // ✅ Only update availability if explicitly included
+    if (availability !== undefined) {
+      console.log('🔄 Incoming availability update:', availability);
+      updateFields.availability = availability;
+    }
+
+    const updated = await Cleaner.findByIdAndUpdate(id, updateFields, { new: true });
 
     if (!updated) {
       return NextResponse.json({ success: false, message: 'Cleaner not found' }, { status: 404 });
@@ -80,7 +82,6 @@ export async function GET(req, { params }) {
       return NextResponse.json({ success: false, message: 'Cleaner not found' }, { status: 404 });
     }
 
-    // Base public data
     const publicData = {
       realName: cleaner.realName,
       postcode: cleaner.postcode,
@@ -93,7 +94,6 @@ export async function GET(req, { params }) {
     let responseData = { ...publicData };
     let hasAccess = false;
 
-    // Check session and purchase
     const { valid, user } = await protectRoute(req);
 
     if (valid && user && user.type === 'client') {
@@ -101,7 +101,6 @@ export async function GET(req, { params }) {
 
       if (purchase) {
         hasAccess = true;
-
         responseData = {
           ...publicData,
           phone: cleaner.phone,
