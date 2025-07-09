@@ -25,8 +25,15 @@ export async function GET(req) {
       return NextResponse.json({ success: false, message: 'User not found.' }, { status: 404 });
     }
 
-    // ✅ Use .toObject() only if available (safe fallback)
-    const userObject = typeof foundUser.toObject === 'function' ? foundUser.toObject() : foundUser;
+    let userObject;
+    try {
+      userObject = typeof foundUser.toObject === 'function'
+        ? foundUser.toObject()
+        : JSON.parse(JSON.stringify(foundUser));
+    } catch (err) {
+      console.error('⚠️ Fallback to plain object failed:', err);
+      userObject = {};
+    }
 
     return NextResponse.json({
       success: true,
