@@ -13,52 +13,57 @@ const daysMap = {
 };
 
 export async function GET() {
-  await connectToDatabase();
+  try {
+    await connectToDatabase();
 
-  const cleaners = await Cleaner.find({});
-  let fixedCount = 0;
+    const cleaners = await Cleaner.find({});
+    let fixedCount = 0;
 
-  for (const cleaner of cleaners) {
-    let fixed = false;
-    const newAvailability = {};
+    for (const cleaner of cleaners) {
+      let fixed = false;
+      const newAvailability = {};
 
-    for (const key in cleaner.availability || {}) {
-      const value = cleaner.availability[key];
+      const availability = cleaner.availability || {};
 
-      // Convert Mon-7 format
-      if (key.includes('-')) {
-        const [dayShort, hour] = key.split('-');
-        const fullDay = daysMap[dayShort];
-        if (!newAvailability[fullDay]) newAvailability[fullDay] = {};
-        newAvailability[fullDay][hour] = value;
-        fixed = true;
-      }
+      for (const key in availability) {
+        const value = availability[key];
 
-      // Convert { monday: false } format
-      else if (typeof value === 'boolean') {
-        const fullDay = key.charAt(0).toUpperCase() + key.slice(1).toLowerCase();
-        if (!newAvailability[fullDay]) newAvailability[fullDay] = {};
-        for (let i = 7; i <= 19; i++) {
-          newAvailability[fullDay][i.toString()] = value;
+        if (key.includes('-')) {
+          const [dayShort, hour] = key.split('-');
+          const fullDay = daysMap[dayShort];
+          if (!fullDay) continue;
+          if (!newAvailability[fullDay]) newAvailability[fullDay] = {};
+          newAvailability[fullDay][hour] = value;
+          fixed = true;
+        } else if (typeof value === 'boolean') {
+          const fullDay = key.charAt(0).toUpperCase() + key.slice(1).toLowerCase();
+          if (!newAvailability[fullDay]) newAvailability[fullDay] = {};
+          for (let i = 7; i <= 19; i++) {
+            newAvailability[fullDay][i.toString()] = value;
+          }
+          fixed = true;
+        } else if (typeof value === 'object') {
+          newAvailability[key] = value;
         }
-        fixed = true;
       }
 
-      // Already correct
-      else if (typeof value === 'object') {
-        newAvailability[key] = value;
+      if (fixed) {
+        cleaner.availability = newAvailability;
+        await cleaner.save();
+        fixedCount++;
       }
     }
 
-    if (fixed) {
-      cleaner.availability = newAvailability;
-      await cleaner.save();
-      fixedCount++;
-    }
+    return NextResponse.json({
+      success: true,
+      message: `✅ Fixed availability for ${fixedCount} cleaners.`,
+    });
+  } catch (err) {
+    console.error('❌ Fix Availability Error:', err);
+    return NextResponse.json({
+      success: false,
+      message: '❌ Server error during fix.',
+      error: err.message,
+    }, { status: 500 });
   }
-
-  return NextResponse.json({
-    success: true,
-    message: `✅ Fixed availability for ${fixedCount} cleaners.`,
-  });
 }
