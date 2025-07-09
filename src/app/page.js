@@ -554,6 +554,8 @@ export default function HomePage() {
 }
 
 function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
+  console.log("🧪 Cleaner data:", cleaner);
+  console.log("📅 Availability:", cleaner.availability);
   return (
     <div className="cleaner-card">
       {isPremium && (
