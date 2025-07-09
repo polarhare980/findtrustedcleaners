@@ -49,7 +49,7 @@ export async function GET() {
 
       if (fixed) {
         cleaner.availability = newAvailability;
-        await cleaner.save();
+        await cleaner.save({ validateBeforeSave: false });
         fixedCount++;
       }
     }
