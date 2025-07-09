@@ -43,7 +43,7 @@ export default function BlogListPage() {
         </svg>
       </div>
       <h3 className="text-2xl font-bold text-teal-800 mb-2">No Blog Posts Yet</h3>
-      <p className="text-gray-600 mb-6">We're working on creating amazing content for you. Check back soon!</p>
+      <p className="text-gray-600 mb-6">We&apos;re working on creating amazing content for you. Check back soon!</p>
       <Link
         href="/"
         className="inline-block bg-gradient-to-r from-teal-600 to-teal-700 text-white px-8 py-3 rounded-full shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 ease-in-out font-medium"
