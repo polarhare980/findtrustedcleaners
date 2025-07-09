@@ -140,7 +140,7 @@ export default function CleanerRegister() {
 
     console.log('📦 Payload:', JSON.stringify(payload, null, 2));
 
-    const res = await fetch('/api/auth/register', {  // 🔥 Change to unified route
+    const res = await fetch('/api/cleaners', {  // 🔥 Change to unified route
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   credentials: 'include',
@@ -447,3 +447,4 @@ export default function CleanerRegister() {
     </>
   );
 }
+
