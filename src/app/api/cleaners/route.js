@@ -25,22 +25,22 @@ export async function GET(req) {
 
       console.log('✅ Cleaner found:', cleaner._id);
 
-      // ✅ Return only public fields
-      const publicCleaner = {
-        _id: cleaner._id,
-        realName: cleaner.realName,
-        companyName: cleaner.companyName,
-        postcode: cleaner.postcode,
-        image: cleaner.image || '/profile-placeholder.png',
-        rates: cleaner.rates,
-        isPremium: cleaner.isPremium,
-        rating: cleaner.rating || null,
-        availability: cleaner.availability || {},
-        googleReviewUrl: cleaner.googleReviewUrl || null,
-        facebookReviewUrl: cleaner.facebookReviewUrl || null,
-      };
-
-      return NextResponse.json({ success: true, cleaner: publicCleaner }, { status: 200 });
+      return NextResponse.json({
+        success: true,
+        cleaner: {
+          _id: cleaner._id,
+          realName: cleaner.realName,
+          companyName: cleaner.companyName,
+          postcode: cleaner.postcode,
+          image: cleaner.image || '/profile-placeholder.png',
+          rates: cleaner.rates,
+          isPremium: cleaner.isPremium,
+          rating: cleaner.rating || null,
+          availability: cleaner.availability || {},
+          googleReviewUrl: cleaner.googleReviewUrl || null,
+          facebookReviewUrl: cleaner.facebookReviewUrl || null,
+        }
+      }, { status: 200 });
     }
 
     const query = {};
@@ -59,21 +59,29 @@ export async function GET(req) {
 
     const rawCleaners = await Cleaner.find(query)
       .select('-password')
-      .sort({ isPremium: -1 }); // Premium first
+      .sort({ isPremium: -1 });
 
-    const cleaners = rawCleaners.map(c => ({
-      _id: c._id,
-      realName: c.realName,
-      companyName: c.companyName,
-      postcode: c.postcode,
-      image: c.image || '/profile-placeholder.png',
-      rates: c.rates,
-      isPremium: c.isPremium,
-      rating: c.rating || null,
-      availability: c.availability || {}, // ✅ include it
-      googleReviewUrl: c.googleReviewUrl || null,
-      facebookReviewUrl: c.facebookReviewUrl || null,
-    }));
+    const cleaners = rawCleaners.map(obj => {
+      try {
+        const c = typeof obj.toObject === 'function' ? obj.toObject() : JSON.parse(JSON.stringify(obj));
+        return {
+          _id: c._id,
+          realName: c.realName,
+          companyName: c.companyName,
+          postcode: c.postcode,
+          image: c.image || '/profile-placeholder.png',
+          rates: c.rates,
+          isPremium: c.isPremium,
+          rating: c.rating || null,
+          availability: c.availability || {},
+          googleReviewUrl: c.googleReviewUrl || null,
+          facebookReviewUrl: c.facebookReviewUrl || null,
+        };
+      } catch (err) {
+        console.error('❌ Failed to format cleaner object:', err);
+        return null;
+      }
+    }).filter(Boolean);
 
     console.log('✅ Found', cleaners.length, 'cleaner(s) for search query.');
 
@@ -99,7 +107,6 @@ export async function POST(req) {
     }
 
     const hashedPassword = await bcrypt.hash(data.password, 10);
-    data.password = hashedPassword;
 
     const cleaner = await Cleaner.create({
       realName: data.realName,
@@ -110,7 +117,7 @@ export async function POST(req) {
       postcode: data.postcode,
       email: data.email,
       phone: data.phone,
-      password: data.password,
+      password: hashedPassword,
       rates: data.rates,
       availability: data.availability,
       services: data.services,
