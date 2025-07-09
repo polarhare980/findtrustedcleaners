@@ -5,30 +5,28 @@ import bcrypt from 'bcryptjs';
 const availabilitySchema = new mongoose.Schema({}, { strict: false, _id: false });
 
 const cleanerSchema = new mongoose.Schema({
-  realName: { type: String, required: true },
-  companyName: { type: String, required: true },
-  houseNameNumber: { type: String, required: true },
-  street: { type: String, required: true },
-  county: { type: String, required: true },
-  postcode: { type: String, required: true },
+  realName: { type: String },
+  companyName: { type: String },
+  houseNameNumber: { type: String },
+  street: { type: String },
+  county: { type: String },
+  postcode: { type: String },
   email: {
     type: String,
-    required: true,
     unique: true,
     match: [/\S+@\S+\.\S+/, 'Please enter a valid email address'],
   },
   phone: {
     type: String,
-    required: true,
     match: [/^(?:0(?:7\d{9}|[123]\d{8,9}))$/, 'Please enter a valid UK mobile or landline number'],
   },
-  password: { type: String, required: true },
-  rates: { type: Number, required: true },
+  password: { type: String },
+  rates: { type: Number },
 
   // ✅ Updated availability
   availability: availabilitySchema,
 
-  services: { type: [String], required: true },
+  services: { type: [String] },
   image: { type: String },
   allowPending: { type: Boolean, default: false },
   googleReviewUrl: { type: String, default: '' },
