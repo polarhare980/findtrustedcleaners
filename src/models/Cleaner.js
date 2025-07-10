@@ -18,7 +18,7 @@ const cleanerSchema = new mongoose.Schema({
   },
   phone: {
     type: String,
-    match: [/^(?:0(?:7\d{9}|[123]\d{8,9}))$/, 'Please enter a valid UK mobile or landline number'],
+    match: [/^0\d{9,10}$/, 'Please enter a valid UK mobile or landline number'],
   },
   password: { type: String },
   rates: { type: Number },
