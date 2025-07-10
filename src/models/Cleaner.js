@@ -5,7 +5,7 @@ import bcrypt from 'bcryptjs';
 const availabilitySchema = new mongoose.Schema({}, { strict: false, _id: false });
 
 const cleanerSchema = new mongoose.Schema({
-  realName: { type: String },
+  realName: { type: String, required: true },
   companyName: { type: String },
   houseNameNumber: { type: String },
   street: { type: String },
@@ -13,17 +13,19 @@ const cleanerSchema = new mongoose.Schema({
   postcode: { type: String },
   email: {
     type: String,
+    required: true,
     unique: true,
     match: [/\S+@\S+\.\S+/, 'Please enter a valid email address'],
   },
   phone: {
     type: String,
+    required: true,
     match: [/^0\d{9,10}$/, 'Please enter a valid UK mobile or landline number'],
   },
-  password: { type: String },
+  password: { type: String, required: true },
   rates: { type: Number },
 
-  // ✅ Updated availability
+  // ✅ Availability schema
   availability: availabilitySchema,
 
   services: { type: [String] },
