@@ -34,17 +34,23 @@ export default function CleanerDashboardComponent() {
             router.push('/login');
             return;
           }
+          const cleanerUser = {
+  ...data.user,
+  _id: data.user._id || data.user._id?.toString() || data.user.id,
+};
 
-          setCleaner(data.user);
-          const cleanerData = {
-            ...data.user,
-            services: data.user.services || [],
-            availability: data.user.availability || {},
-            businessInsurance: data.user.businessInsurance || false,
-          };
+setCleaner(cleanerUser);
 
-          setFormData(cleanerData);
-          setEditData(cleanerData);
+const cleanerData = {
+  ...cleanerUser,
+  services: cleanerUser.services || [],
+  availability: cleanerUser.availability || {},
+  businessInsurance: cleanerUser.businessInsurance || false,
+};
+
+setFormData(cleanerData);
+setEditData(cleanerData);
+
         } catch {
           router.push('/login');
         } finally {
