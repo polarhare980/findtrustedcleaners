@@ -34,7 +34,19 @@ export async function POST(req) {
         return NextResponse.json({ success: false, message: 'Cleaner already exists.' }, { status: 409 });
       }
 
-      const { realName, companyName, phone, rates, services, houseNameNumber, street, county, postcode, availability, businessInsurance } = body;
+      const {
+        realName,
+        companyName,
+        phone,
+        rates,
+        services,
+        houseNameNumber,
+        street,
+        county,
+        postcode,
+        availability,
+        businessInsurance
+      } = body;
 
       if (!realName || !companyName || !phone || !rates || !services || !houseNameNumber || !street || !county || !postcode) {
         return NextResponse.json({ success: false, message: 'All cleaner fields are required.' }, { status: 400 });
@@ -48,7 +60,10 @@ export async function POST(req) {
         phone: phone.trim(),
         rates,
         services,
-        address: { houseNameNumber, street, county, postcode },
+        houseNameNumber,
+        street,
+        county,
+        postcode,
         availability,
         businessInsurance,
       });
