@@ -9,8 +9,7 @@ const cleanerSchema = new mongoose.Schema({
   rates: { type: Number, required: true },
   services: [String],
   availability: {
-    type: Map,
-    of: Map,
+    type: mongoose.Schema.Types.Mixed, // ✅ Fixed: now supports nested object structure
     default: {},
   },
   businessInsurance: { type: Boolean, default: false },

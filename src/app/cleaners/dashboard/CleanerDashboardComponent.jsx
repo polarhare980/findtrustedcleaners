@@ -36,8 +36,9 @@ export default function CleanerDashboardComponent() {
           }
           const cleanerUser = {
   ...data.user,
-  _id: data.user._id || data.user._id?.toString() || data.user.id,
+  _id: data.user._id?.toString() || data.user.id?.toString(),
 };
+
 
 setCleaner(cleanerUser);
 

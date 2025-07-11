@@ -26,12 +26,15 @@ export async function GET(req) {
       return NextResponse.json({ success: false, message: 'User not found.' }, { status: 404 });
     }
 
-    // ✅ Safely get plain object
     const userObject = foundUser?.toObject?.() || foundUser || {};
 
     return NextResponse.json({
       success: true,
-      user: { ...userObject, type: user.type },
+      user: {
+        ...userObject,
+        _id: userObject._id?.toString(), // ✅ Ensure _id is always a string
+        type: user.type,
+      },
     });
   } catch (err) {
     console.error('❌ Error fetching user:', err.message);

@@ -17,7 +17,8 @@ export async function PUT(req, { params }) {
   console.log('Session User ID:', user._id?.toString());
   console.log('Requested Param ID:', id);
 
-  if (String(user._id?.toString()) !== String(id) && user.type !== 'admin') {
+  // ✅ Simplified authorization logic
+  if (user._id?.toString() !== id && user.type !== 'admin') {
     console.log('🔐 PUT Access Denied: ID Mismatch');
     return NextResponse.json({ success: false, message: 'Access denied.' }, { status: 403 });
   }
@@ -35,7 +36,7 @@ export async function PUT(req, { params }) {
       email,
       companyName,
       businessInsurance,
-      address
+      address,
     } = body;
 
     const updateFields = {
@@ -49,10 +50,9 @@ export async function PUT(req, { params }) {
       email: email || '',
       companyName: companyName || '',
       businessInsurance: businessInsurance || false,
-      address: address || {}
+      address: address || {},
     };
 
-    // ✅ Only update availability if explicitly included
     if (availability !== undefined) {
       console.log('🔄 Incoming availability update:', availability);
       updateFields.availability = availability;
@@ -96,8 +96,11 @@ export async function GET(req, { params }) {
 
     const { valid, user } = await protectRoute(req);
 
-    if (valid && user && user.type === 'client') {
-      const purchase = await Purchase.findOne({ clientId: user._id, cleanerId: id });
+    if (valid && user?.type === 'client') {
+      const purchase = await Purchase.findOne({
+        clientId: user._id?.toString(),
+        cleanerId: id,
+      });
 
       if (purchase) {
         hasAccess = true;
