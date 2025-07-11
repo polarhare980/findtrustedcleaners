@@ -1,6 +1,5 @@
 import { connectToDatabase } from '@/lib/db';
 import Cleaner from '@/models/Cleaner';
-import Client from '@/models/Client';
 import bcrypt from 'bcryptjs';
 import { createToken } from '@/lib/auth';
 import { serialize } from 'cookie';
@@ -8,96 +7,73 @@ import { NextResponse } from 'next/server';
 
 export async function POST(req) {
   await connectToDatabase();
-  console.log('✅ Register route hit');
+  console.log('✅ Cleaner Register route hit');
 
   try {
     const body = await req.json();
     const { userType, email, password } = body;
 
-    console.log('📥 Received data:', body);
+    if (userType !== 'cleaner') {
+      return NextResponse.json({ success: false, message: 'Only cleaner registration is handled here.' }, { status: 400 });
+    }
 
-    if (!email || !password || !userType) {
-      console.log('❌ Missing basic fields');
-      return NextResponse.json({ success: false, message: 'Email, password, and user type are required.' }, { status: 400 });
+    console.log('📥 Cleaner registration payload:', body);
+
+    if (!email || !password) {
+      return NextResponse.json({ success: false, message: 'Email and password are required.' }, { status: 400 });
     }
 
     const trimmedEmail = email.trim().toLowerCase();
     const hashedPassword = await bcrypt.hash(password.trim(), 10);
 
-    let existingUser;
+    const existingCleaner = await Cleaner.findOne({ email: trimmedEmail });
 
-    if (userType === 'cleaner') {
-      existingUser = await Cleaner.findOne({ email: trimmedEmail });
+    if (existingCleaner) {
+      console.log('❌ Cleaner already exists:', trimmedEmail);
+      return NextResponse.json({ success: false, message: 'Cleaner already exists.' }, { status: 409 });
+    }
 
-      if (existingUser) {
-        console.log('❌ Cleaner already exists');
-        return NextResponse.json({ success: false, message: 'Cleaner already exists.' }, { status: 409 });
-      }
+    const {
+      realName,
+      companyName,
+      phone,
+      rates,
+      services,
+      houseNameNumber,
+      street,
+      county,
+      postcode,
+      availability,
+      businessInsurance
+    } = body;
 
-      const {
-        realName,
-        companyName,
-        phone,
-        rates,
-        services,
-        houseNameNumber,
-        street,
-        county,
-        postcode,
-        availability,
-        businessInsurance
-      } = body;
+    if (!realName || !companyName || !phone || !rates || !services || !houseNameNumber || !street || !county || !postcode) {
+      return NextResponse.json({ success: false, message: 'All cleaner fields are required.' }, { status: 400 });
+    }
 
-      if (!realName || !companyName || !phone || !rates || !services || !houseNameNumber || !street || !county || !postcode) {
-        return NextResponse.json({ success: false, message: 'All cleaner fields are required.' }, { status: 400 });
-      }
+    const newCleaner = new Cleaner({
+      realName: realName.trim(),
+      companyName: companyName.trim(),
+      email: trimmedEmail,
+      password: hashedPassword,
+      phone: phone.trim(),
+      rates,
+      services,
+      houseNameNumber,
+      street,
+      county,
+      postcode,
+      availability,
+      businessInsurance,
+    });
 
-      const newCleaner = new Cleaner({
-        realName: realName.trim(),
-        companyName: companyName.trim(),
-        email: trimmedEmail,
-        password: hashedPassword,
-        phone: phone.trim(),
-        rates,
-        services,
-        houseNameNumber,
-        street,
-        county,
-        postcode,
-        availability,
-        businessInsurance,
-      });
-
-      await newCleaner.save();
-      return sendCookie(newCleaner._id.toString(), 'cleaner');
-
-    } else if (userType === 'client') {
-      existingUser = await Client.findOne({ email: trimmedEmail });
-
-      if (existingUser) {
-        console.log('❌ Client already exists');
-        return NextResponse.json({ success: false, message: 'Client already exists.' }, { status: 409 });
-      }
-
-      const { fullName, phone, houseNameNumber, street, county, postcode } = body;
-
-      if (!fullName || !phone || !houseNameNumber || !street || !county || !postcode) {
-        return NextResponse.json({ success: false, message: 'All client fields are required.' }, { status: 400 });
-      }
-
-      const newClient = new Client({
-        fullName: fullName.trim(),
-        email: trimmedEmail,
-        password: hashedPassword,
-        phone: phone.trim(),
-        address: { houseNameNumber, street, county, postcode },
-      });
-
-      await newClient.save();
-      return sendCookie(newClient._id.toString(), 'client');
-
-    } else {
-      return NextResponse.json({ success: false, message: 'Invalid user type.' }, { status: 400 });
+    try {
+      const savedCleaner = await newCleaner.save();
+      console.log('✅ Cleaner saved to MongoDB:', savedCleaner._id.toString());
+      return sendCookie(savedCleaner._id.toString(), 'cleaner');
+    } catch (saveErr) {
+      console.error('❌ Failed to save cleaner to MongoDB:', saveErr);
+      return NextResponse.json({ success: false, message: 'Failed to save cleaner.' }, { status: 500 });
     }
 
   } catch (err) {
