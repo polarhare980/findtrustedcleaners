@@ -556,6 +556,10 @@ export default function HomePage() {
 function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
   console.log("🧪 Cleaner data:", cleaner);
   console.log("📅 Availability:", cleaner.availability);
+  
+  // Define all 7 days of the week in order
+  const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  
   return (
     <div className="cleaner-card">
       {isPremium && (
@@ -588,7 +592,8 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
           </div>
         )}
 
-        {cleaner.availability && (
+        {/* Only show availability for premium cleaners */}
+        {isPremium && cleaner.availability && (
           <div className="availability-grid mt-4">
             <h4 className="font-semibold text-teal-700 mb-2 text-center">Availability</h4>
             <div className="grid grid-cols-[60px_repeat(13,1fr)] text-xs border border-gray-200 rounded overflow-hidden">
@@ -596,25 +601,29 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
               {Array.from({ length: 13 }, (_, i) => (
                 <div key={`hour-head-${i}`} className="bg-gray-100 p-1 text-center">{7 + i}</div>
               ))}
-              {Object.entries(cleaner.availability).map(([day, slots]) => (
-                <React.Fragment key={day}>
-                  <div className="bg-gray-50 p-1 font-medium text-center">{day.slice(0, 3)}</div>
-                  {Array.from({ length: 13 }, (_, i) => {
-                    const hour = (7 + i).toString();
-                    const status = slots?.[hour] || 'unavailable';
-                    return (
-                      <div
-                        key={`${day}-${hour}`}
-                        className={`p-1 text-center ${
-                          status === 'available' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                        }`}
-                      >
-                        {status === 'available' ? '✅' : '❌'}
-                      </div>
-                    );
-                  })}
-                </React.Fragment>
-              ))}
+              {/* Loop through all 7 days of the week */}
+              {daysOfWeek.map(day => {
+                const slots = cleaner.availability[day] || {};
+                return (
+                  <React.Fragment key={day}>
+                    <div className="bg-gray-50 p-1 font-medium text-center">{day.slice(0, 3)}</div>
+                    {Array.from({ length: 13 }, (_, i) => {
+                      const hour = (7 + i).toString();
+                      const status = slots[hour] || 'unavailable';
+                      return (
+                        <div
+                          key={`${day}-${hour}`}
+                          className={`p-1 text-center ${
+                            status === 'available' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                          }`}
+                        >
+                          {status === 'available' ? '✅' : '❌'}
+                        </div>
+                      );
+                    })}
+                  </React.Fragment>
+                );
+              })}
             </div>
           </div>
         )}
@@ -629,9 +638,8 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
         </div>
       </div>
 
-      {/* ✅ Styles go inside the return */}
+      {/* Styles go inside the return */}
       <style jsx>{`
-        /* Put all your cleaner-card styles here (same as before) */
         .cleaner-card {
           min-width: 280px;
           background: rgba(255, 255, 255, 0.95);
@@ -769,5 +777,3 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
     </div>
   );
 }
-
-
