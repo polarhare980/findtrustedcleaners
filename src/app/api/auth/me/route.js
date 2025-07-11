@@ -3,6 +3,7 @@ import Cleaner from '@/models/Cleaner';
 import Client from '@/models/Client';
 import { connectToDatabase } from '@/lib/db';
 import { NextResponse } from 'next/server';
+import mongoose from 'mongoose';
 
 export async function GET(req) {
   await connectToDatabase();
@@ -14,9 +15,9 @@ export async function GET(req) {
     let foundUser;
 
     if (user.type === 'cleaner') {
-      foundUser = await Cleaner.findById(user._id).select('-password');
+      foundUser = await Cleaner.findById(new mongoose.Types.ObjectId(user._id)).select('-password');
     } else if (user.type === 'client') {
-      foundUser = await Client.findById(user._id).select('-password');
+      foundUser = await Client.findById(new mongoose.Types.ObjectId(user._id)).select('-password');
     } else {
       return NextResponse.json({ success: false, message: 'Invalid user type.' }, { status: 403 });
     }
@@ -25,19 +26,12 @@ export async function GET(req) {
       return NextResponse.json({ success: false, message: 'User not found.' }, { status: 404 });
     }
 
-    let userObject;
-    try {
-      userObject = typeof foundUser.toObject === 'function'
-        ? foundUser.toObject()
-        : JSON.parse(JSON.stringify(foundUser));
-    } catch (err) {
-      console.error('⚠️ Fallback to plain object failed:', err);
-      userObject = {};
-    }
+    // ✅ Safely get plain object
+    const userObject = foundUser?.toObject?.() || foundUser || {};
 
     return NextResponse.json({
       success: true,
-      user: { ...userObject, type: user.type }
+      user: { ...userObject, type: user.type },
     });
   } catch (err) {
     console.error('❌ Error fetching user:', err.message);
