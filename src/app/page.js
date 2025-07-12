@@ -36,7 +36,7 @@ export default function HomePage() {
     }
     return shuffled;
   };
-  
+
   useEffect(() => {
     if (typeof window !== 'undefined') setMounted(true);
   }, []);
@@ -743,6 +743,8 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
           margin-top: 16px;
         }
 
+        button.btn-view-profile,
+        a.btn-view-profile,
         .btn-view-profile {
           background: linear-gradient(135deg, #EA580C 0%, #C2410C 100%) !important;
           color: white !important;

@@ -21,6 +21,50 @@
 // - Verify premium status updates in Cleaner Dashboard.
 // - Implement paywall and client-side redirects.
 
+
+import Stripe from 'stripe';
+import { buffer } from 'micro';
+import { NextResponse } from 'next/server';
+import { connectToDatabase } from '@/lib/db';
+import Cleaner from '@/models/Cleaner';
+
+export const config = {
+  api: {
+    bodyParser: false, // Stripe requires raw body
+  },
+};
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
 export async function POST(req) {
-  return new Response('Webhook not yet implemented.', { status: 200 });
+  const rawBody = await req.text();
+  const sig = req.headers.get('stripe-signature');
+
+  let event;
+  try {
+    event = stripe.webhooks.constructEvent(
+      rawBody,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET
+    );
+  } catch (err) {
+    console.error('❌ Webhook signature verification failed:', err.message);
+    return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
+  }
+
+  // ✅ Handle subscription checkout success
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+    const cleanerId = session.metadata.cleanerId;
+
+    try {
+      await connectToDatabase();
+      await Cleaner.findByIdAndUpdate(cleanerId, { isPremium: true });
+      console.log(`✅ Cleaner ${cleanerId} marked as premium`);
+    } catch (err) {
+      console.error('❌ Failed to update cleaner:', err);
+    }
+  }
+
+  return NextResponse.json({ received: true });
 }

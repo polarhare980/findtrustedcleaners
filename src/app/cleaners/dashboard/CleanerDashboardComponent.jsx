@@ -276,6 +276,24 @@ for (const day of days) {
     }
   };
 
+  const handleUpgradeClick = async () => {
+  try {
+    const res = await fetch('/api/stripe/create-checkout-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cleanerId: cleaner._id }),
+    });
+    const data = await res.json();
+    if (data.url) {
+      window.location.href = data.url;
+    }
+  } catch (err) {
+    console.error('Upgrade failed:', err);
+    alert('Something went wrong while starting your upgrade.');
+  }
+};
+ 
+
   // Navigation functions
   const handleLogout = async () => {
     try {
@@ -348,6 +366,25 @@ for (const day of days) {
             {message}
           </div>
         )}
+
+        {/* Premium Upgrade Section */}
+{!cleaner?.isPremium && (
+  <div className="bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-3 rounded-lg mb-6">
+    <p className="mb-2 font-semibold">You are using a Free Account</p>
+    <button
+      onClick={handleUpgradeClick}
+      className="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2 rounded-lg font-medium"
+    >
+      Upgrade to Premium (£7.99/month)
+    </button>
+  </div>
+)}
+
+{cleaner?.isPremium && (
+  <div className="bg-green-100 border border-green-400 text-green-800 px-4 py-3 rounded-lg mb-6 font-semibold">
+    ✨ You are a Premium Cleaner!
+  </div>
+)}
 
         {/* Profile Information */}
         <div className="bg-white rounded-2xl shadow-xl mb-6 p-6">

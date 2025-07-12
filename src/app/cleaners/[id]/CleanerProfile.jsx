@@ -103,7 +103,13 @@ export default function CleanerProfile() {
               <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent">
                 {cleaner.realName}
               </h1>
-              
+
+              {cleaner?.isPremium && (
+  <div className="inline-block bg-yellow-400 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md mb-4">
+    ✨ Premium Cleaner
+  </div>
+)}
+           
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700">
                 <div className="bg-white/40 backdrop-blur-md rounded-2xl p-4 border border-white/30">
                   <div className="flex items-center gap-2">
