@@ -158,17 +158,20 @@ export default function CleanerProfile() {
                   <p className="text-gray-600 italic mt-2">Contact details are locked. Unlock to view and book.</p>
                 </div>
                 <PurchaseButton
-                  cleanerId={cleaner._id}
-                  onPurchaseSuccess={(cleanerData) => {
-                    setHasAccess(true);
-                    setCleaner((prev) => ({
-                      ...prev,
-                      phone: cleanerData.phone,
-                      email: cleanerData.email,
-                      companyName: cleanerData.cleanerName,
-                    }));
-                  }}
-                />
+  cleanerId={cleaner._id}
+  day={selectedSlot?.day}
+  hour={selectedSlot?.hour}
+  onPurchaseSuccess={(cleanerData) => {
+    setHasAccess(true);
+    setCleaner((prev) => ({
+      ...prev,
+      phone: cleanerData.phone,
+      email: cleanerData.email,
+      companyName: cleanerData.cleanerName,
+    }));
+  }}
+/>
+
               </div>
             )}
           </div>

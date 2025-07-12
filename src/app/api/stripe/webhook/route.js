@@ -31,7 +31,7 @@ import Cleaner from '@/models/Cleaner';
 
 export const config = {
   api: {
-    bodyParser: false, // Stripe requires raw body
+    bodyParser: false,
   },
 };
 
@@ -53,17 +53,33 @@ export async function POST(req) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
   }
 
-  // ✅ Handle subscription checkout success
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
-    const cleanerId = session.metadata.cleanerId;
+    const metadata = session.metadata || {};
 
     try {
       await connectToDatabase();
-      await Cleaner.findByIdAndUpdate(cleanerId, { isPremium: true });
-      console.log(`✅ Cleaner ${cleanerId} marked as premium`);
+
+      // ✅ Cleaner upgrading to premium
+      if (metadata.cleanerId && metadata.subscription === 'true') {
+        await Cleaner.findByIdAndUpdate(metadata.cleanerId, { isPremium: true });
+        console.log(`✅ Cleaner ${metadata.cleanerId} marked as premium`);
+      }
+
+      // ✅ Client paying to unlock booking (set slot as "pending")
+      if (metadata.cleanerId && metadata.clientBooking === 'true') {
+        const { day, hour } = metadata;
+
+        const update = {};
+        update[`availability.${day}.${hour}`] = 'pending';
+
+        await Cleaner.findByIdAndUpdate(metadata.cleanerId, { $set: update });
+        console.log(`📅 Slot ${day} ${hour}:00 marked as pending for cleaner ${metadata.cleanerId}`);
+      }
+
     } catch (err) {
-      console.error('❌ Failed to update cleaner:', err);
+      console.error('❌ Webhook handling error:', err);
+      return NextResponse.json({ error: 'Internal error' }, { status: 500 });
     }
   }
 
