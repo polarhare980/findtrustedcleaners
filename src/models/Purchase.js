@@ -7,3 +7,4 @@ const PurchaseSchema = new mongoose.Schema({
 });
 
 export default mongoose.models.Purchase || mongoose.model('Purchase', PurchaseSchema);
+
