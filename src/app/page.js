@@ -36,7 +36,7 @@ export default function HomePage() {
     }
     return shuffled;
   };
-
+  
   useEffect(() => {
     if (typeof window !== 'undefined') setMounted(true);
   }, []);
@@ -48,13 +48,10 @@ export default function HomePage() {
         const { cleaners } = await res.json();
 
         const premium = cleaners.filter(c => c.isPremium).slice(0, 5);
-        const free = cleaners.filter(c => !c.isPremium);
-        
-        // Shuffle the free cleaners randomly and take more for scrolling
-        const shuffledFree = shuffleArray(free).slice(0, 12);
+        const free = cleaners.filter(c => !c.isPremium).slice(0, 5);
 
         setPremiumCleaners(premium);
-        setFreeCleaners(shuffledFree);
+        setFreeCleaners(free);
       } catch (err) {
         console.error('Failed to fetch cleaners:', err.message);
       } finally {
@@ -328,7 +325,8 @@ export default function HomePage() {
         </footer>
       </main>
 
-      <style jsx global>{`
+      {/* Styles go inside the return */}
+       <style jsx global>{`
         /* Modern Glass Morphism Styles */
         .glass-card {
           background: rgba(255, 255, 255, 0.25);
@@ -654,333 +652,137 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
       {/* Styles go inside the return */}
       <style jsx>{`
         .cleaner-card {
-          min-width: 300px;
-          max-width: 320px;
+          min-width: 280px;
           background: rgba(255, 255, 255, 0.95);
-          backdrop-filter: blur(15px);
-          border-radius: 20px;
-          overflow: hidden;
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          border-radius: 16px;
+          padding: 20px;
           flex-shrink: 0;
           transition: all 0.3s ease;
-          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-          border: 1px solid rgba(255, 255, 255, 0.2);
+          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
         .cleaner-card:hover {
-          transform: translateY(-8px);
-          box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
-        }
-
-        .premium-card {
-          background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 248, 235, 0.98) 100%);
-          border: 2px solid rgba(245, 158, 11, 0.3);
-        }
-
-        .free-card {
-          background: rgba(255, 255, 255, 0.95);
-          border: 1px solid rgba(156, 163, 175, 0.2);
+          transform: translateY(-5px);
+          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
         }
 
         .premium-badge {
           background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
           color: white;
-          padding: 6px 12px;
-          margin: 16px 16px 0 16px;
+          padding: 4px 12px;
           border-radius: 20px;
+          margin-bottom: 12px;
           display: inline-block;
-          font-size: 12px;
-          font-weight: 600;
           box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
         }
 
-        .cleaner-image-container {
-          position: relative;
-          height: 180px;
-          margin: 16px 16px 0 16px;
-          border-radius: 16px;
+        .cleaner-image {
+          width: 100%;
+          height: 150px;
+          border-radius: 12px;
           overflow: hidden;
-          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+          margin-bottom: 16px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
-        .cleaner-image {
+        .cleaner-image img {
           width: 100%;
           height: 100%;
           object-fit: cover;
           transition: transform 0.3s ease;
         }
 
-        .cleaner-card:hover .cleaner-image {
+        .cleaner-card:hover .cleaner-image img {
           transform: scale(1.05);
         }
 
-        .image-overlay {
-          position: absolute;
-          top: 0;
-          right: 0;
-          padding: 8px;
-        }
-
-        .rating-badge {
-          background: rgba(0, 0, 0, 0.7);
-          color: white;
-          padding: 4px 8px;
-          border-radius: 12px;
-          font-size: 12px;
-          font-weight: 600;
-          backdrop-filter: blur(10px);
-        }
-
-        .cleaner-content {
-          padding: 20px;
+        .cleaner-info {
+          text-align: left;
         }
 
         .cleaner-name {
-          font-size: 20px;
+          font-size: 18px;
           font-weight: 700;
           color: #0F766E;
-          margin-bottom: 12px;
-          text-align: center;
+          margin-bottom: 8px;
         }
 
-        .cleaner-details {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-          margin-bottom: 16px;
-        }
-
-        .detail-item {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-
-        .detail-icon {
-          font-size: 16px;
-          width: 20px;
-          text-align: center;
-        }
-
-        .detail-text {
-          font-size: 14px;
+        .cleaner-rating,
+        .cleaner-rate {
           color: #4B5563;
-          font-weight: 500;
+          margin-bottom: 4px;
+          font-size: 14px;
         }
 
-        .review-links {
+        .cleaner-reviews {
+          margin: 12px 0;
           display: flex;
           flex-direction: column;
-          gap: 6px;
-          margin-bottom: 16px;
+          gap: 4px;
         }
 
         .review-link {
           color: #2563EB;
           text-decoration: none;
           font-size: 13px;
-          font-weight: 500;
-          transition: all 0.3s ease;
-          padding: 4px 8px;
-          border-radius: 6px;
+          transition: color 0.3s ease;
         }
 
         .review-link:hover {
-          background: rgba(37, 99, 235, 0.1);
           color: #1D4ED8;
+          text-decoration: underline;
         }
 
-        .review-link.google {
-          color: #EA4335;
-        }
-
-        .review-link.google:hover {
-          background: rgba(234, 67, 53, 0.1);
-          color: #DC2626;
-        }
-
-        .review-link.facebook {
-          color: #1877F2;
-        }
-
-        .review-link.facebook:hover {
-          background: rgba(24, 119, 242, 0.1);
-          color: #1565C0;
-        }
-
-        .availability-section {
-          margin-bottom: 20px;
-          padding: 12px;
-          background: rgba(240, 253, 250, 0.8);
-          border-radius: 12px;
-          border: 1px solid rgba(13, 148, 136, 0.2);
-        }
-
-        .availability-title {
-          font-size: 14px;
-          font-weight: 600;
-          color: #0F766E;
-          margin-bottom: 8px;
-          text-align: center;
-        }
-
-        .availability-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 8px;
-        }
-
-        .availability-day {
+        .cleaner-actions {
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 4px;
-        }
-
-        .day-name {
-          font-size: 11px;
-          font-weight: 600;
-          color: #6B7280;
-        }
-
-        .availability-status {
-          font-size: 10px;
-          padding: 2px 6px;
-          border-radius: 6px;
-          font-weight: 500;
-        }
-
-        .availability-status.available {
-          background: rgba(16, 185, 129, 0.2);
-          color: #059669;
-        }
-
-        .availability-status.unavailable {
-          background: rgba(239, 68, 68, 0.2);
-          color: #DC2626;
-        }
-
-        .action-buttons {
-          display: flex;
-          flex-direction: column;
           gap: 12px;
-        }
-
-        .btn-view-profile {
-          background: linear-gradient(135deg, #EA580C 0%, #C2410C 100%);
-          color: white;
-          border: none;
-          padding: 12px 20px;
-          border-radius: 12px;
-          font-size: 14px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          box-shadow: 0 4px 15px rgba(234, 88, 12, 0.3);
-          text-decoration: none;
-          display: block;
-          text-align: center;
-        }
-
-        .btn-view-profile:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(234, 88, 12, 0.4);
-          color: white;
-        }
-
-        .btn-request-booking {
-          background: linear-gradient(135deg, #10B981 0%, #059669 100%);
-          color: white;
-          border: none;
-          padding: 12px 20px;
-          border-radius: 12px;
-          font-size: 14px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
-        }
-
-        .btn-request-booking:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
-        }
-
-        /* Enhanced scrolling for cleaner sections */
-        .cleaners-scroll-container {
-          position: relative;
-          overflow: hidden;
-        }
-
-        .cleaners-scroll-wrapper {
-          display: flex;
-          gap: 20px;
-          padding: 20px;
-          overflow-x: auto;
-          scroll-behavior: smooth;
-          scrollbar-width: none;
-          -ms-overflow-style: none;
-        }
-
-        .cleaners-scroll-wrapper::-webkit-scrollbar {
-          display: none;
-        }
-
-        .scroll-indicators {
-          display: flex;
-          justify-center;
-          gap: 8px;
           margin-top: 16px;
         }
 
-        .scroll-dot {
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-          background: rgba(156, 163, 175, 0.5);
-          cursor: pointer;
-          transition: all 0.3s ease;
+        .btn-view-profile {
+          background: linear-gradient(135deg, #EA580C 0%, #C2410C 100%) !important;
+          color: white !important;
+          border: none !important;
+          padding: 12px 20px !important;
+          border-radius: 8px !important;
+          font-size: 16px !important;
+          font-weight: 600 !important;
+          cursor: pointer !important;
+          transition: all 0.3s ease !important;
+          box-shadow: 0 2px 8px rgba(234, 88, 12, 0.3) !important;
+          width: 160px !important;
+          text-decoration: none !important;
+          display: inline-block !important;
+          text-align: center !important;
         }
 
-        .scroll-dot.active {
-          background: #0D9488;
-          transform: scale(1.2);
+        .btn-view-profile:hover {
+          transform: translateY(-1px) !important;
+          box-shadow: 0 4px 12px rgba(234, 88, 12, 0.4) !important;
+          color: white !important;
         }
 
-        .scroll-dot:hover {
-          background: #0D9488;
+        .btn-request-booking {
+          background: linear-gradient(135deg, #10B981 0%, #059669 100%) !important;
+          color: white !important;
+          border: none !important;
+          padding: 12px 20px !important;
+          border-radius: 8px !important;
+          font-size: 16px !important;
+          font-weight: 600 !important;
+          cursor: pointer !important;
+          transition: all 0.3s ease !important;
+          box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3) !important;
+          width: 160px !important;
         }
 
-        /* Section headers */
-        .section-header {
-          text-align: center;
-          margin-bottom: 32px;
-        }
-
-        .section-title {
-          font-size: 32px;
-          font-weight: 700;
-          color: #111827;
-          margin-bottom: 8px;
-          text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .section-subtitle {
-          font-size: 16px;
-          color: #6B7280;
-          max-width: 600px;
-          margin: 0 auto;
-        }
-
-        /* Responsive improvements */
-        @media (max-width: 768px) {
-          .cleaner-card {
-            min-width: 280px;
-          }
-          
-          .cleaners-scroll-wrapper {
-            padding: 16px;
-            gap: 16px;
-          }
+        .btn-request-booking:hover {
+          transform: translateY(-1px) !important;
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4) !important;
         }
       `}</style>
     </div>
