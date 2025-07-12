@@ -269,15 +269,12 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Free Cleaners Section - Updated with Random Display */}
+        {/* Free Cleaners Section */}
         <section className="px-6 py-12">
           <div className="container mx-auto">
-            <h2 className="text-3xl font-bold mb-8 text-center text-black drop-shadow-lg">
+            <h2 className="text-3xl font-bold mb-8 text-center text-grey drop-shadow-lg">
               Free Listed Cleaners
             </h2>
-            <p className="text-center text-gray-600 mb-8">
-              Discover cleaners in your area • Refreshed randomly each visit
-            </p>
 
             {loading ? (
               <div className="text-center text-white">
@@ -287,18 +284,10 @@ export default function HomePage() {
             ) : freeCleaners.length === 0 ? (
               <p className="text-center text-white text-lg">No free listed cleaners available at this time.</p>
             ) : (
-              <div className="relative">
-                <div className="flex overflow-x-auto gap-6 pb-4 px-2 scrollbar-hide scroll-smooth">
-                  {freeCleaners.map((cleaner) => (
-                    <CleanerCard key={cleaner._id} cleaner={cleaner} handleBookingRequest={handleBookingRequest} />
-                  ))}
-                </div>
-                {/* Scroll indicators */}
-                <div className="flex justify-center mt-4 space-x-2">
-                  <div className="h-2 w-2 bg-gray-400 rounded-full"></div>
-                  <div className="h-2 w-2 bg-gray-400 rounded-full"></div>
-                  <div className="h-2 w-2 bg-gray-400 rounded-full"></div>
-                </div>
+              <div className="flex overflow-x-auto gap-6 pb-4 px-2 scrollbar-hide">
+                {freeCleaners.map((cleaner) => (
+                  <CleanerCard key={cleaner._id} cleaner={cleaner} handleBookingRequest={handleBookingRequest} />
+                ))}
               </div>
             )}
           </div>
@@ -339,7 +328,6 @@ export default function HomePage() {
         </footer>
       </main>
 
-      {/* Updated Global Styles */}
       <style jsx global>{`
         /* Modern Glass Morphism Styles */
         .glass-card {
@@ -563,11 +551,6 @@ export default function HomePage() {
           display: none;
         }
 
-        /* Smooth scrolling */
-        .scroll-smooth {
-          scroll-behavior: smooth;
-        }
-
         /* Responsive Container */
         .container {
           max-width: 1200px;
@@ -583,101 +566,92 @@ export default function HomePage() {
   );
 }
 
-// Redesigned CleanerCard Component
 function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
   console.log("🧪 Cleaner data:", cleaner);
   console.log("📅 Availability:", cleaner.availability);
   
+  // Define all 7 days of the week in order
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   
   return (
-    <div className={`cleaner-card ${isPremium ? 'premium-card' : 'free-card'}`}>
+    <div className="cleaner-card">
       {isPremium && (
         <div className="premium-badge">
-          <span className="text-xs font-semibold">✨ Premium</span>
+          <span className="text-xs font-semibold">Premium Cleaner</span>
         </div>
       )}
 
-      <div className="cleaner-image-container">
-        <img 
-          src={cleaner.image || '/profile-placeholder.png'} 
-          alt={cleaner.realName}
-          className="cleaner-image"
-        />
-        <div className="image-overlay">
-          <div className="rating-badge">
-            ⭐ {cleaner.rating || 'New'}
-          </div>
-        </div>
+      <div className="cleaner-image">
+        <img src={cleaner.image || '/profile-placeholder.png'} alt={cleaner.realName} />
       </div>
 
-      <div className="cleaner-content">
+      <div className="cleaner-info">
         <h3 className="cleaner-name">{cleaner.realName}</h3>
-        
-        <div className="cleaner-details">
-          <div className="detail-item">
-            <span className="detail-icon">💷</span>
-            <span className="detail-text">
-              {cleaner.rates ? `£${cleaner.rates}/hr` : 'Contact for rates'}
-            </span>
-          </div>
-          
-          {cleaner.location && (
-            <div className="detail-item">
-              <span className="detail-icon">📍</span>
-              <span className="detail-text">{cleaner.location}</span>
-            </div>
-          )}
-        </div>
+        <p className="cleaner-rating">⭐ {cleaner.rating || 'Not rated yet'}</p>
+        <p className="cleaner-rate">💷 {cleaner.rates ? `£${cleaner.rates}/hr` : 'Rate not set'}</p>
 
         {(cleaner.googleReviewUrl || cleaner.facebookReviewUrl) && (
-          <div className="review-links">
+          <div className="cleaner-reviews">
             {cleaner.googleReviewUrl && (
-              <a href={cleaner.googleReviewUrl} target="_blank" rel="noopener noreferrer" className="review-link google">
+              <a href={cleaner.googleReviewUrl} target="_blank" rel="noopener noreferrer" className="review-link">
                 Google Reviews
               </a>
             )}
             {cleaner.facebookReviewUrl && (
-              <a href={cleaner.facebookReviewUrl} target="_blank" rel="noopener noreferrer" className="review-link facebook">
+              <a href={cleaner.facebookReviewUrl} target="_blank" rel="noopener noreferrer" className="review-link">
                 Facebook Reviews
               </a>
             )}
           </div>
         )}
 
+        {/* Only show availability for premium cleaners */}
         {isPremium && cleaner.availability && (
-          <div className="availability-section">
-            <h4 className="availability-title">This Week's Availability</h4>
-            <div className="availability-grid">
-              {daysOfWeek.slice(0, 3).map(day => {
+          <div className="availability-grid mt-4">
+            <h4 className="font-semibold text-teal-700 mb-2 text-center">Availability</h4>
+            <div className="grid grid-cols-[60px_repeat(13,1fr)] text-xs border border-gray-200 rounded overflow-hidden">
+              <div className="bg-gray-100 p-1 font-bold text-center">Day</div>
+              {Array.from({ length: 13 }, (_, i) => (
+                <div key={`hour-head-${i}`} className="bg-gray-100 p-1 text-center">{7 + i}</div>
+              ))}
+              {/* Loop through all 7 days of the week */}
+              {daysOfWeek.map(day => {
                 const slots = cleaner.availability[day] || {};
-                const availableSlots = Object.values(slots).filter(slot => slot === 'available').length;
                 return (
-                  <div key={day} className="availability-day">
-                    <span className="day-name">{day.slice(0, 3)}</span>
-                    <span className={`availability-status ${availableSlots > 0 ? 'available' : 'unavailable'}`}>
-                      {availableSlots > 0 ? `${availableSlots} slots` : 'Full'}
-                    </span>
-                  </div>
+                  <React.Fragment key={day}>
+                    <div className="bg-gray-50 p-1 font-medium text-center">{day.slice(0, 3)}</div>
+                    {Array.from({ length: 13 }, (_, i) => {
+                      const hour = (7 + i).toString();
+                      const status = slots[hour] || 'unavailable';
+                      return (
+                        <div
+                          key={`${day}-${hour}`}
+                          className={`p-1 text-center ${
+                            status === 'available' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                          }`}
+                        >
+                          {status === 'available' ? '✅' : '❌'}
+                        </div>
+                      );
+                    })}
+                  </React.Fragment>
                 );
               })}
             </div>
           </div>
         )}
 
-        <div className="action-buttons">
+        <div className="cleaner-actions mt-4">
           <Link href={`/cleaners/${cleaner._id}`} className="btn-view-profile">
             View Profile
           </Link>
-          <button 
-            onClick={() => handleBookingRequest(cleaner._id)} 
-            className="btn-request-booking"
-          >
+          <button onClick={() => handleBookingRequest(cleaner._id)} className="btn-request-booking">
             Request Booking
           </button>
         </div>
       </div>
 
+      {/* Styles go inside the return */}
       <style jsx>{`
         .cleaner-card {
           min-width: 300px;
@@ -1006,8 +980,8 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
           .cleaners-scroll-wrapper {
             padding: 16px;
             gap: 16px;
-               }
-            }
+          }
+        }
       `}</style>
     </div>
   );
