@@ -27,6 +27,16 @@ export default function HomePage() {
     '6+-bed': { regular: 450, deep: 450, tenancy: 450 },
   };
 
+  // Fisher-Yates shuffle algorithm for random ordering
+  const shuffleArray = (array) => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  };
+
   useEffect(() => {
     if (typeof window !== 'undefined') setMounted(true);
   }, []);
@@ -38,10 +48,13 @@ export default function HomePage() {
         const { cleaners } = await res.json();
 
         const premium = cleaners.filter(c => c.isPremium).slice(0, 5);
-        const free = cleaners.filter(c => !c.isPremium).slice(0, 5);
+        const free = cleaners.filter(c => !c.isPremium);
+        
+        // Shuffle the free cleaners randomly and take more for scrolling
+        const shuffledFree = shuffleArray(free).slice(0, 12);
 
         setPremiumCleaners(premium);
-        setFreeCleaners(free);
+        setFreeCleaners(shuffledFree);
       } catch (err) {
         console.error('Failed to fetch cleaners:', err.message);
       } finally {
@@ -256,12 +269,15 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Free Cleaners Section */}
+        {/* Free Cleaners Section - Updated with Random Display */}
         <section className="px-6 py-12">
           <div className="container mx-auto">
-            <h2 className="text-3xl font-bold mb-8 text-center text-grey drop-shadow-lg">
+            <h2 className="text-3xl font-bold mb-8 text-center text-black drop-shadow-lg">
               Free Listed Cleaners
             </h2>
+            <p className="text-center text-gray-600 mb-8">
+              Discover cleaners in your area • Refreshed randomly each visit
+            </p>
 
             {loading ? (
               <div className="text-center text-white">
@@ -271,10 +287,18 @@ export default function HomePage() {
             ) : freeCleaners.length === 0 ? (
               <p className="text-center text-white text-lg">No free listed cleaners available at this time.</p>
             ) : (
-              <div className="flex overflow-x-auto gap-6 pb-4 px-2 scrollbar-hide">
-                {freeCleaners.map((cleaner) => (
-                  <CleanerCard key={cleaner._id} cleaner={cleaner} handleBookingRequest={handleBookingRequest} />
-                ))}
+              <div className="relative">
+                <div className="flex overflow-x-auto gap-6 pb-4 px-2 scrollbar-hide scroll-smooth">
+                  {freeCleaners.map((cleaner) => (
+                    <CleanerCard key={cleaner._id} cleaner={cleaner} handleBookingRequest={handleBookingRequest} />
+                  ))}
+                </div>
+                {/* Scroll indicators */}
+                <div className="flex justify-center mt-4 space-x-2">
+                  <div className="h-2 w-2 bg-gray-400 rounded-full"></div>
+                  <div className="h-2 w-2 bg-gray-400 rounded-full"></div>
+                  <div className="h-2 w-2 bg-gray-400 rounded-full"></div>
+                </div>
               </div>
             )}
           </div>
@@ -315,6 +339,7 @@ export default function HomePage() {
         </footer>
       </main>
 
+      {/* Updated Global Styles */}
       <style jsx global>{`
         /* Modern Glass Morphism Styles */
         .glass-card {
@@ -538,6 +563,11 @@ export default function HomePage() {
           display: none;
         }
 
+        /* Smooth scrolling */
+        .scroll-smooth {
+          scroll-behavior: smooth;
+        }
+
         /* Responsive Container */
         .container {
           max-width: 1200px;
@@ -553,227 +583,530 @@ export default function HomePage() {
   );
 }
 
+// Redesigned CleanerCard Component
 function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
   console.log("🧪 Cleaner data:", cleaner);
   console.log("📅 Availability:", cleaner.availability);
   
-  // Define all 7 days of the week in order
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   
   return (
-    <div className="cleaner-card">
+    <div className={`cleaner-card ${isPremium ? 'premium-card' : 'free-card'}`}>
       {isPremium && (
         <div className="premium-badge">
-          <span className="text-xs font-semibold">Premium Cleaner</span>
+          <span className="text-xs font-semibold">✨ Premium</span>
         </div>
       )}
 
-      <div className="cleaner-image">
-        <img src={cleaner.image || '/profile-placeholder.png'} alt={cleaner.realName} />
+      <div className="cleaner-image-container">
+        <img 
+          src={cleaner.image || '/profile-placeholder.png'} 
+          alt={cleaner.realName}
+          className="cleaner-image"
+        />
+        <div className="image-overlay">
+          <div className="rating-badge">
+            ⭐ {cleaner.rating || 'New'}
+          </div>
+        </div>
       </div>
 
-      <div className="cleaner-info">
+      <div className="cleaner-content">
         <h3 className="cleaner-name">{cleaner.realName}</h3>
-        <p className="cleaner-rating">⭐ {cleaner.rating || 'Not rated yet'}</p>
-        <p className="cleaner-rate">💷 {cleaner.rates ? `£${cleaner.rates}/hr` : 'Rate not set'}</p>
+        
+        <div className="cleaner-details">
+          <div className="detail-item">
+            <span className="detail-icon">💷</span>
+            <span className="detail-text">
+              {cleaner.rates ? `£${cleaner.rates}/hr` : 'Contact for rates'}
+            </span>
+          </div>
+          
+          {cleaner.location && (
+            <div className="detail-item">
+              <span className="detail-icon">📍</span>
+              <span className="detail-text">{cleaner.location}</span>
+            </div>
+          )}
+        </div>
 
         {(cleaner.googleReviewUrl || cleaner.facebookReviewUrl) && (
-          <div className="cleaner-reviews">
+          <div className="review-links">
             {cleaner.googleReviewUrl && (
-              <a href={cleaner.googleReviewUrl} target="_blank" rel="noopener noreferrer" className="review-link">
+              <a href={cleaner.googleReviewUrl} target="_blank" rel="noopener noreferrer" className="review-link google">
                 Google Reviews
               </a>
             )}
             {cleaner.facebookReviewUrl && (
-              <a href={cleaner.facebookReviewUrl} target="_blank" rel="noopener noreferrer" className="review-link">
+              <a href={cleaner.facebookReviewUrl} target="_blank" rel="noopener noreferrer" className="review-link facebook">
                 Facebook Reviews
               </a>
             )}
           </div>
         )}
 
-        {/* Only show availability for premium cleaners */}
         {isPremium && cleaner.availability && (
-          <div className="availability-grid mt-4">
-            <h4 className="font-semibold text-teal-700 mb-2 text-center">Availability</h4>
-            <div className="grid grid-cols-[60px_repeat(13,1fr)] text-xs border border-gray-200 rounded overflow-hidden">
-              <div className="bg-gray-100 p-1 font-bold text-center">Day</div>
-              {Array.from({ length: 13 }, (_, i) => (
-                <div key={`hour-head-${i}`} className="bg-gray-100 p-1 text-center">{7 + i}</div>
-              ))}
-              {/* Loop through all 7 days of the week */}
-              {daysOfWeek.map(day => {
+          <div className="availability-section">
+            <h4 className="availability-title">This Week's Availability</h4>
+            <div className="availability-grid">
+              {daysOfWeek.slice(0, 3).map(day => {
                 const slots = cleaner.availability[day] || {};
+                const availableSlots = Object.values(slots).filter(slot => slot === 'available').length;
                 return (
-                  <React.Fragment key={day}>
-                    <div className="bg-gray-50 p-1 font-medium text-center">{day.slice(0, 3)}</div>
-                    {Array.from({ length: 13 }, (_, i) => {
-                      const hour = (7 + i).toString();
-                      const status = slots[hour] || 'unavailable';
-                      return (
-                        <div
-                          key={`${day}-${hour}`}
-                          className={`p-1 text-center ${
-                            status === 'available' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                          }`}
-                        >
-                          {status === 'available' ? '✅' : '❌'}
-                        </div>
-                      );
-                    })}
-                  </React.Fragment>
+                  <div key={day} className="availability-day">
+                    <span className="day-name">{day.slice(0, 3)}</span>
+                    <span className={`availability-status ${availableSlots > 0 ? 'available' : 'unavailable'}`}>
+                      {availableSlots > 0 ? `${availableSlots} slots` : 'Full'}
+                    </span>
+                  </div>
                 );
               })}
             </div>
           </div>
         )}
 
-        <div className="cleaner-actions mt-4">
+        <div className="action-buttons">
           <Link href={`/cleaners/${cleaner._id}`} className="btn-view-profile">
             View Profile
           </Link>
-          <button onClick={() => handleBookingRequest(cleaner._id)} className="btn-request-booking">
+          <button 
+            onClick={() => handleBookingRequest(cleaner._id)} 
+            className="btn-request-booking"
+          >
             Request Booking
           </button>
         </div>
       </div>
 
-      {/* Styles go inside the return */}
       <style jsx>{`
         .cleaner-card {
-          min-width: 280px;
+          min-width: 300px;
+          max-width: 320px;
           background: rgba(255, 255, 255, 0.95);
-          backdrop-filter: blur(10px);
-          border: 1px solid rgba(255, 255, 255, 0.3);
-          border-radius: 16px;
-          padding: 20px;
+          backdrop-filter: blur(15px);
+          border-radius: 20px;
+          overflow: hidden;
           flex-shrink: 0;
           transition: all 0.3s ease;
-          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+          border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .cleaner-card:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+          transform: translateY(-8px);
+          box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .premium-card {
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 248, 235, 0.98) 100%);
+          border: 2px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .free-card {
+          background: rgba(255, 255, 255, 0.95);
+          border: 1px solid rgba(156, 163, 175, 0.2);
         }
 
         .premium-badge {
           background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
           color: white;
-          padding: 4px 12px;
+          padding: 6px 12px;
+          margin: 16px 16px 0 16px;
           border-radius: 20px;
-          margin-bottom: 12px;
           display: inline-block;
+          font-size: 12px;
+          font-weight: 600;
           box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
         }
 
-        .cleaner-image {
-          width: 100%;
-          height: 150px;
-          border-radius: 12px;
+        .cleaner-image-container {
+          position: relative;
+          height: 180px;
+          margin: 16px 16px 0 16px;
+          border-radius: 16px;
           overflow: hidden;
-          margin-bottom: 16px;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
-        .cleaner-image img {
+        .cleaner-image {
           width: 100%;
           height: 100%;
           object-fit: cover;
           transition: transform 0.3s ease;
         }
 
-        .cleaner-card:hover .cleaner-image img {
+        .cleaner-card:hover .cleaner-image {
           transform: scale(1.05);
         }
 
-        .cleaner-info {
-          text-align: left;
+        .image-overlay {
+          position: absolute;
+          top: 0;
+          right: 0;
+          padding: 8px;
+        }
+
+        .rating-badge {
+          background: rgba(0, 0, 0, 0.7);
+          color: white;
+          padding: 4px 8px;
+          border-radius: 12px;
+          font-size: 12px;
+          font-weight: 600;
+          backdrop-filter: blur(10px);
+        }
+
+        .cleaner-content {
+          padding: 20px;
         }
 
         .cleaner-name {
-          font-size: 18px;
+          font-size: 20px;
           font-weight: 700;
           color: #0F766E;
-          margin-bottom: 8px;
+          margin-bottom: 12px;
+          text-align: center;
         }
 
-        .cleaner-rating,
-        .cleaner-rate {
-          color: #4B5563;
-          margin-bottom: 4px;
-          font-size: 14px;
-        }
-
-        .cleaner-reviews {
-          margin: 12px 0;
+        .cleaner-details {
           display: flex;
           flex-direction: column;
-          gap: 4px;
+          gap: 8px;
+          margin-bottom: 16px;
+        }
+
+        .detail-item {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .detail-icon {
+          font-size: 16px;
+          width: 20px;
+          text-align: center;
+        }
+
+        .detail-text {
+          font-size: 14px;
+          color: #4B5563;
+          font-weight: 500;
+        }
+
+        .review-links {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          margin-bottom: 16px;
         }
 
         .review-link {
           color: #2563EB;
           text-decoration: none;
           font-size: 13px;
-          transition: color 0.3s ease;
+          font-weight: 500;
+          transition: all 0.3s ease;
+          padding: 4px 8px;
+          border-radius: 6px;
         }
 
         .review-link:hover {
+          background: rgba(37, 99, 235, 0.1);
           color: #1D4ED8;
-          text-decoration: underline;
         }
 
-        .cleaner-actions {
+        .review-link.google {
+          color: #EA4335;
+        }
+
+        .review-link.google:hover {
+          background: rgba(234, 67, 53, 0.1);
+          color: #DC2626;
+        }
+
+        .review-link.facebook {
+          color: #1877F2;
+        }
+
+        .review-link.facebook:hover {
+          background: rgba(24, 119, 242, 0.1);
+          color: #1565C0;
+        }
+
+        .availability-section {
+          margin-bottom: 20px;
+          padding: 12px;
+          background: rgba(240, 253, 250, 0.8);
+          border-radius: 12px;
+          border: 1px solid rgba(13, 148, 136, 0.2);
+        }
+
+        .availability-title {
+          font-size: 14px;
+          font-weight: 600;
+          color: #0F766E;
+          margin-bottom: 8px;
+          text-align: center;
+        }
+
+        .availability-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 8px;
+        }
+
+        .availability-day {
           display: flex;
           flex-direction: column;
           align-items: center;
+          gap: 4px;
+        }
+
+        .day-name {
+          font-size: 11px;
+          font-weight: 600;
+          color: #6B7280;
+        }
+
+        .availability-status {
+          font-size: 10px;
+          padding: 2px 6px;
+          border-radius: 6px;
+          font-weight: 500;
+        }
+
+        .availability-status.available {
+          background: rgba(16, 185, 129, 0.2);
+          color: #059669;
+        }
+
+        .availability-status.unavailable {
+          background: rgba(239, 68, 68, 0.2);
+          color: #DC2626;
+        }
+
+        .action-buttons {
+          display: flex;
+          flex-direction: column;
           gap: 12px;
-          margin-top: 16px;
         }
 
         .btn-view-profile {
-          background: linear-gradient(135deg, #EA580C 0%, #C2410C 100%) !important;
-          color: white !important;
-          border: none !important;
-          padding: 12px 20px !important;
-          border-radius: 8px !important;
-          font-size: 16px !important;
-          font-weight: 600 !important;
-          cursor: pointer !important;
-          transition: all 0.3s ease !important;
-          box-shadow: 0 2px 8px rgba(234, 88, 12, 0.3) !important;
-          width: 160px !important;
-          text-decoration: none !important;
-          display: inline-block !important;
-          text-align: center !important;
+          background: linear-gradient(135deg, #EA580C 0%, #C2410C 100%);
+          color: white;
+          border: none;
+          padding: 12px 20px;
+          border-radius: 12px;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 15px rgba(234, 88, 12, 0.3);
+          text-decoration: none;
+          display: block;
+          text-align: center;
         }
 
         .btn-view-profile:hover {
-          transform: translateY(-1px) !important;
-          box-shadow: 0 4px 12px rgba(234, 88, 12, 0.4) !important;
-          color: white !important;
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(234, 88, 12, 0.4);
+          color: white;
         }
 
         .btn-request-booking {
-          background: linear-gradient(135deg, #10B981 0%, #059669 100%) !important;
-          color: white !important;
-          border: none !important;
-          padding: 12px 20px !important;
-          border-radius: 8px !important;
-          font-size: 16px !important;
-          font-weight: 600 !important;
-          cursor: pointer !important;
-          transition: all 0.3s ease !important;
-          box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3) !important;
-          width: 160px !important;
+          background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+          color: white;
+          border: none;
+          padding: 12px 20px;
+          border-radius: 12px;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
         }
 
         .btn-request-booking:hover {
-          transform: translateY(-1px) !important;
-          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4) !important;
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        /* Enhanced scrolling for cleaner sections */
+        .cleaners-scroll-container {
+          position: relative;
+          overflow: hidden;
+        }
+
+        .cleaners-scroll-wrapper {
+          display: flex;
+          gap: 20px;
+          padding: 20px;
+          overflow-x: auto;
+          scroll-behavior: smooth;
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+
+        .cleaners-scroll-wrapper::-webkit-scrollbar {
+          display: none;
+        }
+
+        .scroll-indicators {
+          display: flex;
+          justify-center;
+          gap: 8px;
+          margin-top: 16px;
+        }
+
+        .scroll-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: rgba(156, 163, 175, 0.5);
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+
+        .scroll-dot.active {
+          background: #0D9488;
+          transform: scale(1.2);
+        }
+
+        .scroll-dot:hover {
+          background: #0D9488;
+        }
+
+        /* Section headers */
+        .section-header {
+          text-align: center;
+          margin-bottom: 32px;
+        }
+
+        .section-title {
+          font-size: 32px;
+          font-weight: 700;
+          color: #111827;
+          margin-bottom: 8px;
+          text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-subtitle {
+          font-size: 16px;
+          color: #6B7280;
+          max-width: 600px;
+          margin: 0 auto;
+        }
+
+        /* Responsive improvements */
+        @media (max-width: 768px) {
+          .cleaner-card {
+            min-width: 280px;
+          }
+          
+          .cleaners-scroll-wrapper {
+            padding: 16px;
+            gap: 16px;
+          }
         }
       `}</style>
+    </div>
+  );
+}
+
+// Enhanced CleanerCard Component with improved functionality
+function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
+  console.log("🧪 Cleaner data:", cleaner);
+  console.log("📅 Availability:", cleaner.availability);
+  
+  const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  
+  return (
+    <div className={`cleaner-card ${isPremium ? 'premium-card' : 'free-card'}`}>
+      {isPremium && (
+        <div className="premium-badge">
+          <span>✨ Premium</span>
+        </div>
+      )}
+
+      <div className="cleaner-image-container">
+        <img 
+          src={cleaner.image || '/profile-placeholder.png'} 
+          alt={cleaner.realName}
+          className="cleaner-image"
+        />
+        <div className="image-overlay">
+          <div className="rating-badge">
+            ⭐ {cleaner.rating || 'New'}
+          </div>
+        </div>
+      </div>
+
+      <div className="cleaner-content">
+        <h3 className="cleaner-name">{cleaner.realName}</h3>
+        
+        <div className="cleaner-details">
+          <div className="detail-item">
+            <span className="detail-icon">💷</span>
+            <span className="detail-text">
+              {cleaner.rates ? `£${cleaner.rates}/hr` : 'Contact for rates'}
+            </span>
+          </div>
+          
+          {cleaner.location && (
+            <div className="detail-item">
+              <span className="detail-icon">📍</span>
+              <span className="detail-text">{cleaner.location}</span>
+            </div>
+          )}
+        </div>
+
+        {(cleaner.googleReviewUrl || cleaner.facebookReviewUrl) && (
+          <div className="review-links">
+            {cleaner.googleReviewUrl && (
+              <a href={cleaner.googleReviewUrl} target="_blank" rel="noopener noreferrer" className="review-link google">
+                📝 Google Reviews
+              </a>
+            )}
+            {cleaner.facebookReviewUrl && (
+              <a href={cleaner.facebookReviewUrl} target="_blank" rel="noopener noreferrer" className="review-link facebook">
+                📘 Facebook Reviews
+              </a>
+            )}
+          </div>
+        )}
+
+        {isPremium && cleaner.availability && (
+          <div className="availability-section">
+            <h4 className="availability-title">This Week's Availability</h4>
+            <div className="availability-grid">
+              {daysOfWeek.slice(0, 3).map(day => {
+                const slots = cleaner.availability[day] || {};
+                const availableSlots = Object.values(slots).filter(slot => slot === 'available').length;
+                return (
+                  <div key={day} className="availability-day">
+                    <span className="day-name">{day.slice(0, 3)}</span>
+                    <span className={`availability-status ${availableSlots > 0 ? 'available' : 'unavailable'}`}>
+                      {availableSlots > 0 ? `${availableSlots} slots` : 'Full'}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        <div className="action-buttons">
+          <Link href={`/cleaners/${cleaner._id}`} className="btn-view-profile">
+            View Profile
+          </Link>
+          <button 
+            onClick={() => handleBookingRequest(cleaner._id)} 
+            className="btn-request-booking"
+          >
+            Request Booking
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
