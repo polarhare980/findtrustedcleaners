@@ -21,17 +21,16 @@
 // - Verify premium status updates in Cleaner Dashboard.rodger
 // - Implement paywall and client-side redirects.
 
-
-
 import Stripe from 'stripe';
 import { buffer } from 'micro';
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db';
 import Cleaner from '@/models/Cleaner';
+import Purchase from '@/models/Purchase';
 
 export const config = {
   api: {
-    bodyParser: false,
+    bodyParser: false, // Needed for raw Stripe signature verification
   },
 };
 
@@ -56,30 +55,35 @@ export async function POST(req) {
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
     const metadata = session.metadata || {};
+    const paymentIntentId = session.payment_intent;
 
     try {
       await connectToDatabase();
 
-      // ✅ Cleaner upgrading to premium
+      // ✅ Cleaner Subscription Upgrade
       if (metadata.cleanerId && metadata.subscription === 'true') {
         await Cleaner.findByIdAndUpdate(metadata.cleanerId, { isPremium: true });
         console.log(`✅ Cleaner ${metadata.cleanerId} marked as premium`);
       }
 
-      // ✅ Client paying to unlock booking (set slot as "pending")
+      // ✅ Client Booking Payment (manual capture pending approval)
       if (metadata.cleanerId && metadata.clientBooking === 'true') {
-        const { day, hour } = metadata;
+        const { cleanerId, day, hour } = metadata;
 
-        const update = {};
-        update[`availability.${day}.${hour}`] = 'pending';
+        await Purchase.create({
+          cleaner: cleanerId,
+          client: session.customer_email,
+          paymentIntentId,
+          day,
+          hour,
+          status: 'pending',
+        });
 
-        await Cleaner.findByIdAndUpdate(metadata.cleanerId, { $set: update });
-        console.log(`📅 Slot ${day} ${hour}:00 marked as pending for cleaner ${metadata.cleanerId}`);
+        console.log(`📅 Booking stored for ${day} ${hour}:00 — waiting cleaner approval`);
       }
-
     } catch (err) {
-      console.error('❌ Webhook handling error:', err);
-      return NextResponse.json({ error: 'Internal error' }, { status: 500 });
+      console.error('❌ Webhook DB error:', err);
+      return NextResponse.json({ error: 'Database error' }, { status: 500 });
     }
   }
 
