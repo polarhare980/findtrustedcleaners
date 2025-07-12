@@ -19,8 +19,8 @@ export async function POST(req) {
       metadata: {
         cleanerId, // we’ll use this later in webhook
       },
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard?success=true`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard?canceled=true`,
+      success_url: `${process.env.SITE_URL}/dashboard?success=true`,
+      cancel_url: `${process.env.SITE_URL}/dashboard?canceled=true`,
     });
 
     return NextResponse.json({ url: session.url });
