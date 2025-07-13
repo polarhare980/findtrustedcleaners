@@ -159,17 +159,17 @@ export default function CleanerProfile() {
                 </div>
                 {cleaner?._id && (
   <PurchaseButton
-    cleanerId={cleaner._id}
-    onPurchaseSuccess={(cleanerData) => {
-      setHasAccess(true);
-      setCleaner((prev) => ({
-        ...prev,
-        phone: cleanerData.phone,
-        email: cleanerData.email,
-        companyName: cleanerData.cleanerName,
-      }));
-    }}
-  />
+  cleanerId={cleaner?._id || id}
+  onPurchaseSuccess={(cleanerData) => {
+    setHasAccess(true);
+    setCleaner((prev) => ({
+      ...prev,
+      phone: cleanerData.phone,
+      email: cleanerData.email,
+      companyName: cleanerData.cleanerName,
+    }));
+  }}
+/>
 )}
 
 
