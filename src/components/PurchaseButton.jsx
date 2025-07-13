@@ -41,7 +41,6 @@ export default function PurchaseButton({ cleanerId, day, hour, onPurchaseSuccess
       const data = await res.json();
 
       if (res.ok && data.url) {
-        // ✅ Redirect to Stripe
         window.location.href = data.url;
       } else {
         setError(data.error || 'Checkout failed.');
@@ -57,13 +56,7 @@ export default function PurchaseButton({ cleanerId, day, hour, onPurchaseSuccess
   return (
     <>
       <button
-        onClick={() => {
-          if (!cleanerId) {
-            setError('Please register or log in to unlock cleaner contact details.');
-          } else {
-            setShowPopup(true);
-          }
-        }}
+        onClick={() => setShowPopup(true)}
         className="bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-700"
       >
         Unlock Cleaner Contact Info
@@ -84,17 +77,20 @@ export default function PurchaseButton({ cleanerId, day, hour, onPurchaseSuccess
             {success ? (
               <p className="text-green-600 font-semibold mb-4">Redirecting...</p>
             ) : (
-              <div className="flex justify-center gap-4">
+              <div className="flex flex-col items-center gap-4">
                 <button
                   onClick={handlePurchase}
-                  className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:opacity-50"
+                  className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:opacity-50 w-full"
                   disabled={loading}
                 >
                   {loading ? 'Processing...' : 'Confirm (£2.99)'}
                 </button>
                 <button
-                  onClick={() => setShowPopup(false)}
-                  className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+                  onClick={() => {
+                    setShowPopup(false);
+                    setError('');
+                  }}
+                  className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500 w-full"
                 >
                   Cancel
                 </button>
