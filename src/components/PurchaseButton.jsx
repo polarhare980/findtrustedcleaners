@@ -20,28 +20,23 @@ export default function PurchaseButton({
     console.log('🧠 cleanerId:', cleanerId);
   }, [cleanerId]);
 
-  // Prevent body scroll when modal is open
   useEffect(() => {
     if (showPopup) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
     }
-    
-    // Cleanup on unmount
     return () => {
       document.body.style.overflow = 'unset';
     };
   }, [showPopup]);
 
-  // Handle escape key to close modal
   useEffect(() => {
     const handleEscape = (e) => {
       if (e.key === 'Escape' && showPopup && !loading) {
         handleCancel();
       }
     };
-
     if (showPopup) {
       document.addEventListener('keydown', handleEscape);
       return () => document.removeEventListener('keydown', handleEscape);
@@ -60,23 +55,23 @@ export default function PurchaseButton({
 
     setLoading(true);
     setError('');
-    
-    // Notify parent component that purchase is starting
     onPurchaseStart?.();
 
     try {
-      // Check authentication
       const authRes = await fetch('/api/auth/me', { credentials: 'include' });
       const authData = await authRes.json();
       console.log('🔍 AUTH DEBUG:', authData);
 
-      if (!authData.success || authData.user.type !== 'client') {
+      if (!authData.success || authData.user?.type !== 'client') {
+        const errorMsg = 'You must be logged in as a client to purchase.';
+        console.warn('🚫 User not logged in or not a client.');
+        setError(errorMsg);
+        onPurchaseError?.(errorMsg);
         localStorage.setItem('redirectAfterLogin', `/cleaners/${cleanerId}`);
         router.push('/login/clients');
         return;
       }
 
-      // Create checkout session
       const res = await fetch('/api/stripe/create-client-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -89,7 +84,6 @@ export default function PurchaseButton({
 
       if (res.ok && data.url) {
         setSuccess(true);
-        // Redirect to Stripe checkout
         window.location.href = data.url;
       } else {
         const errorMsg = data.error || 'Checkout failed.';
@@ -100,7 +94,7 @@ export default function PurchaseButton({
       console.error('❌ Stripe purchase error:', err);
       const errorMsg = 'Server error. Please try again.';
       setError(errorMsg);
-      onPurchaseError?.(err);
+      onPurchaseError?.(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -112,7 +106,6 @@ export default function PurchaseButton({
     setSuccess(false);
   };
 
-  // Handle backdrop click to close modal
   const handleBackdropClick = (e) => {
     if (e.target === e.currentTarget && !loading) {
       handleCancel();
@@ -140,14 +133,13 @@ export default function PurchaseButton({
         <div 
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4"
           onClick={handleBackdropClick}
-          style={{ zIndex: 9999 }} // Inline style as fallback
+          style={{ zIndex: 9999 }}
         >
           <div 
             className="bg-white rounded-2xl max-w-md w-full shadow-2xl transform transition-all duration-300 scale-100 animate-in fade-in-0 zoom-in-95"
-            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside modal
+            onClick={(e) => e.stopPropagation()}
           >
             <div className="p-6">
-              {/* Header with close button */}
               <div className="flex justify-between items-start mb-6">
                 <div className="text-center flex-1">
                   <div className="text-4xl mb-4">🔓</div>
