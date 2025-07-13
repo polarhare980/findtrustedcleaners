@@ -263,3 +263,6 @@ function Section({ number, title, content, blocks = [], cookieTypes = false, hig
     </div>
   );
 }
+
+
+//
