@@ -67,9 +67,8 @@ export default function PurchaseButton({ cleanerId, day, hour, onPurchaseSuccess
           <div className="bg-white p-6 rounded-lg max-w-sm w-full text-center">
             <h2 className="text-lg font-bold mb-4">Confirm Purchase</h2>
             <p className="mb-4">
-              Unlock this cleaner's contact details and send your booking request for:
+              Unlock this cleaner's contact details and send your booking request:
               <br />
-              <strong>{day}</strong> at <strong>{hour}:00</strong>
             </p>
 
             {error && <p className="text-red-600 mb-4">{error}</p>}
