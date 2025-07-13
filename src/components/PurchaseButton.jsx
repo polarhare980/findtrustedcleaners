@@ -22,7 +22,9 @@ export default function PurchaseButton({ cleanerId, day, hour, onPurchaseSuccess
     try {
       // ✅ Check if user is logged in as a client
       const authRes = await fetch('/api/auth/me', { credentials: 'include' });
-      const authData = await authRes.json();
+const authData = await authRes.json();
+console.log('🔍 AUTH DEBUG:', authData);
+
 
       if (!authData.success || authData.user.type !== 'client') {
         // Save redirect path and force login
