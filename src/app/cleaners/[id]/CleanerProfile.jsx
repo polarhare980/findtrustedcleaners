@@ -53,6 +53,12 @@ export default function CleanerProfile() {
         }
 
         setCleaner(data.cleaner);
+        
+        // Enhanced debug logging
+        console.log('🔍 CLEANER OBJECT:', data.cleaner);
+        console.log('🔍 CLEANER ID (_id):', data.cleaner?._id);
+        console.log('🔍 CLEANER ID (id):', data.cleaner?.id);
+        console.log('🔍 CLEANER KEYS:', Object.keys(data.cleaner || {}));
         console.log('🎯 Availability data received:', JSON.stringify(data.cleaner.availability, null, 2));
         console.log('🎯 Monday data:', data.cleaner.availability?.Monday);
         console.log('🎯 Available days:', Object.keys(data.cleaner.availability || {}));
@@ -98,6 +104,11 @@ export default function CleanerProfile() {
     console.error('❌ Purchase failed:', error);
     setPurchaseLoading(false);
     setError('Purchase failed. Please try again.');
+  };
+
+  // Get the cleaner ID - handle both _id and id
+  const getCleanerId = () => {
+    return cleaner?._id || cleaner?.id;
   };
 
   if (!mounted) return null;
@@ -177,10 +188,12 @@ export default function CleanerProfile() {
 
           {/* Contact Details Section */}
           <div className="bg-white/30 backdrop-blur-md rounded-2xl p-6 border border-white/20 mb-6">
-            {/* Always show debug info in development */}
+            {/* Enhanced debug info in development */}
             {process.env.NODE_ENV === 'development' && (
               <div className="text-xs text-gray-500 mb-4 bg-yellow-100 p-2 rounded">
-                Debug: cleanerId={cleaner?._id}, hasAccess={hasAccess.toString()}, purchaseLoading={purchaseLoading.toString()}
+                Debug: cleanerId={getCleanerId()}, hasAccess={hasAccess.toString()}, purchaseLoading={purchaseLoading.toString()}
+                <br />
+                Cleaner Object Keys: {Object.keys(cleaner || {}).join(', ')}
               </div>
             )}
             
@@ -212,7 +225,8 @@ export default function CleanerProfile() {
                   <p className="text-gray-600 italic mt-2">Contact details are locked. Unlock to view and book.</p>
                 </div>
                 
-                {cleaner?._id && (
+                {/* Fixed condition to handle both _id and id */}
+                {cleaner && getCleanerId() ? (
                   <div className="relative">
                     {purchaseLoading && (
                       <div className="absolute inset-0 bg-white/50 backdrop-blur-sm rounded-full flex items-center justify-center">
@@ -220,7 +234,7 @@ export default function CleanerProfile() {
                       </div>
                     )}
                     <PurchaseButton
-                      cleanerId={cleaner._id}
+                      cleanerId={getCleanerId()}
                       day={selectedSlot?.day}
                       hour={selectedSlot?.hour}
                       onPurchaseSuccess={handlePurchaseSuccess}
@@ -228,6 +242,10 @@ export default function CleanerProfile() {
                       onPurchaseError={handlePurchaseError}
                       disabled={purchaseLoading}
                     />
+                  </div>
+                ) : (
+                  <div className="text-red-600 font-semibold">
+                    ⚠️ Unable to load purchase button - cleaner ID missing
                   </div>
                 )}
               </div>
@@ -392,14 +410,14 @@ export default function CleanerProfile() {
         </div>
 
         {/* Booking Section */}
-        {hasAccess && selectedSlot && (
+        {hasAccess && selectedSlot && getCleanerId() && (
           <div className="bg-white/25 backdrop-blur-xl border border-white/20 rounded-3xl p-8 shadow-2xl">
             <h2 className="text-2xl font-bold text-center mb-6 bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent">
               🎯 Booking for {selectedSlot.day} at {selectedSlot.hour}:00
             </h2>
             <div className="bg-white/30 backdrop-blur-md rounded-2xl p-6 border border-white/20">
               <BookingPaymentWrapper
-                cleanerId={cleaner._id}
+                cleanerId={getCleanerId()}
                 day={selectedSlot.day}
                 time={selectedSlot.hour}
                 price={cleaner.rates || cleaner.rate}
