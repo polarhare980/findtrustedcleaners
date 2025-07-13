@@ -1,4 +1,4 @@
-'use client';
+// 🔄 Temporarily REMOVE 'use client'
 
 import ClientDashboardComponent from './ClientDashboardComponent';
 
@@ -10,4 +10,3 @@ export const metadata = {
 export default function ClientDashboardPage() {
   return <ClientDashboardComponent />;
 }
-
