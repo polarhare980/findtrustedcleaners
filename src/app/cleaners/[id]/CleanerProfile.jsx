@@ -177,19 +177,32 @@ export default function CleanerProfile() {
 
           {/* Contact Details Section */}
           <div className="bg-white/30 backdrop-blur-md rounded-2xl p-6 border border-white/20 mb-6">
+            {/* Always show debug info in development */}
+            {process.env.NODE_ENV === 'development' && (
+              <div className="text-xs text-gray-500 mb-4 bg-yellow-100 p-2 rounded">
+                Debug: cleanerId={cleaner?._id}, hasAccess={hasAccess.toString()}, purchaseLoading={purchaseLoading.toString()}
+              </div>
+            )}
+            
             {hasAccess ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="text-center md:text-left">
-                  <div className="text-teal-600 font-semibold mb-1">📞 Phone</div>
-                  <div className="text-gray-800 font-medium">{cleaner.phone || 'Not provided'}</div>
+              <div>
+                <div className="text-center mb-4">
+                  <span className="text-2xl">🔓</span>
+                  <p className="text-green-600 font-semibold mt-2">Contact details unlocked!</p>
                 </div>
-                <div className="text-center md:text-left">
-                  <div className="text-teal-600 font-semibold mb-1">📧 Email</div>
-                  <div className="text-gray-800 font-medium">{cleaner.email || 'Not provided'}</div>
-                </div>
-                <div className="text-center md:text-left">
-                  <div className="text-teal-600 font-semibold mb-1">🏢 Company</div>
-                  <div className="text-gray-800 font-medium">{cleaner.companyName || cleaner.realName}</div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="text-center md:text-left">
+                    <div className="text-teal-600 font-semibold mb-1">📞 Phone</div>
+                    <div className="text-gray-800 font-medium">{cleaner.phone || 'Not provided'}</div>
+                  </div>
+                  <div className="text-center md:text-left">
+                    <div className="text-teal-600 font-semibold mb-1">📧 Email</div>
+                    <div className="text-gray-800 font-medium">{cleaner.email || 'Not provided'}</div>
+                  </div>
+                  <div className="text-center md:text-left">
+                    <div className="text-teal-600 font-semibold mb-1">🏢 Company</div>
+                    <div className="text-gray-800 font-medium">{cleaner.companyName || cleaner.realName}</div>
+                  </div>
                 </div>
               </div>
             ) : (
@@ -198,13 +211,6 @@ export default function CleanerProfile() {
                   <span className="text-2xl">🔒</span>
                   <p className="text-gray-600 italic mt-2">Contact details are locked. Unlock to view and book.</p>
                 </div>
-                
-                {/* Debug info in development */}
-                {process.env.NODE_ENV === 'development' && (
-                  <div className="text-xs text-gray-500 mb-4">
-                    Debug: cleanerId={cleaner?._id}, hasAccess={hasAccess.toString()}
-                  </div>
-                )}
                 
                 {cleaner?._id && (
                   <div className="relative">
