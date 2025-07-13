@@ -20,6 +20,34 @@ export default function PurchaseButton({
     console.log('🧠 cleanerId:', cleanerId);
   }, [cleanerId]);
 
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (showPopup) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showPopup]);
+
+  // Handle escape key to close modal
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape' && showPopup && !loading) {
+        handleCancel();
+      }
+    };
+
+    if (showPopup) {
+      document.addEventListener('keydown', handleEscape);
+      return () => document.removeEventListener('keydown', handleEscape);
+    }
+  }, [showPopup, loading]);
+
   const handlePurchase = async () => {
     console.log('🟢 Purchase triggered');
 
@@ -84,6 +112,13 @@ export default function PurchaseButton({
     setSuccess(false);
   };
 
+  // Handle backdrop click to close modal
+  const handleBackdropClick = (e) => {
+    if (e.target === e.currentTarget && !loading) {
+      handleCancel();
+    }
+  };
+
   return (
     <>
       <button
@@ -102,15 +137,35 @@ export default function PurchaseButton({
       </button>
 
       {showPopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl">
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4"
+          onClick={handleBackdropClick}
+          style={{ zIndex: 9999 }} // Inline style as fallback
+        >
+          <div 
+            className="bg-white rounded-2xl max-w-md w-full shadow-2xl transform transition-all duration-300 scale-100 animate-in fade-in-0 zoom-in-95"
+            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside modal
+          >
             <div className="p-6">
-              <div className="text-center mb-6">
-                <div className="text-4xl mb-4">🔓</div>
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">Unlock Contact Details</h2>
-                <p className="text-gray-600">
-                  Get instant access to this cleaner's contact information and booking details.
-                </p>
+              {/* Header with close button */}
+              <div className="flex justify-between items-start mb-6">
+                <div className="text-center flex-1">
+                  <div className="text-4xl mb-4">🔓</div>
+                  <h2 className="text-2xl font-bold text-gray-800 mb-2">Unlock Contact Details</h2>
+                  <p className="text-gray-600">
+                    Get instant access to this cleaner's contact information and booking details.
+                  </p>
+                </div>
+                <button
+                  onClick={handleCancel}
+                  disabled={loading}
+                  className="text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ml-4"
+                  aria-label="Close modal"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
 
               {error && (
