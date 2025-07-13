@@ -1,9 +1,10 @@
 'use client';
 
-import ClientDashboardComponent from '@/components/ClientDashboardComponent';
+import ClientDashboardComponent from '@/app/clients/[id]/clientdashboardcomponent';
 
 export default function ClientDashboardPage() {
   return <ClientDashboardComponent />;
 }
+
 
 
