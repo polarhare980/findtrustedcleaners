@@ -159,7 +159,9 @@ export default function CleanerProfile() {
                 </div>
                 {cleaner?._id && (
   <PurchaseButton
-  cleanerId={cleaner?._id || id}
+  cleanerId={cleaner._id}
+  day={selectedSlot?.day}
+  hour={selectedSlot?.hour}
   onPurchaseSuccess={(cleanerData) => {
     setHasAccess(true);
     setCleaner((prev) => ({
@@ -169,7 +171,7 @@ export default function CleanerProfile() {
       companyName: cleanerData.cleanerName,
     }));
   }}
-/>
+  />
 )}
 
 
