@@ -135,7 +135,7 @@ export default function CleanerProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-900/20 to-teal-700/10 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-teal-900/20 to-teal-700/10 p-6 relative">
       <div className="max-w-4xl mx-auto">
         {/* Main Profile Card */}
         <div className="bg-white/25 backdrop-blur-xl border border-white/20 rounded-3xl p-8 shadow-2xl mb-6 transition-all duration-300 hover:shadow-3xl">
@@ -187,8 +187,8 @@ export default function CleanerProfile() {
             </div>
           </div>
 
-          {/* Contact Details Section */}
-          <div className="bg-white/30 backdrop-blur-md rounded-2xl p-6 border border-white/20 mb-6">
+          {/* Contact Details Section - MOVED TO TOP WITH HIGHER Z-INDEX */}
+          <div className="bg-white/30 backdrop-blur-md rounded-2xl p-6 border border-white/20 mb-6 relative z-50" style={{isolation: 'isolate'}}>
             {/* Enhanced debug info in development */}
             {process.env.NODE_ENV === 'development' && (
               <div className="text-xs text-gray-500 mb-4 bg-yellow-100 p-2 rounded">
@@ -232,21 +232,24 @@ export default function CleanerProfile() {
                 
                 {/* Fixed condition to handle both _id and id */}
                 {cleaner && getCleanerId() ? (
-                  <div className="relative">
+                  <div className="relative z-50">
                     {purchaseLoading && (
-                      <div className="absolute inset-0 bg-white/50 backdrop-blur-sm rounded-full flex items-center justify-center">
+                      <div className="absolute inset-0 bg-white/50 backdrop-blur-sm rounded-full flex items-center justify-center z-[60]">
                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-teal-600"></div>
                       </div>
                     )}
-                    <PurchaseButton
-                      cleanerId={getCleanerId()}
-                      day={selectedSlot?.day}
-                      hour={selectedSlot?.hour}
-                      onPurchaseSuccess={handlePurchaseSuccess}
-                      onPurchaseStart={handlePurchaseStart}
-                      onPurchaseError={handlePurchaseError}
-                      disabled={purchaseLoading}
-                    />
+                    {/* Purchase button with maximum z-index and isolation */}
+                    <div style={{position: 'relative', zIndex: 9999, isolation: 'isolate'}}>
+                      <PurchaseButton
+                        cleanerId={getCleanerId()}
+                        day={selectedSlot?.day}
+                        hour={selectedSlot?.hour}
+                        onPurchaseSuccess={handlePurchaseSuccess}
+                        onPurchaseStart={handlePurchaseStart}
+                        onPurchaseError={handlePurchaseError}
+                        disabled={purchaseLoading}
+                      />
+                    </div>
                   </div>
                 ) : (
                   <div className="text-red-600 font-semibold">
@@ -257,8 +260,8 @@ export default function CleanerProfile() {
             )}
           </div>
 
-          {/* Services Section */}
-          <div className="bg-white/30 backdrop-blur-md rounded-2xl p-6 border border-white/20 mb-6">
+          {/* Services Section - MOVED BELOW CONTACT DETAILS */}
+          <div className="bg-white/30 backdrop-blur-md rounded-2xl p-6 border border-white/20 mb-6 relative z-10">
             <h2 className="text-2xl font-bold text-teal-800 mb-4 flex items-center gap-2">
               <span>🧹</span> Services Offered
             </h2>
@@ -278,7 +281,7 @@ export default function CleanerProfile() {
 
           {/* Reviews Section */}
           {(cleaner.googleReviewUrl || cleaner.facebookReviewUrl || cleaner.embedCode) && (
-            <div className="bg-white/30 backdrop-blur-md rounded-2xl p-6 border border-white/20 mb-6">
+            <div className="bg-white/30 backdrop-blur-md rounded-2xl p-6 border border-white/20 mb-6 relative z-10">
               <h2 className="text-2xl font-bold text-teal-800 mb-4 flex items-center gap-2">
                 <span>⭐</span> Reviews
               </h2>
@@ -314,7 +317,7 @@ export default function CleanerProfile() {
           )}
 
           {/* Availability Section */}
-          <div className="bg-white/30 backdrop-blur-md rounded-2xl p-6 border border-white/20">
+          <div className="bg-white/30 backdrop-blur-md rounded-2xl p-6 border border-white/20 relative z-10">
             <h2 className="text-2xl font-bold text-teal-800 mb-6 flex items-center gap-2">
               <span>📅</span> Availability
             </h2>
