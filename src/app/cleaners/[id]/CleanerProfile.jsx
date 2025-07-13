@@ -24,6 +24,7 @@ export default function CleanerProfile() {
   const [error, setError] = useState('');
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [hasAccess, setHasAccess] = useState(false);
+  const [purchaseLoading, setPurchaseLoading] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -37,11 +38,14 @@ export default function CleanerProfile() {
         const res = await fetch(`/api/cleaners/${id}`, { credentials: 'include' });
 
         if (!res.ok) {
-          setError('Cleaner not found or server error.');
+          const errorText = await res.text();
+          console.error('Fetch error:', res.status, errorText);
+          setError(`Cleaner not found or server error (${res.status})`);
           return;
         }
 
         const data = await res.json();
+        console.log('📡 API Response:', data);
 
         if (!data || !data.success || !data.cleaner) {
           setError('Cleaner not found.');
@@ -53,7 +57,8 @@ export default function CleanerProfile() {
         console.log('🎯 Monday data:', data.cleaner.availability?.Monday);
         console.log('🎯 Available days:', Object.keys(data.cleaner.availability || {}));
 
-        setHasAccess(data.hasAccess);
+        setHasAccess(data.hasAccess || false);
+        console.log('🔐 Access status:', data.hasAccess);
       } catch (err) {
         console.error('Failed to load cleaner profile', err);
         setError('Failed to fetch cleaner profile.');
@@ -65,6 +70,36 @@ export default function CleanerProfile() {
     fetchCleaner();
   }, [id]);
 
+  const handlePurchaseSuccess = (cleanerData) => {
+    console.log('✅ Purchase successful, received data:', cleanerData);
+    
+    // Update access status
+    setHasAccess(true);
+    
+    // Update cleaner data with the contact information
+    setCleaner((prev) => ({
+      ...prev,
+      phone: cleanerData.phone || prev.phone,
+      email: cleanerData.email || prev.email,
+      // Handle both cleanerName and realName
+      companyName: cleanerData.companyName || cleanerData.cleanerName || prev.companyName || prev.realName,
+      // Ensure we keep all existing data
+      ...cleanerData
+    }));
+    
+    setPurchaseLoading(false);
+  };
+
+  const handlePurchaseStart = () => {
+    setPurchaseLoading(true);
+  };
+
+  const handlePurchaseError = (error) => {
+    console.error('❌ Purchase failed:', error);
+    setPurchaseLoading(false);
+    setError('Purchase failed. Please try again.');
+  };
+
   if (!mounted) return null;
   if (loading) return <LoadingSpinner />;
 
@@ -75,7 +110,13 @@ export default function CleanerProfile() {
           <h1 className="text-3xl font-bold mb-4 bg-gradient-to-r from-red-600 to-red-800 bg-clip-text text-transparent">
             Error
           </h1>
-          <p className="text-gray-700">{error}</p>
+          <p className="text-gray-700 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="bg-gradient-to-r from-teal-600 to-teal-700 text-white px-6 py-2 rounded-full hover:from-teal-700 hover:to-teal-800 transition-all duration-300"
+          >
+            Try Again
+          </button>
         </div>
       </main>
     );
@@ -105,10 +146,10 @@ export default function CleanerProfile() {
               </h1>
 
               {cleaner?.isPremium && (
-  <div className="inline-block bg-yellow-400 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md mb-4">
-    ✨ Premium Cleaner
-  </div>
-)}
+                <div className="inline-block bg-yellow-400 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md mb-4">
+                  ✨ Premium Cleaner
+                </div>
+              )}
            
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700">
                 <div className="bg-white/40 backdrop-blur-md rounded-2xl p-4 border border-white/30">
@@ -126,7 +167,7 @@ export default function CleanerProfile() {
                     <span className="text-teal-600 font-semibold">💰</span>
                     <div>
                       <span className="font-semibold text-teal-800">Hourly Rate:</span>
-                      <div className="text-lg font-bold text-teal-700">£{cleaner.rates || 'Not set'}</div>
+                      <div className="text-lg font-bold text-teal-700">£{cleaner.rates || cleaner.rate || 'Not set'}</div>
                     </div>
                   </div>
                 </div>
@@ -140,15 +181,15 @@ export default function CleanerProfile() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="text-center md:text-left">
                   <div className="text-teal-600 font-semibold mb-1">📞 Phone</div>
-                  <div className="text-gray-800 font-medium">{cleaner.phone}</div>
+                  <div className="text-gray-800 font-medium">{cleaner.phone || 'Not provided'}</div>
                 </div>
                 <div className="text-center md:text-left">
                   <div className="text-teal-600 font-semibold mb-1">📧 Email</div>
-                  <div className="text-gray-800 font-medium">{cleaner.email}</div>
+                  <div className="text-gray-800 font-medium">{cleaner.email || 'Not provided'}</div>
                 </div>
                 <div className="text-center md:text-left">
                   <div className="text-teal-600 font-semibold mb-1">🏢 Company</div>
-                  <div className="text-gray-800 font-medium">{cleaner.companyName}</div>
+                  <div className="text-gray-800 font-medium">{cleaner.companyName || cleaner.realName}</div>
                 </div>
               </div>
             ) : (
@@ -157,24 +198,32 @@ export default function CleanerProfile() {
                   <span className="text-2xl">🔒</span>
                   <p className="text-gray-600 italic mt-2">Contact details are locked. Unlock to view and book.</p>
                 </div>
+                
+                {/* Debug info in development */}
+                {process.env.NODE_ENV === 'development' && (
+                  <div className="text-xs text-gray-500 mb-4">
+                    Debug: cleanerId={cleaner?._id}, hasAccess={hasAccess.toString()}
+                  </div>
+                )}
+                
                 {cleaner?._id && (
-  <PurchaseButton
-  cleanerId={cleaner._id}
-  day={selectedSlot?.day}
-  hour={selectedSlot?.hour}
-  onPurchaseSuccess={(cleanerData) => {
-    setHasAccess(true);
-    setCleaner((prev) => ({
-      ...prev,
-      phone: cleanerData.phone,
-      email: cleanerData.email,
-      companyName: cleanerData.cleanerName,
-    }));
-  }}
-  />
-)}
-
-
+                  <div className="relative">
+                    {purchaseLoading && (
+                      <div className="absolute inset-0 bg-white/50 backdrop-blur-sm rounded-full flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-teal-600"></div>
+                      </div>
+                    )}
+                    <PurchaseButton
+                      cleanerId={cleaner._id}
+                      day={selectedSlot?.day}
+                      hour={selectedSlot?.hour}
+                      onPurchaseSuccess={handlePurchaseSuccess}
+                      onPurchaseStart={handlePurchaseStart}
+                      onPurchaseError={handlePurchaseError}
+                      disabled={purchaseLoading}
+                    />
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -257,16 +306,19 @@ export default function CleanerProfile() {
                       const hourKey = `${7 + hourIndex}`;
                       const isAvailable = cleaner.availability?.[day]?.[hourKey] === true;
 
-
                       return (
                         <div key={hourKey} className="h-10 w-full">
                           {isAvailable ? (
                             hasAccess ? (
                               <button
                                 onClick={() => setSelectedSlot({ day, hour: hourKey })}
-                                className="w-full h-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-xl font-medium transition-all duration-300 hover:transform hover:scale-105 hover:shadow-lg"
+                                className={`w-full h-full rounded-xl font-medium transition-all duration-300 hover:transform hover:scale-105 hover:shadow-lg ${
+                                  selectedSlot?.day === day && selectedSlot?.hour === hourKey
+                                    ? 'bg-gradient-to-r from-teal-600 to-teal-700 text-white'
+                                    : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white'
+                                }`}
                               >
-                                Book
+                                {selectedSlot?.day === day && selectedSlot?.hour === hourKey ? 'Selected' : 'Book'}
                               </button>
                             ) : (
                               <div className="w-full h-full bg-gradient-to-r from-green-300 to-green-400 text-green-800 rounded-xl flex items-center justify-center font-medium">
@@ -292,14 +344,12 @@ export default function CleanerProfile() {
                 <div key={day} className="bg-white/40 backdrop-blur-sm rounded-xl p-4 border border-white/30">
                   <h3 className="text-lg font-bold text-teal-800 mb-3 flex items-center gap-2">
                     <span className="text-teal-600">📅</span>
-                    {day.substring(0, 3)} {/* Shows Mon, Tue, etc. */}
-
+                    {day.substring(0, 3)}
                   </h3>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                     {[...Array(13)].map((_, hourIndex) => {
                       const hour = 7 + hourIndex;
                       const isAvailable = cleaner.availability?.[day]?.[hour] === true;
-
 
                       return (
                         <div key={hour} className="w-full">
@@ -307,9 +357,13 @@ export default function CleanerProfile() {
                             hasAccess ? (
                               <button
                                 onClick={() => setSelectedSlot({ day, hour: `${hour}` })}
-                                className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-xl py-2 px-3 font-medium transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-lg text-sm"
+                                className={`w-full rounded-xl py-2 px-3 font-medium transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-lg text-sm ${
+                                  selectedSlot?.day === day && selectedSlot?.hour === `${hour}`
+                                    ? 'bg-gradient-to-r from-teal-600 to-teal-700 text-white'
+                                    : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white'
+                                }`}
                               >
-                                {hour}:00
+                                {selectedSlot?.day === day && selectedSlot?.hour === `${hour}` ? 'Selected' : `${hour}:00`}
                               </button>
                             ) : (
                               <div className="w-full bg-gradient-to-r from-green-300 to-green-400 text-green-800 rounded-xl py-2 px-3 text-center font-medium text-sm">
@@ -342,7 +396,7 @@ export default function CleanerProfile() {
                 cleanerId={cleaner._id}
                 day={selectedSlot.day}
                 time={selectedSlot.hour}
-                price={cleaner.rate}
+                price={cleaner.rates || cleaner.rate}
               />
             </div>
           </div>
