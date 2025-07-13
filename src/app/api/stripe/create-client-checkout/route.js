@@ -25,6 +25,7 @@ export async function POST(req) {
     }
 
     const priceInPence = 299; // £2.99
+    const baseUrl = process.env.SITE_URL || 'https://www.findtrustedcleaners.com';
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
@@ -46,8 +47,8 @@ export async function POST(req) {
         cleanerId,
         clientBooking: 'true',
       },
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/cleaner/${cleanerId}?booking=success`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/cleaner/${cleanerId}?booking=cancelled`,
+      success_url: `${baseUrl}/cleaner/${cleanerId}?booking=success`,
+      cancel_url: `${baseUrl}/cleaner/${cleanerId}?booking=cancelled`,
     });
 
     console.log('✅ Stripe session created:', session.id);
