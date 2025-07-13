@@ -140,10 +140,8 @@ export default function ClientDashboardComponent() {
     return (
       <main className="min-h-screen py-12 px-6 bg-gradient-to-br from-teal-900/20 to-teal-700/10">
         <div className="max-w-2xl mx-auto">
-          <div className="bg-white/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] p-8 shadow-[0_8px_32px_rgba(0,0,0,0.1)] text-center animate-fade-in">
-            <h1 className="text-3xl font-bold mb-4 bg-gradient-to-r from-red-600 to-red-700 bg-clip-text text-transparent">
-              Error
-            </h1>
+          <div className="bg-white/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] p-8 text-center shadow-[0_8px_32px_rgba(0,0,0,0.1)] animate-fade-in">
+            <h1 className="text-3xl font-bold mb-4 bg-gradient-to-r from-red-600 to-red-700 bg-clip-text text-transparent">Error</h1>
             <p className="text-gray-700">{error}</p>
           </div>
         </div>
@@ -154,130 +152,140 @@ export default function ClientDashboardComponent() {
   return (
     <main className="min-h-screen py-12 px-6 bg-gradient-to-br from-teal-900/20 to-teal-700/10">
       <div className="max-w-6xl mx-auto animate-fade-in">
-        
-        {/* Back to Search Button */}
+        {/* Back to Home Button */}
         <div className="mb-8">
           <button
             onClick={() => router.push('/')}
             className="bg-gradient-to-r from-teal-600 to-teal-700 text-white px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 hover:scale-105 flex items-center gap-2"
           >
-            🔍 Back to Search
+            🏠 Back to Home
           </button>
-        </div>
-
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-teal-600 to-teal-700 bg-clip-text text-transparent">
-            Client Dashboard
-          </h1>
-          <p className="text-gray-600 text-lg">Manage your profile and view your cleaning services</p>
         </div>
 
         {/* Success Message */}
         {success && (
-          <div className="mb-8 animate-slide-up">
-            <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-4 rounded-[20px] text-center shadow-lg">
-              {success}
-            </div>
+          <div className="mb-6 bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-xl shadow-lg animate-slide-up">
+            {success}
           </div>
         )}
 
+        {/* Welcome Header */}
+        <div className="bg-white/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] p-8 mb-8 shadow-[0_8px_32px_rgba(0,0,0,0.1)] animate-fade-in">
+          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-teal-600 to-teal-700 bg-clip-text text-transparent">
+            Welcome back, {client?.fullName}!
+          </h1>
+          <p className="text-gray-700">Manage your profile, view bookings, and track your cleaning history.</p>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
           {/* Profile Section */}
           <div className="lg:col-span-2">
-            <div className="bg-white/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] p-8 shadow-[0_8px_32px_rgba(0,0,0,0.1)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.15)] transform hover:-translate-y-1 transition-all duration-300">
-              
-              <div className="flex items-center justify-between mb-8">
-                <h2 className="text-2xl font-bold text-teal-800 flex items-center gap-2">
-                  👤 Profile Information
-                </h2>
-                {!isEditing ? (
-                  <button 
-                    onClick={() => setIsEditing(true)}
-                    className="bg-gradient-to-r from-teal-600 to-teal-700 text-white px-6 py-2 rounded-[50px] font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 hover:scale-105"
-                  >
-                    ✏️ Edit Profile
-                  </button>
-                ) : (
-                  <div className="flex gap-3">
-                    <button 
-                      onClick={handleSave}
-                      disabled={saving}
-                      className="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-2 rounded-[50px] font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {saving ? (
-                        <span className="flex items-center gap-2">
-                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                          Saving...
-                        </span>
-                      ) : (
-                        '💾 Save Changes'
-                      )}
-                    </button>
-                    <button 
-                      onClick={() => setIsEditing(false)}
-                      className="bg-gradient-to-r from-gray-500 to-gray-600 text-white px-6 py-2 rounded-[50px] font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 hover:scale-105"
-                    >
-                      ❌ Cancel
-                    </button>
-                  </div>
-                )}
+            <div className="bg-white/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] p-8 shadow-[0_8px_32px_rgba(0,0,0,0.1)] animate-slide-up">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-3xl font-bold text-teal-800">Profile Information</h2>
+                <button
+                  onClick={() => setIsEditing(!isEditing)}
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-2 rounded-[50px] font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 hover:scale-105"
+                >
+                  {isEditing ? '✖️ Cancel' : '✏️ Edit'}
+                </button>
               </div>
 
-              {client && (
+              {!isEditing ? (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="bg-white/80 p-4 rounded-2xl">
+                      <h3 className="font-semibold text-teal-800 mb-2">Full Name</h3>
+                      <p className="text-gray-700">{client?.fullName}</p>
+                    </div>
+                    <div className="bg-white/80 p-4 rounded-2xl">
+                      <h3 className="font-semibold text-teal-800 mb-2">Phone</h3>
+                      <p className="text-gray-700">{client?.phone}</p>
+                    </div>
+                  </div>
+                  <div className="bg-white/80 p-4 rounded-2xl">
+                    <h3 className="font-semibold text-teal-800 mb-2">Address</h3>
+                    <p className="text-gray-700">
+                      {client?.address?.houseNameNumber} {client?.address?.street}, {client?.address?.county} {client?.address?.postcode}
+                    </p>
+                  </div>
+                </div>
+              ) : (
                 <div className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-semibold text-teal-700 mb-2">Full Name</label>
-                      {isEditing ? (
-                        <input 
-                          type="text" 
-                          name="fullName" 
-                          value={formData.fullName} 
-                          onChange={handleChange} 
-                          className="w-full p-3 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-xl focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all duration-300 outline-none"
-                        />
-                      ) : (
-                        <p className="text-gray-700 bg-white/40 p-3 rounded-xl">{formData.fullName}</p>
-                      )}
+                      <label className="block text-teal-800 font-medium mb-2">Full Name</label>
+                      <input
+                        type="text"
+                        name="fullName"
+                        value={formData.fullName}
+                        onChange={handleChange}
+                        className="w-full bg-white/80 backdrop-blur-[20px] border border-white/20 rounded-xl px-4 py-3 text-gray-700 focus:outline-none focus:border-teal-600 transition-all duration-300"
+                      />
                     </div>
-
                     <div>
-                      <label className="block text-sm font-semibold text-teal-700 mb-2">Phone</label>
-                      {isEditing ? (
-                        <input 
-                          type="text" 
-                          name="phone" 
-                          value={formData.phone} 
-                          onChange={handleChange} 
-                          className="w-full p-3 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-xl focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all duration-300 outline-none"
-                        />
-                      ) : (
-                        <p className="text-gray-700 bg-white/40 p-3 rounded-xl">{formData.phone}</p>
-                      )}
+                      <label className="block text-teal-800 font-medium mb-2">Phone</label>
+                      <input
+                        type="tel"
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleChange}
+                        className="w-full bg-white/80 backdrop-blur-[20px] border border-white/20 rounded-xl px-4 py-3 text-gray-700 focus:outline-none focus:border-teal-600 transition-all duration-300"
+                      />
                     </div>
                   </div>
-
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {['houseNameNumber', 'street', 'county', 'postcode'].map((field) => (
-                      <div key={field}>
-                        <label className="block text-sm font-semibold text-teal-700 mb-2 capitalize">
-                          {field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                        </label>
-                        {isEditing ? (
-                          <input 
-                            type="text" 
-                            name={field} 
-                            value={formData.address[field]} 
-                            onChange={handleChange} 
-                            className="w-full p-3 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-xl focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all duration-300 outline-none"
-                          />
-                        ) : (
-                          <p className="text-gray-700 bg-white/40 p-3 rounded-xl">{formData.address[field]}</p>
-                        )}
-                      </div>
-                    ))}
+                    <div>
+                      <label className="block text-teal-800 font-medium mb-2">House Name/Number</label>
+                      <input
+                        type="text"
+                        name="houseNameNumber"
+                        value={formData.address.houseNameNumber}
+                        onChange={handleChange}
+                        className="w-full bg-white/80 backdrop-blur-[20px] border border-white/20 rounded-xl px-4 py-3 text-gray-700 focus:outline-none focus:border-teal-600 transition-all duration-300"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-teal-800 font-medium mb-2">Street</label>
+                      <input
+                        type="text"
+                        name="street"
+                        value={formData.address.street}
+                        onChange={handleChange}
+                        className="w-full bg-white/80 backdrop-blur-[20px] border border-white/20 rounded-xl px-4 py-3 text-gray-700 focus:outline-none focus:border-teal-600 transition-all duration-300"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-teal-800 font-medium mb-2">County</label>
+                      <input
+                        type="text"
+                        name="county"
+                        value={formData.address.county}
+                        onChange={handleChange}
+                        className="w-full bg-white/80 backdrop-blur-[20px] border border-white/20 rounded-xl px-4 py-3 text-gray-700 focus:outline-none focus:border-teal-600 transition-all duration-300"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-teal-800 font-medium mb-2">Postcode</label>
+                      <input
+                        type="text"
+                        name="postcode"
+                        value={formData.address.postcode}
+                        onChange={handleChange}
+                        className="w-full bg-white/80 backdrop-blur-[20px] border border-white/20 rounded-xl px-4 py-3 text-gray-700 focus:outline-none focus:border-teal-600 transition-all duration-300"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-4">
+                    <button
+                      onClick={handleSave}
+                      disabled={saving}
+                      className="bg-gradient-to-r from-green-500 to-green-600 text-white px-8 py-3 rounded-[50px] font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 hover:scale-105 disabled:opacity-50"
+                    >
+                      {saving ? 'Saving...' : '💾 Save Changes'}
+                    </button>
                   </div>
                 </div>
               )}
@@ -286,33 +294,36 @@ export default function ClientDashboardComponent() {
 
           {/* Quick Actions */}
           <div className="space-y-6">
-            <div className="bg-white/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] p-6 shadow-[0_8px_32px_rgba(0,0,0,0.1)]">
-              <h3 className="text-xl font-bold text-teal-800 mb-4 flex items-center gap-2">
-                ⚡ Quick Actions
-              </h3>
+            <div className="bg-white/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] p-6 shadow-[0_8px_32px_rgba(0,0,0,0.1)] animate-slide-up">
+              <h3 className="text-xl font-bold text-teal-800 mb-4">Quick Actions</h3>
               <div className="space-y-3">
                 <Link
-                  href="/"
-                  className="block bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-3 rounded-xl font-medium text-center shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 hover:scale-105"
+                  href="/book-cleaning"
+                  className="block w-full bg-gradient-to-r from-teal-600 to-teal-700 text-white text-center px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 hover:scale-105"
                 >
-                  🔍 Find Cleaners
+                  📅 Book New Cleaning
                 </Link>
                 <Link
-                  href="/bookings"
-                  className="block bg-gradient-to-r from-amber-400 to-amber-500 text-white px-4 py-3 rounded-xl font-medium text-center shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 hover:scale-105"
+                  href="/cleaners"
+                  className="block w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white text-center px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 hover:scale-105"
                 >
-                  📅 My Bookings
+                  👥 Browse Cleaners
+                </Link>
+                <Link
+                  href="/support"
+                  className="block w-full bg-gradient-to-r from-amber-400 to-amber-500 text-white text-center px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 hover:scale-105"
+                >
+                  💬 Get Support
                 </Link>
               </div>
             </div>
 
-            <div className="bg-white/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] p-6 shadow-[0_8px_32px_rgba(0,0,0,0.1)]">
-              <h3 className="text-xl font-bold text-red-600 mb-4 flex items-center gap-2">
-                ⚠️ Danger Zone
-              </h3>
-              <button 
+            {/* Account Management */}
+            <div className="bg-white/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] p-6 shadow-[0_8px_32px_rgba(0,0,0,0.1)] animate-slide-up">
+              <h3 className="text-xl font-bold text-teal-800 mb-4">Account Management</h3>
+              <button
                 onClick={handleDeleteAccount}
-                className="w-full bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 hover:scale-105"
+                className="w-full bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 hover:scale-105"
               >
                 🗑️ Delete Account
               </button>
@@ -321,89 +332,57 @@ export default function ClientDashboardComponent() {
         </div>
 
         {/* Bookings Section */}
-        <div className="mt-12">
-          <div className="bg-white/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] p-8 shadow-[0_8px_32px_rgba(0,0,0,0.1)]">
-            <h2 className="text-2xl font-bold text-teal-800 mb-6 flex items-center gap-2">
-              📅 Your Bookings
-            </h2>
-            
-            {bookings.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {bookings.map((booking) => (
-                  <div 
-                    key={booking._id} 
-                    className="bg-white/40 backdrop-blur-sm border border-white/20 rounded-xl p-6 hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300"
-                  >
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-semibold text-teal-800">{booking.cleanerName}</h3>
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                        booking.status === 'confirmed' ? 'bg-green-100 text-green-700' :
-                        booking.status === 'pending' ? 'bg-amber-100 text-amber-700' :
-                        'bg-gray-100 text-gray-700'
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+          <div className="bg-white/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] p-8 shadow-[0_8px_32px_rgba(0,0,0,0.1)] animate-slide-up">
+            <h2 className="text-3xl font-bold text-teal-800 mb-6">Recent Bookings</h2>
+            {bookings.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-600 mb-4">No bookings yet</p>
+                <Link
+                  href="/book-cleaning"
+                  className="inline-block bg-gradient-to-r from-teal-600 to-teal-700 text-white px-6 py-3 rounded-[50px] font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 hover:scale-105"
+                >
+                  Book Your First Cleaning
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {bookings.slice(0, 3).map((booking) => (
+                  <div key={booking._id} className="bg-white/80 p-4 rounded-2xl hover:shadow-lg transition-all duration-300">
+                    <div className="flex justify-between items-start mb-2">
+                      <h4 className="font-semibold text-teal-800">{booking.service}</h4>
+                      <span className={`px-3 py-1 rounded-[50px] text-sm font-medium ${
+                        booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                        booking.status === 'pending' ? 'bg-amber-100 text-amber-800' :
+                        'bg-gray-100 text-gray-800'
                       }`}>
                         {booking.status}
                       </span>
                     </div>
-                    <div className="space-y-2 text-sm text-gray-600">
-                      <p><strong>Day:</strong> {booking.day}</p>
-                      <p><strong>Time:</strong> {booking.time}:00</p>
-                    </div>
+                    <p className="text-gray-600 text-sm">{new Date(booking.date).toLocaleDateString()}</p>
+                    <p className="text-gray-700 font-medium">£{booking.price}</p>
                   </div>
                 ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <div className="text-6xl mb-4">📅</div>
-                <p className="text-gray-600 text-lg">You have no bookings yet.</p>
-                <Link
-                  href="/"
-                  className="inline-block mt-4 bg-gradient-to-r from-teal-600 to-teal-700 text-white px-6 py-3 rounded-[50px] font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 hover:scale-105"
-                >
-                  Find Your First Cleaner
-                </Link>
               </div>
             )}
           </div>
-        </div>
 
-        {/* Unlocked Cleaners Section */}
-        <div className="mt-12">
-          <div className="bg-white/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] p-8 shadow-[0_8px_32px_rgba(0,0,0,0.1)]">
-            <h2 className="text-2xl font-bold text-teal-800 mb-6 flex items-center gap-2">
-              🔓 Unlocked Cleaners
-            </h2>
-            
-            {purchases.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {purchases.map((purchase) => (
-                  <div 
-                    key={purchase.cleanerId} 
-                    className="bg-white/40 backdrop-blur-sm border border-white/20 rounded-xl p-6 hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300"
-                  >
-                    <h3 className="font-semibold text-teal-800 mb-3">{purchase.cleanerName}</h3>
-                    <div className="space-y-2 text-sm text-gray-600 mb-4">
-                      <p><strong>📞 Phone:</strong> {purchase.phone}</p>
-                      <p><strong>📧 Email:</strong> {purchase.email}</p>
-                    </div>
-                    <Link 
-                      href={`/cleaners/${purchase.cleanerId}`} 
-                      className="inline-block bg-gradient-to-r from-teal-600 to-teal-700 text-white px-4 py-2 rounded-[50px] font-medium text-sm shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 hover:scale-105"
-                    >
-                      View Profile →
-                    </Link>
-                  </div>
-                ))}
+          {/* Purchase History */}
+          <div className="bg-white/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] p-8 shadow-[0_8px_32px_rgba(0,0,0,0.1)] animate-slide-up">
+            <h2 className="text-3xl font-bold text-teal-800 mb-6">Purchase History</h2>
+            {purchases.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-600">No purchases yet</p>
               </div>
             ) : (
-              <div className="text-center py-12">
-                <div className="text-6xl mb-4">🔒</div>
-                <p className="text-gray-600 text-lg">You haven't unlocked any cleaners yet.</p>
-                <Link
-                  href="/"
-                  className="inline-block mt-4 bg-gradient-to-r from-teal-600 to-teal-700 text-white px-6 py-3 rounded-[50px] font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 hover:scale-105"
-                >
-                  Browse Cleaners
-                </Link>
+              <div className="space-y-4">
+                {purchases.slice(0, 3).map((purchase) => (
+                  <div key={purchase._id} className="bg-white/80 p-4 rounded-2xl hover:shadow-lg transition-all duration-300">
+                    <h4 className="font-semibold text-teal-800 mb-2">{purchase.item}</h4>
+                    <p className="text-gray-600 text-sm">{new Date(purchase.date).toLocaleDateString()}</p>
+                    <p className="text-gray-700 font-medium">£{purchase.amount}</p>
+                  </div>
+                ))}
               </div>
             )}
           </div>
@@ -415,16 +394,13 @@ export default function ClientDashboardComponent() {
           from { opacity: 0; transform: translateY(20px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        
         @keyframes slide-up {
           from { opacity: 0; transform: translateY(30px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        
         .animate-fade-in {
           animation: fade-in 0.8s ease-out;
         }
-        
         .animate-slide-up {
           animation: slide-up 0.5s ease-out;
         }
