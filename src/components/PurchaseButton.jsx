@@ -1,17 +1,23 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-export default function PurchaseButton({ cleanerId, day, hour, onPurchaseSuccess }) {
+export default function PurchaseButton({ cleanerId, onPurchaseSuccess }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
 
+  useEffect(() => {
+    console.log('🧠 cleanerId:', cleanerId);
+  }, [cleanerId]);
+
   const handlePurchase = async () => {
-    if (!cleanerId || !day || !hour) {
+    console.log('🟢 Purchase triggered');
+
+    if (!cleanerId) {
       setError('Please register or log in to unlock cleaner contact details.');
       return;
     }
@@ -20,29 +26,27 @@ export default function PurchaseButton({ cleanerId, day, hour, onPurchaseSuccess
     setError('');
 
     try {
-      // ✅ Check if user is logged in as a client
       const authRes = await fetch('/api/auth/me', { credentials: 'include' });
-const authData = await authRes.json();
-console.log('🔍 AUTH DEBUG:', authData);
-
+      const authData = await authRes.json();
+      console.log('🔍 AUTH DEBUG:', authData);
 
       if (!authData.success || authData.user.type !== 'client') {
-        // Save redirect path and force login
         localStorage.setItem('redirectAfterLogin', `/cleaners/${cleanerId}`);
         router.push('/login/clients');
         return;
       }
 
-      // ✅ Create Stripe checkout session
       const res = await fetch('/api/stripe/create-client-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cleanerId, day, hour }),
+        body: JSON.stringify({ cleanerId }), // Only cleanerId
       });
 
       const data = await res.json();
+      console.log('🧾 Stripe response:', data);
 
       if (res.ok && data.url) {
+        setSuccess(true);
         window.location.href = data.url;
       } else {
         setError(data.error || 'Checkout failed.');
@@ -58,7 +62,10 @@ console.log('🔍 AUTH DEBUG:', authData);
   return (
     <>
       <button
-        onClick={() => setShowPopup(true)}
+        onClick={() => {
+          setError('');
+          setShowPopup(true);
+        }}
         className="bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-700"
       >
         Unlock Cleaner Contact Info
@@ -69,8 +76,7 @@ console.log('🔍 AUTH DEBUG:', authData);
           <div className="bg-white p-6 rounded-lg max-w-sm w-full text-center">
             <h2 className="text-lg font-bold mb-4">Confirm Purchase</h2>
             <p className="mb-4">
-              Unlock this cleaner's contact details and send your booking request:
-              <br />
+              Unlock this cleaner’s contact details and send your booking request.
             </p>
 
             {error && <p className="text-red-600 mb-4">{error}</p>}
