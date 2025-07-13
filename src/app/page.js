@@ -567,10 +567,9 @@ export default function HomePage() {
 function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
   console.log("🧪 Cleaner data:", cleaner);
   console.log("📅 Availability:", cleaner.availability);
-  
-  // Define all 7 days of the week in order
+
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-  
+
   return (
     <div className="cleaner-card">
       {isPremium && (
@@ -603,7 +602,6 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
           </div>
         )}
 
-        {/* Only show availability for premium cleaners */}
         {isPremium && cleaner.availability && (
           <div className="availability-grid mt-4">
             <h4 className="font-semibold text-teal-700 mb-2 text-center">Availability</h4>
@@ -612,7 +610,6 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
               {Array.from({ length: 13 }, (_, i) => (
                 <div key={`hour-head-${i}`} className="bg-gray-100 p-1 text-center">{7 + i}</div>
               ))}
-              {/* Loop through all 7 days of the week */}
               {daysOfWeek.map(day => {
                 const slots = cleaner.availability[day] || {};
                 return (
@@ -640,16 +637,12 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
         )}
 
         <div className="cleaner-actions mt-4">
-          <Link href={`/cleaners/${cleaner._id}`} className="btn-view-profile">
+          <Link href={`/cleaners/${cleaner._id}`} className="btn-request-booking">
             View Profile
           </Link>
-          <button onClick={() => handleBookingRequest(cleaner._id)} className="btn-request-booking">
-            Request Booking
-          </button>
         </div>
       </div>
 
-      {/* Styles go inside the return */}
       <style jsx>{`
         .cleaner-card {
           min-width: 280px;
@@ -743,31 +736,6 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
           margin-top: 16px;
         }
 
-        button.btn-view-profile,
-        a.btn-view-profile,
-        .btn-view-profile {
-          background: linear-gradient(135deg, #EA580C 0%, #C2410C 100%) !important;
-          color: white !important;
-          border: none !important;
-          padding: 12px 20px !important;
-          border-radius: 8px !important;
-          font-size: 16px !important;
-          font-weight: 600 !important;
-          cursor: pointer !important;
-          transition: all 0.3s ease !important;
-          box-shadow: 0 2px 8px rgba(234, 88, 12, 0.3) !important;
-          width: 160px !important;
-          text-decoration: none !important;
-          display: inline-block !important;
-          text-align: center !important;
-        }
-
-        .btn-view-profile:hover {
-          transform: translateY(-1px) !important;
-          box-shadow: 0 4px 12px rgba(234, 88, 12, 0.4) !important;
-          color: white !important;
-        }
-
         .btn-request-booking {
           background: linear-gradient(135deg, #10B981 0%, #059669 100%) !important;
           color: white !important;
@@ -780,6 +748,9 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
           transition: all 0.3s ease !important;
           box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3) !important;
           width: 160px !important;
+          text-align: center !important;
+          text-decoration: none !important;
+          display: inline-block !important;
         }
 
         .btn-request-booking:hover {

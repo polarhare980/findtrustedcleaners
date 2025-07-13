@@ -3,6 +3,24 @@ import Cleaner from "@/models/Cleaner";
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 
+// 🧠 Compute bookingStatus from nested availability object
+function determineBookingStatus(availability) {
+  let hasAvailable = false;
+  let hasPending = false;
+
+  for (const day in availability) {
+    for (const hour in availability[day]) {
+      const val = availability[day][hour];
+      if (val === true) hasAvailable = true;
+      if (val === 'pending') hasPending = true;
+    }
+  }
+
+  if (hasAvailable) return 'available';
+  if (hasPending) return 'pending';
+  return 'booked';
+}
+
 // GET - Fetch cleaner(s) with optional filters (💬 Public)
 export async function GET(req) {
   await dbConnect();
@@ -14,16 +32,11 @@ export async function GET(req) {
 
   try {
     if (id) {
-      console.log('🔍 API hit: Cleaner ID received:', id);
-
       const cleaner = await Cleaner.findById(id).select('-password');
 
       if (!cleaner) {
-        console.log('❌ Cleaner not found for ID:', id);
         return NextResponse.json({ success: false, message: 'Cleaner not found' }, { status: 404 });
       }
-
-      console.log('✅ Cleaner found:', cleaner._id);
 
       return NextResponse.json({
         success: true,
@@ -53,10 +66,6 @@ export async function GET(req) {
       query.rating = { $gte: minRating };
     }
 
-    if (bookingStatus !== 'all') {
-      query.bookingStatus = bookingStatus;
-    }
-
     const rawCleaners = await Cleaner.find(query)
       .select('-password')
       .sort({ isPremium: -1 });
@@ -64,6 +73,9 @@ export async function GET(req) {
     const cleaners = rawCleaners.map(obj => {
       try {
         const c = typeof obj.toObject === 'function' ? obj.toObject() : JSON.parse(JSON.stringify(obj));
+
+        const bookingStatusDerived = determineBookingStatus(c.availability || {});
+
         return {
           _id: c._id,
           realName: c.realName,
@@ -76,6 +88,7 @@ export async function GET(req) {
           availability: c.availability || {},
           googleReviewUrl: c.googleReviewUrl || null,
           facebookReviewUrl: c.facebookReviewUrl || null,
+          bookingStatus: bookingStatusDerived,
         };
       } catch (err) {
         console.error('❌ Failed to format cleaner object:', err);
@@ -83,9 +96,11 @@ export async function GET(req) {
       }
     }).filter(Boolean);
 
-    console.log('✅ Found', cleaners.length, 'cleaner(s) for search query.');
+    const finalFiltered = bookingStatus === 'all'
+      ? cleaners
+      : cleaners.filter(c => c.bookingStatus === bookingStatus);
 
-    return NextResponse.json({ success: true, cleaners }, { status: 200 });
+    return NextResponse.json({ success: true, cleaners: finalFiltered }, { status: 200 });
   } catch (err) {
     console.error('❌ GET cleaner error:', err.message);
     return NextResponse.json({ success: false, message: 'Failed to fetch cleaner(s).' }, { status: 500 });
@@ -96,13 +111,11 @@ export async function GET(req) {
 export async function POST(req) {
   await dbConnect();
   const data = await req.json();
-  console.log('👉 Received cleaner data:', data);
 
   try {
     const existing = await Cleaner.findOne({ email: data.email });
 
     if (existing) {
-      console.log('⚠️ Email already registered:', data.email);
       return NextResponse.json({ success: false, message: 'Email already in use.' }, { status: 400 });
     }
 
@@ -123,8 +136,6 @@ export async function POST(req) {
       services: data.services,
       businessInsurance: data.businessInsurance,
     });
-
-    console.log('✅ Cleaner created:', cleaner._id);
 
     return NextResponse.json({ success: true, id: cleaner._id }, { status: 201 });
   } catch (err) {

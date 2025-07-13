@@ -24,78 +24,259 @@ export const metadata = {
 export default function CookiePolicy() {
   return (
     <>
-      <main className="min-h-screen bg-white text-gray-700 p-6 max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-[#0D9488] mb-4">Cookie Policy</h1>
+      {/* Background with gradient overlay */}
+      <div className="min-h-screen bg-gradient-to-br from-teal-900/20 to-teal-700/10 relative">
+        {/* Glass morphism container */}
+        <main className="max-w-4xl mx-auto p-6 py-12">
+          {/* Main content card with glass morphism */}
+          <div 
+            className="bg-white/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] shadow-[0_8px_32px_rgba(0,0,0,0.1)] p-8 mb-8 animate-[fadeIn_0.8s_ease-out]"
+            style={{ animationName: 'fadeIn' }}
+          >
+            {/* Header with gradient text */}
+            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent mb-6">
+              🍪 Cookie Policy
+            </h1>
 
-        <p className="mb-4">
-          This Cookie Policy explains how FindTrustedCleaners.co.uk ("we", "our", "us") uses cookies and similar tracking technologies when you visit our website.
-        </p>
+            <p className="text-gray-700 mb-6 text-lg">
+              This Cookie Policy explains how FindTrustedCleaners.co.uk (&quot;we&quot;, &quot;our&quot;, &quot;us&quot;) uses cookies and similar tracking technologies when you visit our website.
+            </p>
 
-        <h2 className="text-2xl font-semibold mt-6 mb-2">1. What Are Cookies?</h2>
-        <p className="mb-4">
-          Cookies are small text files that are stored on your device when you visit a website. They help improve your browsing experience and provide site functionality.
-        </p>
+            {/* Section 1 */}
+            <div className="mb-8">
+              <h2 className="text-3xl font-semibold text-teal-800 mb-4 flex items-center gap-3">
+                <span className="w-8 h-8 bg-gradient-to-r from-teal-600 to-teal-700 rounded-full flex items-center justify-center text-white font-bold text-sm">1</span>
+                What Are Cookies?
+              </h2>
+              <div className="bg-white/80 backdrop-blur-sm border border-white/30 rounded-2xl p-6 transition-all duration-300 hover:translate-y-[-2px] hover:shadow-[0_12px_40px_rgba(0,0,0,0.15)]">
+                <p className="text-gray-700 leading-relaxed">
+                  Cookies are small text files that are stored on your device when you visit a website. They help improve your browsing experience and provide site functionality.
+                </p>
+              </div>
+            </div>
 
-        <h2 className="text-2xl font-semibold mt-6 mb-2">2. How We Use Cookies</h2>
-        <p className="mb-4">We use cookies for the following purposes:</p>
-        <ul className="list-disc list-inside mb-4">
-          <li>Essential: To enable core website functionality.</li>
-          <li>Performance: To understand how users interact with the website (e.g. page views).</li>
-          <li>Functionality: To remember your preferences.</li>
-          <li>Analytics: To improve our services and website through data analysis.</li>
-        </ul>
+            {/* Section 2 */}
+            <div className="mb-8">
+              <h2 className="text-3xl font-semibold text-teal-800 mb-4 flex items-center gap-3">
+                <span className="w-8 h-8 bg-gradient-to-r from-teal-600 to-teal-700 rounded-full flex items-center justify-center text-white font-bold text-sm">2</span>
+                How We Use Cookies
+              </h2>
+              <div className="bg-white/80 backdrop-blur-sm border border-white/30 rounded-2xl p-6 transition-all duration-300 hover:translate-y-[-2px] hover:shadow-[0_12px_40px_rgba(0,0,0,0.15)]">
+                <p className="text-gray-700 mb-4">We use cookies for the following purposes:</p>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="bg-gradient-to-r from-teal-50 to-teal-100/50 rounded-xl p-4 border border-teal-200/50">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-teal-600 font-semibold">⚡ Essential:</span>
+                    </div>
+                    <p className="text-gray-700 text-sm">To enable core website functionality.</p>
+                  </div>
+                  <div className="bg-gradient-to-r from-blue-50 to-blue-100/50 rounded-xl p-4 border border-blue-200/50">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-blue-600 font-semibold">📊 Performance:</span>
+                    </div>
+                    <p className="text-gray-700 text-sm">To understand how users interact with the website.</p>
+                  </div>
+                  <div className="bg-gradient-to-r from-green-50 to-green-100/50 rounded-xl p-4 border border-green-200/50">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-green-600 font-semibold">🎯 Functionality:</span>
+                    </div>
+                    <p className="text-gray-700 text-sm">To remember your preferences.</p>
+                  </div>
+                  <div className="bg-gradient-to-r from-amber-50 to-amber-100/50 rounded-xl p-4 border border-amber-200/50">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-amber-600 font-semibold">📈 Analytics:</span>
+                    </div>
+                    <p className="text-gray-700 text-sm">To improve our services through data analysis.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-        <h2 className="text-2xl font-semibold mt-6 mb-2">3. Types of Cookies We Use</h2>
-        <ul className="list-disc list-inside mb-4">
-          <li><strong>Session Cookies:</strong> Temporary cookies that are erased when you close your browser.</li>
-          <li><strong>Persistent Cookies:</strong> Remain on your device for a set period or until deleted.</li>
-          <li><strong>Third-Party Cookies:</strong> Cookies set by third-party services (e.g. Google Analytics).</li>
-        </ul>
+            {/* Section 3 */}
+            <div className="mb-8">
+              <h2 className="text-3xl font-semibold text-teal-800 mb-4 flex items-center gap-3">
+                <span className="w-8 h-8 bg-gradient-to-r from-teal-600 to-teal-700 rounded-full flex items-center justify-center text-white font-bold text-sm">3</span>
+                Types of Cookies We Use
+              </h2>
+              <div className="bg-white/80 backdrop-blur-sm border border-white/30 rounded-2xl p-6 transition-all duration-300 hover:translate-y-[-2px] hover:shadow-[0_12px_40px_rgba(0,0,0,0.15)]">
+                <div className="space-y-4">
+                  <div className="flex items-start gap-4 p-4 bg-gradient-to-r from-teal-50/50 to-white/50 rounded-xl border border-teal-100/50">
+                    <div className="w-12 h-12 bg-gradient-to-r from-teal-500 to-teal-600 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
+                      S
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-teal-800 mb-1">Session Cookies</h3>
+                      <p className="text-gray-700 text-sm">Temporary cookies that are erased when you close your browser.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-4 p-4 bg-gradient-to-r from-blue-50/50 to-white/50 rounded-xl border border-blue-100/50">
+                    <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
+                      P
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-blue-800 mb-1">Persistent Cookies</h3>
+                      <p className="text-gray-700 text-sm">Remain on your device for a set period or until deleted.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-4 p-4 bg-gradient-to-r from-amber-50/50 to-white/50 rounded-xl border border-amber-100/50">
+                    <div className="w-12 h-12 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
+                      3
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-amber-800 mb-1">Third-Party Cookies</h3>
+                      <p className="text-gray-700 text-sm">Cookies set by third-party services (e.g. Google Analytics).</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-        <h2 className="text-2xl font-semibold mt-6 mb-2">4. Managing Cookies</h2>
-        <p className="mb-4">
-          You can manage or delete cookies in your browser settings at any time. You can also control non-essential cookies using our Cookie Consent banner.
-        </p>
+            {/* Section 4 */}
+            <div className="mb-8">
+              <h2 className="text-3xl font-semibold text-teal-800 mb-4 flex items-center gap-3">
+                <span className="w-8 h-8 bg-gradient-to-r from-teal-600 to-teal-700 rounded-full flex items-center justify-center text-white font-bold text-sm">4</span>
+                Managing Cookies
+              </h2>
+              <div className="bg-white/80 backdrop-blur-sm border border-white/30 rounded-2xl p-6 transition-all duration-300 hover:translate-y-[-2px] hover:shadow-[0_12px_40px_rgba(0,0,0,0.15)]">
+                <p className="text-gray-700 mb-4">
+                  You can manage or delete cookies in your browser settings at any time. You can also control non-essential cookies using our Cookie Consent banner.
+                </p>
+                <div className="bg-gradient-to-r from-teal-500 to-teal-600 text-white p-4 rounded-xl">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-2xl">⚙️</span>
+                    <span className="font-semibold">Cookie Management Tools</span>
+                  </div>
+                  <p className="text-sm opacity-90">Access your browser settings or use our cookie consent banner to customize your preferences.</p>
+                </div>
+              </div>
+            </div>
 
-        <h2 className="text-2xl font-semibold mt-6 mb-2">5. Third-Party Services</h2>
-        <p className="mb-4">
-          We may use third-party services like Google Analytics to track website usage. These services may set their own cookies, which we do not control.
-        </p>
+            {/* Section 5 */}
+            <div className="mb-8">
+              <h2 className="text-3xl font-semibold text-teal-800 mb-4 flex items-center gap-3">
+                <span className="w-8 h-8 bg-gradient-to-r from-teal-600 to-teal-700 rounded-full flex items-center justify-center text-white font-bold text-sm">5</span>
+                Third-Party Services
+              </h2>
+              <div className="bg-white/80 backdrop-blur-sm border border-white/30 rounded-2xl p-6 transition-all duration-300 hover:translate-y-[-2px] hover:shadow-[0_12px_40px_rgba(0,0,0,0.15)]">
+                <p className="text-gray-700">
+                  We may use third-party services like Google Analytics to track website usage. These services may set their own cookies, which we do not control.
+                </p>
+              </div>
+            </div>
 
-        <h2 className="text-2xl font-semibold mt-6 mb-2">6. Changes to This Cookie Policy</h2>
-        <p className="mb-4">
-          We may update this Cookie Policy from time to time. Changes will be posted on this page.
-        </p>
+            {/* Section 6 */}
+            <div className="mb-8">
+              <h2 className="text-3xl font-semibold text-teal-800 mb-4 flex items-center gap-3">
+                <span className="w-8 h-8 bg-gradient-to-r from-teal-600 to-teal-700 rounded-full flex items-center justify-center text-white font-bold text-sm">6</span>
+                Changes to This Cookie Policy
+              </h2>
+              <div className="bg-white/80 backdrop-blur-sm border border-white/30 rounded-2xl p-6 transition-all duration-300 hover:translate-y-[-2px] hover:shadow-[0_12px_40px_rgba(0,0,0,0.15)]">
+                <p className="text-gray-700">
+                  We may update this Cookie Policy from time to time. Changes will be posted on this page.
+                </p>
+              </div>
+            </div>
 
-        <h2 className="text-2xl font-semibold mt-6 mb-2">7. Contact Us</h2>
-        <p className="mb-4">
-          If you have questions about this policy, please contact us at <strong>privacy@findtrustedcleaners.co.uk</strong>.
-        </p>
+            {/* Section 7 */}
+            <div className="mb-8">
+              <h2 className="text-3xl font-semibold text-teal-800 mb-4 flex items-center gap-3">
+                <span className="w-8 h-8 bg-gradient-to-r from-teal-600 to-teal-700 rounded-full flex items-center justify-center text-white font-bold text-sm">7</span>
+                Contact Us
+              </h2>
+              <div className="bg-white/80 backdrop-blur-sm border border-white/30 rounded-2xl p-6 transition-all duration-300 hover:translate-y-[-2px] hover:shadow-[0_12px_40px_rgba(0,0,0,0.15)]">
+                <p className="text-gray-700 mb-4">
+                  If you have questions about this policy, please contact us at:
+                </p>
+                <div className="bg-gradient-to-r from-teal-500 to-teal-600 text-white p-4 rounded-xl inline-block">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">📧</span>
+                    <span className="font-semibold">privacy@findtrustedcleaners.co.uk</span>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-        <p className="text-sm mt-8">
-          Please also read our{' '}
-          <Link href="/privacy-policy" className="underline text-teal-700">Privacy Policy</Link> for more details on how we protect your personal data.
-        </p>
-      </main>
+            {/* Privacy Policy Link */}
+            <div className="bg-gradient-to-r from-teal-50 to-teal-100/50 rounded-2xl p-6 border border-teal-200/50">
+              <p className="text-gray-700">
+                Please also read our{' '}
+                <Link 
+                  href="/privacy-policy" 
+                  className="text-teal-700 font-semibold hover:text-teal-800 transition-colors duration-300 underline underline-offset-2"
+                >
+                  Privacy Policy
+                </Link>
+                {' '}for more details on how we protect your personal data.
+              </p>
+            </div>
+          </div>
+        </main>
+      </div>
 
-      {/* Footer */}
-      <footer className="bg-[#0D9488] text-white border-t py-6 px-6 text-center text-sm">
-        <nav className="flex flex-wrap justify-center gap-4 mb-2">
-          <Link href="/about">About Us</Link>
-          <Link href="/terms">Terms & Conditions</Link>
-          <Link href="/privacy-policy">Privacy Policy</Link>
-          <Link href="/cookie-policy">Cookie Policy</Link>
-          <Link href="/contact">Contact</Link>
-          <Link href="/faq">FAQs</Link>
-          <Link href="/sitemap">Site Map</Link>
-        </nav>
+      {/* Footer with glass morphism */}
+      <footer className="bg-gradient-to-r from-teal-600 to-teal-700 text-white border-t border-teal-500/20 py-8 px-6">
+        <div className="max-w-6xl mx-auto">
+          {/* Navigation Links */}
+          <nav className="flex flex-wrap justify-center gap-6 mb-6">
+            {[
+              { href: '/about', label: 'About Us' },
+              { href: '/terms', label: 'Terms & Conditions' },
+              { href: '/privacy-policy', label: 'Privacy Policy' },
+              { href: '/cookie-policy', label: 'Cookie Policy' },
+              { href: '/contact', label: 'Contact' },
+              { href: '/faq', label: 'FAQs' },
+              { href: '/sitemap', label: 'Site Map' }
+            ].map((link, index) => (
+              <Link 
+                key={index}
+                href={link.href}
+                className="text-white/90 hover:text-white hover:scale-105 transition-all duration-300 font-medium"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
 
-        <p className="mb-2">&copy; {new Date().getFullYear()} FindTrustedCleaners. All rights reserved.</p>
+          {/* Copyright */}
+          <div className="text-center">
+            <p className="text-white/90 mb-4 text-lg">
+              &copy; {new Date().getFullYear()} FindTrustedCleaners. All rights reserved.
+            </p>
 
-        <p className="text-xs">
-          FindTrustedCleaners is committed to GDPR compliance. Read our <Link href="/privacy-policy" className="underline">Privacy Policy</Link> and <Link href="/cookie-policy" className="underline">Cookie Policy</Link> for details on how we protect your data. You may <Link href="/contact" className="underline">contact us</Link> at any time to manage your personal information.
-        </p>
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 max-w-4xl mx-auto">
+              <p className="text-white/80 text-sm leading-relaxed">
+                FindTrustedCleaners is committed to GDPR compliance. Read our{' '}
+                <Link href="/privacy-policy" className="text-white underline underline-offset-2 hover:text-teal-100 transition-colors duration-300">
+                  Privacy Policy
+                </Link>
+                {' '}and{' '}
+                <Link href="/cookie-policy" className="text-white underline underline-offset-2 hover:text-teal-100 transition-colors duration-300">
+                  Cookie Policy
+                </Link>
+                {' '}for details on how we protect your data. You may{' '}
+                <Link href="/contact" className="text-white underline underline-offset-2 hover:text-teal-100 transition-colors duration-300">
+                  contact us
+                </Link>
+                {' '}at any time to manage your personal information.
+              </p>
+            </div>
+          </div>
+        </div>
       </footer>
+
+      {/* Add custom animation keyframes */}
+      <style jsx>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
     </>
   );
 }

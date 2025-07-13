@@ -18,10 +18,14 @@ export default function CleanerDashboardComponent() {
   const [message, setMessage] = useState('');
   const [editMode, setEditMode] = useState(false);
   const [editData, setEditData] = useState({});
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deleting, setDeleting] = useState(false);
   
   // Image upload states
   const [selectedFile, setSelectedFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
+  const [imageUploading, setImageUploading] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -35,22 +39,21 @@ export default function CleanerDashboardComponent() {
             return;
           }
           const cleanerUser = {
-  ...data.user,
-  _id: data.user._id?.toString() || data.user.id?.toString(),
-};
+            ...data.user,
+            _id: data.user._id?.toString() || data.user.id?.toString(),
+          };
 
+          setCleaner(cleanerUser);
 
-setCleaner(cleanerUser);
+          const cleanerData = {
+            ...cleanerUser,
+            services: cleanerUser.services || [],
+            availability: cleanerUser.availability || {},
+            businessInsurance: cleanerUser.businessInsurance || false,
+          };
 
-const cleanerData = {
-  ...cleanerUser,
-  services: cleanerUser.services || [],
-  availability: cleanerUser.availability || {},
-  businessInsurance: cleanerUser.businessInsurance || false,
-};
-
-setFormData(cleanerData);
-setEditData(cleanerData);
+          setFormData(cleanerData);
+          setEditData(cleanerData);
 
         } catch {
           router.push('/login');
@@ -129,50 +132,48 @@ setEditData(cleanerData);
     }
   };
 
+
   const handleSave = async () => {
-  setSaving(true);
-  console.log('Saving availability...');
+    setSaving(true);
+    console.log('Saving availability...');
 
-  // ✅ Reformat availability into { Monday: { 7: true }, ... }
-  const reformattedAvailability = {};
-for (const day of days) {
-  reformattedAvailability[day] = {};
-  for (const hour of hours) {
-    const value = formData.availability?.[day]?.[hour];
-    if (value !== undefined) {
-      // Ensure key is string — not number
-      reformattedAvailability[day][hour.toString()] = value;
+    // ✅ Reformat availability into { Monday: { 7: true }, ... }
+    const reformattedAvailability = {};
+    for (const day of days) {
+      reformattedAvailability[day] = {};
+      for (const hour of hours) {
+        const value = formData.availability?.[day]?.[hour];
+        if (value !== undefined) {
+          // Ensure key is string — not number
+          reformattedAvailability[day][hour.toString()] = value;
+        }
+      }
     }
-  }
-}
 
+    try {
+      const res = await fetch(`/api/cleaners/${cleaner._id}`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...formData,
+          availability: reformattedAvailability, // 🧠 THIS is what needs saving
+        }),
+      });
 
+      if (!res.ok) throw new Error('Update failed');
 
-  try {
-    const res = await fetch(`/api/cleaners/${cleaner._id}`, {
-      method: 'PUT',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ...formData,
-        availability: reformattedAvailability, // 🧠 THIS is what needs saving
-      }),
-    });
-
-    if (!res.ok) throw new Error('Update failed');
-
-    const data = await res.json();
-    setFormData(data.cleaner); // 🧠 Refresh the state
-    setMessage('✅ Changes saved successfully!');
-    setAvailabilityChanged(false);
-  } catch (err) {
-    console.error('Save error:', err);
-    setMessage('❌ Error saving changes.');
-  } finally {
-    setSaving(false);
-  }
-};
-
+      const data = await res.json();
+      setFormData(data.cleaner); // 🧠 Refresh the state
+      setMessage('✅ Changes saved successfully!');
+      setAvailabilityChanged(false);
+    } catch (err) {
+      console.error('Save error:', err);
+      setMessage('❌ Error saving changes.');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleEditToggle = () => {
     if (editMode) {
@@ -236,10 +237,11 @@ for (const day of days) {
     }));
   };
 
-  // Image upload handler
-  const handleUpload = async () => {
+  // Enhanced image upload handler
+  const handleImageUpload = async () => {
     if (!selectedFile) return alert('Please select a file.');
     
+    setImageUploading(true);
     const formDataUpload = new FormData();
     formDataUpload.append('file', selectedFile);
     
@@ -259,7 +261,7 @@ for (const day of days) {
         });
         
         if (updateRes.ok) {
-          alert('Profile picture uploaded successfully!');
+          setMessage('✅ Profile picture updated successfully!');
           setFormData((prev) => ({ ...prev, image: data.url }));
           setEditData((prev) => ({ ...prev, image: data.url }));
           setImagePreview('');
@@ -273,26 +275,60 @@ for (const day of days) {
     } catch (err) {
       console.error('Upload error:', err);
       alert('Upload failed.');
+    } finally {
+      setImageUploading(false);
+    }
+  };
+
+  // Delete profile handler
+  const handleDeleteProfile = async () => {
+    if (deleteConfirmText !== 'DELETE') {
+      alert('Please type DELETE to confirm');
+      return;
+    }
+
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/cleaners/${cleaner._id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+
+      if (res.ok) {
+        // Logout and redirect
+        await fetch('/api/auth/logout', { 
+          method: 'POST', 
+          credentials: 'include' 
+        });
+        router.push('/');
+      } else {
+        alert('Failed to delete profile. Please try again.');
+      }
+    } catch (err) {
+      console.error('Delete error:', err);
+      alert('Error deleting profile.');
+    } finally {
+      setDeleting(false);
+      setShowDeleteModal(false);
     }
   };
 
   const handleUpgradeClick = async () => {
-  try {
-    const res = await fetch('/api/stripe/create-checkout-session', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cleanerId: cleaner._id }),
-    });
-    const data = await res.json();
-    if (data.url) {
-      window.location.href = data.url;
+    try {
+      const res = await fetch('/api/stripe/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cleanerId: cleaner._id }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (err) {
+      console.error('Upgrade failed:', err);
+      alert('Something went wrong while starting your upgrade.');
     }
-  } catch (err) {
-    console.error('Upgrade failed:', err);
-    alert('Something went wrong while starting your upgrade.');
-  }
-};
- 
+  };
 
   // Navigation functions
   const handleLogout = async () => {
@@ -319,76 +355,127 @@ for (const day of days) {
     <div className="min-h-screen bg-gradient-to-br from-teal-600 to-teal-800 py-6 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-white rounded-2xl shadow-xl mb-6 p-6">
+        <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl mb-6 p-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-teal-700 mb-2">Cleaner Dashboard</h1>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent mb-2">
+                Cleaner Dashboard
+              </h1>
               <p className="text-gray-600">Manage your cleaning services and availability</p>
             </div>
             <div className="flex flex-wrap gap-3 mt-4 md:mt-0">
               {/* Navigation Buttons */}
               <button
                 onClick={handleGoHome}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg font-medium transition-all duration-300 hover:transform hover:-translate-y-0.5 hover:shadow-lg"
               >
                 🏠 Home
               </button>
               <button
                 onClick={handleLogout}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
+                className="px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white rounded-lg font-medium transition-all duration-300 hover:transform hover:-translate-y-0.5 hover:shadow-lg"
               >
                 🔐 Logout
               </button>
               {/* Profile Edit Buttons */}
               <button
                 onClick={handleEditToggle}
-                className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium transition-colors"
+                className="px-4 py-2 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white rounded-lg font-medium transition-all duration-300 hover:transform hover:-translate-y-0.5 hover:shadow-lg"
               >
-                {editMode ? 'Cancel Edit' : 'Edit Profile'}
+                {editMode ? '✕ Cancel Edit' : '✏️ Edit Profile'}
               </button>
               {editMode && (
                 <button
                   onClick={handleEditSave}
                   disabled={saving}
-                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium disabled:opacity-50 transition-colors"
+                  className="px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-lg font-medium disabled:opacity-50 transition-all duration-300 hover:transform hover:-translate-y-0.5 hover:shadow-lg"
                 >
-                  {saving ? 'Saving...' : 'Save Profile'}
+                  {saving ? '⏳ Saving...' : '💾 Save Profile'}
                 </button>
               )}
+              {/* Delete Profile Button */}
+              <button
+                onClick={() => setShowDeleteModal(true)}
+                className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg font-medium transition-all duration-300 hover:transform hover:-translate-y-0.5 hover:shadow-lg"
+              >
+                🗑️ Delete Profile
+              </button>
             </div>
           </div>
         </div>
 
+        {/* Delete Confirmation Modal */}
+        {showDeleteModal && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white/90 backdrop-blur-md border border-white/20 rounded-2xl shadow-2xl max-w-md w-full p-6">
+              <h3 className="text-2xl font-bold text-red-600 mb-4">⚠️ Delete Profile</h3>
+              <p className="text-gray-700 mb-4">
+                This action cannot be undone. This will permanently delete your cleaner profile and all associated data.
+              </p>
+              <p className="text-gray-700 mb-4">
+                Type <strong>DELETE</strong> to confirm:
+              </p>
+              <input
+                type="text"
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 mb-4"
+                placeholder="Type DELETE"
+              />
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setDeleteConfirmText('');
+                  }}
+                  className="flex-1 px-4 py-2 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white rounded-lg font-medium transition-all duration-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteProfile}
+                  disabled={deleteConfirmText !== 'DELETE' || deleting}
+                  className="flex-1 px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white rounded-lg font-medium disabled:opacity-50 transition-all duration-300"
+                >
+                  {deleting ? '🗑️ Deleting...' : '🗑️ Delete Profile'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {message && (
-          <div className={`mb-6 text-center text-white py-3 px-4 rounded-lg font-medium ${
-            message.includes('✅') ? 'bg-green-500' : 'bg-red-500'
+          <div className={`mb-6 text-center text-white py-3 px-4 rounded-lg font-medium backdrop-blur-md border border-white/20 ${
+            message.includes('✅') ? 'bg-green-500/80' : 'bg-red-500/80'
           }`}>
             {message}
           </div>
         )}
 
         {/* Premium Upgrade Section */}
-{!cleaner?.isPremium && (
-  <div className="bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-3 rounded-lg mb-6">
-    <p className="mb-2 font-semibold">You are using a Free Account</p>
-    <button
-      onClick={handleUpgradeClick}
-      className="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2 rounded-lg font-medium"
-    >
-      Upgrade to Premium (£7.99/month)
-    </button>
-  </div>
-)}
+        {!cleaner?.isPremium && (
+          <div className="bg-gradient-to-r from-amber-400/20 to-amber-500/20 backdrop-blur-md border border-amber-400/30 text-amber-800 px-4 py-3 rounded-lg mb-6">
+            <p className="mb-2 font-semibold">✨ You are using a Free Account</p>
+            <button
+              onClick={handleUpgradeClick}
+              className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white px-6 py-2 rounded-lg font-medium transition-all duration-300 hover:transform hover:-translate-y-0.5 hover:shadow-lg"
+            >
+              💎 Upgrade to Premium (£7.99/month)
+            </button>
+          </div>
+        )}
 
-{cleaner?.isPremium && (
-  <div className="bg-green-100 border border-green-400 text-green-800 px-4 py-3 rounded-lg mb-6 font-semibold">
-    ✨ You are a Premium Cleaner!
-  </div>
-)}
+        {cleaner?.isPremium && (
+          <div className="bg-gradient-to-r from-green-400/20 to-green-500/20 backdrop-blur-md border border-green-400/30 text-green-800 px-4 py-3 rounded-lg mb-6 font-semibold">
+            ✨ You are a Premium Cleaner!
+          </div>
+        )}
 
         {/* Profile Information */}
-        <div className="bg-white rounded-2xl shadow-xl mb-6 p-6">
-          <h2 className="text-2xl font-bold text-teal-700 mb-6">Profile Information</h2>
+        <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl mb-6 p-6">
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent mb-6">
+            👤 Profile Information
+          </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="space-y-2">
@@ -398,7 +485,7 @@ for (const day of days) {
                   type="text"
                   value={editData.realName || ''}
                   onChange={(e) => handleInputChange('realName', e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                  className="w-full p-3 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-300"
                 />
               ) : (
                 <p className="text-gray-800 font-medium">{formData.realName || 'Not set'}</p>
@@ -412,7 +499,7 @@ for (const day of days) {
                   type="text"
                   value={editData.companyName || ''}
                   onChange={(e) => handleInputChange('companyName', e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                  className="w-full p-3 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-300"
                 />
               ) : (
                 <p className="text-gray-800 font-medium">{formData.companyName || 'Not set'}</p>
@@ -426,7 +513,7 @@ for (const day of days) {
                   type="email"
                   value={editData.email || ''}
                   onChange={(e) => handleInputChange('email', e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                  className="w-full p-3 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-300"
                 />
               ) : (
                 <p className="text-gray-800 font-medium">{formData.email || 'Not set'}</p>
@@ -440,7 +527,7 @@ for (const day of days) {
                   type="tel"
                   value={editData.phone || ''}
                   onChange={(e) => handleInputChange('phone', e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                  className="w-full p-3 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-300"
                 />
               ) : (
                 <p className="text-gray-800 font-medium">{formData.phone || 'Not set'}</p>
@@ -454,7 +541,7 @@ for (const day of days) {
                   type="number"
                   value={editData.rates || ''}
                   onChange={(e) => handleInputChange('rates', e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                  className="w-full p-3 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-300"
                 />
               ) : (
                 <p className="text-gray-800 font-medium">£{formData.rates || '0'}</p>
@@ -467,7 +554,7 @@ for (const day of days) {
                 <select
                   value={editData.businessInsurance ? 'true' : 'false'}
                   onChange={(e) => handleInputChange('businessInsurance', e.target.value === 'true')}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                  className="w-full p-3 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-300"
                 >
                   <option value="false">No</option>
                   <option value="true">Yes</option>
@@ -485,7 +572,7 @@ for (const day of days) {
                   value={editData.services?.join(', ') || ''}
                   onChange={(e) => handleServicesChange(e.target.value)}
                   placeholder="e.g., Deep cleaning, Regular cleaning, Move-in/out"
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                  className="w-full p-3 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-300"
                 />
               ) : (
                 <p className="text-gray-800 font-medium">
@@ -494,20 +581,36 @@ for (const day of days) {
               )}
             </div>
 
-            {/* Profile Image Upload */}
+            {/* Enhanced Profile Image Upload */}
             <div className="space-y-2 md:col-span-2 lg:col-span-3">
-              <label className="text-sm font-medium text-gray-600">Profile Picture</label>
+              <label className="text-sm font-medium text-gray-600">📸 Profile Picture</label>
               
-              {formData.image && !editMode && (
-                <img 
-                  src={formData.image} 
-                  alt="Profile" 
-                  className="w-32 h-32 object-cover rounded-full mb-4 border-4 border-teal-200" 
-                />
-              )}
-              
-              {editMode && (
-                <>
+              <div className="flex flex-col lg:flex-row gap-6 items-start">
+                {/* Current/Preview Image */}
+                <div className="flex-shrink-0">
+                  {(imagePreview || formData.image) && (
+                    <div className="relative">
+                      <img 
+                        src={imagePreview || formData.image} 
+                        alt="Profile" 
+                        className="w-32 h-32 object-cover rounded-full border-4 border-teal-200 shadow-lg transition-transform duration-300 hover:scale-105" 
+                      />
+                      {!imagePreview && (
+                        <div className="absolute -top-2 -right-2 bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs">
+                          ✓
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {!imagePreview && !formData.image && (
+                    <div className="w-32 h-32 bg-gray-200 rounded-full border-4 border-gray-300 flex items-center justify-center">
+                      <span className="text-gray-500 text-4xl">👤</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Upload Controls */}
+                <div className="flex-1 space-y-4">
                   <input
                     type="file"
                     accept="image/*"
@@ -518,44 +621,40 @@ for (const day of days) {
                         setImagePreview(URL.createObjectURL(file));
                       }
                     }}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                    className="w-full p-3 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-300"
                   />
                   
-                  {imagePreview && (
-                    <div className="mt-4">
-                      <p className="text-sm text-gray-600 mb-2">Preview:</p>
-                      <img 
-                        src={imagePreview} 
-                        alt="Preview" 
-                        className="w-32 h-32 object-cover rounded-full border-4 border-teal-200" 
-                      />
-                    </div>
-                  )}
+                  <div className="flex flex-wrap gap-3">
+                    <button
+                      onClick={handleImageUpload}
+                      disabled={!selectedFile || imageUploading}
+                      className="px-6 py-3 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white rounded-lg font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:transform hover:-translate-y-0.5 hover:shadow-lg"
+                    >
+                      {imageUploading ? '📤 Uploading...' : '📤 Upload New Picture'}
+                    </button>
+                    
+                    {imagePreview && (
+                      <button
+                        onClick={() => {
+                          setImagePreview('');
+                          setSelectedFile(null);
+                        }}
+                        className="px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white rounded-lg font-medium transition-all duration-300 hover:transform hover:-translate-y-0.5 hover:shadow-lg"
+                      >
+                        🗑️ Cancel
+                      </button>
+                    )}
+                  </div>
                   
-                  {formData.image && !imagePreview && (
-                    <div className="mt-4">
-                      <p className="text-sm text-gray-600 mb-2">Current Profile Picture:</p>
-                      <img 
-                        src={formData.image} 
-                        alt="Current Profile" 
-                        className="w-32 h-32 object-cover rounded-full border-4 border-teal-200" 
-                      />
-                    </div>
-                  )}
-                  
-                  <button
-                    onClick={handleUpload}
-                    disabled={!selectedFile}
-                    className="mt-4 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Upload Profile Picture
-                  </button>
-                </>
-              )}
+                  <p className="text-sm text-gray-600">
+                    📝 Upload a professional headshot for better client trust. Max size: 5MB
+                  </p>
+                </div>
+              </div>
             </div>
 
             <div className="space-y-2 md:col-span-2 lg:col-span-3">
-              <label className="text-sm font-medium text-gray-600">Address</label>
+              <label className="text-sm font-medium text-gray-600">📍 Address</label>
               {editMode ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                   <input
@@ -563,33 +662,53 @@ for (const day of days) {
                     value={editData.address?.houseNameNumber || ''}
                     onChange={(e) => handleInputChange('address.houseNameNumber', e.target.value)}
                     placeholder="House/Number"
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                    className="w-full p-3 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-300"
                   />
                   <input
                     type="text"
                     value={editData.address?.street || ''}
                     onChange={(e) => handleInputChange('address.street', e.target.value)}
                     placeholder="Street"
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                    className="w-full p-3 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-300"
                   />
                   <input
                     type="text"
                     value={editData.address?.county || ''}
                     onChange={(e) => handleInputChange('address.county', e.target.value)}
                     placeholder="County"
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                    className="w-full p-3 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-300"
                   />
                   <input
                     type="text"
                     value={editData.address?.postcode || ''}
                     onChange={(e) => handleInputChange('address.postcode', e.target.value)}
                     placeholder="Postcode"
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                    className="w-full p-3 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-300"
                   />
                 </div>
               ) : (
                 <p className="text-gray-800 font-medium">
-                  {formData.address?.houseNameNumber} {formData.address?.street}, {formData.address?.county}, {formData.address?.postcode}
+                  {formData.address ? 
+                    `${formData.address.houseNameNumber || ''} ${formData.address.street || ''}, ${formData.address.county || ''} ${formData.address.postcode || ''}`.trim() 
+                    : 'Address not set'
+                  }
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2 md:col-span-2 lg:col-span-3">
+              <label className="text-sm font-medium text-gray-600">📝 Description</label>
+              {editMode ? (
+                <textarea
+                  value={editData.description || ''}
+                  onChange={(e) => handleInputChange('description', e.target.value)}
+                  placeholder="Tell clients about your experience and what makes you special..."
+                  rows="4"
+                  className="w-full p-3 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-300 resize-none"
+                />
+              ) : (
+                <p className="text-gray-800 font-medium">
+                  {formData.description || 'No description provided'}
                 </p>
               )}
             </div>
@@ -597,148 +716,196 @@ for (const day of days) {
         </div>
 
         {/* Availability Grid */}
-        <div className="bg-white rounded-2xl shadow-xl p-6">
-          <h2 className="text-2xl font-bold text-teal-700 mb-6">Availability Grid</h2>
-          
-          {/* Desktop View */}
-          <div className="hidden lg:block overflow-x-auto">
-            <div className="grid grid-cols-[120px_repeat(13,_minmax(70px,_1fr))] gap-1 text-sm">
-              <div className="p-2 font-bold text-center text-gray-700"></div>
-              {hours.map(hour => (
-                <div key={hour} className="p-2 text-center font-bold text-gray-700 bg-gray-50 rounded">
-                  {hour}:00
-                </div>
-              ))}
+        <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl mb-6 p-6">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent mb-4 md:mb-0">
+              🗓️ Availability Management
+            </h2>
+            {availabilityChanged && (
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-lg font-medium transition-all duration-300 hover:transform hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-50"
+              >
+                {saving ? '⏳ Saving...' : '💾 Save Changes'}
+              </button>
+            )}
+          </div>
 
-              {days.map(day => (
-                <React.Fragment key={day}>
-                  <div className="p-2 font-bold text-gray-800 bg-gray-50 rounded flex items-center">
-                    {day}
+          <div className="overflow-x-auto">
+            <div className="min-w-full">
+              <div className="grid grid-cols-8 gap-2 mb-4">
+                <div className="font-semibold text-gray-700 text-center py-2">Time</div>
+                {days.map(day => (
+                  <div key={day} className="font-semibold text-gray-700 text-center py-2 text-sm">
+                    {day.slice(0, 3)}
                   </div>
-                  {hours.map(hour => {
+                ))}
+              </div>
+
+              {hours.map(hour => (
+                <div key={hour} className="grid grid-cols-8 gap-2 mb-2">
+                  <div className="font-medium text-gray-700 text-center py-3 bg-white/40 backdrop-blur-sm rounded-lg">
+                    {hour}:00
+                  </div>
+                  {days.map(day => {
                     const slot = formData.availability?.[day]?.[hour];
                     const status = typeof slot === 'object' ? slot.status : slot;
-
-                    if (status === 'pending') {
-                      return (
-                        <div key={`${day}-${hour}`} className="p-2 bg-yellow-400 text-white rounded flex flex-col items-center justify-center min-h-[60px]">
-                          <span className="text-xs font-medium mb-1">Pending</span>
-                          <div className="flex space-x-1">
-                            <button 
-                              className="bg-green-600 hover:bg-green-700 px-2 py-1 rounded text-xs transition-colors" 
-                              onClick={() => handleConfirm(day, hour)}
-                            >
-                              ✔️
-                            </button>
-                            <button 
-                              className="bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-xs transition-colors" 
-                              onClick={() => handleDecline(day, hour)}
-                            >
-                              ❌
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    }
-
-                    const isBooked = status === false;
                     const isAvailable = status === true;
                     const isUnavailable = status === 'unavailable';
+                    const isPending = status === 'pending';
+                    const isBooked = status === 'booked';
 
                     return (
-                      <div
-                        key={`${day}-${hour}`}
-                        className={`p-2 min-h-[60px] flex items-center justify-center rounded cursor-pointer transition-all font-medium text-sm ${
-                          isBooked
-                            ? 'bg-red-600 text-white cursor-not-allowed'
-                            : isUnavailable
-                              ? 'bg-red-400 text-white hover:bg-red-500'
-                              : isAvailable
-                                ? 'bg-green-500 text-white hover:bg-green-600'
-                                : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
-                        }`}
-                        onClick={() => toggleAvailability(day, hour)}
-                      >
-                        {isBooked ? 'Booked' : isUnavailable ? 'Unavailable' : isAvailable ? 'Available' : 'Set'}
+                      <div key={`${day}-${hour}`} className="relative">
+                        <button
+                          onClick={() => toggleAvailability(day, hour)}
+                          disabled={isPending || isBooked}
+                          className={`w-full h-12 rounded-lg font-medium text-sm transition-all duration-300 hover:transform hover:-translate-y-0.5 hover:shadow-lg border-2 ${
+                            isAvailable
+                              ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white border-green-400'
+                              : isUnavailable
+                              ? 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white border-red-400'
+                              : isPending
+                              ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white border-amber-400 cursor-not-allowed'
+                              : isBooked
+                              ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white border-blue-400 cursor-not-allowed'
+                              : 'bg-white/40 backdrop-blur-sm hover:bg-white/60 text-gray-600 border-gray-300'
+                          }`}
+                        >
+                          {isAvailable && '✓'}
+                          {isUnavailable && '✗'}
+                          {isPending && '⏳'}
+                          {isBooked && '📅'}
+                          {!status && '○'}
+                        </button>
+
+                        {/* Booking Action Buttons */}
+                        {isPending && (
+                          <div className="absolute top-14 left-0 right-0 z-10 bg-white/95 backdrop-blur-sm border border-white/20 rounded-lg p-2 shadow-lg">
+                            <div className="flex gap-1">
+                              <button
+                                onClick={() => handleConfirm(day, hour)}
+                                className="flex-1 px-2 py-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded text-xs font-medium transition-all duration-300"
+                              >
+                                ✓
+                              </button>
+                              <button
+                                onClick={() => handleDecline(day, hour)}
+                                className="flex-1 px-2 py-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded text-xs font-medium transition-all duration-300"
+                              >
+                                ✗
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
-                </React.Fragment>
+                </div>
               ))}
             </div>
           </div>
 
-          {/* Mobile/Tablet View */}
-          <div className="lg:hidden space-y-6">
-            {days.map(day => (
-              <div key={day} className="bg-gray-50 rounded-lg p-4">
-                <h3 className="text-lg font-bold text-gray-800 mb-3">{day}</h3>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                  {hours.map(hour => {
-                    const slot = formData.availability?.[day]?.[hour];
-                    const status = typeof slot === 'object' ? slot.status : slot;
-
-                    if (status === 'pending') {
-                      return (
-                        <div key={`${day}-${hour}`} className="p-3 bg-yellow-400 text-white rounded-lg flex flex-col items-center justify-center">
-                          <span className="text-xs font-medium mb-2">{hour}:00</span>
-                          <span className="text-xs mb-2">Pending</span>
-                          <div className="flex space-x-1">
-                            <button 
-                              className="bg-green-600 hover:bg-green-700 px-2 py-1 rounded text-xs transition-colors" 
-                              onClick={() => handleConfirm(day, hour)}
-                            >
-                              ✔️
-                            </button>
-                            <button 
-                              className="bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-xs transition-colors" 
-                              onClick={() => handleDecline(day, hour)}
-                            >
-                              ❌
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    }
-
-                    const isBooked = status === false;
-                    const isAvailable = status === true;
-                    const isUnavailable = status === 'unavailable';
-
-                    return (
-                      <div
-                        key={`${day}-${hour}`}
-                        className={`p-3 rounded-lg cursor-pointer transition-all text-center font-medium ${
-                          isBooked
-                            ? 'bg-red-600 text-white cursor-not-allowed'
-                            : isUnavailable
-                              ? 'bg-red-400 text-white hover:bg-red-500'
-                              : isAvailable
-                                ? 'bg-green-500 text-white hover:bg-green-600'
-                                : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
-                        }`}
-                        onClick={() => toggleAvailability(day, hour)}
-                      >
-                        <div className="text-xs font-bold mb-1">{hour}:00</div>
-                        <div className="text-xs">
-                          {isBooked ? 'Booked' : isUnavailable ? 'Unavailable' : isAvailable ? 'Available' : 'Set'}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+          {/* Legend */}
+          <div className="mt-6 p-4 bg-white/40 backdrop-blur-sm rounded-lg">
+            <h3 className="font-semibold text-gray-700 mb-3">Legend:</h3>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-gradient-to-r from-green-500 to-green-600 rounded border-2 border-green-400"></div>
+                <span className="text-gray-700">Available</span>
               </div>
-            ))}
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-gradient-to-r from-red-500 to-red-600 rounded border-2 border-red-400"></div>
+                <span className="text-gray-700">Unavailable</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-gradient-to-r from-amber-500 to-amber-600 rounded border-2 border-amber-400"></div>
+                <span className="text-gray-700">Pending</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-gradient-to-r from-blue-500 to-blue-600 rounded border-2 border-blue-400"></div>
+                <span className="text-gray-700">Booked</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-white/40 backdrop-blur-sm rounded border-2 border-gray-300"></div>
+                <span className="text-gray-700">Not set</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+          <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl p-6 text-center hover:transform hover:-translate-y-1 transition-all duration-300">
+            <div className="text-3xl mb-2">📊</div>
+            <h3 className="text-xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent">
+              Profile Views
+            </h3>
+            <p className="text-2xl font-bold text-gray-800 mt-2">
+              {formData.profileViews || 0}
+            </p>
           </div>
 
-          {/* Save Button */}
-          <div className="flex justify-end mt-6">
+          <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl p-6 text-center hover:transform hover:-translate-y-1 transition-all duration-300">
+            <div className="text-3xl mb-2">⭐</div>
+            <h3 className="text-xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent">
+              Rating
+            </h3>
+            <p className="text-2xl font-bold text-gray-800 mt-2">
+              {formData.rating ? `${formData.rating.toFixed(1)}/5` : 'N/A'}
+            </p>
+          </div>
+
+          <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl p-6 text-center hover:transform hover:-translate-y-1 transition-all duration-300">
+            <div className="text-3xl mb-2">🏆</div>
+            <h3 className="text-xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent">
+              Completed Jobs
+            </h3>
+            <p className="text-2xl font-bold text-gray-800 mt-2">
+              {formData.completedJobs || 0}
+            </p>
+          </div>
+
+          <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl p-6 text-center hover:transform hover:-translate-y-1 transition-all duration-300">
+            <div className="text-3xl mb-2">💎</div>
+            <h3 className="text-xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent">
+              Account Status
+            </h3>
+            <p className="text-lg font-bold text-gray-800 mt-2">
+              {formData.isPremium ? '✨ Premium' : '🆓 Free'}
+            </p>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl p-6">
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent mb-6">
+            ⚡ Quick Actions
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <button
-              onClick={handleSave}
-              className="bg-teal-600 hover:bg-teal-700 text-white px-8 py-3 rounded-lg font-medium shadow-lg disabled:opacity-50 transition-all"
-              disabled={!availabilityChanged || saving}
+              onClick={() => window.open('/api/cleaners/export-data', '_blank')}
+              className="flex items-center gap-3 p-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg font-medium transition-all duration-300 hover:transform hover:-translate-y-0.5 hover:shadow-lg"
             >
-              {saving ? 'Saving...' : 'Save Availability Changes'}
+              <span className="text-xl">📄</span>
+              <span>Export Data</span>
+            </button>
+            
+            <button
+              onClick={() => router.push('/cleaner/bookings')}
+              className="flex items-center gap-3 p-4 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-lg font-medium transition-all duration-300 hover:transform hover:-translate-y-0.5 hover:shadow-lg"
+            >
+              <span className="text-xl">📋</span>
+              <span>View Bookings</span>
+            </button>
+            
+            <button
+              onClick={() => router.push('/cleaner/earnings')}
+              className="flex items-center gap-3 p-4 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white rounded-lg font-medium transition-all duration-300 hover:transform hover:-translate-y-0.5 hover:shadow-lg"
+            >
+              <span className="text-xl">💰</span>
+              <span>View Earnings</span>
             </button>
           </div>
         </div>
