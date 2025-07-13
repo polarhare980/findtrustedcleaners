@@ -9,13 +9,18 @@ export async function POST(req) {
   try {
     const { cleanerId } = await req.json();
 
+    console.log('📦 Incoming Stripe request body:', { cleanerId });
+
     if (!cleanerId) {
+      console.error('❌ Missing cleanerId in request body');
       return NextResponse.json({ error: 'Missing cleaner ID' }, { status: 400 });
     }
 
     await connectToDatabase();
     const cleaner = await Cleaner.findById(cleanerId);
+
     if (!cleaner) {
+      console.error(`❌ Cleaner not found for ID: ${cleanerId}`);
       return NextResponse.json({ error: 'Cleaner not found' }, { status: 404 });
     }
 
@@ -29,7 +34,7 @@ export async function POST(req) {
           price_data: {
             currency: 'gbp',
             product_data: {
-              name: `Cleaner Contact Unlock - ${cleaner.realName}`,
+              name: `Cleaner Contact Unlock - ${cleaner.realName || 'Unknown Cleaner'}`,
               description: `Client is unlocking contact info`,
             },
             unit_amount: priceInPence,
@@ -45,11 +50,12 @@ export async function POST(req) {
       cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/cleaner/${cleanerId}?booking=cancelled`,
     });
 
+    console.log('✅ Stripe session created:', session.id);
+
     return NextResponse.json({ url: session.url });
   } catch (err) {
-    console.error('❌ Booking Checkout error:', err);
+    console.error('❌ Booking Checkout error:', err.message);
+    console.error('❌ Full error object:', err);
     return NextResponse.json({ error: 'Failed to create checkout session' }, { status: 500 });
   }
 }
-
-
