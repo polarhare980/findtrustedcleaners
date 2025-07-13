@@ -59,6 +59,7 @@ export default function CleanerProfile() {
         console.log('🔍 CLEANER ID (_id):', data.cleaner?._id);
         console.log('🔍 CLEANER ID (id):', data.cleaner?.id);
         console.log('🔍 CLEANER KEYS:', Object.keys(data.cleaner || {}));
+        console.log('🔍 FULL CLEANER DATA:', JSON.stringify(data.cleaner, null, 2));
         console.log('🎯 Availability data received:', JSON.stringify(data.cleaner.availability, null, 2));
         console.log('🎯 Monday data:', data.cleaner.availability?.Monday);
         console.log('🎯 Available days:', Object.keys(data.cleaner.availability || {}));
@@ -106,9 +107,9 @@ export default function CleanerProfile() {
     setError('Purchase failed. Please try again.');
   };
 
-  // Get the cleaner ID - handle both _id and id
+  // Get the cleaner ID - handle multiple possible field names
   const getCleanerId = () => {
-    return cleaner?._id || cleaner?.id;
+    return cleaner?._id || cleaner?.id || cleaner?.cleanerId || cleaner?.uuid || id;
   };
 
   if (!mounted) return null;
@@ -193,7 +194,11 @@ export default function CleanerProfile() {
               <div className="text-xs text-gray-500 mb-4 bg-yellow-100 p-2 rounded">
                 Debug: cleanerId={getCleanerId()}, hasAccess={hasAccess.toString()}, purchaseLoading={purchaseLoading.toString()}
                 <br />
+                URL param ID: {id}
+                <br />
                 Cleaner Object Keys: {Object.keys(cleaner || {}).join(', ')}
+                <br />
+                Full Cleaner Object: {JSON.stringify(cleaner, null, 2)}
               </div>
             )}
             
