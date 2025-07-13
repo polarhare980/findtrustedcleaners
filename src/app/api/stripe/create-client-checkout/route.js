@@ -7,10 +7,10 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export async function POST(req) {
   try {
-    const { cleanerId, day, hour } = await req.json();
+    const { cleanerId } = await req.json();
 
-    if (!cleanerId || !day || !hour) {
-      return NextResponse.json({ error: 'Missing booking data' }, { status: 400 });
+    if (!cleanerId) {
+      return NextResponse.json({ error: 'Missing cleaner ID' }, { status: 400 });
     }
 
     await connectToDatabase();
@@ -19,7 +19,7 @@ export async function POST(req) {
       return NextResponse.json({ error: 'Cleaner not found' }, { status: 404 });
     }
 
-    const priceInPence = 299; // £2.99 to unlock
+    const priceInPence = 299; // £2.99
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
@@ -29,8 +29,8 @@ export async function POST(req) {
           price_data: {
             currency: 'gbp',
             product_data: {
-              name: `Cleaner Booking - ${cleaner.realName}`,
-              description: `${day} at ${hour}:00`,
+              name: `Cleaner Contact Unlock - ${cleaner.realName}`,
+              description: `Client is unlocking contact info`,
             },
             unit_amount: priceInPence,
           },
@@ -40,8 +40,6 @@ export async function POST(req) {
       metadata: {
         cleanerId,
         clientBooking: 'true',
-        day,
-        hour,
       },
       success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/cleaner/${cleanerId}?booking=success`,
       cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/cleaner/${cleanerId}?booking=cancelled`,
@@ -53,3 +51,5 @@ export async function POST(req) {
     return NextResponse.json({ error: 'Failed to create checkout session' }, { status: 500 });
   }
 }
+
+
