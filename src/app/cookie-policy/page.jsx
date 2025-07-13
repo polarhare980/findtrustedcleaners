@@ -26,7 +26,7 @@ export default function CookiePolicy() {
     <>
       <div className="min-h-screen bg-gradient-to-br from-teal-900/20 to-teal-700/10 relative">
         <main className="max-w-4xl mx-auto p-6 py-12">
-          <div className="bg-white/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] shadow-[0_8px_32px_rgba(0,0,0,0.1)] p-8 mb-8 animate-fadeIn">
+          <div className="bg-white/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] shadow-[0_8px_32px_rgba(0,0,0,0.1)] p-8 mb-8 animate-fade-in">
             <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent mb-6">
               🍪 Cookie Policy
             </h1>
@@ -163,23 +163,6 @@ export default function CookiePolicy() {
           </div>
         </div>
       </footer>
-
-      {/* Global animation replacement */}
-      <style global jsx>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-fadeIn {
-          animation: fadeIn 0.8s ease-out both;
-        }
-      `}</style>
     </>
   );
 }
@@ -263,6 +246,3 @@ function Section({ number, title, content, blocks = [], cookieTypes = false, hig
     </div>
   );
 }
-
-
-//
