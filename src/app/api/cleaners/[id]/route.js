@@ -17,46 +17,27 @@ export async function PUT(req, { params }) {
   console.log('Session User ID:', user._id?.toString());
   console.log('Requested Param ID:', id);
 
-  // ✅ Simplified authorization logic
   if (user._id?.toString() !== id && user.type !== 'admin') {
     console.log('🔐 PUT Access Denied: ID Mismatch');
     return NextResponse.json({ success: false, message: 'Access denied.' }, { status: 403 });
   }
 
   try {
-    const {
-      availability,
-      googleReviewUrl,
-      facebookReviewUrl,
-      embedCode,
-      image,
-      rates,
-      services,
-      phone,
-      email,
-      companyName,
-      businessInsurance,
-      address,
-    } = body;
+    const updateFields = {};
 
-    const updateFields = {
-      googleReviewUrl: googleReviewUrl || '',
-      facebookReviewUrl: facebookReviewUrl || '',
-      embedCode: embedCode || '',
-      image: image || '',
-      rates: rates || '',
-      services: services || [],
-      phone: phone || '',
-      email: email || '',
-      companyName: companyName || '',
-      businessInsurance: businessInsurance || false,
-      address: address || {},
-    };
-
-    if (availability !== undefined) {
-      console.log('🔄 Incoming availability update:', availability);
-      updateFields.availability = availability;
-    }
+    // ✅ Only include fields if explicitly provided
+    if (body.availability !== undefined) updateFields.availability = body.availability;
+    if (body.googleReviewUrl) updateFields.googleReviewUrl = body.googleReviewUrl;
+    if (body.facebookReviewUrl) updateFields.facebookReviewUrl = body.facebookReviewUrl;
+    if (body.embedCode) updateFields.embedCode = body.embedCode;
+    if (body.image) updateFields.image = body.image;
+    if (body.rates) updateFields.rates = body.rates;
+    if (body.services) updateFields.services = body.services;
+    if (body.phone) updateFields.phone = body.phone;
+    if (body.email) updateFields.email = body.email; // Only set if valid string
+    if (body.companyName) updateFields.companyName = body.companyName;
+    if (body.businessInsurance !== undefined) updateFields.businessInsurance = body.businessInsurance;
+    if (body.address) updateFields.address = body.address;
 
     const updated = await Cleaner.findByIdAndUpdate(id, updateFields, { new: true });
 
