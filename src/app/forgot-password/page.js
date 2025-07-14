@@ -8,17 +8,33 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage('');
     setLoading(true);
 
-    // Simulate sending reset instructions
-    setTimeout(() => {
-      setMessage('If that email exists in our system, a password reset link has been sent.');
+    try {
+      const res = await fetch('/api/auth/request-reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setSubmitted(true);
+        setMessage('✅ Code sent. Check your email.');
+      } else {
+        setMessage(data.message || 'Something went wrong.');
+      }
+    } catch (err) {
+      setMessage('Failed to send reset code.');
+    } finally {
       setLoading(false);
-    }, 1200);
+    }
   };
 
   return (
@@ -44,7 +60,7 @@ export default function ForgotPasswordPage() {
       <section className="max-w-md mx-auto p-6 py-12">
         <h1 className="text-3xl font-bold text-center text-[#0D9488] mb-6">Forgot Password</h1>
         <p className="text-center text-gray-600 mb-6">
-          Enter your email address below and we’ll send you instructions to reset your password.
+          Enter your email and we’ll send you a one-time verification code.
         </p>
 
         <form onSubmit={handleSubmit} className="bg-white shadow p-6 rounded space-y-4">
@@ -61,9 +77,21 @@ export default function ForgotPasswordPage() {
             disabled={loading}
             className="bg-[#0D9488] text-white w-full py-3 rounded hover:bg-teal-700 disabled:opacity-50"
           >
-            {loading ? 'Sending...' : 'Send Reset Instructions'}
+            {loading ? 'Sending...' : 'Send Reset Code'}
           </button>
-          {message && <p className="text-center text-sm text-green-600 mt-2">{message}</p>}
+
+          {submitted && (
+            <p className="text-center text-sm text-green-600 mt-2">
+              Code sent to your email.{' '}
+              <Link href="/verify-reset" className="underline text-[#0D9488]">
+                Click here to continue
+              </Link>
+            </p>
+          )}
+
+          {message && !submitted && (
+            <p className="text-center text-sm text-red-600 mt-2">{message}</p>
+          )}
         </form>
 
         <div className="mt-6 text-center">
@@ -83,11 +111,11 @@ export default function ForgotPasswordPage() {
           <Link href="/faq">FAQs</Link>
           <Link href="/sitemap">Site Map</Link>
         </nav>
-
         <p className="mb-2">&copy; {new Date().getFullYear()} FindTrustedCleaners. All rights reserved.</p>
-
         <p className="text-xs">
-          FindTrustedCleaners is committed to GDPR compliance. Read our <Link href="/privacy-policy" className="underline">Privacy Policy</Link> and <Link href="/cookie-policy" className="underline">Cookie Policy</Link> for details on how we protect your data. You may <Link href="/contact" className="underline">contact us</Link> at any time to manage your personal information.
+          FindTrustedCleaners is committed to GDPR compliance. Read our{' '}
+          <Link href="/privacy-policy" className="underline">Privacy Policy</Link> and{' '}
+          <Link href="/cookie-policy" className="underline">Cookie Policy</Link> for details on how we protect your data.
         </p>
       </footer>
     </main>
