@@ -6,14 +6,14 @@ import Purchase from '@/models/Purchase';
 
 export const config = {
   api: {
-    bodyParser: false, // Required for raw body parsing with Stripe
+    bodyParser: false, // ✅ Must be false to support raw body
   },
 };
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export async function POST(req) {
-  const rawBody = await req.text(); // Read the raw body
+  const rawBody = await buffer(req); // ✅ Use buffer instead of text
   const sig = req.headers.get('stripe-signature');
 
   let event;
@@ -21,7 +21,7 @@ export async function POST(req) {
     event = stripe.webhooks.constructEvent(
       rawBody,
       sig,
-      process.env.STRIPE_WEBHOOK_CLIENT_BOOKING_SECRET // use dedicated secret for this webhook route
+      process.env.STRIPE_WEBHOOK_CLIENT_BOOKING_SECRET
     );
   } catch (err) {
     console.error('❌ Webhook signature failed:', err.message);
