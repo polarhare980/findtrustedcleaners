@@ -1,4 +1,4 @@
-// 📌 Webhook temporarily removed for deployment.
+// 📌 Webhooky removed for deployment.
 // Final run-through must include the Stripe webhook to handle subscription confirmation and booking payments.
 // 
 // ✅ Cleaner Subscription Webhook:
