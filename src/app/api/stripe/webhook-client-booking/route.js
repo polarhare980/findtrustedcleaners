@@ -1,20 +1,34 @@
 import Stripe from 'stripe';
-import { buffer } from 'micro';
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db';
 import Purchase from '@/models/Purchase';
 
 export const config = {
   api: {
-    bodyParser: false, // ✅ Must be false to support raw body
+    bodyParser: false,
   },
 };
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
+// ✅ Convert ReadableStream to Buffer (App Router compatible)
+async function getRawBody(readable) {
+  const reader = readable.getReader();
+  let result = new Uint8Array();
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    const combined = new Uint8Array(result.length + value.length);
+    combined.set(result);
+    combined.set(value, result.length);
+    result = combined;
+  }
+  return result;
+}
+
 export async function POST(req) {
-  const rawBody = await buffer(req); // ✅ Use buffer instead of text
   const sig = req.headers.get('stripe-signature');
+  const rawBody = await getRawBody(req.body);
 
   let event;
   try {
@@ -55,6 +69,8 @@ export async function POST(req) {
         console.error('❌ Failed to record booking:', err);
         return NextResponse.json({ error: 'Database error' }, { status: 500 });
       }
+    } else {
+      console.error('❌ Missing expected metadata in session');
     }
   }
 
