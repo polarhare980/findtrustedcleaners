@@ -9,7 +9,7 @@ const cleanerSchema = new mongoose.Schema({
   rates: { type: Number, required: true },
   services: [String],
   availability: {
-    type: mongoose.Schema.Types.Mixed, // ✅ Fixed: now supports nested object structure
+    type: mongoose.Schema.Types.Mixed,
     default: {},
   },
   businessInsurance: { type: Boolean, default: false },
@@ -20,6 +20,10 @@ const cleanerSchema = new mongoose.Schema({
     county: { type: String },
     postcode: { type: String },
   },
+
+  // ✅ Add this
+  isPremium: { type: Boolean, default: false },
+
 }, {
   timestamps: true,
 });
