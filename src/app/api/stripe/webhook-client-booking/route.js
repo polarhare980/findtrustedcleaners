@@ -6,14 +6,14 @@ import Purchase from '@/models/Purchase';
 
 export const config = {
   api: {
-    bodyParser: false,
+    bodyParser: false, // Required for raw body parsing with Stripe
   },
 };
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export async function POST(req) {
-  const rawBody = await req.text();
+  const rawBody = await req.text(); // Read the raw body
   const sig = req.headers.get('stripe-signature');
 
   let event;
@@ -21,7 +21,7 @@ export async function POST(req) {
     event = stripe.webhooks.constructEvent(
       rawBody,
       sig,
-      process.env.STRIPE_WEBHOOK_SECRET
+      process.env.STRIPE_WEBHOOK_CLIENT_BOOKING_SECRET // use dedicated secret for this webhook route
     );
   } catch (err) {
     console.error('❌ Webhook signature failed:', err.message);
@@ -41,7 +41,7 @@ export async function POST(req) {
         await connectToDatabase();
 
         const newPurchase = await Purchase.create({
-          clientId: session.customer_email || 'unknown', // You can enhance this later
+          clientId: session.customer_email || 'unknown',
           cleanerId,
           day,
           hour,
@@ -53,10 +53,10 @@ export async function POST(req) {
         console.log('✅ Booking recorded and pending approval:', newPurchase._id);
       } catch (err) {
         console.error('❌ Failed to record booking:', err);
+        return NextResponse.json({ error: 'Database error' }, { status: 500 });
       }
     }
   }
 
   return NextResponse.json({ received: true });
 }
-
