@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
 export default function PaymentSuccessPage() {
@@ -31,7 +31,7 @@ export default function PaymentSuccessPage() {
             Return to Home
           </Link>
           <Link
-            href="/dashboard"
+            href="/cleaners/dashboard"
             className="px-4 py-2 bg-gray-600 text-white rounded-xl hover:bg-gray-700 transition-all duration-200"
           >
             Go to Dashboard
