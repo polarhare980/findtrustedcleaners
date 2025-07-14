@@ -1,31 +1,33 @@
-import mongoose from 'mongoose';
+console.log('📦 Stripe event received:', event.type);
 
-const cleanerSchema = new mongoose.Schema({
-  realName: { type: String, required: true },
-  companyName: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  phone: { type: String, required: true },
-  rates: { type: Number, required: true },
-  services: [String],
-  availability: {
-    type: mongoose.Schema.Types.Mixed,
-    default: {},
-  },
-  businessInsurance: { type: Boolean, default: false },
-  image: { type: String },
-  address: {
-    houseNameNumber: { type: String },
-    street: { type: String },
-    county: { type: String },
-    postcode: { type: String },
-  },
+if (event.type === 'checkout.session.completed') {
+  const session = event.data.object;
+  console.log('🎯 Session metadata:', session.metadata);
 
-  // ✅ Add this
-  isPremium: { type: Boolean, default: false },
+  const cleanerId = session.metadata?.cleanerId;
+  console.log('🧼 cleanerId from session:', cleanerId);
 
-}, {
-  timestamps: true,
-});
+  if (cleanerId) {
+    try {
+      await connectToDatabase();
 
-export default mongoose.models.Cleaner || mongoose.model('Cleaner', cleanerSchema);
+      const updatedCleaner = await Cleaner.findByIdAndUpdate(
+        cleanerId,
+        { isPremium: true },
+        { new: true }
+      );
+
+      if (!updatedCleaner) {
+        console.error('❌ Cleaner not found in DB:', cleanerId);
+      } else {
+        console.log('✅ Cleaner upgraded to premium:', updatedCleaner._id);
+      }
+    } catch (err) {
+      console.error('❌ DB error while upgrading cleaner:', err);
+      return NextResponse.json({ error: 'Database update failed' }, { status: 500 });
+    }
+  } else {
+    console.error('❌ No cleanerId found in metadata');
+    return NextResponse.json({ error: 'Missing cleanerId' }, { status: 400 });
+  }
+}
