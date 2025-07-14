@@ -617,7 +617,9 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
                     <div className="bg-gray-50 p-1 font-medium text-center">{day.slice(0, 3)}</div>
                     {Array.from({ length: 13 }, (_, i) => {
                       const hour = (7 + i).toString();
-                      const status = slots[hour] || 'unavailable';
+                      const value = slots[hour];
+                      const status = value === true ? 'available' : 'unavailable';
+
                       return (
                         <div
                           key={`${day}-${hour}`}
