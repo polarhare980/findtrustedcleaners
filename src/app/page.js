@@ -583,24 +583,22 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
       </div>
 
       <div className="cleaner-info">
-        <h3 className="cleaner-name">{cleaner.realName}</h3>
-        <p className="cleaner-rating">⭐ {cleaner.rating || 'Not rated yet'}</p>
-        <p className="cleaner-rate">💷 {cleaner.rates ? `£${cleaner.rates}/hr` : 'Rate not set'}</p>
+        <div className="cleaner-info">
+  <h3 className="cleaner-name">{cleaner.realName}</h3>
 
-        {(cleaner.googleReviewUrl || cleaner.facebookReviewUrl) && (
-          <div className="cleaner-reviews">
-            {cleaner.googleReviewUrl && (
-              <a href={cleaner.googleReviewUrl} target="_blank" rel="noopener noreferrer" className="review-link">
-                Google Reviews
-              </a>
-            )}
-            {cleaner.facebookReviewUrl && (
-              <a href={cleaner.facebookReviewUrl} target="_blank" rel="noopener noreferrer" className="review-link">
-                Facebook Reviews
-              </a>
-            )}
+  {cleaner.googleReviewRating && cleaner.googleReviewCount ? (
+    <p className="cleaner-rating">
+      ⭐ {cleaner.googleReviewRating} ({cleaner.googleReviewCount})
+    </p>
+  ) : (
+    <p className="cleaner-rating">⭐ Not rated yet</p>
+  )}
+
+  <p className="cleaner-rate">
+    💷 {cleaner.rates ? `£${cleaner.rates}/hr` : 'Rate not set'}
+  </p>
           </div>
-        )}
+        
 
         {isPremium && cleaner.availability && (
           <div className="availability-grid mt-4">

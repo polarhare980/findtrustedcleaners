@@ -157,6 +157,13 @@ export default function CleanerProfile() {
                 {cleaner.realName}
               </h1>
 
+              {cleaner.googleReviewRating && cleaner.googleReviewCount && (
+  <p className="text-lg font-medium text-teal-800">
+    ⭐ {cleaner.googleReviewRating} from {cleaner.googleReviewCount} reviews
+  </p>
+)}
+
+
               {cleaner?.isPremium && (
                 <div className="inline-block bg-yellow-400 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md mb-4">
                   ✨ Premium Cleaner
@@ -287,16 +294,17 @@ export default function CleanerProfile() {
               </h2>
 
               <div className="flex flex-col sm:flex-row gap-4 mb-4">
-                {cleaner.googleReviewUrl && (
-                  <a
-                    href={cleaner.googleReviewUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-full text-center font-medium hover:from-blue-700 hover:to-blue-800 transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-lg"
-                  >
-                    📱 View Google Reviews
-                  </a>
-                )}
+                {hasAccess && cleaner.googleReviewUrl && (
+  <a
+    href={cleaner.googleReviewUrl}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-full text-center font-medium hover:from-blue-700 hover:to-blue-800 transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-lg"
+  >
+    📱 View Google Reviews
+  </a>
+)}
+
                 {cleaner.facebookReviewUrl && (
                   <a
                     href={cleaner.facebookReviewUrl}

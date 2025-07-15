@@ -21,6 +21,11 @@ const cleanerSchema = new mongoose.Schema({
     postcode: { type: String },
   },
   isPremium: { type: Boolean, default: false }, // ✅ Required for Stripe upgrade
+
+  // ✅ NEW: Google Review Fields
+  googleReviewUrl: { type: String },
+  googleReviewRating: { type: Number },
+  googleReviewCount: { type: Number },
 }, {
   timestamps: true,
 });

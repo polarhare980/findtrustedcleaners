@@ -492,7 +492,63 @@ export default function CleanerDashboardComponent() {
               )}
             </div>
 
-            <div className="space-y-2">
+{/* ⭐ Google Review Rating */}
+<div className="space-y-2">
+  <label className="text-sm font-medium text-gray-600">⭐ Google Rating (0–5)</label>
+  {editMode ? (
+    <input
+      type="number"
+      step="0.1"
+      min="0"
+      max="5"
+      value={editData.googleReviewRating || ''}
+      onChange={(e) => handleInputChange('googleReviewRating', parseFloat(e.target.value))}
+      className="w-full p-3 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-300"
+    />
+  ) : (
+    <p className="text-gray-800 font-medium">
+      {formData.googleReviewRating ? `${formData.googleReviewRating} / 5` : 'Not set'}
+    </p>
+  )}
+</div>
+
+{/* 🧮 Google Review Count */}
+<div className="space-y-2">
+  <label className="text-sm font-medium text-gray-600">🧮 Review Count</label>
+  {editMode ? (
+    <input
+      type="number"
+      min="0"
+      value={editData.googleReviewCount || ''}
+      onChange={(e) => handleInputChange('googleReviewCount', parseInt(e.target.value))}
+      className="w-full p-3 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-300"
+    />
+  ) : (
+    <p className="text-gray-800 font-medium">
+      {formData.googleReviewCount ? `${formData.googleReviewCount} reviews` : 'Not set'}
+    </p>
+  )}
+</div>
+
+{/* 🔗 Google Review URL */}
+<div className="space-y-2 md:col-span-2 lg:col-span-3">
+  <label className="text-sm font-medium text-gray-600">🔗 Google Review Link</label>
+  {editMode ? (
+    <input
+      type="url"
+      value={editData.googleReviewUrl || ''}
+      onChange={(e) => handleInputChange('googleReviewUrl', e.target.value)}
+      className="w-full p-3 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-300"
+      placeholder="https://www.google.com/search?q=your+business"
+    />
+  ) : (
+    <p className="text-blue-600 underline break-words">
+      {formData.googleReviewUrl || 'Not set'}
+    </p>
+  )}
+</div>
+ 
+<div className="space-y-2">
               <label className="text-sm font-medium text-gray-600">Company Name</label>
               {editMode ? (
                 <input
