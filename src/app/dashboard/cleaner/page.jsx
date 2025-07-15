@@ -84,7 +84,7 @@ export default function CleanerDashboard() {
   if (!user) return <p className="p-10 text-center">Loading your dashboard...</p>;
 
   return (
-    <main className="p-6 min-h-screen bg-[#0D9488] text-white">
+    <main className="p-6 min-h-screen bg-white text-black">
       <h1 className="text-3xl font-bold mb-4">Welcome, {user.realName} 👋</h1>
       <p>Company: {user.companyName}</p>
       <p>Email: {user.email}</p>
