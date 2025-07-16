@@ -6,7 +6,6 @@ import React from 'react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import BookingPaymentWrapper from '@/components/BookingPaymentForm';
 import PurchaseButton from '@/components/PurchaseButton';
-import { hasClientUnlocked } from '@/lib/permissions';
 
 function isSafeEmbed(code) {
   const hasIframe = code.includes('<iframe') && code.includes('src=');
@@ -101,33 +100,48 @@ export default function CleanerProfile() {
 
   // Check permissions when cleaner, client, or selectedSlot changes
   useEffect(() => {
-    const checkPermissions = async () => {
-      if (!cleaner || !client?.email) {
-        setCanViewContact(false);
-        return;
-      }
+  const checkPermissions = async () => {
+    if (!cleaner || !client?.email) {
+      setCanViewContact(false);
+      return;
+    }
 
-      setPermissionLoading(true);
-      try {
-        const cleanerId = getCleanerId();
-        const canView = await hasClientUnlocked(
-          cleanerId, 
-          client.email, 
-          selectedSlot?.day || null, 
-          selectedSlot?.hour || null
-        );
-        setCanViewContact(canView);
-        console.log('🔐 Permission check result:', canView);
-      } catch (err) {
-        console.error('Permission check failed:', err);
-        setCanViewContact(false);
-      } finally {
-        setPermissionLoading(false);
-      }
-    };
+    setPermissionLoading(true);
+    try {
+      const cleanerId = getCleanerId();
 
-    checkPermissions();
-  }, [cleaner, client, selectedSlot]);
+      const res = await fetch('/api/unlock-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          cleanerId,
+          clientEmail: client.email,
+          day: selectedSlot?.day || null,
+          hour: selectedSlot?.hour || null,
+        }),
+      });
+
+      const result = await res.json();
+
+      if (res.ok && result.success) {
+        setCanViewContact(result.unlocked);
+        console.log('🔐 Permission check result:', result.unlocked);
+      } else {
+        console.error('❌ Unlock API Error:', result.message);
+        setCanViewContact(false);
+      }
+    } catch (err) {
+      console.error('Permission check failed:', err);
+      setCanViewContact(false);
+    } finally {
+      setPermissionLoading(false);
+    }
+  };
+
+  checkPermissions();
+}, [cleaner, client, selectedSlot]);
+
 
   const handlePurchaseSuccess = (cleanerData) => {
     console.log('✅ Purchase successful, received data:', cleanerData);
