@@ -26,18 +26,18 @@ export default function ClientLoginPage() {
       if (res.ok && data.id) {
         localStorage.setItem('clientId', data.id);
 
-        // ✅ Prioritise 'next' from URL, fallback to 'redirectAfterLogin' from localStorage
+        // ✅ Prioritise &apos;next&apos; from URL, fallback to &apos;redirectAfterLogin&apos; from localStorage
         const nextUrl = searchParams.get('next');
-const redirectFromStorage = localStorage.getItem('redirectAfterLogin');
+        const redirectFromStorage = localStorage.getItem('redirectAfterLogin');
 
-if (nextUrl) {
-  router.push(nextUrl);
-} else if (redirectFromStorage) {
-  localStorage.removeItem('redirectAfterLogin');
-  router.push(redirectFromStorage);
-} else {
-  router.push('/clients/dashboard');
-}
+        if (nextUrl) {
+          router.push(nextUrl);
+        } else if (redirectFromStorage) {
+          localStorage.removeItem('redirectAfterLogin');
+          router.push(redirectFromStorage);
+        } else {
+          router.push('/clients/dashboard');
+        }
 
       } else {
         alert(data.message || 'Login failed.');
@@ -49,49 +49,67 @@ if (nextUrl) {
   };
 
   return (
-    <div className="w-full max-w-md bg-white shadow-lg rounded-lg p-6">
-      <h1 className="text-2xl font-bold mb-6 text-teal-700 text-center">Client Login</h1>
+    <div className="w-full max-w-md mx-auto">
+      {/* Glass Morphism Card */}
+      <div 
+        className="relative rounded-2xl p-8 shadow-2xl backdrop-blur-[20px] border border-white/20 animate-fade-in"
+        style={{
+          background: 'rgba(255, 255, 255, 0.25)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+        }}
+      >
+        {/* Gradient Title */}
+        <h1 className="text-3xl font-bold mb-8 text-center bg-gradient-to-r from-teal-600 to-teal-700 bg-clip-text text-transparent">
+          Client Login
+        </h1>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">Email</label>
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full border p-2 rounded"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Password</label>
-          <input
-            type="password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full border p-2 rounded"
-          />
-        </div>
-        <button
-          type="submit"
-          className="w-full bg-teal-600 text-white py-2 rounded hover:bg-teal-700"
-        >
-          Log In
-        </button>
-      </form>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium mb-2 text-gray-700">Email</label>
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full p-3 rounded-xl border border-white/20 bg-white/80 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600 transition-all duration-300"
+              placeholder="Enter your email"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-2 text-gray-700">Password</label>
+            <input
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full p-3 rounded-xl border border-white/20 bg-white/80 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600 transition-all duration-300"
+              placeholder="Enter your password"
+            />
+          </div>
 
-      {searchParams.get('next') && (
-        <div className="mt-6 text-center">
-          <p className="mb-2 text-gray-700">Don't have an account?</p>
-          <Link
-            href={`/register/client?next=${encodeURIComponent(searchParams.get('next'))}`}
-            className="inline-block bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg text-lg shadow"
+          {/* Primary Button with Gradient */}
+          <button
+            type="submit"
+            className="w-full bg-gradient-to-r from-teal-600 to-teal-700 text-white py-3 px-6 rounded-xl font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300 ease-out hover:scale-105"
           >
-            Register Here to Continue
+            Log In
+          </button>
+        </form>
+
+        {/* Bottom Section */}
+        <div className="mt-8 text-center space-y-4">
+          <p className="text-gray-700 font-medium">Don&apos;t have an account?</p>
+          <Link
+            href={`/register/client?next=${encodeURIComponent(
+              searchParams.get('next') || localStorage.getItem('redirectAfterLogin') || '/clients/dashboard'
+            )}`}
+            className="inline-block bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-8 py-3 rounded-full text-lg font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300 ease-out hover:scale-105"
+          >
+            Register to Purchase
           </Link>
         </div>
-      )}
+      </div>
     </div>
   );
 }
