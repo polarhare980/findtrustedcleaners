@@ -17,7 +17,7 @@ export async function connectToDatabase() {
 
   if (!cached.promise) {
     cached.promise = mongoose.connect(MONGODB_URI, {
-      dbName: 'findtrustedcleaners',
+      dbName: 'cleanmatch',
       useNewUrlParser: true,
       useUnifiedTopology: true,
     }).then((mongoose) => mongoose)
