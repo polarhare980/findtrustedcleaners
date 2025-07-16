@@ -46,12 +46,23 @@ export default function PurchaseButton({
   const handlePurchase = async () => {
     console.log('🟢 Purchase triggered');
 
-    if (!cleanerId) {
-      const errorMsg = 'Please register or log in to unlock cleaner contact details.';
-      setError(errorMsg);
-      onPurchaseError?.(errorMsg);
-      return;
-    }
+    // ✅ Check if user is logged in as client before proceeding
+const authRes = await fetch('/api/auth/me', { credentials: 'include' });
+const authData = await authRes.json();
+console.log('🔍 AUTH DEBUG:', authData);
+
+if (!authData.success || authData.user?.type !== 'client') {
+  const errorMsg = 'You must be logged in as a client to purchase.';
+  console.warn('🚫 User not logged in or not a client.');
+  setError(errorMsg);
+  onPurchaseError?.(errorMsg);
+
+  // Save redirect path and send to login
+  localStorage.setItem('redirectAfterLogin', `/cleaners/${cleanerId}`);
+  router.push('/login/clients');
+  return;
+}
+
 
     setLoading(true);
     setError('');

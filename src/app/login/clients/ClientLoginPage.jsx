@@ -27,14 +27,18 @@ export default function ClientLoginPage() {
         localStorage.setItem('clientId', data.id);
 
         // ✅ Prioritise 'next' from URL, fallback to 'redirectAfterLogin' from localStorage
-        const nextUrl = searchParams.get('next') || localStorage.getItem('redirectAfterLogin');
+        const nextUrl = searchParams.get('next');
+const redirectFromStorage = localStorage.getItem('redirectAfterLogin');
 
-        if (nextUrl) {
-          localStorage.removeItem('redirectAfterLogin'); // ✅ Clean up
-          router.push(nextUrl);
-        } else {
-          router.push('/clients/dashboard');
-        }
+if (nextUrl) {
+  router.push(nextUrl);
+} else if (redirectFromStorage) {
+  localStorage.removeItem('redirectAfterLogin');
+  router.push(redirectFromStorage);
+} else {
+  router.push('/clients/dashboard');
+}
+
       } else {
         alert(data.message || 'Login failed.');
       }
