@@ -44,72 +44,56 @@ export default function PurchaseButton({
   }, [showPopup, loading]);
 
   const handlePurchase = async () => {
-    console.log('🟢 Purchase triggered');
+  console.log('🟢 Purchase triggered');
 
-    // ✅ Check if user is logged in as client before proceeding
-const authRes = await fetch('/api/auth/me', { credentials: 'include' });
-const authData = await authRes.json();
-console.log('🔍 AUTH DEBUG:', authData);
+  setLoading(true);
+  setError('');
+  onPurchaseStart?.();
 
-if (!authData.success || authData.user?.type !== 'client') {
-  const errorMsg = 'You must be logged in as a client to purchase.';
-  console.warn('🚫 User not logged in or not a client.');
-  setError(errorMsg);
-  onPurchaseError?.(errorMsg);
+  try {
+    // ✅ Check login status and type ONCE
+    const authRes = await fetch('/api/auth/me', { credentials: 'include' });
+    const authData = await authRes.json();
+    console.log('🔍 AUTH DEBUG:', authData);
 
-  // Save redirect path and send to login
-  localStorage.setItem('redirectAfterLogin', `/cleaners/${cleanerId}`);
-  router.push('/login/clients');
-  return;
-}
-
-
-    setLoading(true);
-    setError('');
-    onPurchaseStart?.();
-
-    try {
-      const authRes = await fetch('/api/auth/me', { credentials: 'include' });
-      const authData = await authRes.json();
-      console.log('🔍 AUTH DEBUG:', authData);
-
-      if (!authData.success || authData.user?.type !== 'client') {
-        const errorMsg = 'You must be logged in as a client to purchase.';
-        console.warn('🚫 User not logged in or not a client.');
-        setError(errorMsg);
-        onPurchaseError?.(errorMsg);
-        localStorage.setItem('redirectAfterLogin', `/cleaners/${cleanerId}`);
-        router.push('/login/clients');
-        return;
-      }
-
-      const res = await fetch('/api/stripe/create-client-checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ cleanerId }),
-      });
-
-      const data = await res.json();
-      console.log('🧾 Stripe response:', data);
-
-      if (res.ok && data.url) {
-        setSuccess(true);
-        window.location.href = data.url;
-      } else {
-        const errorMsg = data.error || 'Checkout failed.';
-        setError(errorMsg);
-        onPurchaseError?.(errorMsg);
-      }
-    } catch (err) {
-      console.error('❌ Stripe purchase error:', err);
-      const errorMsg = 'Server error. Please try again.';
+    if (!authData.success || authData.user?.type !== 'client') {
+      const errorMsg = 'You must be logged in as a client to purchase.';
+      console.warn('🚫 User not logged in or not a client.');
       setError(errorMsg);
       onPurchaseError?.(errorMsg);
-    } finally {
-      setLoading(false);
+      localStorage.setItem('redirectAfterLogin', `/cleaners/${cleanerId}`);
+      router.push('/login/clients');
+      return;
     }
-  };
+
+    const res = await fetch('/api/stripe/create-client-checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ cleanerId }),
+    });
+
+    const data = await res.json();
+    console.log('🧾 Stripe response:', data);
+
+    if (res.ok && data.url) {
+      setSuccess(true);
+      window.location.href = data.url;
+    } else {
+      const errorMsg = data.error || 'Checkout failed.';
+      setError(errorMsg);
+      onPurchaseError?.(errorMsg);
+    }
+  } catch (err) {
+    console.error('❌ Stripe purchase error:', err);
+    const errorMsg = 'Server error. Please try again.';
+    setError(errorMsg);
+    onPurchaseError?.(errorMsg);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleCancel = () => {
     setShowPopup(false);
