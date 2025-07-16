@@ -1,28 +1,29 @@
+import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db';
-import booking from '@/models/booking'; // ✅ Correct model capitalisation
-import { verifyToken } from '@/lib/auth'; // ✅ JWT middleware
+import Booking from '@/models/booking'; // ✅ Capitalized
+import { verifyToken } from '@/lib/auth'; // ✅ Assumes it returns user from JWT
 
 export async function GET(req, { params }) {
   await connectToDatabase();
 
   try {
-    // 🔐 Validate JWT token
-    const user = await verifyToken();
+    // 🔐 Validate JWT
+    const user = await verifyToken(req); // ✅ Pass request to verifyToken
 
     if (!user) {
-      return new Response(JSON.stringify({ success: false, message: 'Unauthorised' }), { status: 401 });
+      return NextResponse.json({ success: false, message: 'Unauthorised' }, { status: 401 });
     }
 
-    // ✅ Ensure only cleaners can view their own bookings
-    if (user.type !== 'cleaner' || user.id !== params.id) {
-      return new Response(JSON.stringify({ success: false, message: 'Access denied.' }), { status: 403 });
+    // ✅ Clean string comparison for IDs
+    if (user.type !== 'cleaner' || user._id.toString() !== params.id) {
+      return NextResponse.json({ success: false, message: 'Access denied.' }, { status: 403 });
     }
 
     const bookings = await Booking.find({ cleanerId: params.id });
 
-    return new Response(JSON.stringify(bookings), { status: 200 });
+    return NextResponse.json({ success: true, bookings });
   } catch (err) {
     console.error('❌ Fetch Cleaner Bookings Error:', err.message);
-    return new Response(JSON.stringify({ success: false, message: 'Error fetching bookings' }), { status: 500 });
+    return NextResponse.json({ success: false, message: 'Error fetching bookings' }, { status: 500 });
   }
 }

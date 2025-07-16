@@ -6,6 +6,7 @@ import React from 'react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import BookingPaymentWrapper from '@/components/BookingPaymentForm';
 import PurchaseButton from '@/components/PurchaseButton';
+import { hasClientUnlocked } from '@/lib/permissions';
 
 function isSafeEmbed(code) {
   const hasIframe = code.includes('<iframe') && code.includes('src=');
@@ -25,11 +26,32 @@ export default function CleanerProfile() {
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [hasAccess, setHasAccess] = useState(false);
   const [purchaseLoading, setPurchaseLoading] = useState(false);
+  const [canViewContact, setCanViewContact] = useState(false);
+  const [permissionLoading, setPermissionLoading] = useState(false);
+  const [client, setClient] = useState(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setMounted(true);
     }
+  }, []);
+
+  // Fetch client information (you'll need to implement this based on your auth system)
+  useEffect(() => {
+    const fetchClient = async () => {
+      try {
+        // Replace this with your actual client/user fetching logic
+        const res = await fetch('/api/auth/me', { credentials: 'include' });
+        if (res.ok) {
+          const userData = await res.json();
+          setClient(userData);
+        }
+      } catch (err) {
+        console.error('Failed to fetch client data:', err);
+      }
+    };
+
+    fetchClient();
   }, []);
 
   useEffect(() => {
@@ -77,11 +99,42 @@ export default function CleanerProfile() {
     fetchCleaner();
   }, [id]);
 
+  // Check permissions when cleaner, client, or selectedSlot changes
+  useEffect(() => {
+    const checkPermissions = async () => {
+      if (!cleaner || !client?.email) {
+        setCanViewContact(false);
+        return;
+      }
+
+      setPermissionLoading(true);
+      try {
+        const cleanerId = getCleanerId();
+        const canView = await hasClientUnlocked(
+          cleanerId, 
+          client.email, 
+          selectedSlot?.day || null, 
+          selectedSlot?.hour || null
+        );
+        setCanViewContact(canView);
+        console.log('🔐 Permission check result:', canView);
+      } catch (err) {
+        console.error('Permission check failed:', err);
+        setCanViewContact(false);
+      } finally {
+        setPermissionLoading(false);
+      }
+    };
+
+    checkPermissions();
+  }, [cleaner, client, selectedSlot]);
+
   const handlePurchaseSuccess = (cleanerData) => {
     console.log('✅ Purchase successful, received data:', cleanerData);
     
     // Update access status
     setHasAccess(true);
+    setCanViewContact(true);
     
     // Update cleaner data with the contact information
     setCleaner((prev) => ({
@@ -158,11 +211,10 @@ export default function CleanerProfile() {
               </h1>
 
               {cleaner.googleReviewRating && cleaner.googleReviewCount && (
-  <p className="text-lg font-medium text-teal-800">
-    ⭐ {cleaner.googleReviewRating} from {cleaner.googleReviewCount} reviews
-  </p>
-)}
-
+                <p className="text-lg font-medium text-teal-800">
+                  ⭐ {cleaner.googleReviewRating} from {cleaner.googleReviewCount} reviews
+                </p>
+              )}
 
               {cleaner?.isPremium && (
                 <div className="inline-block bg-yellow-400 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md mb-4">
@@ -194,23 +246,30 @@ export default function CleanerProfile() {
             </div>
           </div>
 
-          {/* Contact Details Section - MOVED TO TOP WITH HIGHER Z-INDEX */}
+          {/* Contact Details Section - WITH PERMISSION CHECK */}
           <div className="bg-white/30 backdrop-blur-md rounded-2xl p-6 border border-white/20 mb-6 relative z-50" style={{isolation: 'isolate'}}>
             {/* Enhanced debug info in development */}
             {process.env.NODE_ENV === 'development' && (
               <div className="text-xs text-gray-500 mb-4 bg-yellow-100 p-2 rounded">
-                Debug: cleanerId={getCleanerId()}, hasAccess={hasAccess.toString()}, purchaseLoading={purchaseLoading.toString()}
+                Debug: cleanerId={getCleanerId()}, hasAccess={hasAccess.toString()}, canViewContact={canViewContact.toString()}, purchaseLoading={purchaseLoading.toString()}
                 <br />
                 URL param ID: {id}
                 <br />
-                Cleaner Object Keys: {Object.keys(cleaner || {}).join(', ')}
+                Client Email: {client?.email || 'Not loaded'}
                 <br />
-                Full Cleaner Object: {JSON.stringify(cleaner, null, 2)}
+                Selected Slot: {selectedSlot ? `${selectedSlot.day} at ${selectedSlot.hour}:00` : 'None'}
+                <br />
+                Permission Loading: {permissionLoading.toString()}
               </div>
             )}
             
-            {hasAccess ? (
-              <div>
+            {permissionLoading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 mx-auto mb-4"></div>
+                <p className="text-gray-600">Checking permissions...</p>
+              </div>
+            ) : canViewContact ? (
+              <div className="contact-info">
                 <div className="text-center mb-4">
                   <span className="text-2xl">🔓</span>
                   <p className="text-green-600 font-semibold mt-2">Contact details unlocked!</p>
@@ -231,10 +290,10 @@ export default function CleanerProfile() {
                 </div>
               </div>
             ) : (
-              <div className="text-center">
+              <div className="blurred-overlay text-center">
                 <div className="mb-4">
                   <span className="text-2xl">🔒</span>
-                  <p className="text-gray-600 italic mt-2">Contact details are locked. Unlock to view and book.</p>
+                  <p className="text-gray-600 italic mt-2">Contact details locked — purchase access to unlock</p>
                 </div>
                 
                 {/* Fixed condition to handle both _id and id */}
@@ -294,16 +353,16 @@ export default function CleanerProfile() {
               </h2>
 
               <div className="flex flex-col sm:flex-row gap-4 mb-4">
-                {hasAccess && cleaner.googleReviewUrl && (
-  <a
-    href={cleaner.googleReviewUrl}
-    target="_blank"
-    rel="noopener noreferrer"
-    className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-full text-center font-medium hover:from-blue-700 hover:to-blue-800 transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-lg"
-  >
-    📱 View Google Reviews
-  </a>
-)}
+                {canViewContact && cleaner.googleReviewUrl && (
+                  <a
+                    href={cleaner.googleReviewUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-full text-center font-medium hover:from-blue-700 hover:to-blue-800 transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-lg"
+                  >
+                    📱 View Google Reviews
+                  </a>
+                )}
 
                 {cleaner.facebookReviewUrl && (
                   <a
@@ -349,7 +408,7 @@ export default function CleanerProfile() {
                       return (
                         <div key={hourKey} className="h-10 w-full">
                           {isAvailable ? (
-                            hasAccess ? (
+                            canViewContact ? (
                               <button
                                 onClick={() => setSelectedSlot({ day, hour: hourKey })}
                                 className={`w-full h-full rounded-xl font-medium transition-all duration-300 hover:transform hover:scale-105 hover:shadow-lg ${
@@ -394,7 +453,7 @@ export default function CleanerProfile() {
                       return (
                         <div key={hour} className="w-full">
                           {isAvailable ? (
-                            hasAccess ? (
+                            canViewContact ? (
                               <button
                                 onClick={() => setSelectedSlot({ day, hour: `${hour}` })}
                                 className={`w-full rounded-xl py-2 px-3 font-medium transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-lg text-sm ${
@@ -426,7 +485,7 @@ export default function CleanerProfile() {
         </div>
 
         {/* Booking Section */}
-        {hasAccess && selectedSlot && getCleanerId() && (
+        {canViewContact && selectedSlot && getCleanerId() && (
           <div className="bg-white/25 backdrop-blur-xl border border-white/20 rounded-3xl p-8 shadow-2xl">
             <h2 className="text-2xl font-bold text-center mb-6 bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent">
               🎯 Booking for {selectedSlot.day} at {selectedSlot.hour}:00

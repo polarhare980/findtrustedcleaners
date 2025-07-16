@@ -5,6 +5,7 @@ import Cleaner from '@/models/Cleaner';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
+// ✅ POST: Create a new Stripe checkout session
 export async function POST(req) {
   try {
     const { cleanerId } = await req.json();
@@ -50,5 +51,23 @@ export async function POST(req) {
   } catch (err) {
     console.error('❌ Stripe error:', err);
     return NextResponse.json({ error: 'Failed to create checkout session' }, { status: 500 });
+  }
+}
+
+// ✅ GET: Confirm a Stripe session after redirect
+export async function GET(req) {
+  const { searchParams } = new URL(req.url);
+  const sessionId = searchParams.get('session_id');
+
+  if (!sessionId) {
+    return NextResponse.json({ success: false, message: 'Missing session_id' }, { status: 400 });
+  }
+
+  try {
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    return NextResponse.json({ success: true, session });
+  } catch (err) {
+    console.error('❌ Stripe session lookup failed:', err);
+    return NextResponse.json({ success: false, message: 'Session lookup failed' }, { status: 500 });
   }
 }
