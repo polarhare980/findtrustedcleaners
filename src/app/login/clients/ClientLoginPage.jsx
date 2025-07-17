@@ -13,12 +13,20 @@ export default function ClientLoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!email.trim() || !password) {
+      alert('Please enter both email and password.');
+      return;
+    }
+
     try {
       const res = await fetch('/api/clients/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-        credentials: 'include' // ✅ This is essential to save the cookie
+        credentials: 'include',
+        body: JSON.stringify({
+          email: email.trim(),
+          password,
+        }),
       });
 
       const data = await res.json();
@@ -26,7 +34,6 @@ export default function ClientLoginPage() {
       if (res.ok && data.id) {
         localStorage.setItem('clientId', data.id);
 
-        // ✅ Prioritise &apos;next&apos; from URL, fallback to &apos;redirectAfterLogin&apos; from localStorage
         const nextUrl = searchParams.get('next');
         const redirectFromStorage = localStorage.getItem('redirectAfterLogin');
 
@@ -38,7 +45,6 @@ export default function ClientLoginPage() {
         } else {
           router.push('/clients/dashboard');
         }
-
       } else {
         alert(data.message || 'Login failed.');
       }
@@ -50,15 +56,13 @@ export default function ClientLoginPage() {
 
   return (
     <div className="w-full max-w-md mx-auto">
-      {/* Glass Morphism Card */}
-      <div 
+      <div
         className="relative rounded-2xl p-8 shadow-2xl backdrop-blur-[20px] border border-white/20 animate-fade-in"
         style={{
           background: 'rgba(255, 255, 255, 0.25)',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
         }}
       >
-        {/* Gradient Title */}
         <h1 className="text-3xl font-bold mb-8 text-center bg-gradient-to-r from-teal-600 to-teal-700 bg-clip-text text-transparent">
           Client Login
         </h1>
@@ -75,7 +79,7 @@ export default function ClientLoginPage() {
               placeholder="Enter your email"
             />
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium mb-2 text-gray-700">Password</label>
             <input
@@ -88,7 +92,6 @@ export default function ClientLoginPage() {
             />
           </div>
 
-          {/* Primary Button with Gradient */}
           <button
             type="submit"
             className="w-full bg-gradient-to-r from-teal-600 to-teal-700 text-white py-3 px-6 rounded-xl font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300 ease-out hover:scale-105"
@@ -97,7 +100,6 @@ export default function ClientLoginPage() {
           </button>
         </form>
 
-        {/* Bottom Section */}
         <div className="mt-8 text-center space-y-4">
           <p className="text-gray-700 font-medium">Don&apos;t have an account?</p>
           <Link

@@ -21,14 +21,8 @@ export default function PurchaseButton({
   }, [cleanerId]);
 
   useEffect(() => {
-    if (showPopup) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
+    document.body.style.overflow = showPopup ? 'hidden' : 'unset';
+    return () => { document.body.style.overflow = 'unset'; };
   }, [showPopup]);
 
   useEffect(() => {
@@ -44,56 +38,56 @@ export default function PurchaseButton({
   }, [showPopup, loading]);
 
   const handlePurchase = async () => {
-  console.log('🟢 Purchase triggered');
+    console.log('🟢 Purchase triggered');
 
-  setLoading(true);
-  setError('');
-  onPurchaseStart?.();
+    setLoading(true);
+    setError('');
+    onPurchaseStart?.();
 
-  try {
-    // ✅ Check login status and type ONCE
-    const authRes = await fetch('/api/auth/me', { credentials: 'include' });
-    const authData = await authRes.json();
-    console.log('🔍 AUTH DEBUG:', authData);
+    try {
+      const authRes = await fetch('/api/auth/me', { credentials: 'include' });
+      const authData = await authRes.json();
+      console.log('🔍 AUTH DEBUG:', authData);
 
-    if (!authData.success || authData.user?.type !== 'client') {
-      const errorMsg = 'You must be logged in as a client to purchase.';
-      console.warn('🚫 User not logged in or not a client.');
+      if (!authData.success || authData.user?.type !== 'client') {
+        const errorMsg = 'You must be logged in as a client to purchase.';
+        console.warn('🚫 Not a logged-in client');
+        setError(errorMsg);
+        onPurchaseError?.(errorMsg);
+
+        const nextPath = `/cleaners/${cleanerId}`;
+        localStorage.setItem('redirectAfterLogin', nextPath);
+        router.push(`/login/clients?next=${encodeURIComponent(nextPath)}`);
+        return;
+      }
+
+      const res = await fetch('/api/stripe/create-client-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ cleanerId }),
+      });
+
+      const data = await res.json();
+      console.log('🧾 Stripe response:', data);
+
+      if (res.ok && data.url) {
+        setSuccess(true);
+        window.location.href = data.url;
+      } else {
+        const errorMsg = data.error || 'Checkout failed.';
+        setError(errorMsg);
+        onPurchaseError?.(errorMsg);
+      }
+    } catch (err) {
+      console.error('❌ Stripe purchase error:', err);
+      const errorMsg = 'Server error. Please try again.';
       setError(errorMsg);
       onPurchaseError?.(errorMsg);
-      localStorage.setItem('redirectAfterLogin', `/cleaners/${cleanerId}`);
-      router.push('/login/clients');
-      return;
+    } finally {
+      setLoading(false);
     }
-
-    const res = await fetch('/api/stripe/create-client-checkout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ cleanerId }),
-    });
-
-    const data = await res.json();
-    console.log('🧾 Stripe response:', data);
-
-    if (res.ok && data.url) {
-      setSuccess(true);
-      window.location.href = data.url;
-    } else {
-      const errorMsg = data.error || 'Checkout failed.';
-      setError(errorMsg);
-      onPurchaseError?.(errorMsg);
-    }
-  } catch (err) {
-    console.error('❌ Stripe purchase error:', err);
-    const errorMsg = 'Server error. Please try again.';
-    setError(errorMsg);
-    onPurchaseError?.(errorMsg);
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
 
   const handleCancel = () => {
     setShowPopup(false);
@@ -125,12 +119,11 @@ export default function PurchaseButton({
       </button>
 
       {showPopup && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4"
           onClick={handleBackdropClick}
-          style={{ zIndex: 9999 }}
         >
-          <div 
+          <div
             className="bg-white rounded-2xl max-w-md w-full shadow-2xl transform transition-all duration-300 scale-100 animate-in fade-in-0 zoom-in-95"
             onClick={(e) => e.stopPropagation()}
           >
