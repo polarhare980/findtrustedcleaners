@@ -2,11 +2,18 @@ import Stripe from 'stripe';
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db';
 import Cleaner from '@/models/Cleaner';
+import { protectRoute } from '@/lib/auth';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 // ✅ POST: Create a new Stripe checkout session
 export async function POST(req) {
+  // 🔐 Check if user is logged in and a client
+  const { valid, user, response } = await protectRoute(req);
+  if (!valid || user?.type !== 'client') {
+    return NextResponse.json({ success: false, message: 'Unauthorised' }, { status: 401 });
+  }
+
   try {
     const { cleanerId } = await req.json();
 
@@ -42,6 +49,7 @@ export async function POST(req) {
       metadata: {
         cleanerId,
         type: 'profileUnlock',
+        clientId: user._id?.toString(), // Optional: for webhook processing
       },
       success_url: `${baseUrl}/client-payment-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/cleaner/${cleanerId}?booking=cancelled`,
@@ -54,7 +62,7 @@ export async function POST(req) {
   }
 }
 
-// ✅ GET: Confirm a Stripe session after redirect
+// ✅ GET: Retrieve a Stripe session (optional)
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
   const sessionId = searchParams.get('session_id');
