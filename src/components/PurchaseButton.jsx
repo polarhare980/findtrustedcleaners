@@ -57,7 +57,7 @@ export default function PurchaseButton({
 
         const nextPath = `/cleaners/${cleanerId}`;
         localStorage.setItem('redirectAfterLogin', nextPath);
-        router.push(`/login/clients?next=${encodeURIComponent(nextPath)}`);
+        router.push(`/login/client?next=${encodeURIComponent(nextPath)}`);
         return;
       }
 
