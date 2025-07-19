@@ -36,7 +36,6 @@ export default function CleanerProfile() {
     }
   }, []);
 
-  // Fetch client information (you'll need to implement this based on your auth system)
   useEffect(() => {
   const fetchClient = async () => {
     try {
@@ -46,20 +45,18 @@ export default function CleanerProfile() {
       if (res.ok && data?.user?.type === 'client') {
         setClient(data.user);
       } else {
-        // Only redirect if not already on login page
-        if (!window.location.pathname.includes('/login')) {
-          const redirectPath = `/cleaner/${id}`;
-          localStorage.setItem('redirectAfterLogin', redirectPath);
-          window.location.href = `/login/clients?next=${encodeURIComponent(redirectPath)}`;
-        }
+        // No redirect here. We allow anonymous viewing of profiles.
+        setClient(null);
       }
     } catch (err) {
       console.error('Failed to fetch client data:', err);
+      setClient(null);
     }
   };
 
   fetchClient();
-}, [id]);
+}, []);
+
 
 
   useEffect(() => {

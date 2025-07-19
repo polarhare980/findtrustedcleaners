@@ -3,12 +3,12 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-export default function PurchaseButton({ 
-  cleanerId, 
-  onPurchaseSuccess, 
-  onPurchaseStart, 
+export default function PurchaseButton({
+  cleanerId,
+  onPurchaseSuccess,
+  onPurchaseStart,
   onPurchaseError,
-  disabled = false 
+  disabled = false,
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -17,12 +17,18 @@ export default function PurchaseButton({
   const [showPopup, setShowPopup] = useState(false);
 
   useEffect(() => {
-    console.log('🧠 cleanerId:', cleanerId);
-  }, [cleanerId]);
+    if (localStorage.getItem('purchaseIntent') === 'true') {
+      console.log('🔁 Reopening popup after login');
+      localStorage.removeItem('purchaseIntent');
+      setShowPopup(true);
+    }
+  }, []);
 
   useEffect(() => {
     document.body.style.overflow = showPopup ? 'hidden' : 'unset';
-    return () => { document.body.style.overflow = 'unset'; };
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
   }, [showPopup]);
 
   useEffect(() => {
@@ -56,6 +62,7 @@ export default function PurchaseButton({
         onPurchaseError?.(errorMsg);
 
         const nextPath = `/cleaners/${cleanerId}`;
+        localStorage.setItem('purchaseIntent', 'true'); // ✅ Flag to reopen popup
         localStorage.setItem('redirectAfterLogin', nextPath);
         router.push(`/login/clients?next=${encodeURIComponent(nextPath)}`);
         return;
