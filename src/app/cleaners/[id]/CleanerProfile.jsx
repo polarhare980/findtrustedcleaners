@@ -38,30 +38,29 @@ export default function CleanerProfile() {
 
   // Fetch client information (you'll need to implement this based on your auth system)
   useEffect(() => {
-    const fetchClient = async () => {
-      try {
-        // Replace this with your actual client/user fetching logic
-        const res = await fetch('/api/auth/me', { credentials: 'include' });
-const data = await res.json();
+  const fetchClient = async () => {
+    try {
+      const res = await fetch('/api/auth/me', { credentials: 'include' });
+      const data = await res.json();
 
-if (res.ok && data?.user?.type === 'client') {
-  setClient(data.user);
-} else {
-  // Optionally redirect to login
-  localStorage.setItem('redirectAfterLogin', `/cleaner/${id}`);
-  if (!window.location.pathname.includes('/login')) {
-  localStorage.setItem('redirectAfterLogin', `/cleaner/${id}`);
-  window.location.href = `/login/clients?next=${encodeURIComponent(`/cleaner/${id}`)}`;
-}
-}
-
-      } catch (err) {
-        console.error('Failed to fetch client data:', err);
+      if (res.ok && data?.user?.type === 'client') {
+        setClient(data.user);
+      } else {
+        // Only redirect if not already on login page
+        if (!window.location.pathname.includes('/login')) {
+          const redirectPath = `/cleaner/${id}`;
+          localStorage.setItem('redirectAfterLogin', redirectPath);
+          window.location.href = `/login/clients?next=${encodeURIComponent(redirectPath)}`;
+        }
       }
-    };
+    } catch (err) {
+      console.error('Failed to fetch client data:', err);
+    }
+  };
 
-    fetchClient();
-  }, []);
+  fetchClient();
+}, [id]);
+
 
   useEffect(() => {
     const fetchCleaner = async () => {

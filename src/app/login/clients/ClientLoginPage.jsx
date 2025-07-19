@@ -38,10 +38,13 @@ export default function ClientLoginPage() {
         const nextUrl = searchParams.get('next');
         const redirectFromStorage = localStorage.getItem('redirectAfterLogin');
 
-        // ✅ Only allow redirects to /clients/... or default to dashboard
-        const safeRedirect = (url) => {
-          return url && url.startsWith('/clients/') ? url : '/clients/dashboard';
-        };
+        // ✅ Allow redirect to /clients/... or /cleaner/... after login
+const safeRedirect = (url) => {
+  if (!url) return '/clients/dashboard';
+  const allowedPrefixes = ['/clients/', '/cleaner/'];
+  return allowedPrefixes.some(prefix => url.startsWith(prefix)) ? url : '/clients/dashboard';
+};
+
 
         const destination = safeRedirect(nextUrl || redirectFromStorage);
         if (redirectFromStorage) localStorage.removeItem('redirectAfterLogin');
