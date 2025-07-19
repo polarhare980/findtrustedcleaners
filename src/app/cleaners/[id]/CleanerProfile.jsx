@@ -44,12 +44,15 @@ export default function CleanerProfile() {
         const res = await fetch('/api/auth/me', { credentials: 'include' });
 const data = await res.json();
 
-if (res.ok && data?.user?.userType === 'client') {
+if (res.ok && data?.user?.type === 'client') {
   setClient(data.user);
 } else {
   // Optionally redirect to login
   localStorage.setItem('redirectAfterLogin', `/cleaner/${id}`);
-  window.location.href = '/login/clients?next=' + encodeURIComponent(`/cleaner/${id}`);
+  if (!window.location.pathname.includes('/login')) {
+  localStorage.setItem('redirectAfterLogin', `/cleaner/${id}`);
+  window.location.href = `/login/clients?next=${encodeURIComponent(`/cleaner/${id}`)}`;
+}
 }
 
       } catch (err) {
