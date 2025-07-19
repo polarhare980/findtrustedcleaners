@@ -37,14 +37,16 @@ export default function ClientLoginPage() {
         const nextUrl = searchParams.get('next');
         const redirectFromStorage = localStorage.getItem('redirectAfterLogin');
 
-        if (nextUrl) {
-          router.push(nextUrl);
-        } else if (redirectFromStorage) {
-          localStorage.removeItem('redirectAfterLogin');
-          router.push(redirectFromStorage);
-        } else {
-          router.push('/clients/dashboard');
-        }
+        const safeRedirect = (url) => {
+          return url && url.startsWith('/') && !url.startsWith('//') ? url : '/clients/dashboard';
+        };
+
+        const destination = safeRedirect(nextUrl || redirectFromStorage);
+        console.log('🔁 Redirecting to:', destination);
+
+        if (redirectFromStorage) localStorage.removeItem('redirectAfterLogin');
+
+        router.push(destination);
       } else {
         alert(data.message || 'Login failed.');
       }
@@ -104,7 +106,9 @@ export default function ClientLoginPage() {
           <p className="text-gray-700 font-medium">Don&apos;t have an account?</p>
           <Link
             href={`/register/client?next=${encodeURIComponent(
-              searchParams.get('next') || localStorage.getItem('redirectAfterLogin') || '/clients/dashboard'
+              searchParams.get('next') ||
+                localStorage.getItem('redirectAfterLogin') ||
+                '/clients/dashboard'
             )}`}
             className="inline-block bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-8 py-3 rounded-full text-lg font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300 ease-out hover:scale-105"
           >
