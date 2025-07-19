@@ -1,6 +1,5 @@
-'use client';
-
 import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
 import React from 'react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import BookingPaymentWrapper from '@/components/BookingPaymentForm';
@@ -14,7 +13,9 @@ function isSafeEmbed(code) {
   return hasIframe && !containsForbidden;
 }
 
-export default function CleanerProfile({ id }) {
+export default function CleanerProfile() {
+  const { id } = useParams();
+
   const [mounted, setMounted] = useState(false);
   const [cleaner, setCleaner] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -32,9 +33,11 @@ export default function CleanerProfile({ id }) {
     }
   }, []);
 
+  // Fetch client information (you'll need to implement this based on your auth system)
   useEffect(() => {
     const fetchClient = async () => {
       try {
+        // Replace this with your actual client/user fetching logic
         const res = await fetch('/api/auth/me', { credentials: 'include' });
         if (res.ok) {
           const userData = await res.json();
@@ -69,13 +72,19 @@ export default function CleanerProfile({ id }) {
         }
 
         setCleaner(data.cleaner);
-
+        
+        // Enhanced debug logging
         console.log('🔍 CLEANER OBJECT:', data.cleaner);
+        console.log('🔍 CLEANER ID (_id):', data.cleaner?._id);
+        console.log('🔍 CLEANER ID (id):', data.cleaner?.id);
+        console.log('🔍 CLEANER KEYS:', Object.keys(data.cleaner || {}));
         console.log('🔍 FULL CLEANER DATA:', JSON.stringify(data.cleaner, null, 2));
         console.log('🎯 Availability data received:', JSON.stringify(data.cleaner.availability, null, 2));
-        console.log('🔐 Access status:', data.hasAccess);
+        console.log('🎯 Monday data:', data.cleaner.availability?.Monday);
+        console.log('🎯 Available days:', Object.keys(data.cleaner.availability || {}));
 
         setHasAccess(data.hasAccess || false);
+        console.log('🔐 Access status:', data.hasAccess);
       } catch (err) {
         console.error('Failed to load cleaner profile', err);
         setError('Failed to fetch cleaner profile.');
@@ -84,68 +93,72 @@ export default function CleanerProfile({ id }) {
       }
     };
 
-    if (id) {
-      fetchCleaner();
-    }
+    fetchCleaner();
   }, [id]);
 
+  // Check permissions when cleaner, client, or selectedSlot changes
   useEffect(() => {
-    const checkPermissions = async () => {
-      if (!cleaner || !client?.email) {
+  const checkPermissions = async () => {
+    if (!cleaner || !client?.email) {
+      setCanViewContact(false);
+      return;
+    }
+
+    setPermissionLoading(true);
+    try {
+      const cleanerId = getCleanerId();
+
+      const res = await fetch('/api/unlock-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          cleanerId,
+          clientEmail: client.email,
+          day: selectedSlot?.day || null,
+          hour: selectedSlot?.hour || null,
+        }),
+      });
+
+      const result = await res.json();
+
+      if (res.ok && result.success) {
+        setCanViewContact(result.unlocked);
+        console.log('🔐 Permission check result:', result.unlocked);
+      } else {
+        console.error('❌ Unlock API Error:', result.message);
         setCanViewContact(false);
-        return;
       }
+    } catch (err) {
+      console.error('Permission check failed:', err);
+      setCanViewContact(false);
+    } finally {
+      setPermissionLoading(false);
+    }
+  };
 
-      setPermissionLoading(true);
-      try {
-        const cleanerId = cleaner._id || cleaner.id || id;
+  checkPermissions();
+}, [cleaner, client, selectedSlot]);
 
-        const res = await fetch('/api/unlock-status', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({
-            cleanerId,
-            clientEmail: client.email,
-            day: selectedSlot?.day || null,
-            hour: selectedSlot?.hour || null,
-          }),
-        });
-
-        const result = await res.json();
-
-        if (res.ok && result.success) {
-          setCanViewContact(result.unlocked);
-          console.log('🔐 Permission check result:', result.unlocked);
-        } else {
-          console.error('❌ Unlock API Error:', result.message);
-          setCanViewContact(false);
-        }
-      } catch (err) {
-        console.error('Permission check failed:', err);
-        setCanViewContact(false);
-      } finally {
-        setPermissionLoading(false);
-      }
-    };
-
-    checkPermissions();
-  }, [cleaner, client, selectedSlot]);
 
   const handlePurchaseSuccess = (cleanerData) => {
     console.log('✅ Purchase successful, received data:', cleanerData);
-
+    
+    // Update access status
     setHasAccess(true);
     setCanViewContact(true);
-
+    
+    // Update cleaner data with the contact information
     setCleaner((prev) => ({
       ...prev,
       phone: cleanerData.phone || prev.phone,
       email: cleanerData.email || prev.email,
+      // Handle both cleanerName and realName
       companyName: cleanerData.companyName || cleanerData.cleanerName || prev.companyName || prev.realName,
-      ...cleanerData,
+      // Ensure we keep all existing data
+      ...cleanerData
     }));
-
+    
     setPurchaseLoading(false);
   };
 
@@ -158,20 +171,6 @@ export default function CleanerProfile({ id }) {
     setPurchaseLoading(false);
     setError('Purchase failed. Please try again.');
   };
-
-  // You'll render UI here (e.g. spinner, error, cleaner data, etc.)
-  return (
-    <div className="p-6">
-      {loading && <LoadingSpinner />}
-      {error && <div className="text-red-600">{error}</div>}
-      {cleaner && (
-        <div>
-          <h1 className="text-2xl font-bold">{cleaner.companyName || cleaner.realName}</h1>
-          {/* Include additional UI logic here */}
-        </div>
-      )}
-    </div>
-  );
 
 
   // Get the cleaner ID - handle multiple possible field names
