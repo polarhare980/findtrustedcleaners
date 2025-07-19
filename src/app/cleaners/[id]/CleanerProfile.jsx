@@ -42,10 +42,16 @@ export default function CleanerProfile() {
       try {
         // Replace this with your actual client/user fetching logic
         const res = await fetch('/api/auth/me', { credentials: 'include' });
-        if (res.ok) {
-          const userData = await res.json();
-          setClient(userData);
-        }
+const data = await res.json();
+
+if (res.ok && data?.user?.userType === 'client') {
+  setClient(data.user);
+} else {
+  // Optionally redirect to login
+  localStorage.setItem('redirectAfterLogin', `/cleaner/${id}`);
+  window.location.href = '/login/clients?next=' + encodeURIComponent(`/cleaner/${id}`);
+}
+
       } catch (err) {
         console.error('Failed to fetch client data:', err);
       }

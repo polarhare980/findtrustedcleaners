@@ -26,6 +26,7 @@ export default function ClientLoginPage() {
         body: JSON.stringify({
           email: email.trim(),
           password,
+          userType: 'client', // ✅ FIXED: add userType
         }),
       });
 
@@ -42,10 +43,9 @@ export default function ClientLoginPage() {
         };
 
         const destination = safeRedirect(nextUrl || redirectFromStorage);
-        console.log('🔁 Redirecting to:', destination);
-
         if (redirectFromStorage) localStorage.removeItem('redirectAfterLogin');
 
+        console.log('🔁 Redirecting to:', destination);
         router.push(destination);
       } else {
         alert(data.message || 'Login failed.');
