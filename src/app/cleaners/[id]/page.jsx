@@ -1,3 +1,4 @@
+// ✅ No 'use client' here
 import CleanerProfile from './CleanerProfile';
 
 export const metadata = {
@@ -5,6 +6,6 @@ export const metadata = {
   description: 'View the profile, services, and availability of trusted cleaners near you.',
 };
 
-export default function Page({ params }) {
-  return <CleanerProfile id={params.id} />;
+export default function Page() {
+  return <CleanerProfile />;
 }
