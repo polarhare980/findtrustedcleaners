@@ -26,7 +26,7 @@ export default function ClientLoginPage() {
         body: JSON.stringify({
           email: email.trim(),
           password,
-          userType: 'client', // ✅ FIXED: add userType
+          userType: 'client',
         }),
       });
 
@@ -38,8 +38,9 @@ export default function ClientLoginPage() {
         const nextUrl = searchParams.get('next');
         const redirectFromStorage = localStorage.getItem('redirectAfterLogin');
 
+        // ✅ Only allow redirects to /clients/... or default to dashboard
         const safeRedirect = (url) => {
-          return url && url.startsWith('/') && !url.startsWith('//') ? url : '/clients/dashboard';
+          return url && url.startsWith('/clients/') ? url : '/clients/dashboard';
         };
 
         const destination = safeRedirect(nextUrl || redirectFromStorage);
@@ -106,9 +107,7 @@ export default function ClientLoginPage() {
           <p className="text-gray-700 font-medium">Don&apos;t have an account?</p>
           <Link
             href={`/register/client?next=${encodeURIComponent(
-              searchParams.get('next') ||
-                localStorage.getItem('redirectAfterLogin') ||
-                '/clients/dashboard'
+              searchParams.get('next') || '/clients/dashboard'
             )}`}
             className="inline-block bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-8 py-3 rounded-full text-lg font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300 ease-out hover:scale-105"
           >
