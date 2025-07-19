@@ -1,3 +1,6 @@
+import mongoose from 'mongoose'; // ✅ add this
+
+
 import { connectToDatabase } from '@/lib/db';
 import Cleaner from '@/models/Cleaner';
 import bcrypt from 'bcryptjs';
@@ -88,7 +91,7 @@ export async function POST(req) {
       }
 
       const db = (await connectToDatabase()).db();
-      const existingClient = await db.collection('clients').findOne({ email: trimmedEmail });
+      const existing = await mongoose.connection.db.collection('clients').findOne({ email: trimmedEmail });
 
       if (existingClient) {
         console.log('❌ Client already exists:', trimmedEmail);
@@ -109,7 +112,7 @@ export async function POST(req) {
         createdAt: new Date(),
       };
 
-      const result = await db.collection('clients').insertOne(newClient);
+      const result = await mongoose.connection.db.collection('clients').insertOne(newClient);
       console.log('✅ Client saved to MongoDB:', result.insertedId.toString());
       return sendCookie(result.insertedId.toString(), 'client');
     }

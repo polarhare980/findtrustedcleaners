@@ -2,6 +2,7 @@ import { connectToDatabase } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import { createToken } from '@/lib/auth';
 import { serialize } from 'cookie';
+import mongoose from 'mongoose'; // ✅ Add this
 import { NextResponse } from 'next/server';
 
 export async function POST(req) {
@@ -25,10 +26,10 @@ export async function POST(req) {
       return NextResponse.json({ success: false, message: 'Missing required fields.' }, { status: 400 });
     }
 
-    const db = (await connectToDatabase()).db();
-
     const trimmedEmail = email.trim().toLowerCase();
-    const existing = await db.collection('clients').findOne({ email: trimmedEmail });
+
+    // ✅ Use Mongoose to access native collection
+    const existing = await mongoose.connection.db.collection('clients').findOne({ email: trimmedEmail });
 
     if (existing) {
       return NextResponse.json({ success: false, message: 'Client already exists.' }, { status: 409 });
@@ -50,7 +51,7 @@ export async function POST(req) {
       createdAt: new Date(),
     };
 
-    const result = await db.collection('clients').insertOne(newClient);
+    const result = await mongoose.connection.db.collection('clients').insertOne(newClient);
     console.log('✅ Client saved to MongoDB:', result.insertedId.toString());
 
     return sendCookie(result.insertedId.toString(), 'client');
@@ -76,4 +77,3 @@ function sendCookie(userId, userType) {
     headers: { 'Set-Cookie': cookie, 'Content-Type': 'application/json' },
   });
 }
-
