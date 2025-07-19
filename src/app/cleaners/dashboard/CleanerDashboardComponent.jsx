@@ -21,7 +21,8 @@ export default function CleanerDashboardComponent() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [deleting, setDeleting] = useState(false);
-  
+  const [bookings, setBookings] = useState([]);
+
   // Image upload states
   const [selectedFile, setSelectedFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
@@ -44,6 +45,25 @@ export default function CleanerDashboardComponent() {
           };
 
           setCleaner(cleanerUser);
+
+          // 📦 Fetch bookings
+const fetchBookings = async () => {
+  try {
+    const res = await fetch(`/api/bookings/cleaner/${cleanerUser._id}`, {
+      credentials: 'include',
+    });
+    const data = await res.json();
+    if (data.success) {
+      setBookings(data.bookings);
+    } else {
+      console.warn('Failed to load bookings:', data.message);
+    }
+  } catch (err) {
+    console.error('Booking fetch failed:', err);
+  }
+};
+fetchBookings();
+
 
           const cleanerData = {
             ...cleanerUser,
@@ -934,37 +954,42 @@ export default function CleanerDashboardComponent() {
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl p-6">
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent mb-6">
-            ⚡ Quick Actions
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <button
-              onClick={() => window.open('/api/cleaners/export-data', '_blank')}
-              className="flex items-center gap-3 p-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg font-medium transition-all duration-300 hover:transform hover:-translate-y-0.5 hover:shadow-lg"
-            >
-              <span className="text-xl">📄</span>
-              <span>Export Data</span>
-            </button>
-            
-            <button
-              onClick={() => router.push('/cleaner/bookings')}
-              className="flex items-center gap-3 p-4 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-lg font-medium transition-all duration-300 hover:transform hover:-translate-y-0.5 hover:shadow-lg"
-            >
-              <span className="text-xl">📋</span>
-              <span>View Bookings</span>
-            </button>
-            
-            <button
-              onClick={() => router.push('/cleaner/earnings')}
-              className="flex items-center gap-3 p-4 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white rounded-lg font-medium transition-all duration-300 hover:transform hover:-translate-y-0.5 hover:shadow-lg"
-            >
-              <span className="text-xl">💰</span>
-              <span>View Earnings</span>
-            </button>
-          </div>
-        </div>
+       {/* 📌 Quick Actions */}
+<div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl p-6 mt-10">
+  <h2 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent mb-6">
+    ⚡ Quick Actions
+  </h2>
+
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    {/* 📄 Export Cleaner Data */}
+    <button
+      onClick={() => window.open('/api/cleaners/export-data', '_blank')}
+      className="flex items-center justify-center gap-3 px-5 py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl font-semibold transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+    >
+      <span className="text-xl">📄</span>
+      <span>Export My Data</span>
+    </button>
+
+    {/* 📋 View All Bookings */}
+    <button
+      onClick={() => router.push('/cleaner/bookings')}
+      className="flex items-center justify-center gap-3 px-5 py-4 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-xl font-semibold transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+    >
+      <span className="text-xl">📋</span>
+      <span>View All Bookings</span>
+    </button>
+
+    {/* 💰 View Earnings */}
+    <button
+      onClick={() => router.push('/cleaner/earnings')}
+      className="flex items-center justify-center gap-3 px-5 py-4 bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-700 hover:to-yellow-800 text-white rounded-xl font-semibold transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+    >
+      <span className="text-xl">💰</span>
+      <span>Check Earnings</span>
+    </button>
+  </div>
+</div>
+
       </div>
     </div>
   );
