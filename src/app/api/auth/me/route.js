@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { protectRoute } from '@/lib/auth';
 import Cleaner from '@/models/Cleaner';
 import Client from '@/models/Client';
