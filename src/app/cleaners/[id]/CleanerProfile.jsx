@@ -37,7 +37,9 @@ export default function CleanerProfile() {
   }, []);
 
   useEffect(() => {
-  const fetchClient = async () => {
+  if (!id) return;
+
+  const fetchCleaner = async () => {
     try {
       const res = await fetch('/api/auth/me', { credentials: 'include' });
       const data = await res.json();
