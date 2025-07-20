@@ -16,7 +16,7 @@ export async function GET(req) {
   if (!valid) return response;
 
   try {
-    const userId = user._id;
+    const userId = user._id || user.id;
     const userType = user.type;
 
     if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
