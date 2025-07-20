@@ -7,6 +7,8 @@ import React from 'react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import BookingPaymentWrapper from '@/components/BookingPaymentForm';
 import PurchaseButton from '@/components/PurchaseButton';
+import { getCleanerId } from '@/lib/utils';
+
 
 function isSafeEmbed(code) {
   const hasIframe = code.includes('<iframe') && code.includes('src=');
@@ -116,7 +118,8 @@ export default function CleanerProfile() {
 
     setPermissionLoading(true);
     try {
-      const cleanerId = getCleanerId();
+      const cleanerId = getCleanerId(cleaner, id);
+
 
       const res = await fetch('/api/unlock-status', {
         method: 'POST',
@@ -184,10 +187,7 @@ export default function CleanerProfile() {
 
 
   // Get the cleaner ID - handle multiple possible field names
-  const getCleanerId = () => {
-    return cleaner?._id || cleaner?.id || cleaner?.cleanerId || cleaner?.uuid || id;
-  };
-
+  
   if (!mounted) return null;
   if (loading) return <LoadingSpinner />;
 
@@ -279,7 +279,7 @@ export default function CleanerProfile() {
             {/* Enhanced debug info in development */}
             {process.env.NODE_ENV === 'development' && (
               <div className="text-xs text-gray-500 mb-4 bg-yellow-100 p-2 rounded">
-                Debug: cleanerId={getCleanerId()}, hasAccess={hasAccess.toString()}, canViewContact={canViewContact.toString()}, purchaseLoading={purchaseLoading.toString()}
+                Debug: cleanerId={getCleanerId(cleaner, id)}, hasAccess={hasAccess.toString()}, canViewContact={canViewContact.toString()}, purchaseLoading={purchaseLoading.toString()}
                 <br />
                 URL param ID: {id}
                 <br />
@@ -325,7 +325,7 @@ export default function CleanerProfile() {
                 </div>
                 
                 {/* Fixed condition to handle both _id and id */}
-                {cleaner && getCleanerId() ? (
+                {cleaner && getCleanerId(cleaner, id) ? (
                   <div className="relative z-50">
                     {purchaseLoading && (
                       <div className="absolute inset-0 bg-white/50 backdrop-blur-sm rounded-full flex items-center justify-center z-[60]">
@@ -335,7 +335,7 @@ export default function CleanerProfile() {
                     {/* Purchase button with maximum z-index and isolation */}
                     <div style={{position: 'relative', zIndex: 9999, isolation: 'isolate'}}>
                       <PurchaseButton
-                        cleanerId={getCleanerId()}
+                        cleanerId={getCleanerId(cleaner, id)}
                         day={selectedSlot?.day}
                         hour={selectedSlot?.hour}
                         onPurchaseSuccess={handlePurchaseSuccess}
@@ -513,14 +513,15 @@ export default function CleanerProfile() {
         </div>
 
         {/* Booking Section */}
-        {canViewContact && selectedSlot && getCleanerId() && (
+        {canViewContact && selectedSlot && getCleanerId(cleaner, id)
+ && (
           <div className="bg-white/25 backdrop-blur-xl border border-white/20 rounded-3xl p-8 shadow-2xl">
             <h2 className="text-2xl font-bold text-center mb-6 bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent">
               🎯 Booking for {selectedSlot.day} at {selectedSlot.hour}:00
             </h2>
             <div className="bg-white/30 backdrop-blur-md rounded-2xl p-6 border border-white/20">
               <BookingPaymentWrapper
-                cleanerId={getCleanerId()}
+                cleanerId={getCleanerId(cleaner, id)}
                 day={selectedSlot.day}
                 time={selectedSlot.hour}
                 price={cleaner.rates || cleaner.rate}

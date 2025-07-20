@@ -11,6 +11,7 @@ export async function POST(req) {
 
   const { valid, user, response } = await protectRoute(req);
   if (!valid) return response;
+
   if (user.type !== 'client') {
     return NextResponse.json({ success: false, message: 'Access denied.' }, { status: 403 });
   }
@@ -20,6 +21,12 @@ export async function POST(req) {
 
     if (!cleanerId || !day || !time || !stripePaymentIntentId) {
       return NextResponse.json({ success: false, message: 'Missing required fields.' }, { status: 400 });
+    }
+
+    // ✅ Lookup cleaner name
+    const cleaner = await Cleaner.findById(cleanerId);
+    if (!cleaner) {
+      return NextResponse.json({ success: false, message: 'Cleaner not found.' }, { status: 404 });
     }
 
     // ✅ Create booking
@@ -43,6 +50,9 @@ export async function POST(req) {
       success: true,
       message: 'Booking created successfully.',
       booking: newBooking,
+      cleanerName: cleaner.realName,
+      slotDay: day,
+      slotTime: time,
     });
   } catch (err) {
     console.error('❌ Booking creation error:', err.message);

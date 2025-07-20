@@ -3,13 +3,17 @@
 import { useEffect, useState } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { useRouter } from 'next/navigation';
+import { getCleanerId } from '@/lib/utils';
 
 // ✅ Load Stripe
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY);
 
 // ✅ Wrapper Component
-export default function BookingPaymentWrapper({ cleanerId, day, time, price }) {
+export default function BookingPaymentWrapper({ cleaner, day, time, price }) {
   const [clientSecret, setClientSecret] = useState(null);
+  const [paymentIntentId, setPaymentIntentId] = useState(null);
+  const cleanerId = getCleanerId(cleaner);
 
   useEffect(() => {
     const createPaymentIntent = async () => {
@@ -25,6 +29,7 @@ export default function BookingPaymentWrapper({ cleanerId, day, time, price }) {
 
         if (res.ok && data.success) {
           setClientSecret(data.clientSecret);
+          setPaymentIntentId(data.paymentIntentId); // ✅ capture this
         } else {
           alert('Failed to create payment intent.');
         }
@@ -34,42 +39,81 @@ export default function BookingPaymentWrapper({ cleanerId, day, time, price }) {
       }
     };
 
-    createPaymentIntent();
+    if (cleanerId) {
+      createPaymentIntent();
+    }
   }, [cleanerId, day, time, price]);
 
   if (!clientSecret) return <div>Loading payment form...</div>;
 
   return (
     <Elements options={{ clientSecret }} stripe={stripePromise}>
-      <BookingPaymentForm />
+      <BookingPaymentForm
+        cleaner={cleaner}
+        day={day}
+        time={time}
+        stripePaymentIntentId={paymentIntentId}
+      />
     </Elements>
   );
 }
 
 // ✅ Stripe Elements Payment Form
-function BookingPaymentForm() {
+function BookingPaymentForm({ cleaner, day, time, stripePaymentIntentId }) {
   const stripe = useStripe();
   const elements = useElements();
+  const router = useRouter();
+
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!stripe || !elements) return;
+    if (!stripe || !elements || !stripePaymentIntentId) return;
 
     setLoading(true);
     setMessage('');
 
-    const { error } = await stripe.confirmPayment({
+    const { error, paymentIntent } = await stripe.confirmPayment({
       elements,
-      confirmParams: { return_url: window.location.href }, // Optional redirect
+      confirmParams: { return_url: window.location.href },
+      redirect: 'if_required',
     });
 
     if (error) {
       setMessage(error.message);
-    } else {
-      setMessage('Payment authorised! Waiting for cleaner confirmation.');
+      setLoading(false);
+      return;
+    }
+
+    // ✅ Create booking in DB
+    try {
+      const res = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          cleanerId: getCleanerId(cleaner),
+          day,
+          time,
+          stripePaymentIntentId,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        router.push(
+          `/booking/confirmation?cleanerName=${encodeURIComponent(data.cleanerName)}&slotDay=${data.slotDay}&slotTime=${data.slotTime}`
+        );
+      } else {
+        console.error('Booking error:', data.message);
+        setMessage('Payment was successful but booking failed.');
+      }
+    } catch (err) {
+      console.error('Booking creation error:', err);
+      setMessage('Payment succeeded but something went wrong with booking.');
     }
 
     setLoading(false);
@@ -85,7 +129,7 @@ function BookingPaymentForm() {
       >
         {loading ? 'Processing...' : 'Pay Now to Hold Booking'}
       </button>
-      {message && <div className="text-center mt-4">{message}</div>}
+      {message && <div className="text-center mt-4 text-red-600">{message}</div>}
     </form>
   );
 }

@@ -637,9 +637,9 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
         )}
 
         <div className="cleaner-actions mt-4">
-          <Link href={`/cleaners/${cleaner._id}`} className="btn-request-booking">
-            View Profile
-          </Link>
+           <Link href={`/cleaners/${cleaner._id}`}>
+           <a className="btn-request-booking">View Profile</a>
+         </Link>
         </div>
       </div>
 

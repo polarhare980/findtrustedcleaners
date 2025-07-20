@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { getCleanerId } from '@/lib/utils'; // ✅ Import helper
 
 export default function PurchaseButton({
-  cleanerId,
+  cleaner,
   onPurchaseSuccess,
   onPurchaseStart,
   onPurchaseError,
@@ -15,6 +16,8 @@ export default function PurchaseButton({
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
+
+  const cleanerId = getCleanerId(cleaner); // ✅ Use standardised ID
 
   useEffect(() => {
     if (localStorage.getItem('purchaseIntent') === 'true') {
@@ -62,7 +65,7 @@ export default function PurchaseButton({
         onPurchaseError?.(errorMsg);
 
         const nextPath = `/cleaners/${cleanerId}`;
-        localStorage.setItem('purchaseIntent', 'true'); // ✅ Flag to reopen popup
+        localStorage.setItem('purchaseIntent', 'true');
         localStorage.setItem('redirectAfterLogin', nextPath);
         router.push(`/login/clients?next=${encodeURIComponent(nextPath)}`);
         return;
