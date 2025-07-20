@@ -217,21 +217,26 @@ export default function CleanerProfile() {
         <div className="bg-white/25 backdrop-blur-xl border border-white/20 rounded-3xl p-8 shadow-2xl mb-6 transition-all duration-300 hover:shadow-3xl">
           {/* Profile Header */}
           <div className="flex flex-col md:flex-row items-center md:items-start gap-6 mb-8">
-            {cleaner.image && (
-              <div className="relative group">
-                <img 
-                  src={cleaner.image} 
-                  alt={cleaner.realName} 
-                  className="w-32 h-32 md:w-40 md:h-40 object-cover rounded-full border-4 border-white/30 shadow-lg transition-transform duration-300 group-hover:scale-105" 
-                />
-                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-teal-600/20 to-teal-800/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              </div>
-            )}
+            <div className="relative group">
+  <img 
+    src={cleaner.image || '/default-avatar.png'} 
+    alt={cleaner.realName} 
+    className="w-32 h-32 md:w-40 md:h-40 object-cover rounded-full border-4 border-white/30 shadow-lg transition-transform duration-300 group-hover:scale-105" 
+  />
+  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-teal-600/20 to-teal-800/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+</div>
             
             <div className="flex-1 text-center md:text-left">
               <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent">
                 {cleaner.realName}
               </h1>
+
+              {cleaner.pending && (
+  <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-4 mb-6 rounded-xl shadow">
+    ⚠️ This profile is currently pending approval for a recent booking and may be unavailable.
+  </div>
+)}
+
 
               {cleaner.googleReviewRating && cleaner.googleReviewCount && (
                 <p className="text-lg font-medium text-teal-800">

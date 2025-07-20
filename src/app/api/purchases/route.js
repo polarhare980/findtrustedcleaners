@@ -9,6 +9,9 @@ export async function POST(req) {
 
   const { valid, user, response } = await protectRoute(req);
   if (!valid) return response;
+  if (user.type !== 'client') {
+    return NextResponse.json({ success: false, message: 'Access denied.' }, { status: 403 });
+  }
 
   try {
     const { cleanerId } = await req.json();
@@ -16,14 +19,14 @@ export async function POST(req) {
     // ✅ Check if purchase already exists
     const existing = await Purchase.findOne({ clientId: user._id, cleanerId });
     if (existing) {
-      // Fetch cleaner contact details
       const cleaner = await Cleaner.findById(cleanerId);
       return NextResponse.json({
         success: true,
+        message: 'Purchase already exists',
         cleanerName: cleaner.companyName || cleaner.realName,
         phone: cleaner.phone,
         email: cleaner.email,
-      });
+      }, { status: 200 });
     }
 
     // ✅ Create new purchase

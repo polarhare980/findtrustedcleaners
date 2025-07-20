@@ -13,30 +13,33 @@ export async function PUT(req, { params }) {
 
   const { valid, user, response } = await protectRoute(req);
   if (!valid) return response;
-
-  const purchase = await Purchase.findById(purchaseId);
-  if (!purchase) return NextResponse.json({ error: 'Purchase not found' }, { status: 404 });
-
-  if (String(user._id) !== String(purchase.cleanerId) && user.type !== 'admin') {
+  if (user.type !== 'cleaner') {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   try {
-    // 1. Capture the payment
-    await stripe.paymentIntents.capture(purchase.paymentIntentId);
+    const purchase = await Purchase.findById(purchaseId);
+    if (!purchase) return NextResponse.json({ error: 'Purchase not found' }, { status: 404 });
 
-    // 2. Mark slot as booked
+    if (String(user._id) !== String(purchase.cleanerId)) {
+      return NextResponse.json({ error: 'You can only decline your own bookings.' }, { status: 403 });
+    }
+
+    // Cancel the payment
+    await stripe.paymentIntents.cancel(purchase.paymentIntentId);
+
+    // Mark slot as available
     const update = {};
-    update[`availability.${purchase.day}.${purchase.hour}`] = false;
+    update[`availability.${purchase.day}.${purchase.hour}`] = true;
     await Cleaner.findByIdAndUpdate(purchase.cleanerId, { $set: update });
 
-    // 3. Update purchase status
-    purchase.status = 'approved';
+    // Update purchase status
+    purchase.status = 'declined';
     await purchase.save();
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error('❌ Approve error:', err);
-    return NextResponse.json({ error: 'Failed to approve booking' }, { status: 500 });
+    console.error('❌ Decline error:', err);
+    return NextResponse.json({ error: 'Failed to decline booking' }, { status: 500 });
   }
 }

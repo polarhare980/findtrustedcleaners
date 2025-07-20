@@ -13,24 +13,27 @@ export async function PUT(req, { params }) {
 
   const { valid, user, response } = await protectRoute(req);
   if (!valid) return response;
-
-  const purchase = await Purchase.findById(purchaseId);
-  if (!purchase) return NextResponse.json({ error: 'Purchase not found' }, { status: 404 });
-
-  if (String(user._id) !== String(purchase.cleanerId) && user.type !== 'admin') {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  if (user.type !== 'cleaner') {
+    return NextResponse.json({ error: 'Access denied' }, { status: 403 });
   }
 
   try {
-    // 1. Cancel the payment intent
+    const purchase = await Purchase.findById(purchaseId);
+    if (!purchase) return NextResponse.json({ error: 'Purchase not found' }, { status: 404 });
+
+    if (String(user._id) !== String(purchase.cleanerId)) {
+      return NextResponse.json({ error: 'You can only decline your own bookings.' }, { status: 403 });
+    }
+
+    // Cancel the payment intent
     await stripe.paymentIntents.cancel(purchase.paymentIntentId);
 
-    // 2. Mark slot as available again
+    // Mark slot as available again
     const update = {};
     update[`availability.${purchase.day}.${purchase.hour}`] = true;
     await Cleaner.findByIdAndUpdate(purchase.cleanerId, { $set: update });
 
-    // 3. Update purchase status
+    // Update purchase status
     purchase.status = 'declined';
     await purchase.save();
 

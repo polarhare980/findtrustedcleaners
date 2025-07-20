@@ -2,64 +2,63 @@ import { connectToDatabase } from '@/lib/db';
 import Booking from '@/models/booking';
 import Cleaner from '@/models/Cleaner';
 import { NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/auth';
-import Stripe from 'stripe';
+import { protectRoute } from '@/lib/auth';
+import { ObjectId } from 'mongodb';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
-export async function PUT(req, { params }) {
+// ✅ Create a new booking (Client only)
+export async function POST(req) {
   await connectToDatabase();
-  const { id } = params;
+
+  const { valid, user, response } = await protectRoute(req);
+  if (!valid) return response;
+  if (user.type !== 'client') {
+    return NextResponse.json({ success: false, message: 'Access denied.' }, { status: 403 });
+  }
 
   try {
-    const token = req.cookies.get('token')?.value;
+    const { cleanerId, day, time, stripePaymentIntentId } = await req.json();
 
-    if (!token) {
-      return NextResponse.json({ success: false, message: 'Unauthorised' }, { status: 401 });
+    if (!cleanerId || !day || !time || !stripePaymentIntentId) {
+      return NextResponse.json({ success: false, message: 'Missing required fields.' }, { status: 400 });
     }
 
-    const user = await verifyToken(token);
+    // ✅ Create booking
+    const newBooking = await Booking.create({
+      clientId: user._id,
+      cleanerId,
+      day,
+      time,
+      stripePaymentIntentId,
+      status: 'pending',
+      createdAt: new Date(),
+    });
 
-    if (!user || user.type !== 'cleaner') {
-      return NextResponse.json({ success: false, message: 'Access denied.' }, { status: 403 });
-    }
+    // ✅ Set cleaner as pending
+    await Cleaner.updateOne(
+      { _id: new ObjectId(cleanerId) },
+      { $set: { pending: true } }
+    );
 
-    const booking = await Booking.findById(id);
-
-    if (!booking) {
-      return NextResponse.json({ success: false, message: 'Booking not found.' }, { status: 404 });
-    }
-
-    if (booking.cleanerId.toString() !== user.id) {
-      return NextResponse.json({ success: false, message: 'You can only accept your own bookings.' }, { status: 403 });
-    }
-
-    if (booking.status !== 'pending') {
-      return NextResponse.json({ success: false, message: 'Booking is not pending.' }, { status: 400 });
-    }
-
-    // ✅ Capture the held payment
-    await stripe.paymentIntents.capture(booking.stripePaymentIntentId);
-
-    // ✅ Update booking to confirmed
-    booking.status = 'confirmed';
-    booking.acceptedBy = user.id;
-    await booking.save();
-
-    // ✅ Update cleaner availability to fully booked
-    const cleaner = await Cleaner.findById(booking.cleanerId);
-    if (!cleaner.availability[booking.day]) cleaner.availability[booking.day] = {};
-    cleaner.availability[booking.day][booking.time] = false; // Fully booked
-    await cleaner.save();
-
-    // ✅ Return the updated booking for instant frontend update
     return NextResponse.json({
       success: true,
-      message: 'Booking accepted and payment captured successfully.',
-      booking, // Return the updated booking object
+      message: 'Booking created successfully.',
+      booking: newBooking,
     });
   } catch (err) {
-    console.error('❌ Booking acceptance error:', err.message);
+    console.error('❌ Booking creation error:', err.message);
+    return NextResponse.json({ success: false, message: 'Server error.' }, { status: 500 });
+  }
+}
+
+// ✅ Optional: Get all bookings (e.g. for admin panel)
+export async function GET() {
+  await connectToDatabase();
+
+  try {
+    const bookings = await Booking.find().sort({ createdAt: -1 });
+    return NextResponse.json({ success: true, bookings });
+  } catch (err) {
+    console.error('❌ Fetch bookings error:', err.message);
     return NextResponse.json({ success: false, message: 'Server error.' }, { status: 500 });
   }
 }

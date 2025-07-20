@@ -7,6 +7,7 @@ import Link from 'next/link';
 export default function ClientLoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -14,7 +15,7 @@ export default function ClientLoginPage() {
     e.preventDefault();
 
     if (!email.trim() || !password) {
-      alert('Please enter both email and password.');
+      setError('Please enter both email and password.');
       return;
     }
 
@@ -38,13 +39,11 @@ export default function ClientLoginPage() {
         const nextUrl = searchParams.get('next');
         const redirectFromStorage = localStorage.getItem('redirectAfterLogin');
 
-        // ✅ Allow redirect to /clients/... or /cleaner/... after login
-const safeRedirect = (url) => {
-  if (!url) return '/clients/dashboard';
-  const allowedPrefixes = ['/clients/', '/cleaner/'];
-  return allowedPrefixes.some(prefix => url.startsWith(prefix)) ? url : '/clients/dashboard';
-};
-
+        const safeRedirect = (url) => {
+          if (!url) return '/clients/dashboard';
+          const allowedPrefixes = ['/clients/', '/cleaner/'];
+          return allowedPrefixes.some(prefix => url.startsWith(prefix)) ? url : '/clients/dashboard';
+        };
 
         const destination = safeRedirect(nextUrl || redirectFromStorage);
         if (redirectFromStorage) localStorage.removeItem('redirectAfterLogin');
@@ -52,11 +51,11 @@ const safeRedirect = (url) => {
         console.log('🔁 Redirecting to:', destination);
         router.push(destination);
       } else {
-        alert(data.message || 'Login failed.');
+        setError(data.message || 'Login failed.');
       }
     } catch (err) {
       console.error('Login error:', err);
-      alert('Something went wrong. Please try again.');
+      setError('Something went wrong. Please try again.');
     }
   };
 
@@ -97,6 +96,10 @@ const safeRedirect = (url) => {
               placeholder="Enter your password"
             />
           </div>
+
+          {error && (
+            <p className="text-red-600 text-sm -mt-4">{error}</p>
+          )}
 
           <button
             type="submit"
