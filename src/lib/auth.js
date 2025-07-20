@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import { NextResponse } from 'next/server';
 
 // ✅ Example Secret (replace in production)
-const JWT_SECRET = 'super_secret_debug_key';
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // ✅ Create Token
 export function createToken(payload) {
