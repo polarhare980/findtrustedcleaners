@@ -81,7 +81,6 @@ export default function ClientDashboardComponent() {
     }
   };
 
-
   const handleSave = async () => {
     setSaving(true);
     setSuccess('');
