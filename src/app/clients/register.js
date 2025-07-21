@@ -2,7 +2,7 @@ import { connectToDatabase } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import { createToken } from '@/lib/auth';
 import { serialize } from 'cookie';
-import mongoose from 'mongoose'; // ✅ Add this
+import mongoose from 'mongoose';
 import { NextResponse } from 'next/server';
 
 export async function POST(req) {
@@ -28,7 +28,6 @@ export async function POST(req) {
 
     const trimmedEmail = email.trim().toLowerCase();
 
-    // ✅ Use Mongoose to access native collection
     const existing = await mongoose.connection.db.collection('clients').findOne({ email: trimmedEmail });
 
     if (existing) {
@@ -38,18 +37,20 @@ export async function POST(req) {
     const hashedPassword = await bcrypt.hash(password.trim(), 10);
 
     const newClient = {
-      fullName: fullName.trim(),
+      fullName: fullName?.trim() || '',
       email: trimmedEmail,
       password: hashedPassword,
-      phone: phone.trim(),
+      phone: phone?.trim() || '',
       address: {
-        houseNameNumber,
-        street,
-        county,
-        postcode,
+        houseNameNumber: houseNameNumber?.trim() || '',
+        street: street?.trim() || '',
+        county: county?.trim() || '',
+        postcode: postcode?.trim() || '',
       },
       createdAt: new Date(),
     };
+
+    console.log('📦 Saving new client:', newClient);
 
     const result = await mongoose.connection.db.collection('clients').insertOne(newClient);
     console.log('✅ Client saved to MongoDB:', result.insertedId.toString());
