@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import Link from 'next/link';
+import { fetchClient } from '@/lib/fetchClient'; // ✅ Shared helper import
 
 export default function ClientDashboardComponent() {
   const router = useRouter();
@@ -25,26 +26,25 @@ export default function ClientDashboardComponent() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const fetchClient = async () => {
+      const loadClientData = async () => {
         try {
-          const res = await fetch('/api/auth/me', { credentials: 'include' });
-          const data = await res.json();
+          const user = await fetchClient();
 
-          if (!data.success || data.user.type !== 'client') {
+          if (!user || user.type !== 'client') {
             setError('Access denied. Please log in.');
             router.push('/login/clients');
             return;
           }
 
-          setClient(data.user);
+          setClient(user);
           setFormData({
-            fullName: data.user.fullName,
-            phone: data.user.phone,
+            fullName: user.fullName,
+            phone: user.phone,
             address: {
-              houseNameNumber: data.user.address?.houseNameNumber || '',
-              street: data.user.address?.street || '',
-              county: data.user.address?.county || '',
-              postcode: data.user.address?.postcode || '',
+              houseNameNumber: user.address?.houseNameNumber || '',
+              street: user.address?.street || '',
+              county: user.address?.county || '',
+              postcode: user.address?.postcode || '',
             },
           });
 
@@ -55,7 +55,6 @@ export default function ClientDashboardComponent() {
           const purchasesRes = await fetch('/api/clients/purchases', { credentials: 'include' });
           const purchasesData = await purchasesRes.json();
           if (purchasesData.success) setPurchases(purchasesData.purchases);
-
         } catch (err) {
           console.error('Error fetching client data:', err);
           setError('Failed to fetch client data.');
@@ -65,7 +64,7 @@ export default function ClientDashboardComponent() {
         }
       };
 
-      fetchClient();
+      loadClientData();
       setMounted(true);
     }
   }, [router]);
@@ -81,6 +80,7 @@ export default function ClientDashboardComponent() {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
+
 
   const handleSave = async () => {
     setSaving(true);

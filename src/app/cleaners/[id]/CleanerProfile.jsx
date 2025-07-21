@@ -1,6 +1,5 @@
 'use client';
 
-
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import React from 'react';
@@ -8,7 +7,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import BookingPaymentWrapper from '@/components/BookingPaymentForm';
 import PurchaseButton from '@/components/PurchaseButton';
 import { getCleanerId } from '@/lib/utils';
-
+import { fetchClient } from '@/lib/fetchClient'; // ✅ Import the shared helper
 
 function isSafeEmbed(code) {
   const hasIframe = code.includes('<iframe') && code.includes('src=');
@@ -38,33 +37,26 @@ export default function CleanerProfile() {
     }
   }, []);
 
+  // ✅ Load logged-in client (if any)
   useEffect(() => {
-  if (!id) return;
-
-  const fetchCleaner = async () => {
-    try {
-      const res = await fetch('/api/auth/me', { credentials: 'include' });
-      const data = await res.json();
-
-      if (res.ok && data?.user?.type === 'client') {
-        setClient(data.user);
-      } else {
-        // No redirect here. We allow anonymous viewing of profiles.
+    const loadClient = async () => {
+      try {
+        const user = await fetchClient();
+        setClient(user);
+      } catch (err) {
+        console.error('Failed to fetch client data:', err);
         setClient(null);
       }
-    } catch (err) {
-      console.error('Failed to fetch client data:', err);
-      setClient(null);
-    }
-  };
+    };
 
-  fetchClient();
-}, []);
+    loadClient();
+  }, []);
 
-
-
+  // ✅ Load cleaner by ID
   useEffect(() => {
-    const fetchClient = async () => {
+    if (!id) return;
+
+    const fetchCleaner = async () => {
       try {
         const res = await fetch(`/api/cleaners/${id}`, { credentials: 'include' });
 
@@ -78,25 +70,17 @@ export default function CleanerProfile() {
         const data = await res.json();
         console.log('📡 API Response:', data);
 
-        if (!data || !data.success || !data.cleaner) {
+        if (!data?.success || !data.cleaner) {
           setError('Cleaner not found.');
           return;
         }
 
         setCleaner(data.cleaner);
-        
-        // Enhanced debug logging
-        console.log('🔍 CLEANER OBJECT:', data.cleaner);
-        console.log('🔍 CLEANER ID (_id):', data.cleaner?._id);
-        console.log('🔍 CLEANER ID (id):', data.cleaner?.id);
-        console.log('🔍 CLEANER KEYS:', Object.keys(data.cleaner || {}));
-        console.log('🔍 FULL CLEANER DATA:', JSON.stringify(data.cleaner, null, 2));
-        console.log('🎯 Availability data received:', JSON.stringify(data.cleaner.availability, null, 2));
-        console.log('🎯 Monday data:', data.cleaner.availability?.Monday);
-        console.log('🎯 Available days:', Object.keys(data.cleaner.availability || {}));
-
         setHasAccess(data.hasAccess || false);
-        console.log('🔐 Access status:', data.hasAccess);
+
+        // Debug logs
+        console.log('🔍 CLEANER OBJECT:', data.cleaner);
+        console.log('🎯 Availability:', data.cleaner.availability);
       } catch (err) {
         console.error('Failed to load cleaner profile', err);
         setError('Failed to fetch cleaner profile.');
@@ -107,6 +91,7 @@ export default function CleanerProfile() {
 
     fetchCleaner();
   }, [id]);
+
 
   // Check permissions when cleaner, client, or selectedSlot changes
   useEffect(() => {

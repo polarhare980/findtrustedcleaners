@@ -3,25 +3,23 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Head from 'next/head';
+import { fetchClient } from '@/lib/fetchClient'; // ✅ Use shared helper
 
 export default function ClientAccountPage() {
   const [client, setClient] = useState(null);
 
   useEffect(() => {
-    const fetchClient = async () => {
-      const res = await fetch('/api/client-profile', {
-        credentials: 'include' // ✅ Required for protected routes using cookies
-      });
-      const data = await res.json();
+    const loadClient = async () => {
+      const user = await fetchClient();
 
-      if (!data.success) {
-        window.location.href = '/login'; // ✅ Redirect if not logged in
+      if (!user || user.type !== 'client') {
+        window.location.href = '/login';
       } else {
-        setClient(data.client);
+        setClient(user);
       }
     };
 
-    fetchClient();
+    loadClient();
   }, []);
 
   return (
@@ -48,8 +46,8 @@ export default function ClientAccountPage() {
           <div className="space-y-2">
             <p><strong>Email:</strong> {client.email}</p>
             <p><strong>Phone:</strong> {client.phone}</p>
-            <p><strong>Address:</strong> {client.address}</p>
-            <p><strong>Postcode:</strong> {client.postcode}</p>
+            <p><strong>Address:</strong> {client.address?.houseNameNumber} {client.address?.street}, {client.address?.county}</p>
+            <p><strong>Postcode:</strong> {client.address?.postcode}</p>
             <p className="text-sm text-gray-500">To update details, please contact support or re-register.</p>
           </div>
         ) : (

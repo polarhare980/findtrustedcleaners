@@ -1,7 +1,9 @@
 'use client';
+
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { fetchClient } from '@/lib/fetchClient'; // ✅ shared helper
 
 export default function ClientDashboard({ params }) {
   const { id } = params;
@@ -10,15 +12,15 @@ export default function ClientDashboard({ params }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchClient = async () => {
+    const loadClient = async () => {
       try {
-        const res = await fetch(`/api/clients/${id}`, {
-  credentials: 'include'
-});
+        const user = await fetchClient(); // ✅ fetch from shared logic
 
-        if (!res.ok) throw new Error('Failed to fetch client');
-        const data = await res.json();
-        setClient(data);
+        if (!user || user._id !== id) {
+          throw new Error('Client not authorised');
+        }
+
+        setClient(user);
       } catch (err) {
         console.error(err);
         router.push('/login');
@@ -27,7 +29,7 @@ export default function ClientDashboard({ params }) {
       }
     };
 
-    fetchClient(); 
+    loadClient();
   }, [id, router]);
 
   if (loading) return <p className="text-center p-10 text-gray-600">Loading your dashboard...</p>;
