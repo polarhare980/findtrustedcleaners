@@ -24,50 +24,51 @@ export default function ClientDashboardComponent() {
   const [bookings, setBookings] = useState([]);
   const [purchases, setPurchases] = useState([]);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const loadClientData = async () => {
-        try {
-          const user = await fetchClient();
+ useEffect(() => {
+  if (typeof window !== 'undefined') {
+    const loadClientData = async () => {
+      try {
+        const res = await fetch('/api/auth/me', { credentials: 'include' });
+        const data = await res.json();
 
-          if (!user || user.type !== 'client') {
-            setError('Access denied. Please log in.');
-            router.push('/login/clients');
-            return;
-          }
-
-          setClient(user);
-          setFormData({
-            fullName: user.fullName,
-            phone: user.phone,
-            address: {
-              houseNameNumber: user.address?.houseNameNumber || '',
-              street: user.address?.street || '',
-              county: user.address?.county || '',
-              postcode: user.address?.postcode || '',
-            },
-          });
-
-          const bookingsRes = await fetch('/api/clients/bookings', { credentials: 'include' });
-          const bookingsData = await bookingsRes.json();
-          if (bookingsData.success) setBookings(bookingsData.bookings);
-
-          const purchasesRes = await fetch('/api/clients/purchases', { credentials: 'include' });
-          const purchasesData = await purchasesRes.json();
-          if (purchasesData.success) setPurchases(purchasesData.purchases);
-
-        } catch (err) {
-          console.error('Error fetching client data:', err);
-          setError('Failed to fetch client data.');
+        if (!data.success || data.user.type !== 'client') {
+          setError('Access denied. Please log in.');
           router.push('/login/clients');
-        } finally {
-          setLoading(false);
+          return;
         }
-      };
 
-      loadClientData();
-      setMounted(true);
-    }
+        const user = data.user;
+        setClient(user);
+        setFormData({
+          fullName: user.fullName,
+          phone: user.phone,
+          address: {
+            houseNameNumber: user.address?.houseNameNumber || '',
+            street: user.address?.street || '',
+            county: user.address?.county || '',
+            postcode: user.address?.postcode || '',
+          },
+        });
+
+        const bookingsRes = await fetch('/api/clients/bookings', { credentials: 'include' });
+        const bookingsData = await bookingsRes.json();
+        if (bookingsData.success) setBookings(bookingsData.bookings);
+
+        const purchasesRes = await fetch('/api/clients/purchases', { credentials: 'include' });
+        const purchasesData = await purchasesRes.json();
+        if (purchasesData.success) setPurchases(purchasesData.purchases);
+
+        setLoading(false);
+      } catch (err) {
+        console.error('Error loading client data:', err);
+        setError('Something went wrong.');
+        setLoading(false);
+      }
+    };
+
+    loadClientData();
+    setMounted(true);
+  }
   }, [router]);
 
   const handleChange = (e) => {
