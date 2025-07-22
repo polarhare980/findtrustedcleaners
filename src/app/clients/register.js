@@ -1,63 +1,128 @@
+import mongoose from 'mongoose';
 import { connectToDatabase } from '@/lib/db';
+import Cleaner from '@/models/Cleaner';
 import bcrypt from 'bcryptjs';
 import { createToken } from '@/lib/auth';
 import { serialize } from 'cookie';
-import mongoose from 'mongoose';
 import { NextResponse } from 'next/server';
 
 export async function POST(req) {
   await connectToDatabase();
-  console.log('✅ Client Register route hit');
+  console.log('✅ Unified Register route hit');
 
   try {
     const body = await req.json();
-    const {
-      fullName,
-      email,
-      password,
-      phone,
-      houseNameNumber,
-      street,
-      county,
-      postcode,
-    } = body;
+    console.log('📨 Incoming registration payload:', body);
 
-    if (!email || !password || !fullName || !phone || !postcode) {
+    const { userType, email, password } = body;
+
+    if (!userType || !email || !password) {
       return NextResponse.json({ success: false, message: 'Missing required fields.' }, { status: 400 });
     }
 
     const trimmedEmail = email.trim().toLowerCase();
-
-    const existing = await mongoose.connection.db.collection('clients').findOne({ email: trimmedEmail });
-
-    if (existing) {
-      return NextResponse.json({ success: false, message: 'Client already exists.' }, { status: 409 });
-    }
-
     const hashedPassword = await bcrypt.hash(password.trim(), 10);
 
-    const newClient = {
-      fullName: fullName?.trim() || '',
-      email: trimmedEmail,
-      password: hashedPassword,
-      phone: phone?.trim() || '',
-      address: {
-        houseNameNumber: houseNameNumber?.trim() || '',
-        street: street?.trim() || '',
-        county: county?.trim() || '',
-        postcode: postcode?.trim() || '',
-      },
-      createdAt: new Date(),
-    };
+    // ✅ CLEANER REGISTRATION
+    if (userType === 'cleaner') {
+      console.log('📥 Cleaner registration payload:', body);
 
-    console.log('📦 Saving new client:', newClient);
+      const {
+        realName,
+        companyName,
+        phone,
+        rates,
+        services,
+        houseNameNumber,
+        street,
+        county,
+        postcode,
+        availability,
+        businessInsurance,
+      } = body;
 
-    const result = await mongoose.connection.db.collection('clients').insertOne(newClient);
-    console.log('✅ Client saved to MongoDB:', result.insertedId.toString());
+      if (!realName || !companyName || !phone || !rates || !services || !houseNameNumber || !street || !county || !postcode) {
+        return NextResponse.json({ success: false, message: 'All cleaner fields are required.' }, { status: 400 });
+      }
 
-    return sendCookie(result.insertedId.toString(), 'client');
+      const existingCleaner = await Cleaner.findOne({ email: trimmedEmail });
+
+      if (existingCleaner) {
+        console.log('❌ Cleaner already exists:', trimmedEmail);
+        return NextResponse.json({ success: false, message: 'Cleaner already exists.' }, { status: 409 });
+      }
+
+      const newCleaner = new Cleaner({
+        realName: realName.trim(),
+        companyName: companyName.trim(),
+        email: trimmedEmail,
+        password: hashedPassword,
+        phone: phone.trim(),
+        rates,
+        services,
+        houseNameNumber,
+        street,
+        county,
+        postcode,
+        availability,
+        businessInsurance,
+      });
+
+      const savedCleaner = await newCleaner.save();
+      console.log('✅ Cleaner saved to MongoDB:', savedCleaner._id.toString());
+      return sendCookie(savedCleaner._id.toString(), 'cleaner');
+    }
+
+    // ✅ CLIENT REGISTRATION
+    if (userType === 'client') {
+      console.log('📥 Client registration payload:', body);
+
+      const {
+        fullName,
+        phone,
+        houseNameNumber,
+        street,
+        county,
+        postcode,
+      } = body;
+
+      if (!fullName || !phone || !houseNameNumber || !street || !county || !postcode) {
+        console.warn('❌ Missing client fields:', {
+          fullName, phone, houseNameNumber, street, county, postcode
+        });
+        return NextResponse.json({ success: false, message: 'All client fields are required.' }, { status: 400 });
+      }
+
+      const existing = await mongoose.connection.db.collection('clients').findOne({ email: trimmedEmail });
+
+      if (existing) {
+        console.log('❌ Client already exists:', trimmedEmail);
+        return NextResponse.json({ success: false, message: 'Client already exists.' }, { status: 409 });
+      }
+
+      const newClient = {
+        fullName: fullName.trim(),
+        email: trimmedEmail,
+        password: hashedPassword,
+        phone: phone.trim(),
+        address: {
+          houseNameNumber: houseNameNumber.trim(),
+          street: street.trim(),
+          county: county.trim(),
+          postcode: postcode.trim(),
+        },
+        createdAt: new Date(),
+      };
+
+      const result = await mongoose.connection.db.collection('clients').insertOne(newClient);
+      console.log('✅ Client saved to MongoDB:', result.insertedId.toString());
+      return sendCookie(result.insertedId.toString(), 'client');
+    }
+
+    return NextResponse.json({ success: false, message: 'Invalid user type.' }, { status: 400 });
+
   } catch (err) {
-    console.error('❌ Client Registration Error:', err);
+    console.error('❌ Registration error:', err);
     return NextResponse.json({ success: false, message: 'Server error.' }, { status: 500 });
   }
 }
