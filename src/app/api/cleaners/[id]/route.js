@@ -69,7 +69,7 @@ export async function GET(req, { params }) {
       rates: cleaner.rates,
       services: cleaner.services,
       availability: cleaner.availability,
-      image: cleaner.image || '/profile-placeholder.png',
+      image: cleaner.image || '/default-avatar.png',
     };
 
     let responseData = { ...publicData };

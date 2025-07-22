@@ -112,7 +112,7 @@ export default function CleanerProfile() {
         <section className="max-w-4xl mx-auto px-6 py-10">
           <div className="flex items-center gap-6">
             <Image
-              src="/profile-placeholder.png"
+              src="/default-avatar.png"
               alt="Profile"
               className="w-32 h-32 rounded-full object-cover border"
               width={128}
