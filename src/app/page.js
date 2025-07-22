@@ -579,7 +579,13 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
       )}
 
       <div className="cleaner-image">
-        <img src={cleaner.image || '/profile-placeholder.png'} alt={cleaner.realName} />
+        <img
+  src={cleaner.image?.trim() ? cleaner.image : '/default-avatar.png'}
+  alt={cleaner.realName || 'Cleaner'}
+  loading="lazy"
+  className="w-full h-full object-cover"
+/>
+
       </div>
 
       <div className="cleaner-info">
