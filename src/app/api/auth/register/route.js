@@ -93,7 +93,7 @@ export async function POST(req) {
       const db = (await connectToDatabase()).db();
       const existing = await mongoose.connection.db.collection('clients').findOne({ email: trimmedEmail });
 
-      if (existingClient) {
+      if (existing) {
         console.log('❌ Client already exists:', trimmedEmail);
         return NextResponse.json({ success: false, message: 'Client already exists.' }, { status: 409 });
       }

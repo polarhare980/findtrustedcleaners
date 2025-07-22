@@ -203,11 +203,12 @@ export default function CleanerProfile() {
           {/* Profile Header */}
           <div className="flex flex-col md:flex-row items-center md:items-start gap-6 mb-8">
             <div className="relative group">
-  <img 
-    src={cleaner.image || '/default-avatar.png'} 
-    alt={cleaner.realName} 
-    className="w-32 h-32 md:w-40 md:h-40 object-cover rounded-full border-4 border-white/30 shadow-lg transition-transform duration-300 group-hover:scale-105" 
-  />
+    <img 
+       src={cleaner.image?.trim() ? cleaner.image : '/default-avatar.png'} 
+       alt={cleaner.realName || 'Cleaner'} 
+       loading="lazy"
+       className="w-32 h-32 md:w-40 md:h-40 object-cover rounded-full border-4 border-white/30 shadow-lg transition-transform duration-300 group-hover:scale-105" 
+    />
   <div className="absolute inset-0 rounded-full bg-gradient-to-br from-teal-600/20 to-teal-800/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 </div>
             

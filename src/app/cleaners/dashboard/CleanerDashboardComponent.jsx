@@ -372,7 +372,7 @@ fetchBookings();
   if (loading || !formData) return <LoadingSpinner />;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-600 to-teal-800 py-6 px-4">
+    <div className="min-h-screen bg-white py-6 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl mb-6 p-6">
@@ -667,11 +667,17 @@ fetchBookings();
                   {(imagePreview || formData.image) && (
                     <div className="relative">
                       <img 
-                        src={imagePreview || formData.image} 
-                        alt="Profile" 
-                        loading="lazy"
-                        className="w-32 h-32 object-cover rounded-full border-4 border-teal-200 shadow-lg transition-transform duration-300 hover:scale-105" 
-                      />
+  src={
+    imagePreview ||
+    (formData.image?.trim()
+      ? formData.image
+      : '/default-avatar.png')
+  }
+  alt="Profile"
+  loading="lazy"
+  className="w-32 h-32 object-cover rounded-full border-4 border-teal-200 shadow-lg transition-transform duration-300 hover:scale-105" 
+/>
+
                       {!imagePreview && (
                         <div className="absolute -top-2 -right-2 bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs">
                           ✓
