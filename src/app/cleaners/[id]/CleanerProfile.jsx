@@ -319,15 +319,31 @@ export default function CleanerProfile() {
                     )}
                     {/* Purchase button with maximum z-index and isolation */}
                     <div style={{position: 'relative', zIndex: 9999, isolation: 'isolate'}}>
-                      <PurchaseButton
-                        cleanerId={getCleanerId(cleaner, id)}
-                        day={selectedSlot?.day}
-                        hour={selectedSlot?.hour}
-                        onPurchaseSuccess={handlePurchaseSuccess}
-                        onPurchaseStart={handlePurchaseStart}
-                        onPurchaseError={handlePurchaseError}
-                        disabled={purchaseLoading}
-                      />
+                      {client?.type === 'client' ? (
+  <PurchaseButton
+    cleanerId={getCleanerId(cleaner, id)}
+    day={selectedSlot?.day}
+    hour={selectedSlot?.hour}
+    onPurchaseSuccess={handlePurchaseSuccess}
+    onPurchaseStart={handlePurchaseStart}
+    onPurchaseError={handlePurchaseError}
+    disabled={purchaseLoading}
+  />
+) : (
+  <button
+    onClick={() => {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('redirectAfterLogin', `/cleaners/${cleaner._id || id}`);
+        window.location.href = `/login/clients?next=/cleaners/${cleaner._id || id}`;
+      }
+    }}
+    className="bg-gradient-to-r from-teal-600 to-teal-700 text-white px-6 py-2 rounded-full font-semibold shadow hover:from-teal-700 hover:to-teal-800 transition-all duration-300"
+  >
+    Log in to Purchase Access
+  </button>
+)}
+
+              
                     </div>
                   </div>
                 ) : (
