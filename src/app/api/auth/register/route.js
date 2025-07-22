@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import { connectToDatabase } from '@/lib/db';
 import Cleaner from '@/models/Cleaner';
-import Client from '@/models/clients'; // ✅ using your actual model name
+import Client from '@/models/client.js'; // ✅ using your actual model name
 import bcrypt from 'bcryptjs';
 import { createToken } from '@/lib/auth';
 import { serialize } from 'cookie';
