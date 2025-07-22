@@ -1,8 +1,7 @@
-import mongoose from 'mongoose'; // ✅ add this
-
-
+import mongoose from 'mongoose';
 import { connectToDatabase } from '@/lib/db';
 import Cleaner from '@/models/Cleaner';
+import Client from '@/models/clients'; // ✅ using your actual model name
 import bcrypt from 'bcryptjs';
 import { createToken } from '@/lib/auth';
 import { serialize } from 'cookie';
@@ -14,6 +13,8 @@ export async function POST(req) {
 
   try {
     const body = await req.json();
+    console.log('📨 Incoming registration payload:', body);
+
     const { userType, email, password } = body;
 
     if (!userType || !email || !password) {
@@ -21,12 +22,9 @@ export async function POST(req) {
     }
 
     const trimmedEmail = email.trim().toLowerCase();
-    const hashedPassword = await bcrypt.hash(password.trim(), 10);
 
     // ✅ CLEANER REGISTRATION
     if (userType === 'cleaner') {
-      console.log('📥 Cleaner registration payload:', body);
-
       const {
         realName,
         companyName,
@@ -52,6 +50,8 @@ export async function POST(req) {
         return NextResponse.json({ success: false, message: 'Cleaner already exists.' }, { status: 409 });
       }
 
+      const hashedPassword = await bcrypt.hash(password.trim(), 10);
+
       const newCleaner = new Cleaner({
         realName: realName.trim(),
         companyName: companyName.trim(),
@@ -69,14 +69,12 @@ export async function POST(req) {
       });
 
       const savedCleaner = await newCleaner.save();
-      console.log('✅ Cleaner saved to MongoDB:', savedCleaner._id.toString());
+      console.log('✅ Cleaner saved:', savedCleaner._id.toString());
       return sendCookie(savedCleaner._id.toString(), 'cleaner');
     }
 
     // ✅ CLIENT REGISTRATION
     if (userType === 'client') {
-      console.log('📥 Client registration payload:', body);
-
       const {
         fullName,
         phone,
@@ -90,31 +88,28 @@ export async function POST(req) {
         return NextResponse.json({ success: false, message: 'All client fields are required.' }, { status: 400 });
       }
 
-      const db = (await connectToDatabase()).db();
-      const existing = await mongoose.connection.db.collection('clients').findOne({ email: trimmedEmail });
-
-      if (existing) {
+      const existingClient = await Client.findOne({ email: trimmedEmail });
+      if (existingClient) {
         console.log('❌ Client already exists:', trimmedEmail);
         return NextResponse.json({ success: false, message: 'Client already exists.' }, { status: 409 });
       }
 
-      const newClient = {
+      const newClient = new Client({
         fullName: fullName.trim(),
         email: trimmedEmail,
-        password: hashedPassword,
+        password: password.trim(), // ✅ hash will be handled by the `pre('save')` middleware
         phone: phone.trim(),
         address: {
-          houseNameNumber,
-          street,
-          county,
-          postcode,
+          houseNameNumber: houseNameNumber.trim(),
+          street: street.trim(),
+          county: county.trim(),
+          postcode: postcode.trim(),
         },
-        createdAt: new Date(),
-      };
+      });
 
-      const result = await mongoose.connection.db.collection('clients').insertOne(newClient);
-      console.log('✅ Client saved to MongoDB:', result.insertedId.toString());
-      return sendCookie(result.insertedId.toString(), 'client');
+      const savedClient = await newClient.save();
+      console.log('✅ Client saved:', savedClient._id.toString());
+      return sendCookie(savedClient._id.toString(), 'client');
     }
 
     return NextResponse.json({ success: false, message: 'Invalid user type.' }, { status: 400 });
