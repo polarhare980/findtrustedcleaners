@@ -44,7 +44,7 @@ export default function HomePage() {
   useEffect(() => {
     const fetchCleaners = async () => {
       try {
-        const res = await fetch('/api/cleaners');
+        const res = await fetch('/api/cleaners?bookingStatus=all');
         const { cleaners } = await res.json();
 
         const premium = cleaners.filter(c => c.isPremium).slice(0, 5);
