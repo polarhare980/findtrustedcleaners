@@ -57,37 +57,36 @@ export default function CleanerProfile() {
     if (!id) return;
 
     const fetchCleaner = async () => {
-      try {
-        const res = await fetch(`/api/cleaners/${id}`, { credentials: 'include' });
+  try {
+    setLoading(true);
+    setError('');
 
-        if (!res.ok) {
-          const errorText = await res.text();
-          console.error('Fetch error:', res.status, errorText);
-          setError(`Cleaner not found or server error (${res.status})`);
-          return;
-        }
+    const res = await fetch(`/api/cleaners/${id}`, { credentials: 'include' });
 
-        const data = await res.json();
-        console.log('📡 API Response:', data);
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error('Fetch error:', res.status, errorText);
+      setError(`Cleaner not found or server error (${res.status})`);
+      return;
+    }
 
-        if (!data?.success || !data.cleaner) {
-          setError('Cleaner not found.');
-          return;
-        }
+    const data = await res.json();
 
-        setCleaner(data.cleaner);
-        setHasAccess(data.hasAccess || false);
+    if (!data?.success || !data.cleaner) {
+      setError('Cleaner not found.');
+      return;
+    }
 
-        // Debug logs
-        console.log('🔍 CLEANER OBJECT:', data.cleaner);
-        console.log('🎯 Availability:', data.cleaner.availability);
-      } catch (err) {
-        console.error('Failed to load cleaner profile', err);
-        setError('Failed to fetch cleaner profile.');
-      } finally {
-        setLoading(false);
-      }
-    };
+    setCleaner(data.cleaner);
+    setHasAccess(data.hasAccess || false);
+  } catch (err) {
+    console.error('❌ Failed to load cleaner profile', err);
+    setError('Failed to fetch cleaner profile.');
+  } finally {
+    setLoading(false);
+  }
+};
+
 
     fetchCleaner();
   }, [id]);
