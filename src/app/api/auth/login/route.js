@@ -12,13 +12,15 @@ export async function POST(req) {
 
   try {
     const { email, password, userType } = await req.json();
-    console.log('📥 Login attempt:', { email, userType });
+    const trimmedEmail = email?.trim().toLowerCase();
+
+    console.log('📥 Login attempt:', { email, trimmedEmail, password, userType });
 
     if (!email || !password || !userType) {
+      console.log('⚠️ Missing fields');
       return NextResponse.json({ success: false, message: 'All fields are required.' }, { status: 400 });
     }
 
-    const trimmedEmail = email.trim().toLowerCase();
     let user;
 
     if (userType === 'cleaner') {
@@ -26,17 +28,23 @@ export async function POST(req) {
     } else if (userType === 'client') {
       user = await Client.findOne({ email: trimmedEmail });
     } else {
+      console.log('❌ Invalid userType:', userType);
       return NextResponse.json({ success: false, message: 'Invalid user type.' }, { status: 400 });
     }
 
     if (!user) {
-      console.log('❌ User not found');
+      console.log('❌ No user found for email:', trimmedEmail);
       return NextResponse.json({ success: false, message: 'Invalid email or password.' }, { status: 401 });
     }
 
+    console.log('🧪 Found user:', user.email);
+    console.log('🔐 Hashed password in DB:', user.password);
+
     const isPasswordValid = await bcrypt.compare(password, user.password);
+    console.log('🔐 Password match:', isPasswordValid);
+
     if (!isPasswordValid) {
-      console.log('❌ Incorrect password');
+      console.log('❌ Incorrect password for user:', trimmedEmail);
       return NextResponse.json({ success: false, message: 'Invalid email or password.' }, { status: 401 });
     }
 
@@ -49,13 +57,13 @@ export async function POST(req) {
       maxAge: 60 * 60 * 24 * 7, // 7 days
     });
 
-    console.log('✅ Login success:', user._id.toString());
+    console.log('✅ Login success for:', user._id.toString());
 
     const response = NextResponse.json(
       { success: true, id: user._id.toString(), type: userType },
       { status: 200 }
     );
-    response.headers.set('Set-Cookie', cookie); // ✅ This works reliably
+    response.headers.set('Set-Cookie', cookie);
     return response;
 
   } catch (err) {
