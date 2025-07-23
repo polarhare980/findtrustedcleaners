@@ -17,6 +17,7 @@ export async function GET() {
 
     const cleaner = await Cleaner.create({
       realName: 'Test Cleaner',
+      companyName: 'Test Cleaning Co', // ✅ Required field added
       email: 'test@cleaner.com',
       password: hashed,
       phone: '07000111222',
