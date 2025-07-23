@@ -13,6 +13,12 @@ export async function connectToDatabase() {
     throw new Error('Please define the MONGODB_URI environment variable');
   }
 
+  // ✅ Return existing connection if already ready
+  if (mongoose.connection.readyState >= 1) {
+    return mongoose.connection;
+  }
+
+  // ✅ Return cached connection
   if (cached.conn) return cached.conn;
 
   if (!cached.promise) {
@@ -22,7 +28,7 @@ export async function connectToDatabase() {
       useUnifiedTopology: true,
     }).then((mongoose) => mongoose)
       .catch((err) => {
-        console.error('MongoDB connection error:', err);
+        console.error('❌ MongoDB connection error:', err);
         throw err;
       });
   }

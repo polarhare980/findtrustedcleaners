@@ -5,6 +5,9 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Head from 'next/head';
 import Link from 'next/link';
+import useSWR from 'swr';
+
+const fetcher = (url) => fetch(url).then((res) => res.json());
 
 export default function HomePage() {
   const [mounted, setMounted] = useState(false);
@@ -16,7 +19,18 @@ export default function HomePage() {
   const [showPrice, setShowPrice] = useState(false);
   const [premiumCleaners, setPremiumCleaners] = useState([]);
   const [freeCleaners, setFreeCleaners] = useState([]);
-  const [loading, setLoading] = useState(true);
+
+  const { data, error, isLoading } = useSWR('/api/cleaners?bookingStatus=all', fetcher);
+
+  useEffect(() => {
+    if (data?.cleaners) {
+      const premium = data.cleaners.filter(c => c.isPremium).slice(0, 5);
+      const free = data.cleaners.filter(c => !c.isPremium).slice(0, 5);
+
+      setPremiumCleaners(premium);
+      setFreeCleaners(free);
+    }
+  }, [data]);
 
   const priceChart = {
     studio: { regular: 200, deep: 200, tenancy: 200 },
@@ -39,27 +53,6 @@ export default function HomePage() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    const fetchCleaners = async () => {
-      try {
-        const res = await fetch('/api/cleaners?bookingStatus=all');
-        const { cleaners } = await res.json();
-
-        const premium = cleaners.filter(c => c.isPremium).slice(0, 5);
-        const free = cleaners.filter(c => !c.isPremium).slice(0, 5);
-
-        setPremiumCleaners(premium);
-        setFreeCleaners(free);
-      } catch (err) {
-        console.error('Failed to fetch cleaners:', err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCleaners();
   }, []);
 
   const handleBookingRequest = (cleanerId) => {
@@ -273,7 +266,7 @@ export default function HomePage() {
               Free Listed Cleaners
             </h2>
 
-            {loading ? (
+            {isloading ? (
               <div className="text-center text-white">
                 <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
                 <p className="mt-2">Loading cleaners...</p>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getCleanerId } from '@/lib/utils'; // ✅ Import helper
+import { secureFetch } from '@/lib/secureFetch';
 
 export default function PurchaseButton({
   cleaner,
@@ -54,7 +55,7 @@ export default function PurchaseButton({
     onPurchaseStart?.();
 
     try {
-      const authRes = await fetch('/api/auth/me', { credentials: 'include' });
+      const authRes = await secureFetch('/api/auth/me');
       const authData = await authRes.json();
       console.log('🔍 AUTH DEBUG:', authData);
 

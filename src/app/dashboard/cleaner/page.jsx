@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { secureFetch } from '@/lib/secureFetch';
 
 export default function CleanerDashboard() {
   const [user, setUser] = useState(null);
@@ -10,8 +11,8 @@ export default function CleanerDashboard() {
 
   useEffect(() => {
     const fetchUser = async () => {
-      const res = await fetch('/api/auth/me', { credentials: 'include' });
-      const data = await res.json();
+      const res = await secureFetch('/api/auth/me');
+const data = await res.json();
       if (!data.success) {
         router.push('/login');
       } else {

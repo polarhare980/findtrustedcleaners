@@ -1,34 +1,35 @@
+import { parse } from 'cookie';
 import jwt from 'jsonwebtoken';
 import { NextResponse } from 'next/server';
 
-// ✅ Example Secret (replace in production)
 const JWT_SECRET = process.env.JWT_SECRET;
 
-// ✅ Create Token
 export function createToken(payload) {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+  return jwt.sign({
+    ...payload,
+    _id: payload._id?.toString?.() || payload._id, // ✅ Ensure _id is always a string
+  }, JWT_SECRET, { expiresIn: '7d' });
 }
 
-// ✅ Verify Token
+
 export function verifyToken(token) {
   try {
     return jwt.verify(token, JWT_SECRET);
-  } catch (err) {
+  } catch {
     return null;
   }
 }
 
-// ✅ Stable Protect Route - Reads Cookie Directly
+// ✅ Updated secure version
 export async function protectRoute(req) {
-  // Read cookies directly from request headers
   const cookieHeader = req.headers.get('cookie') || '';
-  const tokenMatch = cookieHeader.match(/token=([^;]+)/);
-  const token = tokenMatch ? tokenMatch[1] : null;
+  const cookies = parse(cookieHeader);
+  const token = cookies.token;
 
   if (!token) {
     return {
       valid: false,
-      response: new NextResponse(JSON.stringify({ success: false, message: 'Unauthorized - No token' }), { status: 401 }),
+      response: NextResponse.redirect('/login'), // redirect for pages
     };
   }
 
@@ -37,7 +38,7 @@ export async function protectRoute(req) {
   if (!user) {
     return {
       valid: false,
-      response: new NextResponse(JSON.stringify({ success: false, message: 'Invalid or expired token' }), { status: 401 }),
+      response: NextResponse.redirect('/login'),
     };
   }
 

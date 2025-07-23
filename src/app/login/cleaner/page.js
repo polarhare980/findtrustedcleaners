@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Head from 'next/head';
 import Link from 'next/link';
 import Image from 'next/image';
+import { secureFetch } from '@/lib/secureFetch';
 
 export default function CleanerProfile() {
   const { id } = useParams();
@@ -17,7 +18,8 @@ export default function CleanerProfile() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await fetch('/api/auth/me', { credentials: 'include' });
+        
+const res = await secureFetch('/api/auth/me');
         const data = await res.json();
         if (!data.success || data.user._id !== id) {
           router.push('/login');

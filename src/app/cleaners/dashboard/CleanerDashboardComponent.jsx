@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { secureFetch } from '@/lib/secureFetch';
 
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const hours = Array.from({ length: 13 }, (_, i) => `${7 + i}`);
@@ -32,8 +33,12 @@ export default function CleanerDashboardComponent() {
     if (typeof window !== 'undefined') {
       const fetchCleaner = async () => {
         try {
-          const res = await fetch('/api/auth/me', { credentials: 'include' });
-          const data = await res.json();
+          
+
+// Inside useEffect
+const res = await secureFetch('/api/auth/me');
+const data = await res.json();
+
 
           if (!data.success || data.user.type !== 'cleaner') {
             router.push('/login');

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import Link from 'next/link';
 import { fetchClient } from '@/lib/fetchClient'; // ✅ REUSABLE client fetch helper
+import { secureFetch } from '@/lib/secureFetch';
 
 export default function ClientDashboardComponent() {
   const router = useRouter();
@@ -28,8 +29,11 @@ export default function ClientDashboardComponent() {
   if (typeof window !== 'undefined') {
     const loadClientData = async () => {
       try {
-        const res = await fetch('/api/auth/me', { credentials: 'include' });
-        const data = await res.json();
+        
+
+const res = await secureFetch('/api/auth/me');
+const data = await res.json();
+
 
         if (!data.success || data.user.type !== 'client') {
           setError('Access denied. Please log in.');
