@@ -163,17 +163,31 @@ fetchBookings();
     console.log('Saving availability...');
 
     // ✅ Reformat availability into { Monday: { 7: true }, ... }
-    const reformattedAvailability = {};
-    for (const day of days) {
-      reformattedAvailability[day] = {};
-      for (const hour of hours) {
-        const value = formData.availability?.[day]?.[hour];
-        if (value !== undefined) {
-          // Ensure key is string — not number
-          reformattedAvailability[day][hour.toString()] = value;
-        }
-      }
-    }
+    // 🛠️ Convert flat keys like 'Mon-11' into nested format like { Monday: { 11: true } }
+const dayMap = {
+  Mon: 'Monday',
+  Tue: 'Tuesday',
+  Wed: 'Wednesday',
+  Thu: 'Thursday',
+  Fri: 'Friday',
+  Sat: 'Saturday',
+  Sun: 'Sunday',
+};
+
+const reformattedAvailability = {};
+
+Object.entries(formData.availability || {}).forEach(([key, value]) => {
+  const [shortDay, hour] = key.split('-');
+  const fullDay = dayMap[shortDay];
+  if (!fullDay || !hour) return;
+
+  if (!reformattedAvailability[fullDay]) {
+    reformattedAvailability[fullDay] = {};
+  }
+
+  reformattedAvailability[fullDay][hour] = value;
+});
+
 
     try {
       const res = await fetch(`/api/cleaners/${cleaner._id}`, {

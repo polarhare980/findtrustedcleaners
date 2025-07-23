@@ -21,7 +21,7 @@ function determineBookingStatus(availability) {
   return 'booked';
 }
 
-// GET - Fetch cleaner(s) with optional filters (💬 Public)
+// GET - Fetch cleaner(s)
 export async function GET(req) {
   await dbConnect();
   const { searchParams } = new URL(req.url);
@@ -52,6 +52,8 @@ export async function GET(req) {
           availability: cleaner.availability || {},
           googleReviewUrl: cleaner.googleReviewUrl || null,
           facebookReviewUrl: cleaner.facebookReviewUrl || null,
+          googleReviewRating: cleaner.googleReviewRating || null,
+          googleReviewCount: cleaner.googleReviewCount || 0,
         }
       }, { status: 200 });
     }
@@ -88,6 +90,8 @@ export async function GET(req) {
           availability: c.availability || {},
           googleReviewUrl: c.googleReviewUrl || null,
           facebookReviewUrl: c.facebookReviewUrl || null,
+          googleReviewRating: c.googleReviewRating || null,
+          googleReviewCount: c.googleReviewCount || 0,
           bookingStatus: bookingStatusDerived,
         };
       } catch (err) {
@@ -107,7 +111,7 @@ export async function GET(req) {
   }
 }
 
-// POST - Register new cleaner (💬 Public)
+// POST - Register new cleaner
 export async function POST(req) {
   await dbConnect();
   const data = await req.json();
@@ -135,6 +139,9 @@ export async function POST(req) {
       availability: data.availability,
       services: data.services,
       businessInsurance: data.businessInsurance,
+      googleReviewRating: data.googleReviewRating || null,
+      googleReviewCount: data.googleReviewCount || 0,
+      googleReviewUrl: data.googleReviewUrl || '',
     });
 
     return NextResponse.json({ success: true, id: cleaner._id }, { status: 201 });
