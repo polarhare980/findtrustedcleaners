@@ -19,7 +19,6 @@ export async function POST(req) {
     }
 
     const trimmedEmail = email.trim().toLowerCase();
-
     let user;
 
     if (userType === 'cleaner') {
@@ -36,14 +35,12 @@ export async function POST(req) {
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
-
     if (!isPasswordValid) {
       console.log('❌ Incorrect password');
       return NextResponse.json({ success: false, message: 'Invalid email or password.' }, { status: 401 });
     }
 
     const token = createToken({ _id: user._id.toString(), type: userType });
-
     const cookie = serialize('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -54,10 +51,12 @@ export async function POST(req) {
 
     console.log('✅ Login success:', user._id.toString());
 
-    return new NextResponse(JSON.stringify({ success: true, id: user._id.toString(), type: userType }), {
-      status: 200,
-      headers: { 'Set-Cookie': cookie, 'Content-Type': 'application/json' },
-    });
+    const response = NextResponse.json(
+      { success: true, id: user._id.toString(), type: userType },
+      { status: 200 }
+    );
+    response.headers.set('Set-Cookie', cookie); // ✅ This works reliably
+    return response;
 
   } catch (err) {
     console.error('❌ Login error:', err);
