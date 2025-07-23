@@ -12,14 +12,14 @@ export default async function dbConnect() {
   }
 
   try {
-    // ✅ Recommended for Mongoose v7+ to suppress strict query warnings
     mongoose.set('strictQuery', false);
 
-    // ✅ Clean connection without deprecated options
-    await mongoose.connect(uri);
+    await mongoose.connect(uri, {
+      dbName: process.env.MONGODB_DB || 'cleanmatch', // ✅ force correct DB
+    });
 
     isConnected = mongoose.connection.readyState === 1;
-    console.log("✅ MongoDB connected");
+    console.log("✅ MongoDB connected to", mongoose.connection.name);
   } catch (error) {
     console.error("❌ MongoDB connection error:", error);
     throw error;
