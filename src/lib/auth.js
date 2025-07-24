@@ -5,12 +5,12 @@ import { NextResponse } from 'next/server';
 const JWT_SECRET = process.env.JWT_SECRET;
 
 export function createToken(payload) {
-  return jwt.sign({
-    ...payload,
-    _id: payload._id?.toString?.() || payload._id, // ✅ Ensure _id is always a string
-  }, JWT_SECRET, { expiresIn: '7d' });
+  return jwt.sign(
+    { ...payload, _id: payload._id?.toString?.() || payload._id },
+    JWT_SECRET,
+    { expiresIn: '7d' }
+  );
 }
-
 
 export function verifyToken(token) {
   try {
@@ -20,7 +20,34 @@ export function verifyToken(token) {
   }
 }
 
-// ✅ Updated secure version
+// ✅ For API routes — returns JSON on failure
+export async function protectApiRoute(req) {
+  const cookieHeader = req.headers.get('cookie') || '';
+  const cookies = parse(cookieHeader);
+  const token = cookies.token;
+
+  if (!token) {
+    return {
+      valid: false,
+      user: null,
+      response: NextResponse.json({ success: false, message: 'Not authenticated' }, { status: 401 }),
+    };
+  }
+
+  const user = verifyToken(token);
+
+  if (!user) {
+    return {
+      valid: false,
+      user: null,
+      response: NextResponse.json({ success: false, message: 'Invalid token' }, { status: 401 }),
+    };
+  }
+
+  return { valid: true, user };
+}
+
+// ✅ Optional: for pages — redirects to login
 export async function protectRoute(req) {
   const cookieHeader = req.headers.get('cookie') || '';
   const cookies = parse(cookieHeader);
@@ -29,7 +56,7 @@ export async function protectRoute(req) {
   if (!token) {
     return {
       valid: false,
-      response: NextResponse.redirect('/login'), // redirect for pages
+      response: NextResponse.redirect('/login'),
     };
   }
 
