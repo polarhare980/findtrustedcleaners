@@ -164,29 +164,8 @@ fetchBookings();
 
     // ✅ Reformat availability into { Monday: { 7: true }, ... }
     // 🛠️ Convert flat keys like 'Mon-11' into nested format like { Monday: { 11: true } }
-const dayMap = {
-  Mon: 'Monday',
-  Tue: 'Tuesday',
-  Wed: 'Wednesday',
-  Thu: 'Thursday',
-  Fri: 'Friday',
-  Sat: 'Saturday',
-  Sun: 'Sunday',
-};
 
-const reformattedAvailability = {};
-
-Object.entries(formData.availability || {}).forEach(([key, value]) => {
-  const [shortDay, hour] = key.split('-');
-  const fullDay = dayMap[shortDay];
-  if (!fullDay || !hour) return;
-
-  if (!reformattedAvailability[fullDay]) {
-    reformattedAvailability[fullDay] = {};
-  }
-
-  reformattedAvailability[fullDay][hour] = value;
-});
+const reformattedAvailability = formData.availability;
 
 
     try {
