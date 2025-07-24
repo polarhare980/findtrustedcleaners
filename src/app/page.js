@@ -24,8 +24,9 @@ export default function HomePage() {
 
   useEffect(() => {
     if (data?.cleaners) {
-      const premium = data.cleaners.filter(c => c.premium === true).slice(0, 5);
-      const free = data.cleaners.filter(c => c.premium !== true).slice(0, 5);
+      const premium = data.cleaners.filter(c => c.isPremium === true).slice(0, 5);
+      const free = data.cleaners.filter(c => c.isPremium !== true).slice(0, 5);
+
 
 
       setPremiumCleaners(premium);
