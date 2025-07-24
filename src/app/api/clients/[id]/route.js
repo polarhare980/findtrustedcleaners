@@ -1,6 +1,6 @@
 import { connectToDatabase } from '@/lib/db';
 import Client from '@/models/Client';
-import { protectRoute } from '@/lib/auth';
+import { protectApiRoute } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 
 // GET Client by ID (🔒 Protected)
@@ -9,12 +9,12 @@ export async function GET(req, context) {
 
   await connectToDatabase();
 
-  const { valid, user, response } = await protectRoute(req);
+  const { valid, user, response } = await protectApiRoute(req);
   if (!valid) return response;
 
-  if (user.type !== 'client' || String(user._id?.toString()) !== String(params.id)) {
+  if (user.type !== 'client' || String(user._id) !== String(params.id)) {
     console.log('🔐 GET Access Denied:');
-    console.log('Session User ID:', user._id?.toString());
+    console.log('Session User ID:', user._id);
     console.log('Requested Param ID:', params.id);
     return NextResponse.json({ success: false, message: 'Access denied.' }, { status: 403 });
   }
@@ -39,14 +39,14 @@ export async function PUT(req, context) {
 
   await connectToDatabase();
 
-  const { valid, user, response } = await protectRoute(req);
+  const { valid, user, response } = await protectApiRoute(req);
   if (!valid) return response;
 
   console.log('🔐 PUT Access Check:');
-  console.log('Session User ID:', user._id?.toString());
+  console.log('Session User ID:', user._id);
   console.log('Requested Param ID:', params.id);
 
-  if (String(user._id?.toString()) !== String(params.id) && user.type !== 'admin') {
+  if (String(user._id) !== String(params.id) && user.type !== 'admin') {
     console.log('🔐 PUT Access Denied: ID Mismatch');
     return NextResponse.json({ success: false, message: 'Access denied.' }, { status: 403 });
   }
@@ -86,14 +86,14 @@ export async function DELETE(req, context) {
 
   await connectToDatabase();
 
-  const { valid, user, response } = await protectRoute(req);
+  const { valid, user, response } = await protectApiRoute(req);
   if (!valid) return response;
 
   console.log('🔐 DELETE Access Check:');
-  console.log('Session User ID:', user._id?.toString());
+  console.log('Session User ID:', user._id);
   console.log('Requested Param ID:', params.id);
 
-  if (String(user._id?.toString()) !== String(params.id) && user.type !== 'admin') {
+  if (String(user._id) !== String(params.id) && user.type !== 'admin') {
     console.log('🔐 DELETE Access Denied: ID Mismatch');
     return NextResponse.json({ success: false, message: 'Access denied.' }, { status: 403 });
   }

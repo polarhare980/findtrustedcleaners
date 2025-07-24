@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic';
 
-import { protectRoute } from '@/lib/auth';
+import { protectApiRoute } from '@/lib/auth';
 import Cleaner from '@/models/Cleaner';
 import Client from '@/models/Client';
 import { connectToDatabase } from '@/lib/db';
@@ -10,7 +10,7 @@ import mongoose from 'mongoose';
 export async function GET(req) {
   await connectToDatabase();
 
-  const { valid, user, response } = await protectRoute(req);
+  const { valid, user, response } = await protectApiRoute(req);
   if (!valid) return response;
 
   try {

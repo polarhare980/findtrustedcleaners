@@ -1,5 +1,7 @@
 import dbConnect from '@/lib/dbConnect';
 import Cleaner from '@/models/Cleaner';
+import { parse } from 'cookie';
+import { verifyToken } from '@/lib/auth';
 
 export default async function handler(req, res) {
   const { id } = req.query;
@@ -17,6 +19,15 @@ export default async function handler(req, res) {
   }
 
   else if (req.method === 'PUT') {
+    // 🔐 Manual token check for legacy route
+    const cookies = parse(req.headers.cookie || '');
+    const token = cookies.token;
+    const user = verifyToken(token);
+
+    if (!user || (user._id !== id && user.type !== 'admin')) {
+      return res.status(401).json({ success: false, message: 'Unauthorised' });
+    }
+
     try {
       const body = req.body;
 

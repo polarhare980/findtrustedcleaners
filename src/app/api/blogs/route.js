@@ -1,5 +1,6 @@
 import { connectToDatabase } from '@/lib/db';
 import BlogPost from '@/models/BlogPost';
+import { protectApiRoute } from '@/lib/auth';
 
 export async function GET() {
   await connectToDatabase();
@@ -8,6 +9,9 @@ export async function GET() {
 }
 
 export async function POST(req) {
+  const { valid, user, response } = await protectApiRoute(req);
+  if (!valid) return response;
+
   await connectToDatabase();
   const { title, slug, content } = await req.json();
 

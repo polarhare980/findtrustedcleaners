@@ -2,7 +2,7 @@ import { connectToDatabase } from '@/lib/db';
 import Cleaner from '@/models/Cleaner';
 import Purchase from '@/models/Purchase';
 import { NextResponse } from 'next/server';
-import { protectRoute } from '@/lib/auth';
+import { protectApiRoute } from '@/lib/auth';
 
 // 🔒 PUT - Update cleaner profile (Protected)
 export async function PUT(req, { params }) {
@@ -10,7 +10,7 @@ export async function PUT(req, { params }) {
   const { id } = params;
   const body = await req.json();
 
-  const { valid, user, response } = await protectRoute(req);
+  const { valid, user, response } = await protectApiRoute(req);
   if (!valid) return response;
 
   console.log('🔐 PUT Access Check:');
@@ -25,7 +25,6 @@ export async function PUT(req, { params }) {
   try {
     const updateFields = {};
 
-    // ✅ Only include fields if explicitly provided
     if (body.availability !== undefined) updateFields.availability = body.availability;
     if (body.googleReviewUrl) updateFields.googleReviewUrl = body.googleReviewUrl;
     if (body.facebookReviewUrl) updateFields.facebookReviewUrl = body.facebookReviewUrl;
@@ -34,7 +33,7 @@ export async function PUT(req, { params }) {
     if (body.rates) updateFields.rates = body.rates;
     if (body.services) updateFields.services = body.services;
     if (body.phone) updateFields.phone = body.phone;
-    if (body.email) updateFields.email = body.email; // Only set if valid string
+    if (body.email) updateFields.email = body.email;
     if (body.companyName) updateFields.companyName = body.companyName;
     if (body.businessInsurance !== undefined) updateFields.businessInsurance = body.businessInsurance;
     if (body.address) updateFields.address = body.address;
@@ -75,7 +74,7 @@ export async function GET(req, { params }) {
     let responseData = { ...publicData };
     let hasAccess = false;
 
-    const { valid, user } = await protectRoute(req);
+    const { valid, user } = await protectApiRoute(req);
 
     if (valid && user?.type === 'client') {
       const purchase = await Purchase.findOne({

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db';
-import { protectRoute } from '@/lib/auth';
+import { protectApiRoute } from '@/lib/auth';
 import Purchase from '@/models/Purchase';
 import Cleaner from '@/models/Cleaner';
 import Stripe from 'stripe';
@@ -11,8 +11,9 @@ export async function PUT(req, { params }) {
   await connectToDatabase();
   const purchaseId = params.id;
 
-  const { valid, user, response } = await protectRoute(req);
+  const { valid, user, response } = await protectApiRoute(req);
   if (!valid) return response;
+
   if (user.type !== 'cleaner') {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }

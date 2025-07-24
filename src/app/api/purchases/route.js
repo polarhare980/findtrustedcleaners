@@ -2,13 +2,14 @@ import { connectToDatabase } from '@/lib/db';
 import Purchase from '@/models/Purchase';
 import Cleaner from '@/models/Cleaner';
 import { NextResponse } from 'next/server';
-import { protectRoute } from '@/lib/auth';
+import { protectApiRoute } from '@/lib/auth';
 
 export async function POST(req) {
   await connectToDatabase();
 
-  const { valid, user, response } = await protectRoute(req);
+  const { valid, user, response } = await protectApiRoute(req);
   if (!valid) return response;
+
   if (user.type !== 'client') {
     return NextResponse.json({ success: false, message: 'Access denied.' }, { status: 403 });
   }

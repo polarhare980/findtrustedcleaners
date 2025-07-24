@@ -1,19 +1,14 @@
 import { connectToDatabase } from '@/lib/db';
-import Booking from '@/models/booking'; // ✅ Capitalized model name
-import { verifyToken } from '@/lib/auth'; // ✅ Correct JWT middleware
+import Booking from '@/models/booking';
+import { protectApiRoute } from '@/lib/auth';
 
-// DELETE Booking (🔒 Protected)
 export async function DELETE(req, { params }) {
   await connectToDatabase();
 
+  const { valid, user, response } = await protectApiRoute(req);
+  if (!valid) return response;
+
   try {
-    // 🔐 Validate JWT token
-    const user = await verifyToken();
-
-    if (!user) {
-      return new Response(JSON.stringify({ success: false, message: 'Unauthorised' }), { status: 401 });
-    }
-
     const existingBooking = await Booking.findById(params.id);
 
     if (!existingBooking) {
@@ -21,16 +16,24 @@ export async function DELETE(req, { params }) {
     }
 
     // ✅ Allow only booking owner or admin to delete
-    if (user.type === 'client' && existingBooking.clientId.toString() !== user.id) {
+    const isClientOwner =
+      user.type === 'client' && existingBooking.clientId.toString() === user._id;
+    const isAdmin = user.type === 'admin';
+
+    if (!isClientOwner && !isAdmin) {
       return new Response(JSON.stringify({ success: false, message: 'Access denied.' }), { status: 403 });
     }
 
     await Booking.findByIdAndDelete(params.id);
 
-    return new Response(JSON.stringify({ success: true, message: 'Booking cancelled successfully' }), { status: 200 });
+    return new Response(
+      JSON.stringify({ success: true, message: 'Booking cancelled successfully' }),
+      { status: 200 }
+    );
   } catch (err) {
     console.error('❌ Booking Deletion Error:', err.message);
-    return new Response(JSON.stringify({ success: false, message: 'Error processing request.' }), { status: 500 });
+    return new Response(JSON.stringify({ success: false, message: 'Error processing request.' }), {
+      status: 500,
+    });
   }
 }
-

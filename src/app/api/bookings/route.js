@@ -2,14 +2,14 @@ import { connectToDatabase } from '@/lib/db';
 import Booking from '@/models/booking';
 import Cleaner from '@/models/Cleaner';
 import { NextResponse } from 'next/server';
-import { protectRoute } from '@/lib/auth';
+import { protectApiRoute } from '@/lib/auth';
 import { ObjectId } from 'mongodb';
 
 // ✅ Create a new booking (Client only)
 export async function POST(req) {
   await connectToDatabase();
 
-  const { valid, user, response } = await protectRoute(req);
+  const { valid, user, response } = await protectApiRoute(req);
   if (!valid) return response;
 
   if (user.type !== 'client') {

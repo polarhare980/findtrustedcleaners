@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db';
-import Booking from '@/models/booking'; // Ensure this matches the schema name
-import { protectRoute } from '@/lib/auth'; // ✅ Switched to protectRoute
+import Booking from '@/models/booking';
+import { protectApiRoute } from '@/lib/auth';
 
 export async function GET(req, { params }) {
   await connectToDatabase();
 
-  const { valid, user, response } = await protectRoute(req);
+  const { valid, user, response } = await protectApiRoute(req);
   if (!valid) return response;
 
   const { id } = params;

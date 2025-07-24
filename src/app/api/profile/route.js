@@ -1,36 +1,27 @@
 import { connectToDatabase } from '@/lib/db';
 import Client from '@/models/Client';
 import Cleaner from '@/models/Cleaner';
-import { cookies } from 'next/headers';
-import { verifyToken } from '@/lib/auth';
+import { protectApiRoute } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 
-export async function GET() {
+export async function GET(req) {
   await connectToDatabase();
 
+  const { valid, user, response } = await protectApiRoute(req);
+  if (!valid) return response;
+
+  const Model = user.type === 'client' ? Client : Cleaner;
+
   try {
-    const token = cookies().get('token')?.value;
+    const fullUser = await Model.findById(user._id).select('-password');
 
-    if (!token) {
-      return NextResponse.json({ success: false, message: 'No token provided' }, { status: 401 });
-    }
-
-    const data = await verifyToken({ headers: { get: () => `Bearer ${token}` } }); // ✅ match your verifyToken cookie reader
-
-    if (!data?.id || !data?.type) {
-      return NextResponse.json({ success: false, message: 'Invalid token' }, { status: 401 });
-    }
-
-    const Model = data.type === 'client' ? Client : Cleaner;
-    const user = await Model.findById(data.id).select('-password');
-
-    if (!user) {
+    if (!fullUser) {
       return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, user }, { status: 200 });
+    return NextResponse.json({ success: true, user: fullUser }, { status: 200 });
   } catch (err) {
-    console.error('❌ Token verification error:', err.message);
-    return NextResponse.json({ success: false, message: 'Token verification failed' }, { status: 401 });
+    console.error('❌ Error fetching user:', err.message);
+    return NextResponse.json({ success: false, message: 'Server error' }, { status: 500 });
   }
 }

@@ -2,25 +2,20 @@ import { connectToDatabase } from '@/lib/db';
 import Purchase from '@/models/Purchase';
 import Cleaner from '@/models/Cleaner';
 import { NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/auth';
+import { protectApiRoute } from '@/lib/auth';
 
 export async function GET(req) {
   await connectToDatabase();
 
+  const { valid, user, response } = await protectApiRoute(req);
+  if (!valid) return response;
+
+  if (user.type !== 'client') {
+    return NextResponse.json({ success: false, message: 'Access denied.' }, { status: 403 });
+  }
+
   try {
-    const token = req.cookies.get('token')?.value;
-
-    if (!token) {
-      return NextResponse.json({ success: false, message: 'Unauthorised' }, { status: 401 });
-    }
-
-    const user = await verifyToken(token);
-
-    if (!user || user.type !== 'client') {
-      return NextResponse.json({ success: false, message: 'Access denied.' }, { status: 403 });
-    }
-
-    const purchases = await Purchase.find({ clientId: user.id }).lean();
+    const purchases = await Purchase.find({ clientId: user._id }).lean();
 
     const detailedPurchases = await Promise.all(
       purchases.map(async (purchase) => {
