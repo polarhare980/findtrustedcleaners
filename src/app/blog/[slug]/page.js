@@ -1,5 +1,3 @@
-import { connectToDatabase } from '@/lib/db';
-import BlogPost from '@/models/BlogPost';
 import BlogPostClient from './BlogPostClient';
 import Link from 'next/link';
 
@@ -8,10 +6,13 @@ export const dynamic = 'force-dynamic'; // Ensures fresh data on every request
 export default async function BlogPostPage({ params }) {
   const { slug } = params;
 
-  await connectToDatabase();
-  const post = await BlogPost.findOne({ slug });
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'https://www.findtrustedcleaners.com'}/api/blog?slug=${slug}`, {
+    cache: 'no-store',
+  });
 
-  if (!post) {
+  const data = await res.json();
+
+  if (!data.success || !data.post) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-teal-900/20 to-teal-700/10 flex items-center justify-center p-6">
         <div className="max-w-xl text-center bg-white/30 backdrop-blur-md p-10 rounded-2xl shadow-lg">
@@ -30,12 +31,13 @@ export default async function BlogPostPage({ params }) {
     );
   }
 
+  const post = data.post;
   const wordCount = post.content.replace(/<[^>]*>/g, '').split(/\s+/).length;
   const readingTime = Math.ceil(wordCount / 200);
 
   return (
     <BlogPostClient
-      post={JSON.parse(JSON.stringify(post))}
+      post={post}
       readingTime={readingTime}
       wordCount={wordCount}
     />
