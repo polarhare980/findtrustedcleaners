@@ -27,6 +27,8 @@ export async function PUT(req, { params }) {
 
     if (body.availability !== undefined) updateFields.availability = body.availability;
     if (body.googleReviewUrl) updateFields.googleReviewUrl = body.googleReviewUrl;
+    if (body.googleReviewRating !== undefined) updateFields.googleReviewRating = body.googleReviewRating;
+    if (body.googleReviewCount !== undefined) updateFields.googleReviewCount = body.googleReviewCount;
     if (body.facebookReviewUrl) updateFields.facebookReviewUrl = body.facebookReviewUrl;
     if (body.embedCode) updateFields.embedCode = body.embedCode;
     if (body.image) updateFields.image = body.image;
