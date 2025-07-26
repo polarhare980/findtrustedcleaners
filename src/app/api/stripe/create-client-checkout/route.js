@@ -47,13 +47,13 @@ export async function POST(req) {
         },
       ],
       metadata: {
-        cleanerId,
-        type: 'profileUnlock',
-        clientId: user._id?.toString(),
-        clientBooking: 'true', // ✅ Required so webhook knows it's a client booking
-        day: day || '',
-        hour: hour || '',
-      },
+  type: 'clientBooking',                    // 🔑 webhook uses this to identify type
+  cleanerId: cleanerId.toString(),          // ✅ Required for DB
+  clientId: user._id.toString(),            // ✅ Required for DB
+  day,                                      // ✅ Must be a string like 'Monday'
+  hour                                      // ✅ Must be a string like '13'
+},
+
       success_url: `${baseUrl}/clients/dashboard?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/cleaner/${cleanerId}?booking=cancelled`,
     });
