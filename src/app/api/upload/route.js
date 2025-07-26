@@ -15,7 +15,10 @@ export const POST = async (req) => {
 
     const result = await new Promise((resolve, reject) => {
       cloudinary.uploader.upload_stream(
-        { folder: 'findtrustedcleaners' },
+        {
+          folder: 'findtrustedcleaners', // Cloudinary folder
+          resource_type: 'image',
+        },
         (error, result) => {
           if (error) reject(error);
           else resolve(result);
@@ -23,7 +26,12 @@ export const POST = async (req) => {
       ).end(buffer);
     });
 
-    return NextResponse.json({ success: true, url: result.secure_url }, { status: 201 });
+    return NextResponse.json({
+      success: true,
+      url: result.secure_url,
+      public_id: result.public_id, // ✅ This is now included!
+    }, { status: 201 });
+
   } catch (error) {
     console.error('❌ Upload error:', error.message);
     return NextResponse.json({ success: false, message: 'Upload failed.' }, { status: 500 });
