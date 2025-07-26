@@ -1080,7 +1080,7 @@ const reformattedAvailability = formData.availability;
 
     {/* 💰 View Earnings */}
     <button
-      onClick={() => router.push('/cleaner/earnings')}
+      onClick={() => router.push('/cleaners/earnings')}
       className="flex items-center justify-center gap-3 px-5 py-4 bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-700 hover:to-yellow-800 text-white rounded-xl font-semibold transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
     >
       <span className="text-xl">💰</span>
