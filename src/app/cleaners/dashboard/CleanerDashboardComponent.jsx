@@ -656,6 +656,100 @@ const reformattedAvailability = formData.availability;
             </div>
 
             {/* Enhanced Profile Image Upload */}
+            {/* ✅ Premium Gallery Uploads */}
+{cleaner?.isPremium && (
+  <>
+    {/* 📸 Additional Photos */}
+    <div className="space-y-2 md:col-span-2 lg:col-span-3">
+      <label className="text-sm font-medium text-gray-600">📸 Photo Gallery (Max 10)</label>
+      <input
+        type="file"
+        accept="image/*"
+        multiple
+        onChange={async (e) => {
+          const files = Array.from(e.target.files);
+          if (!files.length) return;
+          const newPhotos = [...(formData.photos || [])];
+
+          for (const file of files) {
+            if (newPhotos.length >= 10) break;
+            const formDataUpload = new FormData();
+            formDataUpload.append('file', file);
+
+            const res = await fetch('/api/upload', { method: 'POST', body: formDataUpload });
+            const data = await res.json();
+            if (data.success && data.url) newPhotos.push(data.url);
+          }
+
+          setFormData((prev) => ({ ...prev, photos: newPhotos }));
+
+          await fetch(`/api/cleaners/${cleaner._id}`, {
+            method: 'PUT',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ photos: newPhotos }),
+          });
+        }}
+        className="w-full p-3 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-lg"
+      />
+      {formData.photos?.length > 0 && (
+  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-4">
+    {formData.photos.map((url, i) => (
+      <div key={i} className="relative group">
+        <img
+          src={url}
+          alt={`Photo ${i + 1}`}
+          className="w-full h-32 object-cover rounded-lg border shadow"
+          loading="lazy"
+        />
+        <button
+          onClick={async () => {
+            const updated = formData.photos.filter((_, index) => index !== i);
+            setFormData((prev) => ({ ...prev, photos: updated }));
+
+            await fetch(`/api/cleaners/${cleaner._id}`, {
+              method: 'PUT',
+              credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ photos: updated }),
+            });
+          }}
+          className="absolute top-1 right-1 p-1 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition"
+          title="Remove photo"
+        >
+          ✕
+        </button>
+      </div>
+    ))}
+  </div>
+)}
+
+    </div>
+
+    {/* 🎥 Intro Video URL */}
+    <div className="space-y-2 md:col-span-2 lg:col-span-3 mt-6">
+      <label className="text-sm font-medium text-gray-600">🎥 Intro Video URL</label>
+      <input
+        type="url"
+        placeholder="https://yourvideo.com"
+        value={formData.videoUrl || ''}
+        onChange={(e) =>
+          setFormData((prev) => ({ ...prev, videoUrl: e.target.value }))
+        }
+        onBlur={async () => {
+          await fetch(`/api/cleaners/${cleaner._id}`, {
+            method: 'PUT',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ videoUrl: formData.videoUrl }),
+          });
+        }}
+        className="w-full p-3 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-lg"
+      />
+    </div>
+  </>
+)}
+
             <div className="space-y-2 md:col-span-2 lg:col-span-3">
               <label className="text-sm font-medium text-gray-600">📸 Profile Picture</label>
               
