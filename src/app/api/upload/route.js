@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import cloudinary from '@/lib/cloudinary';
+import { detectTextFromBuffer } from '@/lib/detectText'; // 🧠 OCR util
+import { Buffer } from 'buffer';
 
 export const POST = async (req) => {
   const formData = await req.formData();
@@ -13,10 +15,14 @@ export const POST = async (req) => {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
+    // 🧠 Step 1: Detect text in the image
+    const hasText = await detectTextFromBuffer(buffer);
+
+    // 🧠 Step 2: Upload to Cloudinary
     const result = await new Promise((resolve, reject) => {
       cloudinary.uploader.upload_stream(
         {
-          folder: 'findtrustedcleaners', // Cloudinary folder
+          folder: 'findtrustedcleaners',
           resource_type: 'image',
         },
         (error, result) => {
@@ -29,7 +35,8 @@ export const POST = async (req) => {
     return NextResponse.json({
       success: true,
       url: result.secure_url,
-      public_id: result.public_id, // ✅ This is now included!
+      public_id: result.public_id,
+      hasText, // ✅ OCR flag returned to frontend
     }, { status: 201 });
 
   } catch (error) {

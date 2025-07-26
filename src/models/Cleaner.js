@@ -18,6 +18,9 @@ const cleanerSchema = new mongoose.Schema({
 
   image: { type: String },
 
+  // ✅ Blur flag for profile image
+  imageHasText: { type: Boolean, default: false },
+
   address: {
     houseNameNumber: { type: String },
     street: { type: String },
@@ -34,10 +37,10 @@ const cleanerSchema = new mongoose.Schema({
   googleReviewCount: { type: Number },
 
   // ✅ Analytics Fields
-  views: { type: Number, default: 0 },              // Profile views
-  profileUnlocks: { type: Number, default: 0 },     // Contact info unlocks
-  completedJobs: { type: Number, default: 0 },      // Confirmed jobs
-  rating: { type: Number },                         // Optional internal rating
+  views: { type: Number, default: 0 },
+  profileUnlocks: { type: Number, default: 0 },
+  completedJobs: { type: Number, default: 0 },
+  rating: { type: Number },
 
   // ✅ Premium Media Uploads
   photos: {
@@ -45,6 +48,7 @@ const cleanerSchema = new mongoose.Schema({
       {
         url: String,
         public_id: String,
+        hasText: { type: Boolean, default: false }, // ✅ Blur flag for gallery
       }
     ],
     default: [],

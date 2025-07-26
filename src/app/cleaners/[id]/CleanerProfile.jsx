@@ -356,23 +356,52 @@ export default function CleanerProfile() {
           </div>
 
           {/* Services Section - MOVED BELOW CONTACT DETAILS */}
-          <div className="bg-white/30 backdrop-blur-md rounded-2xl p-6 border border-white/20 mb-6 relative z-10">
-            <h2 className="text-2xl font-bold text-teal-800 mb-4 flex items-center gap-2">
-              <span>🧹</span> Services Offered
-            </h2>
-            {Array.isArray(cleaner.services) && cleaner.services.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {cleaner.services.map((service, i) => (
-                  <div key={i} className="bg-white/40 backdrop-blur-sm rounded-xl p-3 border border-white/30 flex items-center gap-2">
-                    <span className="text-teal-600">✨</span>
-                    <span className="text-gray-800">{service}</span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="italic text-gray-600 text-center py-4">No services listed</p>
-            )}
-          </div>
+<div className="bg-white/30 backdrop-blur-md rounded-2xl p-6 border border-white/20 mb-6 relative z-10">
+  <h2 className="text-2xl font-bold text-teal-800 mb-4 flex items-center gap-2">
+    <span>🧹</span> Services Offered
+  </h2>
+  {Array.isArray(cleaner.services) && cleaner.services.length > 0 ? (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      {cleaner.services.map((service, i) => (
+        <div key={i} className="bg-white/40 backdrop-blur-sm rounded-xl p-3 border border-white/30 flex items-center gap-2">
+          <span className="text-teal-600">✨</span>
+          <span className="text-gray-800">{service}</span>
+        </div>
+      ))}
+    </div>
+  ) : (
+    <p className="italic text-gray-600 text-center py-4">No services listed</p>
+  )}
+</div>
+
+{/* Gallery Section */}
+{cleaner.photos?.length > 0 && (
+  <div className="bg-white/30 backdrop-blur-md rounded-2xl p-6 border border-white/20 mb-6 relative z-10">
+    <h2 className="text-2xl font-bold text-teal-800 mb-4 flex items-center gap-2">
+      <span>🖼️</span> Cleaner Gallery
+    </h2>
+
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+      {cleaner.photos.map((photo, index) => (
+        <div key={index} className="relative group overflow-hidden rounded-xl border border-white/30">
+          <img
+            src={photo.url}
+            alt={`Gallery photo ${index + 1}`}
+            className={`w-full h-auto transition-all duration-300 object-cover ${
+              !canViewContact && photo.hasText ? 'blur-sm grayscale brightness-75' : ''
+            }`}
+          />
+          {!canViewContact && photo.hasText && (
+            <div className="absolute inset-0 bg-black/30 flex items-center justify-center text-white text-sm font-medium">
+              🔒 Unlock to view
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  </div>
+)}
+
 
           {/* Reviews Section */}
           {(cleaner.googleReviewUrl || cleaner.facebookReviewUrl || cleaner.embedCode) && (
