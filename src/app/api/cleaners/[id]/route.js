@@ -4,6 +4,25 @@ import Purchase from '@/models/Purchase';
 import { NextResponse } from 'next/server';
 import { protectApiRoute } from '@/lib/auth';
 
+// 🧼 Contact Info Scrubber
+function containsContactInfo(text, cleaner) {
+  const patterns = [
+    /\b\d{5,}\b/g, // long digit blocks = phone numbers
+    /\b\S+@\S+\.\S+\b/g, // emails
+    /(https?:\/\/|www\.)\S+/gi, // URLs
+    /\.com\b|\.co\.uk\b|\.net\b|\.org\b/gi, // common TLDs
+    /\b(ltd|cleaning|services)\b/gi // common company terms
+  ];
+
+  // Add company name if it exists
+  if (cleaner?.companyName) {
+    const safeName = cleaner.companyName.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    patterns.push(new RegExp(`\\b${safeName}\\b`, 'gi'));
+  }
+
+  return patterns.some((regex) => regex.test(text));
+}
+
 // 🔒 PUT - Update cleaner profile (Protected)
 export async function PUT(req, { params }) {
   await connectToDatabase();
@@ -13,17 +32,28 @@ export async function PUT(req, { params }) {
   const { valid, user, response } = await protectApiRoute(req);
   if (!valid) return response;
 
-  console.log('🔐 PUT Access Check:');
-  console.log('Session User ID:', user._id?.toString());
-  console.log('Requested Param ID:', id);
-
   if (user._id?.toString() !== id && user.type !== 'admin') {
-    console.log('🔐 PUT Access Denied: ID Mismatch');
     return NextResponse.json({ success: false, message: 'Access denied.' }, { status: 403 });
   }
 
   try {
+    const cleaner = await Cleaner.findById(id);
+    if (!cleaner) {
+      return NextResponse.json({ success: false, message: 'Cleaner not found' }, { status: 404 });
+    }
+
     const updateFields = {};
+
+    // ✅ Bio sanitisation
+    if (body.bio !== undefined) {
+      if (containsContactInfo(body.bio, cleaner)) {
+        return NextResponse.json({
+          success: false,
+          message: 'Bio contains contact info or company references. Please remove them.',
+        }, { status: 400 });
+      }
+      updateFields.bio = body.bio.trim();
+    }
 
     if (body.availability !== undefined) updateFields.availability = body.availability;
     if (body.googleReviewUrl) updateFields.googleReviewUrl = body.googleReviewUrl;
@@ -41,10 +71,6 @@ export async function PUT(req, { params }) {
     if (body.address) updateFields.address = body.address;
 
     const updated = await Cleaner.findByIdAndUpdate(id, updateFields, { new: true });
-
-    if (!updated) {
-      return NextResponse.json({ success: false, message: 'Cleaner not found' }, { status: 404 });
-    }
 
     return NextResponse.json({ success: true, cleaner: updated });
   } catch (err) {
@@ -66,11 +92,12 @@ export async function GET(req, { params }) {
 
     const publicData = {
       realName: cleaner.realName,
-      postcode: cleaner.postcode,
+      postcode: cleaner.address?.postcode,
       rates: cleaner.rates,
       services: cleaner.services,
       availability: cleaner.availability,
       image: cleaner.image || '/default-avatar.png',
+      bio: cleaner.bio || '',
     };
 
     let responseData = { ...publicData };

@@ -9,6 +9,13 @@ const cleanerSchema = new mongoose.Schema({
   rates: { type: Number, required: true },
   services: [String],
 
+bio: {
+  type: String,
+  maxlength: 1000,
+  default: '',
+},
+
+
   availability: {
     type: mongoose.Schema.Types.Mixed,
     default: {},
