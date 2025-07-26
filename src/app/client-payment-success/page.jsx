@@ -53,7 +53,7 @@ export default function ClientPaymentSuccessPage() {
               Return to Home
             </Link>
             <Link
-              href="/client/dashboard"
+              href="/clients/dashboard"
               className="px-4 py-2 bg-gray-700 text-white rounded-xl hover:bg-gray-800 transition-all duration-200"
             >
               Go to Dashboard
