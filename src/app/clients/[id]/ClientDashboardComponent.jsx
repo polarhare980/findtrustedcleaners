@@ -383,12 +383,28 @@ const data = await res.json();
             ) : (
               <div className="space-y-4">
                 {purchases.slice(0, 3).map((purchase) => (
-                  <div key={purchase._id} className="bg-white/80 p-4 rounded-2xl hover:shadow-lg transition-all duration-300">
-                    <h4 className="font-semibold text-teal-800 mb-2">{purchase.item}</h4>
-                    <p className="text-gray-600 text-sm">{new Date(purchase.date).toLocaleDateString()}</p>
-                    <p className="text-gray-700 font-medium">£{purchase.amount}</p>
-                  </div>
-                ))}
+  <div key={purchase._id} className="bg-white/80 p-4 rounded-2xl hover:shadow-lg transition-all duration-300">
+    <div className="flex justify-between items-start mb-2">
+      <h4 className="font-semibold text-teal-800">
+        Access to {purchase.cleanerId?.companyName || purchase.cleanerId?.realName || 'Cleaner'}
+      </h4>
+      <span className={`px-3 py-1 rounded-[50px] text-sm font-medium ${
+        purchase.status === 'approved' ? 'bg-green-100 text-green-800' :
+        purchase.status === 'pending' ? 'bg-amber-100 text-amber-800' :
+        'bg-gray-100 text-gray-800'
+      }`}>
+        {purchase.status}
+      </span>
+    </div>
+    <p className="text-gray-600 text-sm">
+      Purchased on {new Date(purchase.createdAt).toLocaleDateString()} at {purchase.hour}, {purchase.day}
+    </p>
+    {purchase.amount && (
+      <p className="text-gray-700 font-medium">£{(purchase.amount).toFixed(2)}</p>
+    )}
+  </div>
+))}
+
               </div>
             )}
           </div>

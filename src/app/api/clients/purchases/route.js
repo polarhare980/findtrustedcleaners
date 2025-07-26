@@ -1,8 +1,9 @@
+// /app/api/clients/purchases/route.js
+
 import { connectToDatabase } from '@/lib/db';
 import Purchase from '@/models/Purchase';
-import Cleaner from '@/models/Cleaner';
-import { NextResponse } from 'next/server';
 import { protectApiRoute } from '@/lib/auth';
+import { NextResponse } from 'next/server';
 
 export async function GET(req) {
   await connectToDatabase();
@@ -15,23 +16,14 @@ export async function GET(req) {
   }
 
   try {
-    const purchases = await Purchase.find({ clientId: user._id }).lean();
+    const purchases = await Purchase.find({ clientId: user._id })
+      .sort({ createdAt: -1 })
+      .populate('cleanerId', 'realName companyName') // 🔥 Get cleaner details
+      .lean();
 
-    const detailedPurchases = await Promise.all(
-      purchases.map(async (purchase) => {
-        const cleaner = await Cleaner.findById(purchase.cleanerId);
-        return {
-          cleanerId: cleaner._id,
-          cleanerName: cleaner.realName,
-          phone: cleaner.phone,
-          email: cleaner.email,
-        };
-      })
-    );
-
-    return NextResponse.json({ success: true, purchases: detailedPurchases });
+    return NextResponse.json({ success: true, purchases });
   } catch (err) {
-    console.error('❌ Error fetching purchases:', err.message);
+    console.error('❌ Failed to fetch purchases:', err);
     return NextResponse.json({ success: false, message: 'Server error.' }, { status: 500 });
   }
 }

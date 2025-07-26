@@ -377,9 +377,19 @@ export default function ClientDashboardComponent() {
               <div className="space-y-4">
                 {purchases.slice(0, 3).map((purchase) => (
                   <div key={purchase._id} className="bg-white/80 p-4 rounded-2xl hover:shadow-lg transition-all duration-300">
-                    <h4 className="font-semibold text-teal-800 mb-2">{purchase.item}</h4>
-                    <p className="text-gray-600 text-sm">{new Date(purchase.date).toLocaleDateString()}</p>
-                    <p className="text-gray-700 font-medium">£{purchase.amount}</p>
+                    <h4 className="font-semibold text-teal-800 mb-2">
+  Unlock: {purchase.cleanerId?.companyName || purchase.cleanerId?.realName || 'Cleaner'}
+</h4>
+<p className="text-gray-600 text-sm">
+  Slot: {purchase.day} at {purchase.hour}
+</p>
+<p className="text-gray-600 text-sm">
+  Purchased: {new Date(purchase.purchasedAt || purchase.createdAt).toLocaleDateString()}
+</p>
+<p className="text-gray-700 font-medium">
+  £{purchase.amount?.toFixed(2) || '—'}
+</p>
+
                   </div>
                 ))}
               </div>
