@@ -60,8 +60,12 @@ export async function GET(req) {
 
     const query = {};
 
+    // ✅ Expanded service area support
     if (postcode && postcode.length >= 2) {
-      query.postcode = { $regex: postcode, $options: 'i' };
+      query.$or = [
+        { 'address.postcode': { $regex: postcode, $options: 'i' } },
+        { additionalPostcodes: { $regex: postcode, $options: 'i' } }
+      ];
     }
 
     if (minRating > 0) {
@@ -110,6 +114,7 @@ export async function GET(req) {
     return NextResponse.json({ success: false, message: 'Failed to fetch cleaner(s).' }, { status: 500 });
   }
 }
+
 
 // POST - Register new cleaner
 export async function POST(req) {

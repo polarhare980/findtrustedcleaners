@@ -6,19 +6,20 @@ import { getCleanerId } from '@/lib/utils'; // ✅ Import helper
 import { secureFetch } from '@/lib/secureFetch';
 
 export default function PurchaseButton({
-  cleaner,
+  cleanerId, // ✅ now cleanerId is passed directly from parent
   onPurchaseSuccess,
   onPurchaseStart,
   onPurchaseError,
   disabled = false,
 }) {
+
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
 
-  const cleanerId = getCleanerId(cleaner); // ✅ Use standardised ID
+
 
   useEffect(() => {
     if (localStorage.getItem('purchaseIntent') === 'true') {

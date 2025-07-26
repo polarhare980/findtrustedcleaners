@@ -75,6 +75,7 @@ fetchBookings();
             services: cleanerUser.services || [],
             availability: cleanerUser.availability || {},
             businessInsurance: cleanerUser.businessInsurance || false,
+            bio: cleanerUser.bio || '',
           };
 
           setFormData(cleanerData);
@@ -906,20 +907,22 @@ const reformattedAvailability = formData.availability;
 
 
             <div className="space-y-2 md:col-span-2 lg:col-span-3">
-              <label className="text-sm font-medium text-gray-600">📝 Description</label>
-              {editMode ? (
-                <textarea
-                  value={editData.description || ''}
-                  onChange={(e) => handleInputChange('description', e.target.value)}
-                  placeholder="Tell clients about your experience and what makes you special..."
-                  rows="4"
-                  className="w-full p-3 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-300 resize-none"
-                />
-              ) : (
-                <p className="text-gray-800 font-medium">
-                  {formData.description || 'No description provided'}
-                </p>
-              )}
+              <label className="text-sm font-medium text-gray-600">📝 Public Bio</label>
+{editMode ? (
+  <textarea
+    value={editData.bio || ''}
+    onChange={(e) => handleInputChange('bio', e.target.value)}
+    placeholder="Tell clients about your experience, services, and what makes you stand out. Don’t include contact info or company names."
+    rows="4"
+    maxLength="1000"
+    className="w-full p-3 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-300 resize-none"
+  />
+) : (
+  <p className="text-gray-800 font-medium whitespace-pre-wrap">
+    {formData.bio || 'No public bio added yet.'}
+  </p>
+)}
+
             </div>
           </div>
         </div>

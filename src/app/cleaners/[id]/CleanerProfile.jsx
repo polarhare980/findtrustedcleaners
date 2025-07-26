@@ -380,6 +380,16 @@ export default function CleanerProfile() {
   )}
 </div>
 
+{cleaner.bio && (
+  <div className="bg-white/30 backdrop-blur-md rounded-2xl p-6 border border-white/20 mb-6 relative z-10">
+    <h2 className="text-2xl font-bold text-teal-800 mb-4 flex items-center gap-2">
+      <span>🧾</span> About This Cleaner
+    </h2>
+    <p className="text-gray-800 whitespace-pre-wrap">{cleaner.bio}</p>
+  </div>
+)}
+
+
 {/* Gallery Section */}
 {cleaner.photos?.length > 0 && (
   <div className="bg-white/30 backdrop-blur-md rounded-2xl p-6 border border-white/20 mb-6 relative z-10">
