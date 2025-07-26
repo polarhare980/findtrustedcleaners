@@ -98,6 +98,8 @@ export default function CleanerRegister() {
 
     // Check rates
     const parsedRates = parseFloat(form.rates.replace(/[^0-9.]/g, '')) || 0;
+    // ✅ Reformat availability keys like "Mon-9" → { Monday: { "9": true } }
+
     if (parsedRates <= 0) {
       newErrors.rates = 'Please enter a valid hourly rate greater than 0';
     }
@@ -116,6 +118,26 @@ export default function CleanerRegister() {
   setIsSubmitting(true);
   setErrors({});
 
+  // ✅ Reformat availability keys like "Mon-9" → { Monday: { "9": true } }
+  const reformattedAvailability = {};
+  Object.entries(form.availability).forEach(([key, value]) => {
+    const [shortDay, hour] = key.split('-');
+    const dayMap = {
+      Mon: 'Monday',
+      Tue: 'Tuesday',
+      Wed: 'Wednesday',
+      Thu: 'Thursday',
+      Fri: 'Friday',
+      Sat: 'Saturday',
+      Sun: 'Sunday',
+    };
+    const fullDay = dayMap[shortDay];
+    if (!reformattedAvailability[fullDay]) {
+      reformattedAvailability[fullDay] = {};
+    }
+    reformattedAvailability[fullDay][hour] = value;
+  });
+
   const parsedRates = parseFloat(form.rates.replace(/[^0-9.]/g, '')) || 0;
 
   try {
@@ -129,24 +151,25 @@ export default function CleanerRegister() {
       phone: form.phone.trim(),
       rates: parsedRates,
       services: form.services,
-      houseNameNumber: form.houseNameNumber.trim(),
-      street: form.street.trim(),
-      county: form.county.trim(),
-      postcode: form.postcode.trim(),
-      availability: form.availability,
+      address: {
+        houseNameNumber: form.houseNameNumber.trim(),
+        street: form.street.trim(),
+        county: form.county.trim(),
+        postcode: form.postcode.trim(),
+      },
+      availability: reformattedAvailability, // ✅ Use the corrected format
       businessInsurance: form.businessInsurance,
-      userType: 'cleaner'
+      userType: 'cleaner',
     };
 
     console.log('📦 Payload:', JSON.stringify(payload, null, 2));
 
-    const res = await fetch('/api/auth/register', {  // 🔥 Change to unified route
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  credentials: 'include',
-  body: JSON.stringify(payload),
-});
-
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(payload),
+    });
 
     const data = await res.json();
     console.log('📥 Response:', data);
@@ -165,6 +188,7 @@ export default function CleanerRegister() {
     setIsSubmitting(false);
   }
 };
+
 
 
 
