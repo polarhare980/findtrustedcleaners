@@ -130,7 +130,7 @@ export default function FindCleanerPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  📍 Postcode
+                  Location
                 </label>
                 <input
                   type="text"
@@ -143,7 +143,7 @@ export default function FindCleanerPage() {
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  ⭐ Minimum Rating
+                  Minimum Rating
                 </label>
                 <select
                   value={minRating}
@@ -159,7 +159,7 @@ export default function FindCleanerPage() {
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  📅 Availability
+                  Availability
                 </label>
                 <select
                   value={bookingStatus}
@@ -200,34 +200,51 @@ export default function FindCleanerPage() {
                     className="bg-white/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] shadow-[0_8px_32px_rgba(0,0,0,0.1)] p-8 hover:shadow-[0_12px_40px_rgba(0,0,0,0.15)] hover:-translate-y-1 transition-all duration-300 ease-in-out"
                   >
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between mb-4">
-                          <div>
-                            <h3 className="text-2xl font-bold text-teal-800 mb-2">{cleaner.realName}</h3>
-                            <p className="text-gray-700 font-medium mb-2">{cleaner.companyName}</p>
-                            <p className="text-sm text-gray-600 mb-3">📍 {cleaner.postcode}</p>
-                          </div>
-                          <div className="flex-shrink-0">
-                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                              cleaner.bookingStatus === 'available' 
-                                ? 'bg-gradient-to-r from-green-500 to-green-600 text-white' 
-                                : cleaner.bookingStatus === 'pending'
-                                ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-white'
-                                : 'bg-gradient-to-r from-gray-400 to-gray-500 text-white'
-                            }`}>
-                              {cleaner.bookingStatus?.charAt(0).toUpperCase() + cleaner.bookingStatus?.slice(1) || 'Unknown'}
-                            </span>
-                          </div>
+                      <div className="flex items-center gap-6">
+                        {/* Cleaner Profile Image */}
+                        <div className="flex-shrink-0">
+                          <img
+                            src={cleaner.image || '/default-avatar.png'}
+                            alt={cleaner.realName || 'Cleaner'}
+                            className="w-20 h-20 object-cover rounded-full border-2 border-white/50 shadow-lg"
+                          />
                         </div>
                         
-                        <div className="flex flex-wrap items-center gap-4 mb-4">
-                          <div className="flex items-center bg-white/50 px-3 py-1 rounded-full">
-                            <span className="text-sm font-medium text-gray-700">💷 {cleaner.rates}</span>
+                        <div className="flex-1">
+                          <div className="flex items-start justify-between mb-4">
+                            <div>
+                              <h3 className="text-2xl font-bold text-teal-800 mb-2">{cleaner.realName}</h3>
+                              <p className="text-gray-700 font-medium mb-2">{cleaner.companyName}</p>
+                              <p className="text-sm text-gray-600 mb-3">Postcode: {cleaner.postcode}</p>
+                            </div>
+                            <div className="flex-shrink-0 ml-4">
+                              <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                                cleaner.bookingStatus === 'available' 
+                                  ? 'bg-gradient-to-r from-green-500 to-green-600 text-white' 
+                                  : cleaner.bookingStatus === 'pending'
+                                  ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-white'
+                                  : 'bg-gradient-to-r from-gray-400 to-gray-500 text-white'
+                              }`}>
+                                {cleaner.bookingStatus?.charAt(0).toUpperCase() + cleaner.bookingStatus?.slice(1) || 'Unknown'}
+                              </span>
+                            </div>
                           </div>
-                          <div className="flex items-center bg-white/50 px-3 py-1 rounded-full">
-                            <span className="text-sm font-medium text-gray-700">
-                              ⭐ {cleaner.rating || 'Unrated'}
-                            </span>
+                          
+                          <div className="flex flex-wrap items-center gap-4 mb-4">
+                            {/* Proper Rating Display */}
+                            <div className="flex items-center bg-white/50 px-3 py-1 rounded-full">
+                              <span className="text-sm font-medium text-gray-700">
+                                ⭐ {cleaner.googleReviewRating || cleaner.rating || 'Unrated'}
+                                {cleaner.googleReviewCount ? ` (${cleaner.googleReviewCount} reviews)` : ''}
+                              </span>
+                            </div>
+                            
+                            {/* Rates Display */}
+                            {cleaner.rates && (
+                              <div className="flex items-center bg-white/50 px-3 py-1 rounded-full">
+                                <span className="text-sm font-medium text-gray-700">💷 {cleaner.rates}</span>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>

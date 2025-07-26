@@ -23,6 +23,8 @@ export default function CleanerDashboardComponent() {
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [deleting, setDeleting] = useState(false);
   const [bookings, setBookings] = useState([]);
+  const [postcodeInput, setPostcodeInput] = useState('');
+
 
   // Image upload states
   const [selectedFile, setSelectedFile] = useState(null);
@@ -871,20 +873,13 @@ const reformattedAvailability = formData.availability;
             🗺️ Additional Postcodes You Cover (Premium)
           </label>
           <input
-            type="text"
-            value={editData.additionalPostcodes?.join(', ') || ''}
-            onChange={(e) =>
-              setEditData((prev) => ({
-                ...prev,
-                additionalPostcodes: e.target.value
-                  .split(',')
-                  .map((s) => s.trim().toUpperCase())
-                  .filter((s) => s),
-              }))
-            }
-            placeholder="e.g. BN1, RH10, GU2"
-            className="w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-300"
-          />
+  type="text"
+  value={postcodeInput}
+  onChange={(e) => setPostcodeInput(e.target.value)}
+  placeholder="e.g. BN1, RH10, GU2"
+  className="w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-300"
+/>
+
           <p className="text-xs text-gray-500 italic mt-1">
             You’ll appear in searches for any of these postcodes. Separate with commas.
           </p>
