@@ -5,7 +5,7 @@ import Purchase from '@/models/Purchase';
 
 export const config = {
   api: {
-    bodyParser: false,
+    bodyParser: false, // Required for Stripe raw body verification
   },
 };
 
@@ -47,20 +47,21 @@ export async function POST(req) {
 
     if (
       session?.payment_intent &&
-      session.metadata?.clientBooking === 'true'
+      session?.metadata?.clientBooking === 'true'
     ) {
-      const { cleanerId, day, hour } = session.metadata;
+      const { cleanerId, day, hour, clientId } = session.metadata;
 
       try {
         await connectToDatabase();
 
         const newPurchase = await Purchase.create({
-          clientId: session.customer_email || 'unknown',
+          clientId: clientId || 'unknown',
           cleanerId,
           day,
           hour,
           stripeSessionId: session.id,
           paymentIntentId: session.payment_intent,
+          amount: session.amount_total ? session.amount_total / 100 : null,
           status: 'pending_approval',
         });
 
@@ -70,7 +71,7 @@ export async function POST(req) {
         return NextResponse.json({ error: 'Database error' }, { status: 500 });
       }
     } else {
-      console.error('❌ Missing expected metadata in session');
+      console.error('❌ Missing or invalid metadata:', session);
     }
   }
 
