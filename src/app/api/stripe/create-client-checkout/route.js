@@ -15,7 +15,7 @@ export async function POST(req) {
   }
 
   try {
-    const { cleanerId } = await req.json();
+    const { cleanerId, day, hour } = await req.json();
 
     if (!cleanerId) {
       return NextResponse.json({ error: 'Missing cleaner ID' }, { status: 400 });
@@ -49,9 +49,12 @@ export async function POST(req) {
       metadata: {
         cleanerId,
         type: 'profileUnlock',
-        clientId: user._id?.toString(), // Optional: for webhook processing
+        clientId: user._id?.toString(),
+        clientBooking: 'true', // ✅ Required so webhook knows it's a client booking
+        day: day || '',
+        hour: hour || '',
       },
-      success_url: `${baseUrl}/client-payment-success?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${baseUrl}/clients/dashboard?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/cleaner/${cleanerId}?booking=cancelled`,
     });
 
