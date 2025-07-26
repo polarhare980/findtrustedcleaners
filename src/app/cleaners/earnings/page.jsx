@@ -12,7 +12,7 @@ export default function CleanerEarningsPage() {
   useEffect(() => {
     const loadEarnings = async () => {
       try {
-        const res = await fetch('/api/cleaner/earnings', { credentials: 'include' });
+        const res = await fetch('/api/cleaners/earnings', { credentials: 'include' });
         const json = await res.json();
 
         if (!json.success) {

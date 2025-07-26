@@ -18,10 +18,10 @@ export async function GET(req) {
       return NextResponse.json({ success: false, message: 'Premium access required' }, { status: 403 });
     }
 
-    const bookings = await Booking.find({ cleanerId, status: 'confirmed' });
+    const bookings = await Booking.find({ cleanerId, status: 'accepted' });
 
     const totalJobs = bookings.length;
-    const totalEarnings = bookings.reduce((sum, b) => sum + (b.total || 0), 0);
+    const totalEarnings = bookings.reduce((sum, b) => sum + (b.amount || 0), 0);
     const views = cleaner.views || 0;
     const unlocks = cleaner.profileUnlocks || 0;
     const conversionRate = views > 0 ? (unlocks / views) * 100 : 0;
