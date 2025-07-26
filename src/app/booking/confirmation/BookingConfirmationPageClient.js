@@ -1,17 +1,46 @@
 'use client';
 
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import Confetti from 'react-confetti';
 
 export default function BookingConfirmationPage() {
+  const searchParams = useSearchParams();
+  const day = searchParams.get('day');
+  const hour = searchParams.get('hour');
+  const cleanerName = searchParams.get('cleanerName');
+
+  const [showConfetti, setShowConfetti] = useState(true);
+  const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
+
+  useEffect(() => {
+    function handleResize() {
+      setWindowSize({ width: window.innerWidth, height: window.innerHeight });
+    }
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+
+    const timer = setTimeout(() => setShowConfetti(false), 5000);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      clearTimeout(timer);
+    };
+  }, []);
+
   return (
     <main className="min-h-screen relative flex flex-col items-center justify-center p-6 text-center">
-      {/* Background with gradient overlay */}
+      {/* 🎊 Confetti Animation */}
+      {showConfetti && <Confetti width={windowSize.width} height={windowSize.height} />}
+
+      {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-teal-900/20 via-teal-800/15 to-teal-700/10"></div>
 
       {/* Main content */}
       <div className="relative z-10 max-w-xl">
-        {/* Glass morphism card */}
+        {/* Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -31,10 +60,26 @@ export default function BookingConfirmationPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.4 }}
-            className="text-lg text-gray-700 mb-8"
+            className="text-lg text-gray-700 mb-4"
           >
             Thank you! Your booking request has been sent successfully.
           </motion.p>
+
+          {(day || hour || cleanerName) && (
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.5 }}
+              className="text-sm text-gray-600 mb-6"
+            >
+              {cleanerName && <span>Cleaner: <strong>{cleanerName}</strong>. </span>}
+              {day && hour && (
+                <span>
+                  Time booked: <strong>{day} at {hour}:00</strong>.
+                </span>
+              )}
+            </motion.p>
+          )}
 
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -58,7 +103,7 @@ export default function BookingConfirmationPage() {
           </motion.div>
         </motion.div>
 
-        {/* Additional decorative elements */}
+        {/* Confirmation icon */}
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -71,7 +116,7 @@ export default function BookingConfirmationPage() {
             </svg>
           </div>
           <p className="mt-3 text-sm text-gray-600">
-            We&apos;ll contact you shortly to confirm your booking details.
+            We’ll notify you once the cleaner approves or declines the booking.
           </p>
         </motion.div>
       </div>
