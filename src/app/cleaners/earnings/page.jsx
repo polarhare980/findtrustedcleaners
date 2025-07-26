@@ -33,6 +33,32 @@ export default function CleanerEarningsPage() {
     loadEarnings();
   }, [router]);
 
+  const handleExport = async () => {
+    try {
+      const res = await fetch('/api/cleaners/earnings/export', {
+        credentials: 'include',
+      });
+
+      if (!res.ok) {
+        throw new Error('Not premium or failed to export');
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'earnings.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Export failed:', err);
+      alert('Failed to export earnings. Are you a premium cleaner?');
+    }
+  };
+
   if (loading || !data) return <LoadingSpinner />;
 
   return (
@@ -50,8 +76,15 @@ export default function CleanerEarningsPage() {
           <Card title="Conversion Rate" value={`${data.conversionRate}%`} emoji="📈" />
         </div>
 
+        <button
+          onClick={handleExport}
+          className="mt-6 px-4 py-2 rounded-lg bg-yellow-700 text-white font-semibold hover:bg-yellow-800 transition"
+        >
+          ⬇️ Export Earnings CSV
+        </button>
+
         <p className="text-gray-600 text-sm mt-6 italic">
-          * These stats are based on confirmed bookings and your cleaner profile activity.
+          * These stats are based on accepted bookings and your cleaner profile activity.
         </p>
       </div>
     </div>

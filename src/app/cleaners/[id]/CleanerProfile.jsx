@@ -242,6 +242,12 @@ export default function CleanerProfile() {
                     <div>
                       <span className="font-semibold text-teal-800">Postcode:</span>
                       <div className="text-lg">{cleaner.postcode}</div>
+                      {cleaner.additionalPostcodes?.length > 0 && (
+  <div className="text-sm text-yellow-800 mt-1">
+    <span className="font-medium">Also covers:</span> {cleaner.additionalPostcodes.join(', ')}
+  </div>
+)}
+
                     </div>
                   </div>
                 </div>

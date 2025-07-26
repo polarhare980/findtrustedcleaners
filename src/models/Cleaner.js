@@ -48,13 +48,19 @@ const cleanerSchema = new mongoose.Schema({
       {
         url: String,
         public_id: String,
-        hasText: { type: Boolean, default: false }, // ✅ Blur flag for gallery
-      }
+        hasText: { type: Boolean, default: false },
+      },
     ],
     default: [],
   },
 
   videoUrl: { type: String }, // Optional intro video
+
+  // ✅ NEW: Additional service coverage
+  additionalPostcodes: {
+    type: [String],
+    default: [],
+  },
 
 }, {
   timestamps: true,

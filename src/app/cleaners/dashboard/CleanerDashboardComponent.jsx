@@ -829,47 +829,81 @@ const reformattedAvailability = formData.availability;
             </div>
 
             <div className="space-y-2 md:col-span-2 lg:col-span-3">
-              <label className="text-sm font-medium text-gray-600">📍 Address</label>
-              {editMode ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-                  <input
-                    type="text"
-                    value={editData.address?.houseNameNumber || ''}
-                    onChange={(e) => handleInputChange('address.houseNameNumber', e.target.value)}
-                    placeholder="House/Number"
-                    className="w-full p-3 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-300"
-                  />
-                  <input
-                    type="text"
-                    value={editData.address?.street || ''}
-                    onChange={(e) => handleInputChange('address.street', e.target.value)}
-                    placeholder="Street"
-                    className="w-full p-3 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-300"
-                  />
-                  <input
-                    type="text"
-                    value={editData.address?.county || ''}
-                    onChange={(e) => handleInputChange('address.county', e.target.value)}
-                    placeholder="County"
-                    className="w-full p-3 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-300"
-                  />
-                  <input
-                    type="text"
-                    value={editData.address?.postcode || ''}
-                    onChange={(e) => handleInputChange('address.postcode', e.target.value)}
-                    placeholder="Postcode"
-                    className="w-full p-3 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-300"
-                  />
-                </div>
-              ) : (
-                <p className="text-gray-800 font-medium">
-                  {formData.address ? 
-                    `${formData.address.houseNameNumber || ''} ${formData.address.street || ''}, ${formData.address.county || ''} ${formData.address.postcode || ''}`.trim() 
-                    : 'Address not set'
-                  }
-                </p>
-              )}
-            </div>
+  <label className="text-sm font-medium text-gray-600">📍 Address</label>
+
+  {editMode ? (
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+        <input
+          type="text"
+          value={editData.address?.houseNameNumber || ''}
+          onChange={(e) => handleInputChange('address.houseNameNumber', e.target.value)}
+          placeholder="House/Number"
+          className="w-full p-3 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-300"
+        />
+        <input
+          type="text"
+          value={editData.address?.street || ''}
+          onChange={(e) => handleInputChange('address.street', e.target.value)}
+          placeholder="Street"
+          className="w-full p-3 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-300"
+        />
+        <input
+          type="text"
+          value={editData.address?.county || ''}
+          onChange={(e) => handleInputChange('address.county', e.target.value)}
+          placeholder="County"
+          className="w-full p-3 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-300"
+        />
+        <input
+          type="text"
+          value={editData.address?.postcode || ''}
+          onChange={(e) => handleInputChange('address.postcode', e.target.value)}
+          placeholder="Postcode"
+          className="w-full p-3 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-300"
+        />
+      </div>
+
+      {cleaner.isPremium && (
+        <div className="pt-4">
+          <label className="text-sm font-medium text-gray-600">
+            🗺️ Additional Postcodes You Cover (Premium)
+          </label>
+          <input
+            type="text"
+            value={editData.additionalPostcodes?.join(', ') || ''}
+            onChange={(e) =>
+              setEditData((prev) => ({
+                ...prev,
+                additionalPostcodes: e.target.value
+                  .split(',')
+                  .map((s) => s.trim().toUpperCase())
+                  .filter((s) => s),
+              }))
+            }
+            placeholder="e.g. BN1, RH10, GU2"
+            className="w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-300"
+          />
+          <p className="text-xs text-gray-500 italic mt-1">
+            You’ll appear in searches for any of these postcodes. Separate with commas.
+          </p>
+        </div>
+      )}
+    </>
+  ) : (
+    <p className="text-gray-800 font-medium">
+      {formData.address
+        ? `${formData.address.houseNameNumber || ''} ${formData.address.street || ''}, ${formData.address.county || ''} ${formData.address.postcode || ''}`.trim()
+        : 'Address not set'}
+      {cleaner.isPremium && formData.additionalPostcodes?.length > 0 && (
+        <span className="block text-sm text-gray-600 mt-1">
+          Covers: {formData.additionalPostcodes.join(', ')}
+        </span>
+      )}
+    </p>
+  )}
+</div>
+
 
             <div className="space-y-2 md:col-span-2 lg:col-span-3">
               <label className="text-sm font-medium text-gray-600">📝 Description</label>
