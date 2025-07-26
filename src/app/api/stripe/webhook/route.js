@@ -1,28 +1,4 @@
-// 📌 Webhooky donkey removed for deployment.
-// Final run-through must include the Stripe webhook to handle subscription confirmation and booking payments.
-// 
-// ✅ Cleaner Subscription Webhook:
-// Required to mark cleaner profiles as premium after successful £7.99/month payment.
-// Route: /src/app/api/stripe/webhook/route.js
-//
-// ✅ Booking Payment Webhook:
-// Required to unlock full cleaner profiles after client payment for a specific booking.
-//
-// 🚧 Current Status:
-// - Stripe subscription flow is built and working.
-// - Cleaner upgrade checkout session is working.
-// - Webhook removed for deployment compatibility.
-// - Client-side redirects to Stripe pending.
-// - Paywall logic pending.
-//
-// 🔔 Final Checklist:
-// - Reinstate this webhook.
-// - Complete booking payment webhook.
-// - Verify premium status updates in Cleaner Dashboard.rodger
-// - Implement paywall and client-side redirects.
-
 import Stripe from 'stripe';
-import { buffer } from 'micro';
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db';
 import Cleaner from '@/models/Cleaner';
@@ -30,7 +6,7 @@ import Purchase from '@/models/Purchase';
 
 export const config = {
   api: {
-    bodyParser: false, // Needed for raw Stripe signature verification
+    bodyParser: false, // Required for Stripe signature verification
   },
 };
 
@@ -45,7 +21,7 @@ export async function POST(req) {
     event = stripe.webhooks.constructEvent(
       rawBody,
       sig,
-      process.env.STRIPE_WEBHOOK_SECRET
+      process.env.STRIPE_WEBHOOK_SECRET // 🧠 Use your unified webhook secret if handling both cases
     );
   } catch (err) {
     console.error('❌ Webhook signature verification failed:', err.message);
@@ -56,36 +32,38 @@ export async function POST(req) {
     const session = event.data.object;
     const metadata = session.metadata || {};
     const paymentIntentId = session.payment_intent;
+    const amount = session.amount_total ? session.amount_total / 100 : null;
 
     try {
       await connectToDatabase();
 
-      // ✅ Cleaner Subscription Upgrade
+      // ✅ 1. Handle Premium Cleaner Subscription
       if (metadata.cleanerId && metadata.subscription === 'true') {
         await Cleaner.findByIdAndUpdate(metadata.cleanerId, { isPremium: true });
         console.log(`✅ Cleaner ${metadata.cleanerId} marked as premium`);
       }
 
-      // ✅ Client Booking Payment (manual capture pending approval)
-      if (metadata.cleanerId && metadata.clientBooking === 'true') {
-        const { cleanerId, day, hour } = metadata;
-
-        await Purchase.create({
-          cleaner: cleanerId,
-          client: session.customer_email,
+      // ✅ 2. Handle Client Booking Payment
+      if (metadata.cleanerId && metadata.clientId && metadata.clientBooking === 'true') {
+        const newPurchase = await Purchase.create({
+          cleanerId: metadata.cleanerId,
+          clientId: metadata.clientId,
           paymentIntentId,
-          day,
-          hour,
-          status: 'pending',
+          stripeSessionId: session.id,
+          amount,
+          day: metadata.day || null,
+          hour: metadata.hour || null,
+          status: 'pending_approval',
         });
 
-        console.log(`📅 Booking stored for ${day} ${hour}:00 — waiting cleaner approval`);
+        console.log(`📅 Booking stored: ${newPurchase._id} for ${metadata.day} at ${metadata.hour}:00`);
       }
+
     } catch (err) {
       console.error('❌ Webhook DB error:', err);
       return NextResponse.json({ error: 'Database error' }, { status: 500 });
     }
   }
 
-  return NextResponse.json({ received: true });
+  return NextResponse.json({ received: true }, { status: 200 });
 }
