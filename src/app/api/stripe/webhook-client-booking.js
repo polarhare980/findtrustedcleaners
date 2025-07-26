@@ -5,7 +5,7 @@ import Purchase from '@/models/Purchase';
 
 export const config = {
   api: {
-    bodyParser: false, // REQUIRED to prevent parsing of the raw Stripe payload
+    bodyParser: false, // REQUIRED for raw Stripe payload
   },
 };
 
@@ -16,8 +16,8 @@ export default async function handler(req, res) {
     return res.status(405).send('Method Not Allowed');
   }
 
-  let rawBody;
   const sig = req.headers['stripe-signature'];
+  let rawBody;
 
   try {
     rawBody = await buffer(req);
@@ -38,23 +38,28 @@ export default async function handler(req, res) {
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
+  // ✅ Handle successful checkout
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
+    const metadata = session.metadata || {};
 
+    // 🧠 Confirm booking metadata is present
     if (
       session?.payment_intent &&
-      session?.metadata?.clientBooking === 'true'
+      metadata?.type === 'clientBooking' &&
+      metadata.cleanerId &&
+      metadata.clientId &&
+      metadata.day &&
+      metadata.hour
     ) {
-      const { cleanerId, day, hour, clientId } = session.metadata;
-
       try {
         await connectToDatabase();
 
         const newPurchase = await Purchase.create({
-          clientId: clientId || 'unknown',
-          cleanerId,
-          day,
-          hour,
+          clientId: metadata.clientId,
+          cleanerId: metadata.cleanerId,
+          day: metadata.day,
+          hour: metadata.hour,
           stripeSessionId: session.id,
           paymentIntentId: session.payment_intent,
           amount: session.amount_total ? session.amount_total / 100 : null,
@@ -67,7 +72,13 @@ export default async function handler(req, res) {
         return res.status(500).send('Database error');
       }
     } else {
-      console.error('❌ Missing or invalid metadata:', session);
+      console.error('❌ Missing booking metadata:', {
+        cleanerId: metadata.cleanerId,
+        clientId: metadata.clientId,
+        day: metadata.day,
+        hour: metadata.hour,
+        sessionId: session.id,
+      });
     }
   }
 
