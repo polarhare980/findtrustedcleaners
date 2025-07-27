@@ -5,7 +5,7 @@ import Purchase from '@/models/Purchase';
 
 export const config = {
   api: {
-    bodyParser: false, // Required for raw Stripe payload
+    bodyParser: false, // ✅ Required for raw Stripe payload
   },
 };
 
@@ -45,6 +45,7 @@ export default async function handler(req, res) {
 
       console.log('📦 Webhook metadata:', metadata);
 
+      // ✅ Ensure required metadata is present (day/hour removed)
       if (
         session?.payment_intent &&
         metadata?.type === 'clientBooking' &&

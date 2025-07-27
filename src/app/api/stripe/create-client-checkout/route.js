@@ -6,7 +6,7 @@ import { protectRoute } from '@/lib/auth';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-// ✅ POST: Create Stripe Checkout Session for Client Booking
+// ✅ POST: Create Stripe Checkout Session (no day/hour metadata)
 export async function POST(req) {
   const { valid, user, response } = await protectRoute(req);
 
@@ -15,10 +15,10 @@ export async function POST(req) {
   }
 
   try {
-    const { cleanerId, day, hour } = await req.json();
+    const { cleanerId } = await req.json();
 
-    if (!cleanerId || !day || !hour) {
-      return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+    if (!cleanerId) {
+      return NextResponse.json({ error: 'Missing cleanerId' }, { status: 400 });
     }
 
     await connectToDatabase();
@@ -40,7 +40,7 @@ export async function POST(req) {
             unit_amount: priceInPence,
             product_data: {
               name: `Unlock Cleaner Contact: ${cleaner.realName || 'Cleaner'}`,
-              description: `View contact details for booking on ${day} at ${hour}:00.`,
+              description: `Access cleaner's contact details and gallery.`,
             },
           },
           quantity: 1,
@@ -48,10 +48,8 @@ export async function POST(req) {
       ],
       metadata: {
         type: 'clientBooking',
-        cleanerId: cleaner._id.toString(), // ✅ Force ObjectId to string
+        cleanerId: cleaner._id.toString(),
         clientId: user._id.toString(),
-        day: day.toString(),              // e.g. "Monday"
-        hour: hour.toString(),            // e.g. "13"
       },
       success_url: `${baseUrl}/cleaners/${cleanerId}?payment=success`,
       cancel_url: `${baseUrl}/cleaners/${cleanerId}?booking=cancelled`,
@@ -64,7 +62,7 @@ export async function POST(req) {
   }
 }
 
-// ✅ Optional: Fetch existing Stripe session
+// ✅ GET: Retrieve Stripe session by ID (unchanged)
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
   const sessionId = searchParams.get('session_id');

@@ -327,8 +327,6 @@ useEffect(() => {
                       {client?.type === 'client' ? (
   <PurchaseButton
     cleanerId={getCleanerId(cleaner, id)}
-    day={selectedSlot?.day}
-    hour={selectedSlot?.hour}
     onPurchaseSuccess={handlePurchaseSuccess}
     onPurchaseStart={handlePurchaseStart}
     onPurchaseError={handlePurchaseError}
