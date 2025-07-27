@@ -43,47 +43,42 @@ export default async function handler(req, res) {
       const session = event.data.object;
       const metadata = session.metadata || {};
 
+      console.log('📦 Webhook metadata:', metadata);
+
       if (
         session?.payment_intent &&
         metadata?.type === 'clientBooking' &&
         metadata.cleanerId &&
-        metadata.clientId &&
-        metadata.day &&
-        metadata.hour
+        metadata.clientId
       ) {
         await connectToDatabase();
 
-        // 🛡️ Optional: Prevent duplicate insert
+        // 🛡️ Prevent duplicate insert
         const existing = await Purchase.findOne({
           cleanerId: metadata.cleanerId,
           clientId: metadata.clientId,
-          day: metadata.day,
-          hour: metadata.hour,
           stripeSessionId: session.id,
         });
 
         if (existing) {
-          console.warn('⚠️ Duplicate booking skipped for session:', session.id);
+          console.warn('⚠️ Duplicate purchase skipped for session:', session.id);
         } else {
           const newPurchase = await Purchase.create({
             clientId: metadata.clientId,
             cleanerId: metadata.cleanerId,
-            day: metadata.day,
-            hour: metadata.hour,
             stripeSessionId: session.id,
             paymentIntentId: session.payment_intent,
             amount: session.amount_total ? session.amount_total / 100 : null,
             status: 'pending_approval',
           });
 
-          console.log('✅ Booking saved:', newPurchase._id);
+          console.log('✅ Purchase saved:', newPurchase._id);
         }
       } else {
         console.error('❌ Missing or invalid metadata:', metadata);
       }
     }
 
-    // ✅ Always return 200 so Stripe doesn’t retry
     return res.status(200).send('Received');
   } catch (err) {
     console.error('❌ Unexpected webhook error:', err);

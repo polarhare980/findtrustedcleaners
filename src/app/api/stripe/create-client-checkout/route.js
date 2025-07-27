@@ -6,10 +6,10 @@ import { protectRoute } from '@/lib/auth';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-// ✅ POST: Create a new Stripe checkout session
+// ✅ POST: Create Stripe Checkout Session for Client Booking
 export async function POST(req) {
-  // 🔐 Check if user is logged in and a client
   const { valid, user, response } = await protectRoute(req);
+
   if (!valid || user?.type !== 'client') {
     return NextResponse.json({ success: false, message: 'Unauthorised' }, { status: 401 });
   }
@@ -17,8 +17,8 @@ export async function POST(req) {
   try {
     const { cleanerId, day, hour } = await req.json();
 
-    if (!cleanerId) {
-      return NextResponse.json({ error: 'Missing cleaner ID' }, { status: 400 });
+    if (!cleanerId || !day || !hour) {
+      return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
     }
 
     await connectToDatabase();
@@ -37,35 +37,34 @@ export async function POST(req) {
         {
           price_data: {
             currency: 'gbp',
-            product_data: {
-              name: `Unlock Cleaner Contact - ${cleaner.realName || 'Unknown Cleaner'}`,
-              description: 'Client is purchasing access to contact details.',
-            },
             unit_amount: priceInPence,
+            product_data: {
+              name: `Unlock Cleaner Contact: ${cleaner.realName || 'Cleaner'}`,
+              description: `View contact details for booking on ${day} at ${hour}:00.`,
+            },
           },
           quantity: 1,
         },
       ],
       metadata: {
-  type: 'clientBooking',                    // 🔑 webhook uses this to identify type
-  cleanerId: cleanerId.toString(),          // ✅ Required for DB
-  clientId: user._id.toString(),            // ✅ Required for DB
-  day,                                      // ✅ Must be a string like 'Monday'
-  hour                                      // ✅ Must be a string like '13'
-},
-
+        type: 'clientBooking',
+        cleanerId: cleaner._id.toString(), // ✅ Force ObjectId to string
+        clientId: user._id.toString(),
+        day: day.toString(),              // e.g. "Monday"
+        hour: hour.toString(),            // e.g. "13"
+      },
       success_url: `${baseUrl}/cleaners/${cleanerId}?payment=success`,
-      cancel_url: `${baseUrl}/cleaner/${cleanerId}?booking=cancelled`,
+      cancel_url: `${baseUrl}/cleaners/${cleanerId}?booking=cancelled`,
     });
 
-    return NextResponse.json({ url: session.url });
+    return NextResponse.json({ success: true, url: session.url });
   } catch (err) {
-    console.error('❌ Stripe error:', err);
-    return NextResponse.json({ error: 'Failed to create checkout session' }, { status: 500 });
+    console.error('❌ Stripe session error:', err);
+    return NextResponse.json({ success: false, message: 'Checkout session failed' }, { status: 500 });
   }
 }
 
-// ✅ GET: Retrieve a Stripe session (optional)
+// ✅ Optional: Fetch existing Stripe session
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
   const sessionId = searchParams.get('session_id');
@@ -78,7 +77,7 @@ export async function GET(req) {
     const session = await stripe.checkout.sessions.retrieve(sessionId);
     return NextResponse.json({ success: true, session });
   } catch (err) {
-    console.error('❌ Stripe session lookup failed:', err);
-    return NextResponse.json({ success: false, message: 'Session lookup failed' }, { status: 500 });
+    console.error('❌ Stripe session fetch failed:', err);
+    return NextResponse.json({ success: false, message: 'Failed to retrieve session' }, { status: 500 });
   }
 }
