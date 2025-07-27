@@ -13,11 +13,15 @@ const PurchaseSchema = new mongoose.Schema({
   },
   paymentIntentId: {
     type: String,
-    required: false, // ✅ Stripe-only
+    required: false,
   },
   stripeSessionId: {
     type: String,
-    required: false, // ✅ Stripe-only
+    required: false,
+  },
+  amount: {
+    type: Number, // in pounds
+    required: false,
   },
   day: {
     type: String,
@@ -29,9 +33,9 @@ const PurchaseSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'approved', 'declined'],
-    default: 'pending',
+    enum: ['pending_approval', 'confirmed', 'declined'], // aligned with webhook
+    default: 'pending_approval',
   },
-}, { timestamps: true }); // ✅ Adds createdAt, updatedAt
+}, { timestamps: true });
 
 export default mongoose.models.Purchase || mongoose.model('Purchase', PurchaseSchema);

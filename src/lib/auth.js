@@ -4,6 +4,12 @@ import { NextResponse } from 'next/server';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
+// 🔐 Ensure secret is defined
+if (!JWT_SECRET) {
+  throw new Error('❌ JWT_SECRET is not defined in environment variables');
+}
+
+// ✅ Create a JWT token (used on login/register)
 export function createToken(payload) {
   return jwt.sign(
     { ...payload, _id: payload._id?.toString?.() || payload._id },
@@ -12,19 +18,28 @@ export function createToken(payload) {
   );
 }
 
+// ✅ Verify a JWT token — returns decoded payload or null
 export function verifyToken(token) {
   try {
     return jwt.verify(token, JWT_SECRET);
-  } catch {
+  } catch (err) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('🔐 JWT verification failed:', err.message);
+    }
     return null;
   }
 }
 
-// ✅ For API routes — returns JSON on failure
-export async function protectApiRoute(req) {
+// 🧩 Extract token from request cookies
+function getTokenFromRequest(req) {
   const cookieHeader = req.headers.get('cookie') || '';
   const cookies = parse(cookieHeader);
-  const token = cookies.token;
+  return cookies.token;
+}
+
+// ✅ For API routes — returns JSON if invalid
+export async function protectApiRoute(req, expectedRole = null) {
+  const token = getTokenFromRequest(req);
 
   if (!token) {
     return {
@@ -40,23 +55,29 @@ export async function protectApiRoute(req) {
     return {
       valid: false,
       user: null,
-      response: NextResponse.json({ success: false, message: 'Invalid token' }, { status: 401 }),
+      response: NextResponse.json({ success: false, message: 'Invalid or expired token' }, { status: 401 }),
+    };
+  }
+
+  if (expectedRole && user?.type !== expectedRole) {
+    return {
+      valid: false,
+      user: null,
+      response: NextResponse.json({ success: false, message: 'Access denied' }, { status: 403 }),
     };
   }
 
   return { valid: true, user };
 }
 
-// ✅ Optional: for pages — redirects to login
-export async function protectRoute(req) {
-  const cookieHeader = req.headers.get('cookie') || '';
-  const cookies = parse(cookieHeader);
-  const token = cookies.token;
+// ✅ For App Router pages — redirects to login
+export async function protectRoute(req, expectedRole = null) {
+  const token = getTokenFromRequest(req);
 
   if (!token) {
     return {
       valid: false,
-      response: NextResponse.redirect('/login'),
+      response: NextResponse.redirect(`/login?next=${encodeURIComponent(req.nextUrl.pathname)}`),
     };
   }
 
@@ -65,7 +86,14 @@ export async function protectRoute(req) {
   if (!user) {
     return {
       valid: false,
-      response: NextResponse.redirect('/login'),
+      response: NextResponse.redirect(`/login?next=${encodeURIComponent(req.nextUrl.pathname)}`),
+    };
+  }
+
+  if (expectedRole && user?.type !== expectedRole) {
+    return {
+      valid: false,
+      response: NextResponse.redirect(`/unauthorized`),
     };
   }
 

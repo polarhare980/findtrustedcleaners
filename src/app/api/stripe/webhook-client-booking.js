@@ -5,7 +5,7 @@ import Purchase from '@/models/Purchase';
 
 export const config = {
   api: {
-    bodyParser: false, // REQUIRED for raw Stripe payload
+    bodyParser: false, // Required for raw Stripe payload
   },
 };
 
@@ -38,49 +38,55 @@ export default async function handler(req, res) {
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  // ✅ Handle successful checkout
-  if (event.type === 'checkout.session.completed') {
-    const session = event.data.object;
-    const metadata = session.metadata || {};
+  try {
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object;
+      const metadata = session.metadata || {};
 
-    // 🧠 Confirm booking metadata is present
-    if (
-      session?.payment_intent &&
-      metadata?.type === 'clientBooking' &&
-      metadata.cleanerId &&
-      metadata.clientId &&
-      metadata.day &&
-      metadata.hour
-    ) {
-      try {
+      if (
+        session?.payment_intent &&
+        metadata?.type === 'clientBooking' &&
+        metadata.cleanerId &&
+        metadata.clientId &&
+        metadata.day &&
+        metadata.hour
+      ) {
         await connectToDatabase();
 
-        const newPurchase = await Purchase.create({
-          clientId: metadata.clientId,
+        // 🛡️ Optional: Prevent duplicate insert
+        const existing = await Purchase.findOne({
           cleanerId: metadata.cleanerId,
+          clientId: metadata.clientId,
           day: metadata.day,
           hour: metadata.hour,
           stripeSessionId: session.id,
-          paymentIntentId: session.payment_intent,
-          amount: session.amount_total ? session.amount_total / 100 : null,
-          status: 'pending_approval',
         });
 
-        console.log('✅ Booking recorded and pending approval:', newPurchase._id);
-      } catch (err) {
-        console.error('❌ Database error:', err);
-        return res.status(500).send('Database error');
-      }
-    } else {
-      console.error('❌ Missing booking metadata:', {
-        cleanerId: metadata.cleanerId,
-        clientId: metadata.clientId,
-        day: metadata.day,
-        hour: metadata.hour,
-        sessionId: session.id,
-      });
-    }
-  }
+        if (existing) {
+          console.warn('⚠️ Duplicate booking skipped for session:', session.id);
+        } else {
+          const newPurchase = await Purchase.create({
+            clientId: metadata.clientId,
+            cleanerId: metadata.cleanerId,
+            day: metadata.day,
+            hour: metadata.hour,
+            stripeSessionId: session.id,
+            paymentIntentId: session.payment_intent,
+            amount: session.amount_total ? session.amount_total / 100 : null,
+            status: 'pending_approval',
+          });
 
-  return res.status(200).json({ received: true });
+          console.log('✅ Booking saved:', newPurchase._id);
+        }
+      } else {
+        console.error('❌ Missing or invalid metadata:', metadata);
+      }
+    }
+
+    // ✅ Always return 200 so Stripe doesn’t retry
+    return res.status(200).send('Received');
+  } catch (err) {
+    console.error('❌ Unexpected webhook error:', err);
+    return res.status(500).send('Unexpected server error');
+  }
 }

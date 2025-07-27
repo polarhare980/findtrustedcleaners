@@ -54,7 +54,7 @@ export async function POST(req) {
   hour                                      // ✅ Must be a string like '13'
 },
 
-      success_url: `${baseUrl}/clients/dashboard?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${baseUrl}/cleaners/${cleanerId}?payment=success`,
       cancel_url: `${baseUrl}/cleaner/${cleanerId}?booking=cancelled`,
     });
 
