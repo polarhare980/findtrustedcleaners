@@ -111,7 +111,6 @@ export default function CleanerProfile() {
         credentials: 'include',
         body: JSON.stringify({
           cleanerId,
-          clientEmail: client.email,
           day: selectedSlot?.day || null,
           hour: selectedSlot?.hour || null,
         }),
