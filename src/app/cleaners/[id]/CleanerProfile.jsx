@@ -92,8 +92,8 @@ export default function CleanerProfile() {
   }, [id]);
 
 
-  // Check permissions when cleaner, client, or selectedSlot changes
-  useEffect(() => {
+  // ✅ Check permissions when cleaner or client changes
+useEffect(() => {
   const checkPermissions = async () => {
     if (!cleaner || !client?.email) {
       setCanViewContact(false);
@@ -101,9 +101,9 @@ export default function CleanerProfile() {
     }
 
     setPermissionLoading(true);
+
     try {
       const cleanerId = getCleanerId(cleaner, id);
-
 
       const res = await fetch('/api/unlock-status', {
         method: 'POST',
@@ -111,8 +111,7 @@ export default function CleanerProfile() {
         credentials: 'include',
         body: JSON.stringify({
           cleanerId,
-          day: selectedSlot?.day || null,
-          hour: selectedSlot?.hour || null,
+          clientEmail: client.email,
         }),
       });
 
@@ -134,7 +133,8 @@ export default function CleanerProfile() {
   };
 
   checkPermissions();
-}, [cleaner, client, selectedSlot]);
+}, [cleaner, client]);
+
 
 
   const handlePurchaseSuccess = (cleanerData) => {

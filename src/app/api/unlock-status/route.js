@@ -3,26 +3,24 @@ import { connectToDatabase } from '@/lib/db';
 import Purchase from '@/models/Purchase';
 import { protectApiRoute } from '@/lib/auth';
 
-export const runtime = 'nodejs';
+export const runtime = 'nodejs'; // Ensure full Node.js support
 
 export async function POST(req) {
   const { valid, user, response } = await protectApiRoute(req);
   if (!valid || user.type !== 'client') return response;
 
   try {
-    const { cleanerId, day, hour } = await req.json();
+    const { cleanerId } = await req.json();
 
-    if (!cleanerId || !day || !hour) {
-      return NextResponse.json({ success: false, message: 'Missing fields' }, { status: 400 });
+    if (!cleanerId) {
+      return NextResponse.json({ success: false, message: 'Missing cleaner ID' }, { status: 400 });
     }
 
     await connectToDatabase();
 
     const purchase = await Purchase.findOne({
       cleanerId,
-      clientId: user._id, // ✅ MATCH ON ID NOT EMAIL
-      day,
-      hour,
+      clientId: user._id, // ✅ Match on authenticated client ID
       status: { $in: ['pending_approval', 'confirmed'] },
     });
 
