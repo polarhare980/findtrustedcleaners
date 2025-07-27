@@ -18,11 +18,19 @@ export async function POST(req) {
 
     await connectToDatabase();
 
-    const purchase = await Purchase.findOne({
-      cleanerId,
-      clientId: user._id, // ✅ Match ObjectId for user
-      status: { $in: ['pending_approval', 'confirmed'] }, // ✅ Global unlock
-    });
+    const query = {
+      cleanerId: cleanerId.toString(), // ✅ Force string match
+      clientId: user._id.toString(),   // ✅ Force string match
+      status: { $in: ['pending_approval', 'confirmed'] },
+    };
+
+    console.log('🔍 Running unlock-status query:', query);
+
+    const purchase = await Purchase.findOne(query);
+
+    if (!purchase) {
+      console.warn('🔐 No purchase found for provided cleaner/client');
+    }
 
     return NextResponse.json({ success: true, unlocked: !!purchase });
   } catch (err) {

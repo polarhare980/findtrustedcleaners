@@ -105,6 +105,11 @@ useEffect(() => {
     try {
       const cleanerId = getCleanerId(cleaner, id);
 
+      console.log('🧪 Checking unlock status...');
+      console.log('👤 client._id:', client?._id);
+      console.log('🧼 cleanerId:', cleanerId);
+
+
       const res = await fetch('/api/unlock-status', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
