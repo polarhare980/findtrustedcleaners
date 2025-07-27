@@ -3,7 +3,7 @@ import { connectToDatabase } from '@/lib/db';
 import Purchase from '@/models/Purchase';
 import { protectApiRoute } from '@/lib/auth';
 
-export const runtime = 'nodejs'; // Required for backend DB access
+export const runtime = 'nodejs';
 
 export async function POST(req) {
   const { valid, user, response } = await protectApiRoute(req);
@@ -12,24 +12,25 @@ export async function POST(req) {
   try {
     const { cleanerId } = await req.json();
 
-    if (!cleanerId) {
-      return NextResponse.json({ success: false, message: 'Missing cleaner ID' }, { status: 400 });
-    }
+    const clientId = user._id.toString();
+    const cleanerIdStr = cleanerId.toString();
+
+    console.log('🔍 Checking purchase with:');
+    console.log('clientId:', clientId);
+    console.log('cleanerId:', cleanerIdStr);
 
     await connectToDatabase();
 
-    const query = {
-      cleanerId: cleanerId.toString(), // ✅ Force string match
-      clientId: user._id.toString(),   // ✅ Force string match
+    const purchase = await Purchase.findOne({
+      cleanerId: cleanerIdStr,
+      clientId: clientId,
       status: { $in: ['pending_approval', 'confirmed'] },
-    };
-
-    console.log('🔍 Running unlock-status query:', query);
-
-    const purchase = await Purchase.findOne(query);
+    });
 
     if (!purchase) {
-      console.warn('🔐 No purchase found for provided cleaner/client');
+      console.warn('❌ No matching purchase found in DB');
+    } else {
+      console.log('✅ Matching purchase found:', purchase._id);
     }
 
     return NextResponse.json({ success: true, unlocked: !!purchase });
