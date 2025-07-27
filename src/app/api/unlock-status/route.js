@@ -3,7 +3,7 @@ import { connectToDatabase } from '@/lib/db';
 import Purchase from '@/models/Purchase';
 import { protectApiRoute } from '@/lib/auth';
 
-export const runtime = 'nodejs'; // Ensure full Node.js support
+export const runtime = 'nodejs';
 
 export async function POST(req) {
   const { valid, user, response } = await protectApiRoute(req);
@@ -20,8 +20,8 @@ export async function POST(req) {
 
     const purchase = await Purchase.findOne({
       cleanerId,
-      clientId: user._id, // ✅ Match on authenticated client ID
-      status: { $in: ['pending_approval', 'confirmed'] },
+      clientId: user._id, // ✅ MATCH ON ID NOT EMAIL
+      status: { $in: ['pending_approval', 'confirmed'] }, // ✅ Global unlock match
     });
 
     return NextResponse.json({ success: true, unlocked: !!purchase });
