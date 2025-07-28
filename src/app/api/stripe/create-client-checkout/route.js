@@ -6,7 +6,7 @@ import { protectRoute } from '@/lib/auth';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-// ✅ POST: Create Stripe Checkout Session (no day/hour metadata)
+// ✅ POST: Create Stripe Checkout Session (with metadata)
 export async function POST(req) {
   const { valid, user, response } = await protectRoute(req);
 
@@ -27,8 +27,14 @@ export async function POST(req) {
       return NextResponse.json({ error: 'Cleaner not found' }, { status: 404 });
     }
 
-    const priceInPence = 299; // £2.99
-    const baseUrl = process.env.SITE_URL || 'https://www.findtrustedcleaners.com';
+    const metadata = {
+      type: 'clientBooking',
+      cleanerId: cleaner._id.toString(),
+      clientId: user._id.toString(),
+      testMeta: '✅ present', // ✅ Helps confirm metadata is received
+    };
+
+    console.log('📦 Sending Stripe metadata:', metadata);
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
@@ -37,7 +43,7 @@ export async function POST(req) {
         {
           price_data: {
             currency: 'gbp',
-            unit_amount: priceInPence,
+            unit_amount: 299, // £2.99 in pence
             product_data: {
               name: `Unlock Cleaner Contact: ${cleaner.realName || 'Cleaner'}`,
               description: `Access cleaner's contact details and gallery.`,
@@ -46,18 +52,14 @@ export async function POST(req) {
           quantity: 1,
         },
       ],
-      metadata: {
-        type: 'clientBooking',
-        cleanerId: cleaner._id.toString(),
-        clientId: user._id.toString(),
-      },
-      success_url: `${baseUrl}/cleaners/${cleanerId}?payment=success`,
-      cancel_url: `${baseUrl}/cleaners/${cleanerId}?booking=cancelled`,
+      metadata,
+      success_url: `${process.env.SITE_URL || 'https://www.findtrustedcleaners.com'}/cleaners/${cleanerId}?payment=success`,
+      cancel_url: `${process.env.SITE_URL || 'https://www.findtrustedcleaners.com'}/cleaners/${cleanerId}?booking=cancelled`,
     });
 
     return NextResponse.json({ success: true, url: session.url });
   } catch (err) {
-    console.error('❌ Stripe session error:', err);
+    console.error('❌ Stripe session creation failed:', err.message);
     return NextResponse.json({ success: false, message: 'Checkout session failed' }, { status: 500 });
   }
 }
@@ -75,7 +77,7 @@ export async function GET(req) {
     const session = await stripe.checkout.sessions.retrieve(sessionId);
     return NextResponse.json({ success: true, session });
   } catch (err) {
-    console.error('❌ Stripe session fetch failed:', err);
+    console.error('❌ Stripe session fetch failed:', err.message);
     return NextResponse.json({ success: false, message: 'Failed to retrieve session' }, { status: 500 });
   }
 }
