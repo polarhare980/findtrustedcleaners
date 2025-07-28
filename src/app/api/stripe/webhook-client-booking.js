@@ -1,29 +1,42 @@
-import { buffer } from 'micro';
 import Stripe from 'stripe';
 import { connectToDatabase } from '@/lib/db';
 import Purchase from '@/models/Purchase';
+import { NextResponse } from 'next/server';
 
 export const config = {
   api: {
-    bodyParser: false,
+    bodyParser: false, // Needed for raw body stream
   },
 };
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).send('Method Not Allowed');
+// Raw body reader for App Router
+async function getRawBody(readable) {
+  const reader = readable.getReader();
+  let result = new Uint8Array();
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    const combined = new Uint8Array(result.length + value.length);
+    combined.set(result);
+    combined.set(value, result.length);
+    result = combined;
   }
 
-  const sig = req.headers['stripe-signature'];
+  return result;
+}
 
+export async function POST(req) {
   let rawBody;
+  const sig = req.headers.get('stripe-signature');
+
   try {
-    rawBody = await buffer(req);
+    rawBody = await getRawBody(req.body);
   } catch (err) {
-    console.error('❌ Failed to read raw body:', err.message);
-    return res.status(500).send('Webhook body error');
+    console.error('❌ Error reading raw body:', err.message);
+    return new NextResponse('Webhook body read error', { status: 500 });
   }
 
   let event;
@@ -34,26 +47,20 @@ export default async function handler(req, res) {
       process.env.STRIPE_WEBHOOK_CLIENT_BOOKING_SECRET
     );
   } catch (err) {
-    console.error('❌ Stripe webhook signature failed:', err.message);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
+    console.error('❌ Stripe signature verification failed:', err.message);
+    return new NextResponse(`Webhook Error: ${err.message}`, { status: 400 });
   }
 
-  // ✅ Only handle successful session completion
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
     const metadata = session.metadata || {};
 
-    console.log('📦 Webhook triggered with metadata:', metadata);
+    console.log('📦 Webhook received metadata:', metadata);
 
-    if (
-      session?.payment_intent &&
-      metadata?.clientId &&
-      metadata?.cleanerId
-    ) {
+    if (metadata?.clientId && metadata?.cleanerId) {
       try {
         await connectToDatabase();
 
-        // 🛡️ Prevent duplicates
         const existing = await Purchase.findOne({
           clientId: metadata.clientId,
           cleanerId: metadata.cleanerId,
@@ -61,7 +68,7 @@ export default async function handler(req, res) {
         });
 
         if (existing) {
-          console.warn('⚠️ Purchase already exists for this session:', session.id);
+          console.warn('⚠️ Duplicate purchase found:', session.id);
         } else {
           const newPurchase = await Purchase.create({
             clientId: metadata.clientId,
@@ -72,16 +79,16 @@ export default async function handler(req, res) {
             status: 'pending_approval',
           });
 
-          console.log('✅ Purchase inserted:', newPurchase._id);
+          console.log('✅ Purchase saved:', newPurchase._id);
         }
       } catch (err) {
-        console.error('❌ Purchase insert failed:', err);
-        return res.status(500).send('Database error');
+        console.error('❌ DB insert failed:', err);
+        return new NextResponse('Database error', { status: 500 });
       }
     } else {
-      console.error('❌ Missing metadata in webhook:', metadata);
+      console.error('❌ Missing metadata:', metadata);
     }
   }
 
-  return res.status(200).send('Webhook received');
+  return new NextResponse('Webhook received', { status: 200 });
 }
