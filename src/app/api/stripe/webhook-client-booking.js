@@ -5,39 +5,29 @@ import { NextResponse } from 'next/server';
 
 export const config = {
   api: {
-    bodyParser: false, // Needed for raw body stream
+    bodyParser: false,
   },
 };
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-// Raw body reader for App Router
+// App Router-friendly raw body reader
 async function getRawBody(readable) {
   const reader = readable.getReader();
   let result = new Uint8Array();
-
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
     const combined = new Uint8Array(result.length + value.length);
-    combined.set(result);
     combined.set(value, result.length);
     result = combined;
   }
-
   return result;
 }
 
 export async function POST(req) {
-  let rawBody;
   const sig = req.headers.get('stripe-signature');
-
-  try {
-    rawBody = await getRawBody(req.body);
-  } catch (err) {
-    console.error('❌ Error reading raw body:', err.message);
-    return new NextResponse('Webhook body read error', { status: 500 });
-  }
+  const rawBody = await getRawBody(req.body);
 
   let event;
   try {
@@ -47,7 +37,7 @@ export async function POST(req) {
       process.env.STRIPE_WEBHOOK_CLIENT_BOOKING_SECRET
     );
   } catch (err) {
-    console.error('❌ Stripe signature verification failed:', err.message);
+    console.error('❌ Signature verification failed:', err.message);
     return new NextResponse(`Webhook Error: ${err.message}`, { status: 400 });
   }
 
@@ -55,9 +45,9 @@ export async function POST(req) {
     const session = event.data.object;
     const metadata = session.metadata || {};
 
-    console.log('📦 Webhook received metadata:', metadata);
+    console.log('📦 Webhook fired with metadata:', metadata);
 
-    if (metadata?.clientId && metadata?.cleanerId) {
+    if (metadata.clientId && metadata.cleanerId) {
       try {
         await connectToDatabase();
 
@@ -67,9 +57,7 @@ export async function POST(req) {
           stripeSessionId: session.id,
         });
 
-        if (existing) {
-          console.warn('⚠️ Duplicate purchase found:', session.id);
-        } else {
+        if (!existing) {
           const newPurchase = await Purchase.create({
             clientId: metadata.clientId,
             cleanerId: metadata.cleanerId,
@@ -79,16 +67,17 @@ export async function POST(req) {
             status: 'pending_approval',
           });
 
-          console.log('✅ Purchase saved:', newPurchase._id);
+          console.log('✅ Purchase inserted:', newPurchase._id);
         }
       } catch (err) {
         console.error('❌ DB insert failed:', err);
-        return new NextResponse('Database error', { status: 500 });
+        return new NextResponse('DB insert error', { status: 500 });
       }
     } else {
       console.error('❌ Missing metadata:', metadata);
     }
   }
 
-  return new NextResponse('Webhook received', { status: 200 });
+  return new NextResponse('OK', { status: 200 });
 }
+
