@@ -1,5 +1,3 @@
-export const runtime = 'nodejs';
-
 // app/api/stripe/webhook-client-booking/route.js
 
 import Stripe from 'stripe';
