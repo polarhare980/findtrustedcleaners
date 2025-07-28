@@ -1,7 +1,8 @@
+// pages/api/stripe/webhook-client-booking.js
 import Stripe from 'stripe';
+import { buffer } from 'micro';
 import { connectToDatabase } from '@/lib/db';
 import Purchase from '@/models/Purchase';
-import { NextResponse } from 'next/server';
 
 export const config = {
   api: {
@@ -11,23 +12,13 @@ export const config = {
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-// App Router-friendly raw body reader
-async function getRawBody(readable) {
-  const reader = readable.getReader();
-  let result = new Uint8Array();
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    const combined = new Uint8Array(result.length + value.length);
-    combined.set(value, result.length);
-    result = combined;
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).end('Method Not Allowed');
   }
-  return result;
-}
 
-export async function POST(req) {
-  const sig = req.headers.get('stripe-signature');
-  const rawBody = await getRawBody(req.body);
+  const sig = req.headers['stripe-signature'];
+  const rawBody = await buffer(req);
 
   let event;
   try {
@@ -38,7 +29,7 @@ export async function POST(req) {
     );
   } catch (err) {
     console.error('❌ Signature verification failed:', err.message);
-    return new NextResponse(`Webhook Error: ${err.message}`, { status: 400 });
+    return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
   if (event.type === 'checkout.session.completed') {
@@ -71,13 +62,12 @@ export async function POST(req) {
         }
       } catch (err) {
         console.error('❌ DB insert failed:', err);
-        return new NextResponse('DB insert error', { status: 500 });
+        return res.status(500).send('Database error');
       }
     } else {
       console.error('❌ Missing metadata:', metadata);
     }
   }
 
-  return new NextResponse('OK', { status: 200 });
+  res.status(200).send('Webhook received');
 }
-
