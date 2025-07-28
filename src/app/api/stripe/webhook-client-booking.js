@@ -1,8 +1,9 @@
-// pages/api/stripe/webhook-client-booking.js
+// app/api/stripe/webhook-client-booking/route.js
+
 import Stripe from 'stripe';
-import { buffer } from 'micro';
 import { connectToDatabase } from '@/lib/db';
 import Purchase from '@/models/Purchase';
+import { NextResponse } from 'next/server';
 
 export const config = {
   api: {
@@ -12,13 +13,27 @@ export const config = {
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).end('Method Not Allowed');
+// ✅ Compatible body reader
+async function getRawBody(readable) {
+  const reader = readable.getReader();
+  let chunks = new Uint8Array();
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    const combined = new Uint8Array(chunks.length + value.length);
+    combined.set(chunks);
+    combined.set(value, chunks.length);
+    chunks = combined;
   }
 
-  const sig = req.headers['stripe-signature'];
-  const rawBody = await buffer(req);
+  return chunks;
+}
+
+export async function POST(req) {
+  const sig = req.headers.get('stripe-signature');
+  const rawBody = await getRawBody(req.body);
 
   let event;
   try {
@@ -29,14 +44,14 @@ export default async function handler(req, res) {
     );
   } catch (err) {
     console.error('❌ Signature verification failed:', err.message);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
+    return new NextResponse(`Webhook Error: ${err.message}`, { status: 400 });
   }
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
     const metadata = session.metadata || {};
 
-    console.log('📦 Webhook fired with metadata:', metadata);
+    console.log('📦 Webhook received with metadata:', metadata);
 
     if (metadata.clientId && metadata.cleanerId) {
       try {
@@ -58,16 +73,16 @@ export default async function handler(req, res) {
             status: 'pending_approval',
           });
 
-          console.log('✅ Purchase inserted:', newPurchase._id);
+          console.log('✅ Purchase created:', newPurchase._id);
         }
       } catch (err) {
         console.error('❌ DB insert failed:', err);
-        return res.status(500).send('Database error');
+        return new NextResponse('Database error', { status: 500 });
       }
     } else {
-      console.error('❌ Missing metadata:', metadata);
+      console.error('❌ Missing metadata in session:', metadata);
     }
   }
 
-  res.status(200).send('Webhook received');
+  return new NextResponse('Webhook received', { status: 200 });
 }
