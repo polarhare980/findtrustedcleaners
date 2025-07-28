@@ -1,5 +1,6 @@
 import { buffer } from 'micro';
 import Stripe from 'stripe';
+import mongoose from 'mongoose';
 import { connectToDatabase } from '@/lib/db';
 import Purchase from '@/models/Purchase';
 
@@ -41,16 +42,19 @@ export default async function handler(req, res) {
       try {
         await connectToDatabase();
 
+        const clientObjectId = new mongoose.Types.ObjectId(metadata.clientId);
+        const cleanerObjectId = new mongoose.Types.ObjectId(metadata.cleanerId);
+
         const existing = await Purchase.findOne({
-          clientId: metadata.clientId,
-          cleanerId: metadata.cleanerId,
+          clientId: clientObjectId,
+          cleanerId: cleanerObjectId,
           stripeSessionId: session.id,
         });
 
         if (!existing) {
           const newPurchase = await Purchase.create({
-            clientId: metadata.clientId,
-            cleanerId: metadata.cleanerId,
+            clientId: clientObjectId,
+            cleanerId: cleanerObjectId,
             stripeSessionId: session.id,
             paymentIntentId: session.payment_intent,
             amount: session.amount_total ? session.amount_total / 100 : null,
@@ -58,6 +62,8 @@ export default async function handler(req, res) {
           });
 
           console.log('✅ Purchase created:', newPurchase._id);
+        } else {
+          console.log('ℹ️ Purchase already exists:', existing._id);
         }
       } catch (err) {
         console.error('❌ DB insert failed:', err);
