@@ -1,3 +1,7 @@
+export const runtime = 'nodejs';
+
+// app/api/stripe/webhook-client-booking/route.js
+
 import Stripe from 'stripe';
 import { connectToDatabase } from '@/lib/db';
 import Purchase from '@/models/Purchase';
@@ -9,8 +13,11 @@ export const config = {
   },
 };
 
+export const runtime = 'nodejs'; // ✅ Required for raw body support
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
+// ✅ Correct raw body reader for App Router
 async function getRawBody(readable) {
   const reader = readable.getReader();
   let chunks = new Uint8Array();
@@ -34,7 +41,7 @@ export async function POST(req) {
 
   try {
     sig = req.headers.get('stripe-signature');
-    rawBody = await getRawBody(req.body);
+    rawBody = await getRawBody(req.body); // ✅ Required to match Stripe signature
   } catch (err) {
     console.error('❌ Failed to read raw body:', err.message);
     return new NextResponse(`Failed to read raw body: ${err.message}`, { status: 400 });
@@ -52,7 +59,6 @@ export async function POST(req) {
     return new NextResponse(`Webhook Error: ${err.message}`, { status: 400 });
   }
 
-  // ✅ Now handle the session event
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
     const metadata = session.metadata || {};
@@ -92,4 +98,3 @@ export async function POST(req) {
 
   return new NextResponse('Webhook received', { status: 200 });
 }
-
