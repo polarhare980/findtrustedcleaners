@@ -233,7 +233,7 @@ useEffect(() => {
                 </p>
               )}
 
-              {cleaner?.isPremium && (
+              {/*cleaner?.isPremium && (
                 <div className="inline-block bg-yellow-400 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md mb-4">
                   ✨ Premium Cleaner
                 </div>
@@ -265,9 +265,9 @@ useEffect(() => {
                     </div>
                   </div>
                 </div>
-              </div>
+              </div>*/}
             </div>
-          </div>
+          </div>/
 
           {/* Contact Details Section - WITH PERMISSION CHECK */}
           <div className="bg-white/30 backdrop-blur-md rounded-2xl p-6 border border-white/20 mb-6 relative z-50" style={{isolation: 'isolate'}}>
