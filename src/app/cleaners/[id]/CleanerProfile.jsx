@@ -233,7 +233,7 @@ useEffect(() => {
                 </p>
               )}
 
-              {/*cleaner?.isPremium && (
+              {cleaner?.isPremium && (
                 <div className="inline-block bg-yellow-400 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md mb-4">
                   ✨ Premium Cleaner
                 </div>
@@ -265,9 +265,9 @@ useEffect(() => {
                     </div>
                   </div>
                 </div>
-              </div>*/}
+              </div>
             </div>
-          </div>/
+          </div>
 
           {/* Contact Details Section - WITH PERMISSION CHECK */}
           <div className="bg-white/30 backdrop-blur-md rounded-2xl p-6 border border-white/20 mb-6 relative z-50" style={{isolation: 'isolate'}}>
@@ -461,106 +461,144 @@ useEffect(() => {
             </div>
           )}
 
-          {/* Availability Section */}
-          <div className="bg-white/30 backdrop-blur-md rounded-2xl p-6 border border-white/20 relative z-10">
-            <h2 className="text-2xl font-bold text-teal-800 mb-6 flex items-center gap-2">
-              <span>📅</span> Availability
-            </h2>
+          // Fixed Availability Section - Replace your existing availability section with this:
 
-            {/* Desktop View */}
-            <div className="hidden lg:block">
-              <div className="grid grid-cols-[100px_repeat(13,_1fr)] gap-2 text-sm">
-                <div></div>
-                {[...Array(13)].map((_, hour) => (
-                  <div key={hour} className="text-center font-bold text-teal-700 py-2">
-                    {7 + hour}:00
-                  </div>
-                ))}
-                {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => (
-                  <React.Fragment key={day}>
-                    <div className="font-semibold text-teal-800 py-2 flex items-center">{day}</div>
-                    {[...Array(13)].map((_, hourIndex) => {
-                      const hourKey = `${7 + hourIndex}`;
-                      const isAvailable = cleaner.availability?.[day]?.[hourKey] === true;
+{/* Availability Section */}
+<div className="bg-white/30 backdrop-blur-md rounded-2xl p-6 border border-white/20 relative z-10">
+  <h2 className="text-2xl font-bold text-teal-800 mb-6 flex items-center gap-2">
+    <span>📅</span> Availability
+  </h2>
 
-                      return (
-                        <div key={hourKey} className="h-10 w-full">
-                          {isAvailable ? (
-                            canViewContact ? (
-                              <button
-                                onClick={() => setSelectedSlot({ day, hour: hourKey })}
-                                className={`w-full h-full rounded-xl font-medium transition-all duration-300 hover:transform hover:scale-105 hover:shadow-lg ${
-                                  selectedSlot?.day === day && selectedSlot?.hour === hourKey
-                                    ? 'bg-gradient-to-r from-teal-600 to-teal-700 text-white'
-                                    : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white'
-                                }`}
-                              >
-                                {selectedSlot?.day === day && selectedSlot?.hour === hourKey ? 'Selected' : 'Book'}
-                              </button>
-                            ) : (
-                              <div className="w-full h-full bg-gradient-to-r from-green-300 to-green-400 text-green-800 rounded-xl flex items-center justify-center font-medium">
-                                ✓
-                              </div>
-                            )
-                          ) : (
-                            <div className="w-full h-full bg-gradient-to-r from-red-300 to-red-400 text-red-800 rounded-xl flex items-center justify-center font-medium">
-                              ✗
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </React.Fragment>
-                ))}
-              </div>
-            </div>
-
-            {/* Mobile/Tablet View */}
-            <div className="lg:hidden space-y-6">
-              {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => (
-                <div key={day} className="bg-white/40 backdrop-blur-sm rounded-xl p-4 border border-white/30">
-                  <h3 className="text-lg font-bold text-teal-800 mb-3 flex items-center gap-2">
-                    <span className="text-teal-600">📅</span>
-                    {day.substring(0, 3)}
-                  </h3>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                    {[...Array(13)].map((_, hourIndex) => {
-                      const hour = 7 + hourIndex;
-                      const isAvailable = cleaner.availability?.[day]?.[hour] === true;
-
-                      return (
-                        <div key={hour} className="w-full">
-                          {isAvailable ? (
-                            canViewContact ? (
-                              <button
-                                onClick={() => setSelectedSlot({ day, hour: `${hour}` })}
-                                className={`w-full rounded-xl py-2 px-3 font-medium transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-lg text-sm ${
-                                  selectedSlot?.day === day && selectedSlot?.hour === `${hour}`
-                                    ? 'bg-gradient-to-r from-teal-600 to-teal-700 text-white'
-                                    : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white'
-                                }`}
-                              >
-                                {selectedSlot?.day === day && selectedSlot?.hour === `${hour}` ? 'Selected' : `${hour}:00`}
-                              </button>
-                            ) : (
-                              <div className="w-full bg-gradient-to-r from-green-300 to-green-400 text-green-800 rounded-xl py-2 px-3 text-center font-medium text-sm">
-                                {hour}:00 ✓
-                              </div>
-                            )
-                          ) : (
-                            <div className="w-full bg-gradient-to-r from-red-300 to-red-400 text-red-800 rounded-xl py-2 px-3 text-center font-medium text-sm">
-                              {hour}:00 ✗
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+  {/* Desktop View */}
+  <div className="hidden lg:block">
+    <div className="grid grid-cols-[100px_repeat(13,_1fr)] gap-2 text-sm">
+      <div></div>
+      {[...Array(13)].map((_, hour) => (
+        <div key={hour} className="text-center font-bold text-teal-700 py-2">
+          {7 + hour}:00
         </div>
+      ))}
+      {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => (
+        <React.Fragment key={day}>
+          <div className="font-semibold text-teal-800 py-2 flex items-center">{day}</div>
+          {[...Array(13)].map((_, hourIndex) => {
+            const hour = 7 + hourIndex;
+            const hourKey = `${hour}`;
+            // ✅ Fixed: Check availability more defensively
+            const isAvailable = cleaner?.availability?.[day]?.[hourKey] === true || 
+                               cleaner?.availability?.[day]?.[hour] === true;
+
+            return (
+              <div key={hourKey} className="h-10 w-full">
+                {isAvailable ? (
+                  canViewContact ? (
+                    <button
+                      type="button" // ✅ Explicit button type
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('🎯 Slot clicked:', { day, hour: hourKey });
+                        setSelectedSlot({ day, hour: hourKey });
+                      }}
+                      className={`w-full h-full rounded-xl font-medium transition-all duration-300 hover:transform hover:scale-105 hover:shadow-lg cursor-pointer relative z-20 ${
+                        selectedSlot?.day === day && selectedSlot?.hour === hourKey
+                          ? 'bg-gradient-to-r from-teal-600 to-teal-700 text-white shadow-lg'
+                          : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white'
+                      }`}
+                      style={{ 
+                        pointerEvents: 'auto',
+                        isolation: 'isolate' 
+                      }}
+                    >
+                      {selectedSlot?.day === day && selectedSlot?.hour === hourKey ? '✓' : 'Book'}
+                    </button>
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-r from-green-300 to-green-400 text-green-800 rounded-xl flex items-center justify-center font-medium">
+                      ✓
+                    </div>
+                  )
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-r from-red-300 to-red-400 text-red-800 rounded-xl flex items-center justify-center font-medium">
+                    ✗
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </React.Fragment>
+      ))}
+    </div>
+  </div>
+
+  {/* Mobile/Tablet View */}
+  <div className="lg:hidden space-y-6">
+    {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => (
+      <div key={day} className="bg-white/40 backdrop-blur-sm rounded-xl p-4 border border-white/30">
+        <h3 className="text-lg font-bold text-teal-800 mb-3 flex items-center gap-2">
+          <span className="text-teal-600">📅</span>
+          {day.substring(0, 3)}
+        </h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+          {[...Array(13)].map((_, hourIndex) => {
+            const hour = 7 + hourIndex;
+            const hourKey = `${hour}`;
+            // ✅ Fixed: Check availability more defensively
+            const isAvailable = cleaner?.availability?.[day]?.[hourKey] === true || 
+                               cleaner?.availability?.[day]?.[hour] === true;
+
+            return (
+              <div key={hour} className="w-full">
+                {isAvailable ? (
+                  canViewContact ? (
+                    <button
+                      type="button" // ✅ Explicit button type
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('🎯 Mobile slot clicked:', { day, hour: hourKey });
+                        setSelectedSlot({ day, hour: hourKey });
+                      }}
+                      className={`w-full rounded-xl py-2 px-3 font-medium transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-lg text-sm cursor-pointer relative z-20 ${
+                        selectedSlot?.day === day && selectedSlot?.hour === hourKey
+                          ? 'bg-gradient-to-r from-teal-600 to-teal-700 text-white shadow-lg'
+                          : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white'
+                      }`}
+                      style={{ 
+                        pointerEvents: 'auto',
+                        isolation: 'isolate' 
+                      }}
+                    >
+                      {selectedSlot?.day === day && selectedSlot?.hour === hourKey ? '✓ Selected' : `${hour}:00`}
+                    </button>
+                  ) : (
+                    <div className="w-full bg-gradient-to-r from-green-300 to-green-400 text-green-800 rounded-xl py-2 px-3 text-center font-medium text-sm">
+                      {hour}:00 ✓
+                    </div>
+                  )
+                ) : (
+                  <div className="w-full bg-gradient-to-r from-red-300 to-red-400 text-red-800 rounded-xl py-2 px-3 text-center font-medium text-sm">
+                    {hour}:00 ✗
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    ))}
+  </div>
+
+  {/* Debug Info (remove in production) */}
+  {process.env.NODE_ENV === 'development' && selectedSlot && (
+    <div className="mt-4 p-3 bg-yellow-100 rounded-lg text-sm">
+      <strong>Selected:</strong> {selectedSlot.day} at {selectedSlot.hour}:00
+      <br />
+      <strong>Can View Contact:</strong> {canViewContact.toString()}
+      <br />
+      <strong>Availability Data:</strong> {JSON.stringify(cleaner?.availability?.[selectedSlot.day], null, 2)}
+    </div>
+  )}
+</div>
 
         {/* Booking Section */}
         {canViewContact && selectedSlot && getCleanerId(cleaner, id)
@@ -580,6 +618,7 @@ useEffect(() => {
           </div>
         )}
       </div>
+    </div>
     </div>
   );
 }
