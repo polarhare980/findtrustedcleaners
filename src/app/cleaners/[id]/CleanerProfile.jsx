@@ -174,6 +174,10 @@ useEffect(() => {
     setError('Purchase failed. Please try again.');
   };
 
+  // ✅ TEMP override to force canViewContact true
+  useEffect(() => {
+    setCanViewContact(true);
+  }, []);
 
   // Get the cleaner ID - handle multiple possible field names
   
