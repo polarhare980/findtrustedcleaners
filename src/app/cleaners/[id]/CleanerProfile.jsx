@@ -640,6 +640,33 @@ useEffect(() => {
 
       </div>
     </div>
+    {/* ✅ Absolute Floating Debug Button */}
+<div
+  style={{
+    position: 'fixed',
+    bottom: '2rem',
+    left: '2rem',
+    zIndex: 9999999, // higher than everything
+    pointerEvents: 'auto'
+  }}
+>
+  <button
+    onClick={testClick}
+    style={{
+      backgroundColor: '#dc2626',
+      color: 'white',
+      padding: '0.75rem 1.5rem',
+      borderRadius: '9999px',
+      fontWeight: 'bold',
+      boxShadow: '0 0 10px rgba(0,0,0,0.4)',
+      pointerEvents: 'auto',
+      cursor: 'pointer'
+    }}
+  >
+    TEST Button
+  </button>
+</div>
+
     </div>
   );
 }
