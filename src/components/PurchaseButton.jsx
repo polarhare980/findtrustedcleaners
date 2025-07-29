@@ -73,12 +73,18 @@ export default function PurchaseButton({
         return;
       }
 
-      const res = await fetch('/api/stripe/create-client-checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ cleanerId }),
-      });
+      await fetch('/api/stripe/create-client-checkout', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    cleanerId,
+    day: selectedDay,         // <-- must be defined in component
+    hour: selectedHourKey,    // <-- must be defined in component
+  }),
+});
+
 
       const data = await res.json();
       console.log('🧾 Stripe response:', data);
