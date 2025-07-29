@@ -174,6 +174,11 @@ useEffect(() => {
     setError('Purchase failed. Please try again.');
   };
 
+  const testClick = () => {
+  console.log('💥 Outside TEST BUTTON clicked!');
+  setSelectedSlot({ day: 'Monday', hour: '9' });
+};
+
   // ✅ TEMP override to force canViewContact true
   useEffect(() => {
     setCanViewContact(true);
@@ -183,6 +188,15 @@ useEffect(() => {
   
   if (!mounted) return null;
   if (loading) return <LoadingSpinner />;
+
+  <button
+  onClick={testClick}
+  className="fixed bottom-10 left-10 z-[999999] bg-red-600 text-white px-4 py-2 rounded shadow-xl"
+  style={{ pointerEvents: 'auto' }}
+>
+  Outside Test Button
+</button>
+
 
   if (error) {
     return (
