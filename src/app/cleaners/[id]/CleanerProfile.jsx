@@ -291,62 +291,59 @@ export default function CleanerProfile() {
 
                     return (
                       <td key={hourKey} style={{ border: '1px solid #ccc', padding: '2px' }}>
-                        {isAvailable ? (
-                          canViewContact ? (
-                            <button
-  onClick={() => {
-    alert(`💥 SLOT CLICKED: ${day} ${hourKey}:00`);
-    setSelectedSlot({ day, hour: hourKey });
-  }}
-  style={{
-    width: '100%',
-    height: '30px',
-    backgroundColor: '#007acc',
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: '12px',
-    cursor: 'pointer',
-    position: 'relative',
-    zIndex: 999999,
-    pointerEvents: 'auto',
-    border: 'none',
-    display: 'block'
-  }}
->
-  BOOK
-</button>
+  {isAvailable ? (
+    canViewContact ? (
+      <div
+        onClick={() => {
+          alert(`💥 SLOT CLICKED: ${day} ${hourKey}:00`);
+          setSelectedSlot({ day, hour: hourKey });
+        }}
+        style={{
+          width: '100%',
+          height: '30px',
+          backgroundColor: '#007acc',
+          color: 'white',
+          fontWeight: 'bold',
+          fontSize: '12px',
+          cursor: 'pointer',
+          zIndex: 999999,
+          position: 'relative',
+          pointerEvents: 'auto',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        BOOK
+      </div>
+    ) : (
+      <div style={{
+        width: '100%',
+        height: '30px',
+        backgroundColor: '#90EE90',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: '12px',
+      }}>
+        ✓
+      </div>
+    )
+  ) : (
+    <div style={{
+      width: '100%',
+      height: '30px',
+      backgroundColor: '#ff6b6b',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontSize: '12px',
+    }}>
+      ✗
+    </div>
+  )}
+</td>
 
-
-
-
-
-                          ) : (
-                            <div style={{
-                              width: '100%',
-                              height: '30px',
-                              backgroundColor: '#90EE90',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontSize: '12px'
-                            }}>
-                              ✓
-                            </div>
-                          )
-                        ) : (
-                          <div style={{
-                            width: '100%',
-                            height: '30px',
-                            backgroundColor: '#ff6b6b',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '12px'
-                          }}>
-                            ✗
-                          </div>
-                        )}
-                      </td>
                     );
                   })}
                 </tr>
