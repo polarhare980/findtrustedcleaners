@@ -9,13 +9,7 @@ import PurchaseButton from '@/components/PurchaseButton';
 import { getCleanerId } from '@/lib/utils';
 import { fetchClient } from '@/lib/fetchClient'; // ✅ Import the shared helper
 
-function isSafeEmbed(code) {
-  const hasIframe = code.includes('<iframe') && code.includes('src=');
-  const forbidden = ['<script', '<style', 'onerror', 'onload', 'javascript:'];
-  const lower = code.toLowerCase();
-  const containsForbidden = forbidden.some(frag => lower.includes(frag));
-  return hasIframe && !containsForbidden;
-}
+
 
 export default function CleanerProfile() {
   const { id } = useParams();
@@ -331,12 +325,14 @@ useEffect(() => {
                     <div style={{position: 'relative', zIndex: 9999, isolation: 'isolate'}}>
                       {client?.type === 'client' ? (
   <PurchaseButton
-    cleanerId={getCleanerId(cleaner, id)}
-    onPurchaseSuccess={handlePurchaseSuccess}
-    onPurchaseStart={handlePurchaseStart}
-    onPurchaseError={handlePurchaseError}
-    disabled={purchaseLoading}
-  />
+  cleanerId={getCleanerId(cleaner, id)}
+  selectedSlot={selectedSlot} // ✅ ← Pass the selected day/hour
+  onPurchaseSuccess={handlePurchaseSuccess}
+  onPurchaseStart={handlePurchaseStart}
+  onPurchaseError={handlePurchaseError}
+  disabled={purchaseLoading}
+/>
+
 ) : (
   <button
     onClick={() => {
