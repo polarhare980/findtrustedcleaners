@@ -7,7 +7,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import BookingPaymentWrapper from '@/components/BookingPaymentForm';
 import PurchaseButton from '@/components/PurchaseButton';
 import { getCleanerId } from '@/lib/utils';
-import { fetchClient } from '@/lib/fetchClient'; // ✅ Import the shared helper
+import { fetchClient } from '@/lib/fetchClient';
 
 function isSafeEmbed(code) {
   const hasIframe = code.includes('<iframe') && code.includes('src=');
@@ -15,7 +15,6 @@ function isSafeEmbed(code) {
   const lower = code.toLowerCase();
   return hasIframe && !forbidden.some(frag => lower.includes(frag));
 }
-
 
 export default function CleanerProfile() {
   const { id } = useParams();
@@ -27,8 +26,7 @@ export default function CleanerProfile() {
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [hasAccess, setHasAccess] = useState(false);
   const [purchaseLoading, setPurchaseLoading] = useState(false);
-  const [canViewContact, setCanViewContact] = useState(true); // ← TEMP TEST
-
+  const [canViewContact, setCanViewContact] = useState(true);
   const [permissionLoading, setPermissionLoading] = useState(false);
   const [client, setClient] = useState(null);
 
@@ -38,7 +36,7 @@ export default function CleanerProfile() {
     }
   }, []);
 
-  // ✅ Load logged-in client (if any)
+  // Load logged-in client
   useEffect(() => {
     const loadClient = async () => {
       try {
@@ -49,118 +47,98 @@ export default function CleanerProfile() {
         setClient(null);
       }
     };
-
     loadClient();
   }, []);
 
-  // ✅ Load cleaner by ID
+  // Load cleaner by ID
   useEffect(() => {
     if (!id) return;
 
     const fetchCleaner = async () => {
-  try {
-    setLoading(true);
-    setError('');
+      try {
+        setLoading(true);
+        setError('');
 
-    const res = await fetch(`/api/cleaners/${id}`, { credentials: 'include' });
+        const res = await fetch(`/api/cleaners/${id}`, { credentials: 'include' });
 
-    if (!res.ok) {
-      const errorText = await res.text();
-      console.error('Fetch error:', res.status, errorText);
-      setError(`Cleaner not found or server error (${res.status})`);
-      return;
-    }
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error('Fetch error:', res.status, errorText);
+          setError(`Cleaner not found or server error (${res.status})`);
+          return;
+        }
 
-    const data = await res.json();
+        const data = await res.json();
 
-    if (!data?.success || !data.cleaner) {
-      setError('Cleaner not found.');
-      return;
-    }
+        if (!data?.success || !data.cleaner) {
+          setError('Cleaner not found.');
+          return;
+        }
 
-    setCleaner(data.cleaner);
-    setHasAccess(data.hasAccess || false);
-  } catch (err) {
-    console.error('❌ Failed to load cleaner profile', err);
-    setError('Failed to fetch cleaner profile.');
-  } finally {
-    setLoading(false);
-  }
-};
-
+        setCleaner(data.cleaner);
+        setHasAccess(data.hasAccess || false);
+      } catch (err) {
+        console.error('❌ Failed to load cleaner profile', err);
+        setError('Failed to fetch cleaner profile.');
+      } finally {
+        setLoading(false);
+      }
+    };
 
     fetchCleaner();
   }, [id]);
 
-
-  // ✅ Check permissions when cleaner or client changes
-useEffect(() => {
-  const checkPermissions = async () => {
-    if (!cleaner || !client?.email) {
-      setCanViewContact(false);
-      return;
-    }
-
-    setPermissionLoading(true);
-
-    try {
-      const cleanerId = getCleanerId(cleaner, id);
-
-      console.log('🧪 Checking unlock status...');
-      console.log('👤 client._id:', client?._id);
-      console.log('🧼 cleanerId:', cleanerId);
-
-
-      const res = await fetch('/api/unlock-status', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          cleanerId,
-          clientId: client._id,
-        }),
-      });
-
-      const result = await res.json();
-
-      if (res.ok && result.success) {
-        setCanViewContact(result.unlocked);
-        console.log('🔐 Permission check result:', result.unlocked);
-      } else {
-        console.error('❌ Unlock API Error:', result.message);
+  // Check permissions
+  useEffect(() => {
+    const checkPermissions = async () => {
+      if (!cleaner || !client?.email) {
         setCanViewContact(false);
+        return;
       }
-    } catch (err) {
-      console.error('Permission check failed:', err);
-      setCanViewContact(false);
-    } finally {
-      setPermissionLoading(false);
-    }
-  };
 
-  checkPermissions();
-}, [cleaner, client]);
+      setPermissionLoading(true);
 
+      try {
+        const cleanerId = getCleanerId(cleaner, id);
 
+        const res = await fetch('/api/unlock-status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            cleanerId,
+            clientId: client._id,
+          }),
+        });
+
+        const result = await res.json();
+
+        if (res.ok && result.success) {
+          setCanViewContact(result.unlocked);
+        } else {
+          setCanViewContact(false);
+        }
+      } catch (err) {
+        console.error('Permission check failed:', err);
+        setCanViewContact(false);
+      } finally {
+        setPermissionLoading(false);
+      }
+    };
+
+    checkPermissions();
+  }, [cleaner, client]);
 
   const handlePurchaseSuccess = (cleanerData) => {
-    console.log('✅ Purchase successful, received data:', cleanerData);
-    
-    // Update access status
     setHasAccess(true);
     setCanViewContact(true);
-    
-    // Update cleaner data with the contact information
     setCleaner((prev) => ({
       ...prev,
       phone: cleanerData.phone || prev.phone,
       email: cleanerData.email || prev.email,
-      // Handle both cleanerName and realName
       companyName: cleanerData.companyName || cleanerData.cleanerName || prev.companyName || prev.realName,
-      // Ensure we keep all existing data
       ...cleanerData
     }));
-    
     setPurchaseLoading(false);
   };
 
@@ -174,496 +152,213 @@ useEffect(() => {
     setError('Purchase failed. Please try again.');
   };
 
-  const testClick = () => {
-  console.log('💥 Outside TEST BUTTON clicked!');
-  setSelectedSlot({ day: 'Monday', hour: '9' });
-};
+  const handleSlotClick = (day, hour) => {
+    console.log('🎯 SLOT CLICKED:', { day, hour });
+    setSelectedSlot({ day, hour });
+  };
 
-  // ✅ TEMP override to force canViewContact true
+  // TEMP override
   useEffect(() => {
     setCanViewContact(true);
   }, []);
 
-  // Get the cleaner ID - handle multiple possible field names
-  
   if (!mounted) return null;
   if (loading) return <LoadingSpinner />;
 
   if (error) {
     return (
-      <main className="min-h-screen bg-gradient-to-br from-teal-900/20 to-teal-700/10 p-6 flex items-center justify-center">
-        <div className="bg-white/25 backdrop-blur-xl border border-white/20 rounded-3xl p-8 shadow-2xl text-center">
-          <h1 className="text-3xl font-bold mb-4 bg-gradient-to-r from-red-600 to-red-800 bg-clip-text text-transparent">
-            Error
-          </h1>
-          <p className="text-gray-700 mb-4">{error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="bg-gradient-to-r from-teal-600 to-teal-700 text-white px-6 py-2 rounded-full hover:from-teal-700 hover:to-teal-800 transition-all duration-300"
-          >
-            Try Again
-          </button>
-        </div>
-      </main>
+      <div style={{ padding: '20px', textAlign: 'center' }}>
+        <h1 style={{ color: 'red' }}>Error</h1>
+        <p>{error}</p>
+        <button onClick={() => window.location.reload()}>Try Again</button>
+      </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-900/20 to-teal-700/10 p-6 relative">
-      <div className="max-w-4xl mx-auto">
-        {/* Main Profile Card */}
-        <div className="bg-white/25 backdrop-blur-xl border border-white/20 rounded-3xl p-8 shadow-2xl mb-6 transition-all duration-300 hover:shadow-3xl">
-          {/* Profile Header */}
-          <div className="flex flex-col md:flex-row items-center md:items-start gap-6 mb-8">
-            <div className="relative group">
-    <img 
-       src={cleaner.image?.trim() ? cleaner.image : '/default-avatar.png'} 
-       alt={cleaner.realName || 'Cleaner'} 
-       loading="lazy"
-       className="w-32 h-32 md:w-40 md:h-40 object-cover rounded-full border-4 border-white/30 shadow-lg transition-transform duration-300 group-hover:scale-105" 
-    />
-  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-teal-600/20 to-teal-800/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-</div>
-            
-            <div className="flex-1 text-center md:text-left">
-              <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent">
-                {cleaner.realName}
-              </h1>
-
-              {cleaner.pending && (
-  <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-4 mb-6 rounded-xl shadow">
-    ⚠️ This profile is currently pending approval for a recent booking and may be unavailable.
-  </div>
-)}
-
-
-              {cleaner.googleReviewRating && cleaner.googleReviewCount && (
-                <p className="text-lg font-medium text-teal-800">
-                  ⭐ {cleaner.googleReviewRating} from {cleaner.googleReviewCount} reviews
-                </p>
-              )}
-
-              {cleaner?.isPremium && (
-                <div className="inline-block bg-yellow-400 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md mb-4">
-                  ✨ Premium Cleaner
-                </div>
-              )}
-           
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700">
-                <div className="bg-white/40 backdrop-blur-md rounded-2xl p-4 border border-white/30">
-                  <div className="flex items-center gap-2">
-                    <span className="text-teal-600 font-semibold">📍</span>
-                    <div>
-                      <span className="font-semibold text-teal-800">Postcode:</span>
-                      <div className="text-lg">{cleaner.postcode}</div>
-                      {cleaner.additionalPostcodes?.length > 0 && (
-  <div className="text-sm text-yellow-800 mt-1">
-    <span className="font-medium">Also covers:</span> {cleaner.additionalPostcodes.join(', ')}
-  </div>
-)}
-
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="bg-white/40 backdrop-blur-md rounded-2xl p-4 border border-white/30">
-                  <div className="flex items-center gap-2">
-                    <span className="text-teal-600 font-semibold">💰</span>
-                    <div>
-                      <span className="font-semibold text-teal-800">Hourly Rate:</span>
-                      <div className="text-lg font-bold text-teal-700">£{cleaner.rates || cleaner.rate || 'Not set'}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Contact Details Section - WITH PERMISSION CHECK */}
-          <div className="bg-white/30 backdrop-blur-md rounded-2xl p-6 border border-white/20 mb-6 relative z-50" style={{isolation: 'isolate'}}>
-            {/* Enhanced debug info in development */}
-            {process.env.NODE_ENV === 'development' && (
-              <div className="text-xs text-gray-500 mb-4 bg-yellow-100 p-2 rounded">
-                Debug: cleanerId={getCleanerId(cleaner, id)}, hasAccess={hasAccess.toString()}, canViewContact={canViewContact.toString()}, purchaseLoading={purchaseLoading.toString()}
-                <br />
-                URL param ID: {id}
-                <br />
-                Client Email: {client?.email || 'Not loaded'}
-                <br />
-                Selected Slot: {selectedSlot ? `${selectedSlot.day} at ${selectedSlot.hour}:00` : 'None'}
-                <br />
-                Permission Loading: {permissionLoading.toString()}
-              </div>
-            )}
-            
-            {permissionLoading ? (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 mx-auto mb-4"></div>
-                <p className="text-gray-600">Checking permissions...</p>
-              </div>
-            ) : canViewContact ? (
-              <div className="contact-info">
-                <div className="text-center mb-4">
-                  <span className="text-2xl">🔓</span>
-                  <p className="text-green-600 font-semibold mt-2">Contact details unlocked!</p>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="text-center md:text-left">
-                    <div className="text-teal-600 font-semibold mb-1">📞 Phone</div>
-                    <div className="text-gray-800 font-medium">{cleaner.phone || 'Not provided'}</div>
-                  </div>
-                  <div className="text-center md:text-left">
-                    <div className="text-teal-600 font-semibold mb-1">📧 Email</div>
-                    <div className="text-gray-800 font-medium">{cleaner.email || 'Not provided'}</div>
-                  </div>
-                  <div className="text-center md:text-left">
-                    <div className="text-teal-600 font-semibold mb-1">🏢 Company</div>
-                    <div className="text-gray-800 font-medium">{cleaner.companyName || cleaner.realName}</div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="blurred-overlay text-center">
-                <div className="mb-4">
-                  <span className="text-2xl">🔒</span>
-                  <p className="text-gray-600 italic mt-2">Contact details locked — purchase access to unlock</p>
-                </div>
-                
-                {/* Fixed condition to handle both _id and id */}
-                {cleaner && getCleanerId(cleaner, id) ? (
-                  <div className="relative z-50">
-                    {purchaseLoading && (
-                      <div className="absolute inset-0 bg-white/50 backdrop-blur-sm rounded-full flex items-center justify-center z-[60]">
-                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-teal-600"></div>
-                      </div>
-                    )}
-                    {/* Purchase button with maximum z-index and isolation */}
-                    <div style={{position: 'relative', zIndex: 9999, isolation: 'isolate'}}>
-                      {client?.type === 'client' ? (
-  <PurchaseButton
-  cleanerId={getCleanerId(cleaner, id)}
-  selectedSlot={selectedSlot} // ✅ ← Pass the selected day/hour
-  onPurchaseSuccess={handlePurchaseSuccess}
-  onPurchaseStart={handlePurchaseStart}
-  onPurchaseError={handlePurchaseError}
-  disabled={purchaseLoading}
-/>
-
-) : (
-  <button
-    onClick={() => {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('redirectAfterLogin', `/cleaners/${cleaner._id || id}`);
-        window.location.href = `/login/clients?next=/cleaners/${cleaner._id || id}`;
-      }
-    }}
-    className="bg-gradient-to-r from-teal-600 to-teal-700 text-white px-6 py-2 rounded-full font-semibold shadow hover:from-teal-700 hover:to-teal-800 transition-all duration-300"
-  >
-    Log in to Purchase Access
-  </button>
-)}
-
-              
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-red-600 font-semibold">
-                    ⚠️ Unable to load purchase button - cleaner ID missing
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Services Section - MOVED BELOW CONTACT DETAILS */}
-<div className="bg-white/30 backdrop-blur-md rounded-2xl p-6 border border-white/20 mb-6 relative z-10">
-  <h2 className="text-2xl font-bold text-teal-800 mb-4 flex items-center gap-2">
-    <span>🧹</span> Services Offered
-  </h2>
-  {Array.isArray(cleaner.services) && cleaner.services.length > 0 ? (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-      {cleaner.services.map((service, i) => (
-        <div key={i} className="bg-white/40 backdrop-blur-sm rounded-xl p-3 border border-white/30 flex items-center gap-2">
-          <span className="text-teal-600">✨</span>
-          <span className="text-gray-800">{service}</span>
-        </div>
-      ))}
-    </div>
-  ) : (
-    <p className="italic text-gray-600 text-center py-4">No services listed</p>
-  )}
-</div>
-
-{cleaner.bio && (
-  <div className="bg-white/30 backdrop-blur-md rounded-2xl p-6 border border-white/20 mb-6 relative z-10">
-    <h2 className="text-2xl font-bold text-teal-800 mb-4 flex items-center gap-2">
-      <span>🧾</span> About This Cleaner
-    </h2>
-    <p className="text-gray-800 whitespace-pre-wrap">{cleaner.bio}</p>
-  </div>
-)}
-
-
-{/* Gallery Section */}
-{cleaner.photos?.length > 0 && (
-  <div className="bg-white/30 backdrop-blur-md rounded-2xl p-6 border border-white/20 mb-6 relative z-10">
-    <h2 className="text-2xl font-bold text-teal-800 mb-4 flex items-center gap-2">
-      <span>🖼️</span> Cleaner Gallery
-    </h2>
-
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-      {cleaner.photos.map((photo, index) => (
-        <div key={index} className="relative group overflow-hidden rounded-xl border border-white/30">
-          <img
-            src={photo.url}
-            alt={`Gallery photo ${index + 1}`}
-            className={`w-full h-auto transition-all duration-300 object-cover ${
-              !canViewContact && photo.hasText ? 'blur-sm grayscale brightness-75' : ''
-            }`}
-          />
-          {!canViewContact && photo.hasText && (
-            <div className="absolute inset-0 bg-black/30 flex items-center justify-center text-white text-sm font-medium">
-              🔒 Unlock to view
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  </div>
-)}
-
-
-          {/* Reviews Section */}
-          {(cleaner.googleReviewUrl || cleaner.facebookReviewUrl || cleaner.embedCode) && (
-            <div className="bg-white/30 backdrop-blur-md rounded-2xl p-6 border border-white/20 mb-6 relative z-10">
-              <h2 className="text-2xl font-bold text-teal-800 mb-4 flex items-center gap-2">
-                <span>⭐</span> Reviews
-              </h2>
-
-              <div className="flex flex-col sm:flex-row gap-4 mb-4">
-                {canViewContact && cleaner.googleReviewUrl && (
-                  <a
-                    href={cleaner.googleReviewUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-full text-center font-medium hover:from-blue-700 hover:to-blue-800 transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-lg"
-                  >
-                    📱 View Google Reviews
-                  </a>
-                )}
-
-                {cleaner.facebookReviewUrl && (
-                  <a
-                    href={cleaner.facebookReviewUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-full text-center font-medium hover:from-blue-700 hover:to-blue-800 transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-lg"
-                  >
-                    📘 View Facebook Page
-                  </a>
-                )}
-              </div>
-
-              {cleaner.embedCode && isSafeEmbed(cleaner.embedCode) && (
-                <div className="bg-white/40 backdrop-blur-sm rounded-xl p-4 border border-white/30" 
-                     dangerouslySetInnerHTML={{ __html: cleaner.embedCode }} />
-              )}
-            </div>
-          )}
-
-          // Fixed Availability Section - Replace your existing availability section with this:
-
-{/* Availability Section */}
-<div
-  className="bg-white/30 backdrop-blur-md rounded-2xl p-6 border border-white/20 relative z-10"
-  style={{ pointerEvents: 'auto', isolation: 'isolate' }}
->
- <h2 className="text-2xl font-bold text-teal-800 mb-6 flex items-center gap-2">
-    <span>📅</span> Availability
-  </h2>
-
-  {/* Desktop View */}
-  <div className="hidden lg:block">
-    <div className="grid grid-cols-[100px_repeat(13,_1fr)] gap-2 text-sm">
-      <div></div>
-      {[...Array(13)].map((_, hour) => (
-        <div key={hour} className="text-center font-bold text-teal-700 py-2">
-          {7 + hour}:00
-        </div>
-      ))}
-      {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => (
-        <React.Fragment key={day}>
-          <div className="font-semibold text-teal-800 py-2 flex items-center">{day}</div>
-          {[...Array(13)].map((_, hourIndex) => {
-            const hour = 7 + hourIndex;
-            const hourKey = `${hour}`;
-            // ✅ Fixed: Check availability more defensively
-             const isAvailable = true; // 👈 Force slots to always show for test
-
-            return (
-              <div key={hourKey} className="h-10 w-full">
-                {isAvailable ? (
-      canViewContact ? (
-        <button
-          type="button"
-          onClick={testClick} // 🧪 Use testClick temporarily
-          className={`w-full h-full rounded-xl font-medium transition-all duration-300 hover:transform hover:scale-105 hover:shadow-lg cursor-pointer relative z-20 ${
-            selectedSlot?.day === day && selectedSlot?.hour === hourKey
-              ? 'bg-gradient-to-r from-teal-600 to-teal-700 text-white shadow-lg'
-              : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white'
-          }`}
-          style={{
-            pointerEvents: 'auto',
-            isolation: 'isolate',
-          }}
-        >
-          {selectedSlot?.day === day && selectedSlot?.hour === hourKey ? '✓' : 'Book'}
-        </button>
-      ) : (
-        <div className="w-full h-full bg-gradient-to-r from-green-300 to-green-400 text-green-800 rounded-xl flex items-center justify-center font-medium">
-          ✓
-        </div>
-      )
-    ) : (
-      <div className="w-full h-full bg-gradient-to-r from-red-300 to-red-400 text-red-800 rounded-xl flex items-center justify-center font-medium">
-        ✗
-      </div>
-    )}
-  </div>
-);
-          })}
-        </React.Fragment>
-      ))}
-    </div>
-  </div>
-
-  {/* Mobile/Tablet View */}
-  <div className="lg:hidden space-y-6">
-    {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => (
-      <div key={day} className="bg-white/40 backdrop-blur-sm rounded-xl p-4 border border-white/30">
-        <h3 className="text-lg font-bold text-teal-800 mb-3 flex items-center gap-2">
-          <span className="text-teal-600">📅</span>
-          {day.substring(0, 3)}
-        </h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-          {[...Array(13)].map((_, hourIndex) => {
-            const hour = 7 + hourIndex;
-            const hourKey = `${hour}`;
-            // ✅ Fixed: Check availability more defensively
-            const isAvailable = true;
-
-
-            return (
-              <div key={hour} className="w-full">
-                {isAvailable ? (
-                  canViewContact ? (
-                    <button
-                      type="button" // ✅ Explicit button type
-                      onClick={(e) => {
-  e.preventDefault();
-  e.stopPropagation();
-  console.log('📱 SLOT CLICKED:', { day, hour: hourKey });
-  setSelectedSlot({ day, hour: hourKey });
-}}
-
-                      className={`w-full rounded-xl py-2 px-3 font-medium transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-lg text-sm cursor-pointer relative z-20 ${
-                        selectedSlot?.day === day && selectedSlot?.hour === hourKey
-                          ? 'bg-gradient-to-r from-teal-600 to-teal-700 text-white shadow-lg'
-                          : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white'
-                      }`}
-                      style={{ 
-                        pointerEvents: 'auto',
-                        isolation: 'isolate' 
-                      }}
-                    >
-                      {selectedSlot?.day === day && selectedSlot?.hour === hourKey ? '✓ Selected' : `${hour}:00`}
-                    </button>
-                  ) : (
-                    <div className="w-full bg-gradient-to-r from-green-300 to-green-400 text-green-800 rounded-xl py-2 px-3 text-center font-medium text-sm">
-                      {hour}:00 ✓
-                    </div>
-                  )
-                ) : (
-                  <div className="w-full bg-gradient-to-r from-red-300 to-red-400 text-red-800 rounded-xl py-2 px-3 text-center font-medium text-sm">
-                    {hour}:00 ✗
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    ))}
-  </div>
-
-  {/* Debug Info (remove in production) */}
-  {process.env.NODE_ENV === 'development' && selectedSlot && (
-    <div className="mt-4 p-3 bg-yellow-100 rounded-lg text-sm">
-      <strong>Selected:</strong> {selectedSlot.day} at {selectedSlot.hour}:00
-      <br />
-      <strong>Can View Contact:</strong> {canViewContact.toString()}
-      <br />
-      <strong>Availability Data:</strong> {JSON.stringify(cleaner?.availability?.[selectedSlot.day], null, 2)}
-    </div>
-  )}
-</div>
-
-        {/* Booking Section */}
-        {canViewContact && selectedSlot && getCleanerId(cleaner, id)
- && (
-          <div className="bg-white/25 backdrop-blur-xl border border-white/20 rounded-3xl p-8 shadow-2xl">
-            <h2 className="text-2xl font-bold text-center mb-6 bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent">
-              🎯 Booking for {selectedSlot.day} at {selectedSlot.hour}:00
-            </h2>
-            <div className="bg-white/30 backdrop-blur-md rounded-2xl p-6 border border-white/20">
-              <BookingPaymentWrapper
-                cleanerId={getCleanerId(cleaner, id)}
-                day={selectedSlot.day}
-                time={selectedSlot.hour}
-                price={cleaner.rates || cleaner.rate}
-              />
-            </div>
+    <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
+      {/* Basic Profile Info */}
+      <div style={{ border: '1px solid #ccc', padding: '20px', marginBottom: '20px' }}>
+        <h1>{cleaner.realName}</h1>
+        <p>Postcode: {cleaner.postcode}</p>
+        <p>Rate: £{cleaner.rates || cleaner.rate || 'Not set'}</p>
+        
+        {cleaner.pending && (
+          <div style={{ background: '#fff3cd', padding: '10px', border: '1px solid #ffeaa7' }}>
+            ⚠️ This profile is pending approval
           </div>
         )}
-
-        {/* ✅ Floating Debug Test Button */}
-        <button
-          onClick={testClick}
-          className="fixed bottom-10 left-10 z-[999999] bg-red-600 text-white px-4 py-2 rounded shadow-xl"
-          style={{ pointerEvents: 'auto' }}
-        >
-          Outside Test Button
-        </button>
-
       </div>
-    </div>
-    {/* ✅ Absolute Floating Debug Button */}
-<div
-  style={{
-    position: 'fixed',
-    bottom: '2rem',
-    left: '2rem',
-    zIndex: 9999999, // higher than everything
-    pointerEvents: 'auto'
-  }}
->
-  <button
-    onClick={testClick}
-    style={{
-      backgroundColor: '#dc2626',
-      color: 'white',
-      padding: '0.75rem 1.5rem',
-      borderRadius: '9999px',
-      fontWeight: 'bold',
-      boxShadow: '0 0 10px rgba(0,0,0,0.4)',
-      pointerEvents: 'auto',
-      cursor: 'pointer'
-    }}
-  >
-    TEST Button
-  </button>
-</div>
 
+      {/* Contact Details */}
+      <div style={{ border: '1px solid #ccc', padding: '20px', marginBottom: '20px' }}>
+        <h2>Contact Details</h2>
+        {permissionLoading ? (
+          <p>Loading permissions...</p>
+        ) : canViewContact ? (
+          <div>
+            <p>🔓 Contact details unlocked!</p>
+            <p>Phone: {cleaner.phone || 'Not provided'}</p>
+            <p>Email: {cleaner.email || 'Not provided'}</p>
+            <p>Company: {cleaner.companyName || cleaner.realName}</p>
+          </div>
+        ) : (
+          <div>
+            <p>🔒 Contact details locked</p>
+            {cleaner && getCleanerId(cleaner, id) ? (
+              client?.type === 'client' ? (
+                <PurchaseButton
+                  cleanerId={getCleanerId(cleaner, id)}
+                  selectedSlot={selectedSlot}
+                  onPurchaseSuccess={handlePurchaseSuccess}
+                  onPurchaseStart={handlePurchaseStart}
+                  onPurchaseError={handlePurchaseError}
+                  disabled={purchaseLoading}
+                />
+              ) : (
+                <button onClick={() => window.location.href = `/login/clients?next=/cleaners/${cleaner._id || id}`}>
+                  Log in to Purchase Access
+                </button>
+              )
+            ) : (
+              <p style={{ color: 'red' }}>Unable to load purchase button</p>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Services */}
+      {cleaner.services && cleaner.services.length > 0 && (
+        <div style={{ border: '1px solid #ccc', padding: '20px', marginBottom: '20px' }}>
+          <h2>Services</h2>
+          <ul>
+            {cleaner.services.map((service, i) => (
+              <li key={i}>{service}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Bio */}
+      {cleaner.bio && (
+        <div style={{ border: '1px solid #ccc', padding: '20px', marginBottom: '20px' }}>
+          <h2>About</h2>
+          <p>{cleaner.bio}</p>
+        </div>
+      )}
+
+      {/* SIMPLE AVAILABILITY GRID */}
+      <div style={{ border: '1px solid #ccc', padding: '20px', marginBottom: '20px' }}>
+        <h2>Availability</h2>
+        
+        {/* Desktop Grid */}
+        <div style={{ display: 'block' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr>
+                <th style={{ border: '1px solid #ccc', padding: '5px' }}>Day</th>
+                {[...Array(13)].map((_, hour) => (
+                  <th key={hour} style={{ border: '1px solid #ccc', padding: '5px' }}>
+                    {7 + hour}:00
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => (
+                <tr key={day}>
+                  <td style={{ border: '1px solid #ccc', padding: '5px', fontWeight: 'bold' }}>{day}</td>
+                  {[...Array(13)].map((_, hourIndex) => {
+                    const hour = 7 + hourIndex;
+                    const hourKey = `${hour}`;
+                    const isAvailable = true; // Force available for testing
+                    const isSelected = selectedSlot?.day === day && selectedSlot?.hour === hourKey;
+
+                    return (
+                      <td key={hourKey} style={{ border: '1px solid #ccc', padding: '2px' }}>
+                        {isAvailable ? (
+                          canViewContact ? (
+                            <button
+                              type="button"
+                              onClick={() => handleSlotClick(day, hourKey)}
+                              style={{
+                                width: '100%',
+                                height: '30px',
+                                backgroundColor: isSelected ? '#007acc' : '#28a745',
+                                color: 'white',
+                                border: 'none',
+                                cursor: 'pointer',
+                                fontSize: '12px'
+                              }}
+                            >
+                              {isSelected ? '✓' : 'Book'}
+                            </button>
+                          ) : (
+                            <div style={{
+                              width: '100%',
+                              height: '30px',
+                              backgroundColor: '#90EE90',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '12px'
+                            }}>
+                              ✓
+                            </div>
+                          )
+                        ) : (
+                          <div style={{
+                            width: '100%',
+                            height: '30px',
+                            backgroundColor: '#ff6b6b',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '12px'
+                          }}>
+                            ✗
+                          </div>
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Selected Slot Display */}
+        {selectedSlot && (
+          <div style={{ marginTop: '20px', padding: '10px', background: '#f0f0f0' }}>
+            <strong>Selected:</strong> {selectedSlot.day} at {selectedSlot.hour}:00
+          </div>
+        )}
+      </div>
+
+      {/* Booking Section */}
+      {canViewContact && selectedSlot && getCleanerId(cleaner, id) && (
+        <div style={{ border: '1px solid #ccc', padding: '20px', marginBottom: '20px' }}>
+          <h2>Booking for {selectedSlot.day} at {selectedSlot.hour}:00</h2>
+          <BookingPaymentWrapper
+            cleanerId={getCleanerId(cleaner, id)}
+            day={selectedSlot.day}
+            time={selectedSlot.hour}
+            price={cleaner.rates || cleaner.rate}
+          />
+        </div>
+      )}
+
+      {/* Debug Info */}
+      {process.env.NODE_ENV === 'development' && (
+        <div style={{ background: '#ffffcc', padding: '10px', fontSize: '12px' }}>
+          <strong>Debug:</strong><br />
+          cleanerId: {getCleanerId(cleaner, id)}<br />
+          canViewContact: {canViewContact.toString()}<br />
+          selectedSlot: {selectedSlot ? `${selectedSlot.day} at ${selectedSlot.hour}:00` : 'None'}<br />
+          client: {client?.email || 'Not loaded'}
+        </div>
+      )}
     </div>
   );
 }
