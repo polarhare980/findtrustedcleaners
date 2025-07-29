@@ -279,20 +279,20 @@ export default function CleanerProfile() {
                         {isAvailable ? (
                           canViewContact ? (
                             <button
-                              type="button"
-                              onClick={() => handleSlotClick(day, hourKey)}
-                              style={{
-                                width: '100%',
-                                height: '30px',
-                                backgroundColor: isSelected ? '#007acc' : '#28a745',
-                                color: 'white',
-                                border: 'none',
-                                cursor: 'pointer',
-                                fontSize: '12px'
-                              }}
-                            >
-                              {isSelected ? '✓' : 'Book'}
-                            </button>
+  onClick={() => alert('IT WORKS!')}
+  style={{
+    width: '100%',
+    height: '30px',
+    backgroundColor: '#007acc',
+    color: 'white',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: '12px'
+  }}
+>
+  TEST ALERT
+</button>
+
                           ) : (
                             <div style={{
                               width: '100%',
