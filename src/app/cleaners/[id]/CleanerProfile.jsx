@@ -27,7 +27,8 @@ export default function CleanerProfile() {
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [hasAccess, setHasAccess] = useState(false);
   const [purchaseLoading, setPurchaseLoading] = useState(false);
-  const [canViewContact, setCanViewContact] = useState(false);
+  const [canViewContact, setCanViewContact] = useState(true); // ← TEMP TEST
+
   const [permissionLoading, setPermissionLoading] = useState(false);
   const [client, setClient] = useState(null);
 
