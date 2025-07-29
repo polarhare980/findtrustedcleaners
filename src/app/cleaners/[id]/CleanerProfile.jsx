@@ -189,15 +189,6 @@ useEffect(() => {
   if (!mounted) return null;
   if (loading) return <LoadingSpinner />;
 
-  <button
-  onClick={testClick}
-  className="fixed bottom-10 left-10 z-[999999] bg-red-600 text-white px-4 py-2 rounded shadow-xl"
-  style={{ pointerEvents: 'auto' }}
->
-  Outside Test Button
-</button>
-
-
   if (error) {
     return (
       <main className="min-h-screen bg-gradient-to-br from-teal-900/20 to-teal-700/10 p-6 flex items-center justify-center">
@@ -637,6 +628,16 @@ useEffect(() => {
             </div>
           </div>
         )}
+
+        {/* ✅ Floating Debug Test Button */}
+        <button
+          onClick={testClick}
+          className="fixed bottom-10 left-10 z-[999999] bg-red-600 text-white px-4 py-2 rounded shadow-xl"
+          style={{ pointerEvents: 'auto' }}
+        >
+          Outside Test Button
+        </button>
+
       </div>
     </div>
     </div>
