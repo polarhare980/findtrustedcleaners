@@ -9,13 +9,6 @@ import PurchaseButton from '@/components/PurchaseButton';
 import { getCleanerId } from '@/lib/utils';
 import { fetchClient } from '@/lib/fetchClient';
 
-function isSafeEmbed(code) {
-  const hasIframe = code.includes('<iframe') && code.includes('src=');
-  const forbidden = ['<script', '<style', 'onerror', 'onload', 'javascript:'];
-  const lower = code.toLowerCase();
-  return hasIframe && !forbidden.some(frag => lower.includes(frag));
-}
-
 export default function CleanerProfile() {
   const { id } = useParams();
 
@@ -29,28 +22,12 @@ export default function CleanerProfile() {
   const [canViewContact, setCanViewContact] = useState(true);
   const [permissionLoading, setPermissionLoading] = useState(false);
   const [client, setClient] = useState(null);
+  const [showGrid, setShowGrid] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setMounted(true);
     }
-  }, []);
-
-  useEffect(() => {
-    const overlay = document.createElement('div');
-    overlay.style.position = 'fixed';
-    overlay.style.inset = '0';
-    overlay.style.zIndex = '9999999999999';
-    overlay.style.pointerEvents = 'none';
-    overlay.style.border = '5px dashed red';
-    overlay.style.boxSizing = 'border-box';
-    overlay.style.opacity = '0.5';
-    overlay.innerText = 'OVERLAY DETECTOR';
-    document.body.appendChild(overlay);
-
-    return () => {
-      document.body.removeChild(overlay);
-    };
   }, []);
 
   useEffect(() => {
@@ -151,70 +128,117 @@ export default function CleanerProfile() {
       phone: cleanerData.phone || prev.phone,
       email: cleanerData.email || prev.email,
       companyName: cleanerData.companyName || cleanerData.cleanerName || prev.companyName || prev.realName,
-      ...cleanerData,
+      ...cleanerData
     }));
     setPurchaseLoading(false);
   };
 
-  const handlePurchaseStart = () => setPurchaseLoading(true);
-  const handlePurchaseError = (error) => {
-    console.error('❌ Purchase failed:', error);
-    setPurchaseLoading(false);
-    setError('Purchase failed. Please try again.');
-  };
-
   const handleSlotClick = (day, hour) => {
-    alert(`💥 SLOT CLICKED: ${day} at ${hour}`);
     setSelectedSlot({ day, hour });
   };
 
-  useEffect(() => {
-    document.body.style.pointerEvents = 'auto';
-  }, []);
-
   if (!mounted) return null;
   if (loading) return <LoadingSpinner />;
-
-  if (error) {
-    return (
-      <div style={{ padding: '20px', textAlign: 'center' }}>
-        <h1 style={{ color: 'red' }}>Error</h1>
-        <p>{error}</p>
-        <button onClick={() => window.location.reload()}>Try Again</button>
-      </div>
-    );
-  }
+  if (error) return <div style={{ padding: '20px', color: 'red' }}>{error}</div>;
 
   return (
-    <div>
-      <h1>{cleaner?.realName}</h1>
-      <div style={{ position: 'fixed', top: '100px', zIndex: 999999999, pointerEvents: 'auto' }}>
-        {['Monday', 'Tuesday', 'Wednesday'].map((day) => (
-          <div key={day}>
-            <strong>{day}</strong>
-            <div style={{ display: 'flex' }}>
-              {[...Array(13)].map((_, i) => {
-                const hour = `${7 + i}`;
-                return (
-                  <div
-                    key={hour}
-                    onClick={() => handleSlotClick(day, hour)}
-                    style={{
-                      padding: '10px',
-                      margin: '2px',
-                      background: '#007acc',
-                      color: '#fff',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {hour}:00
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        ))}
+    <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
+      <h1>{cleaner.realName}</h1>
+      <p>📍 Postcode: {cleaner.postcode}</p>
+      <p>💷 Rate: £{cleaner.rates || cleaner.rate || 'Not set'}</p>
+
+      {cleaner.bio && (
+        <div style={{ margin: '20px 0' }}>
+          <h3>🧼 About</h3>
+          <p>{cleaner.bio}</p>
+        </div>
+      )}
+
+      {cleaner.services?.length > 0 && (
+        <div>
+          <h3>🛠️ Services Offered:</h3>
+          <ul>
+            {cleaner.services.map((s, i) => <li key={i}>{s}</li>)}
+          </ul>
+        </div>
+      )}
+
+      <div style={{ margin: '20px 0' }}>
+        <h3>📞 Contact Details:</h3>
+        {permissionLoading ? 'Checking access...' : canViewContact ? (
+          <>
+            <p>Phone: {cleaner.phone}</p>
+            <p>Email: {cleaner.email}</p>
+            <p>Company: {cleaner.companyName || cleaner.realName}</p>
+          </>
+        ) : (
+          <>
+            <p>🔒 Contact locked</p>
+            <PurchaseButton
+              cleanerId={getCleanerId(cleaner, id)}
+              selectedSlot={selectedSlot}
+              onPurchaseSuccess={handlePurchaseSuccess}
+              disabled={purchaseLoading}
+            />
+          </>
+        )}
       </div>
+
+      <button onClick={() => setShowGrid(prev => !prev)} style={{ margin: '20px 0', padding: '10px 20px' }}>
+        {showGrid ? 'Hide Availability' : 'Show Availability'}
+      </button>
+
+      {showGrid && (
+        <div style={{ overflowX: 'auto', border: '1px solid #ccc', padding: '10px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr>
+                <th style={{ border: '1px solid #ccc', padding: '5px' }}>Day</th>
+                {[...Array(13)].map((_, i) => (
+                  <th key={i} style={{ border: '1px solid #ccc', padding: '5px' }}>{7 + i}:00</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"].map(day => (
+                <tr key={day}>
+                  <td style={{ fontWeight: 'bold', padding: '5px' }}>{day}</td>
+                  {[...Array(13)].map((_, i) => {
+                    const hour = 7 + i;
+                    const isAvailable = cleaner?.availability?.[day]?.[hour.toString()] === true;
+                    return (
+                      <td key={i} style={{ padding: '2px' }}>
+                        {isAvailable ? (
+                          <button
+                            onClick={() => handleSlotClick(day, hour.toString())}
+                            style={{ width: '100%', padding: '5px', background: '#007acc', color: 'white', border: 'none', cursor: 'pointer' }}
+                          >
+                            BOOK
+                          </button>
+                        ) : (
+                          <div style={{ textAlign: 'center', color: '#aaa' }}>✗</div>
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {selectedSlot && (
+        <div style={{ marginTop: '20px', padding: '20px', background: '#f9f9f9', border: '1px solid #ccc' }}>
+          <h3>📅 Booking for {selectedSlot.day} at {selectedSlot.hour}:00</h3>
+          <BookingPaymentWrapper
+            cleanerId={getCleanerId(cleaner, id)}
+            day={selectedSlot.day}
+            time={selectedSlot.hour}
+            price={cleaner.rates || cleaner.rate}
+          />
+        </div>
+      )}
     </div>
   );
 }
