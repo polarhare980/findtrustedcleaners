@@ -36,7 +36,23 @@ export default function CleanerProfile() {
     }
   }, []);
 
-  // Load logged-in client
+  useEffect(() => {
+    const overlay = document.createElement('div');
+    overlay.style.position = 'fixed';
+    overlay.style.inset = '0';
+    overlay.style.zIndex = '9999999999999';
+    overlay.style.pointerEvents = 'none';
+    overlay.style.border = '5px dashed red';
+    overlay.style.boxSizing = 'border-box';
+    overlay.style.opacity = '0.5';
+    overlay.innerText = 'OVERLAY DETECTOR';
+    document.body.appendChild(overlay);
+
+    return () => {
+      document.body.removeChild(overlay);
+    };
+  }, []);
+
   useEffect(() => {
     const loadClient = async () => {
       try {
@@ -50,7 +66,6 @@ export default function CleanerProfile() {
     loadClient();
   }, []);
 
-  // Load cleaner by ID
   useEffect(() => {
     if (!id) return;
 
@@ -88,7 +103,6 @@ export default function CleanerProfile() {
     fetchCleaner();
   }, [id]);
 
-  // Check permissions
   useEffect(() => {
     const checkPermissions = async () => {
       if (!cleaner || !client?.email) {
@@ -137,15 +151,12 @@ export default function CleanerProfile() {
       phone: cleanerData.phone || prev.phone,
       email: cleanerData.email || prev.email,
       companyName: cleanerData.companyName || cleanerData.cleanerName || prev.companyName || prev.realName,
-      ...cleanerData
+      ...cleanerData,
     }));
     setPurchaseLoading(false);
   };
 
-  const handlePurchaseStart = () => {
-    setPurchaseLoading(true);
-  };
-
+  const handlePurchaseStart = () => setPurchaseLoading(true);
   const handlePurchaseError = (error) => {
     console.error('❌ Purchase failed:', error);
     setPurchaseLoading(false);
@@ -153,40 +164,18 @@ export default function CleanerProfile() {
   };
 
   const handleSlotClick = (day, hour) => {
-    console.log('🎯 SLOT CLICKED:', { day, hour });
+    alert(`💥 SLOT CLICKED: ${day} at ${hour}`);
     setSelectedSlot({ day, hour });
   };
 
-  // TEMP override
   useEffect(() => {
-    setCanViewContact(true);
+    document.body.style.pointerEvents = 'auto';
   }, []);
-
-  useEffect(() => {
-  document.body.style.pointerEvents = 'auto'; // ✅ Kill any global blocks
-}, []);
 
   if (!mounted) return null;
   if (loading) return <LoadingSpinner />;
 
   if (error) {
-    useEffect(() => {
-  const overlay = document.createElement('div');
-  overlay.style.position = 'fixed';
-  overlay.style.inset = '0';
-  overlay.style.zIndex = '9999999999999';
-  overlay.style.pointerEvents = 'none';
-  overlay.style.border = '5px dashed red';
-  overlay.style.boxSizing = 'border-box';
-  overlay.style.opacity = '0.5';
-  overlay.innerText = 'OVERLAY DETECTOR';
-  document.body.appendChild(overlay);
-
-  return () => {
-    document.body.removeChild(overlay);
-  };
-}, []);
-
     return (
       <div style={{ padding: '20px', textAlign: 'center' }}>
         <h1 style={{ color: 'red' }}>Error</h1>
@@ -197,255 +186,35 @@ export default function CleanerProfile() {
   }
 
   return (
-    <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
-      {/* Basic Profile Info */}
-      <div style={{ border: '1px solid #ccc', padding: '20px', marginBottom: '20px' }}>
-        <h1>{cleaner.realName}</h1>
-        <p>Postcode: {cleaner.postcode}</p>
-        <p>Rate: £{cleaner.rates || cleaner.rate || 'Not set'}</p>
-        
-        {cleaner.pending && (
-          <div style={{ background: '#fff3cd', padding: '10px', border: '1px solid #ffeaa7' }}>
-            ⚠️ This profile is pending approval
+    <div>
+      <h1>{cleaner?.realName}</h1>
+      <div style={{ position: 'fixed', top: '100px', zIndex: 999999999, pointerEvents: 'auto' }}>
+        {['Monday', 'Tuesday', 'Wednesday'].map((day) => (
+          <div key={day}>
+            <strong>{day}</strong>
+            <div style={{ display: 'flex' }}>
+              {[...Array(13)].map((_, i) => {
+                const hour = `${7 + i}`;
+                return (
+                  <div
+                    key={hour}
+                    onClick={() => handleSlotClick(day, hour)}
+                    style={{
+                      padding: '10px',
+                      margin: '2px',
+                      background: '#007acc',
+                      color: '#fff',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {hour}:00
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        )}
+        ))}
       </div>
-
-      {/* Contact Details */}
-      <div style={{ border: '1px solid #ccc', padding: '20px', marginBottom: '20px' }}>
-        <h2>Contact Details</h2>
-        {permissionLoading ? (
-          <p>Loading permissions...</p>
-        ) : canViewContact ? (
-          <div>
-            <p>🔓 Contact details unlocked!</p>
-            <p>Phone: {cleaner.phone || 'Not provided'}</p>
-            <p>Email: {cleaner.email || 'Not provided'}</p>
-            <p>Company: {cleaner.companyName || cleaner.realName}</p>
-          </div>
-        ) : (
-          <div>
-            <p>🔒 Contact details locked</p>
-            {cleaner && getCleanerId(cleaner, id) ? (
-              client?.type === 'client' ? (
-                <PurchaseButton
-                  cleanerId={getCleanerId(cleaner, id)}
-                  selectedSlot={selectedSlot}
-                  onPurchaseSuccess={handlePurchaseSuccess}
-                  onPurchaseStart={handlePurchaseStart}
-                  onPurchaseError={handlePurchaseError}
-                  disabled={purchaseLoading}
-                />
-              ) : (
-                <button onClick={() => window.location.href = `/login/clients?next=/cleaners/${cleaner._id || id}`}>
-                  Log in to Purchase Access
-                </button>
-              )
-            ) : (
-              <p style={{ color: 'red' }}>Unable to load purchase button</p>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Services */}
-      {cleaner.services && cleaner.services.length > 0 && (
-        <div style={{ border: '1px solid #ccc', padding: '20px', marginBottom: '20px' }}>
-          <h2>Services</h2>
-          <ul>
-            {cleaner.services.map((service, i) => (
-              <li key={i}>{service}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* Bio */}
-      {cleaner.bio && (
-        <div style={{ border: '1px solid #ccc', padding: '20px', marginBottom: '20px' }}>
-          <h2>About</h2>
-          <p>{cleaner.bio}</p>
-        </div>
-      )}
-
-      {/* SIMPLE AVAILABILITY GRID */}
-      {/* SIMPLE AVAILABILITY GRID */}
-<div
-  style={{
-    position: 'fixed',             // ✅ Make it floating
-    top: '100px',                  // ✅ Adjust position as needed
-    left: '50%',
-    transform: 'translateX(-50%)',
-    backgroundColor: '#fff',
-    border: '2px solid #333',
-    padding: '20px',
-    zIndex: 999999999,
-    pointerEvents: 'auto',
-    boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
-    maxWidth: '95vw',
-    overflowX: 'auto',
-  }}
->
-
-  <h2>Availability</h2>
-        
-        {/* Desktop Grid */}
-        <div style={{ display: 'block' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr>
-                <th style={{ border: '1px solid #ccc', padding: '5px' }}>Day</th>
-                {[...Array(13)].map((_, hour) => (
-                  <th key={hour} style={{ border: '1px solid #ccc', padding: '5px' }}>
-                    {7 + hour}:00
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => (
-                <tr key={day}>
-                  <td style={{ border: '1px solid #ccc', padding: '5px', fontWeight: 'bold' }}>{day}</td>
-                  {[...Array(13)].map((_, hourIndex) => {
-                    const hour = 7 + hourIndex;
-                    const hourKey = `${hour}`;
-                    const isAvailable = true; // Force available for testing
-                    const isSelected = selectedSlot?.day === day && selectedSlot?.hour === hourKey;
-
-                    return (
-                      <td key={hourKey} style={{ border: '1px solid #ccc', padding: '2px' }}>
-  {isAvailable ? (
-    canViewContact ? (
-      <div
-        onClick={() => {
-          alert(`💥 SLOT CLICKED: ${day} ${hourKey}:00`);
-          setSelectedSlot({ day, hour: hourKey });
-        }}
-        style={{
-          width: '100%',
-          height: '30px',
-          backgroundColor: '#007acc',
-          color: 'white',
-          fontWeight: 'bold',
-          fontSize: '12px',
-          cursor: 'pointer',
-          zIndex: 999999,
-          position: 'relative',
-          pointerEvents: 'auto',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        BOOK
-      </div>
-    ) : (
-      <div style={{
-        width: '100%',
-        height: '30px',
-        backgroundColor: '#90EE90',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: '12px',
-      }}>
-        ✓
-      </div>
-    )
-  ) : (
-    <div style={{
-      width: '100%',
-      height: '30px',
-      backgroundColor: '#ff6b6b',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      fontSize: '12px',
-    }}>
-      ✗
-    </div>
-  )}
-</td>
-
-                    );
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Selected Slot Display */}
-        {selectedSlot && (
-          <div style={{ marginTop: '20px', padding: '10px', background: '#f0f0f0' }}>
-            <strong>Selected:</strong> {selectedSlot.day} at {selectedSlot.hour}:00
-          </div>
-        )}
-      </div>
-
-      {/* Booking Section */}
-      {canViewContact && selectedSlot && getCleanerId(cleaner, id) && (
-        <div style={{ border: '1px solid #ccc', padding: '20px', marginBottom: '20px' }}>
-          <h2>Booking for {selectedSlot.day} at {selectedSlot.hour}:00</h2>
-          <BookingPaymentWrapper
-            cleanerId={getCleanerId(cleaner, id)}
-            day={selectedSlot.day}
-            time={selectedSlot.hour}
-            price={cleaner.rates || cleaner.rate}
-          />
-        </div>
-      )}
-
-      {/* Debug Info */}
-      {process.env.NODE_ENV === 'development' && (
-        <div style={{ background: '#ffffcc', padding: '10px', fontSize: '12px' }}>
-          <strong>Debug:</strong><br />
-          cleanerId: {getCleanerId(cleaner, id)}<br />
-          canViewContact: {canViewContact.toString()}<br />
-          selectedSlot: {selectedSlot ? `${selectedSlot.day} at ${selectedSlot.hour}:00` : 'None'}<br />
-          client: {client?.email || 'Not loaded'}
-        </div>
-      )}
-      {/* 💥 ABSOLUTE FLOATING TEST BUTTON */}
-<div
-  style={{
-    position: 'fixed',
-    bottom: '20px',
-    left: '20px',
-    zIndex: 999999999,
-    pointerEvents: 'auto'
-  }}
->
-  <button
-    onClick={() => alert('💥 WORKING')}
-    style={{
-      padding: '12px 20px',
-      backgroundColor: 'red',
-      color: 'white',
-      fontWeight: 'bold',
-      fontSize: '16px',
-      borderRadius: '8px',
-      border: 'none',
-      cursor: 'pointer',
-      pointerEvents: 'auto'
-    }}
-  >
-    🔥 CLICK ME
-  </button>
-
-  {/* DEBUG: Wipe Out Any Bad Overlays */}
-<div
-  style={{
-    position: 'fixed',
-    inset: 0,
-    zIndex: 1,
-    pointerEvents: 'none',
-    background: 'transparent'
-  }}
-></div>
-
-</div>
-
     </div>
   );
 }
