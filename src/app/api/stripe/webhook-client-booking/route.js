@@ -11,7 +11,7 @@ export const config = {
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-// ⛓️ Helper: Convert ReadableStream to Buffer
+// ⛓️ Convert ReadableStream to Buffer
 async function getRawBody(readable) {
   const chunks = [];
   const reader = readable.getReader();
@@ -38,7 +38,7 @@ async function getRawBody(readable) {
   return result;
 }
 
-// 🚀 Main webhook handler
+// 🚀 Webhook Handler
 export async function POST(req) {
   console.log('🔥 WEBHOOK HIT: Booking webhook triggered');
 
@@ -64,17 +64,17 @@ export async function POST(req) {
     return new Response(`Webhook Error: ${err.message}`, { status: 400 });
   }
 
-  // Only act on checkout.session.completed
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
     const metadata = session.metadata || {};
 
     console.log('📦 Session metadata:', metadata);
 
-    const { clientId, cleanerId } = metadata;
-    if (!clientId || !cleanerId) {
-      console.error('❌ Missing clientId or cleanerId in metadata');
-      return new Response('Missing metadata', { status: 400 });
+    const { clientId, cleanerId, day, hour } = metadata;
+
+    if (!clientId || !cleanerId || !day || !hour) {
+      console.error('❌ Missing required metadata (clientId, cleanerId, day, hour)');
+      return new Response('Missing required metadata', { status: 400 });
     }
 
     try {
@@ -100,6 +100,8 @@ export async function POST(req) {
           stripeSessionId: session.id,
           paymentIntentId: session.payment_intent,
           amount: session.amount_total ? session.amount_total / 100 : null,
+          day,
+          hour,
           status: 'pending_approval',
         });
         console.log('✅ New Purchase saved to DB:', newPurchase._id);

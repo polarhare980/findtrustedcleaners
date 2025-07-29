@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db';
 import Purchase from '@/models/Purchase';
 import { protectApiRoute } from '@/lib/auth';
+import mongoose from 'mongoose';
 
 export const runtime = 'nodejs';
 
@@ -12,18 +13,22 @@ export async function POST(req) {
   try {
     const { cleanerId } = await req.json();
 
-    const clientId = user._id.toString();
-    const cleanerIdStr = cleanerId.toString();
+    if (!cleanerId) {
+      return NextResponse.json({ success: false, message: 'Missing cleanerId' }, { status: 400 });
+    }
+
+    const clientObjectId = new mongoose.Types.ObjectId(user._id);
+    const cleanerObjectId = new mongoose.Types.ObjectId(cleanerId);
 
     console.log('🔍 Checking purchase with:');
-    console.log('clientId:', clientId);
-    console.log('cleanerId:', cleanerIdStr);
+    console.log('clientId:', clientObjectId.toString());
+    console.log('cleanerId:', cleanerObjectId.toString());
 
     await connectToDatabase();
 
     const purchase = await Purchase.findOne({
-      cleanerId: cleanerIdStr,
-      clientId: clientId,
+      cleanerId: cleanerObjectId,
+      clientId: clientObjectId,
       status: { $in: ['pending_approval', 'confirmed'] },
     });
 

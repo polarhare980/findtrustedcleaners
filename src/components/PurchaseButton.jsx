@@ -2,24 +2,21 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getCleanerId } from '@/lib/utils'; // ✅ Import helper
 import { secureFetch } from '@/lib/secureFetch';
 
 export default function PurchaseButton({
-  cleanerId, // ✅ now cleanerId is passed directly from parent
+  cleanerId,
+  selectedSlot, // ✅ new prop from parent
   onPurchaseSuccess,
   onPurchaseStart,
   onPurchaseError,
   disabled = false,
 }) {
-
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
-
-
 
   useEffect(() => {
     if (localStorage.getItem('purchaseIntent') === 'true') {
@@ -51,6 +48,16 @@ export default function PurchaseButton({
   const handlePurchase = async () => {
     console.log('🟢 Purchase triggered');
 
+    const day = selectedSlot?.day;
+    const hour = selectedSlot?.hour;
+
+    if (!day || !hour) {
+      const errorMsg = 'Please select a time slot before continuing.';
+      setError(errorMsg);
+      onPurchaseError?.(errorMsg);
+      return;
+    }
+
     setLoading(true);
     setError('');
     onPurchaseStart?.();
@@ -62,7 +69,6 @@ export default function PurchaseButton({
 
       if (!authData.success || authData.user?.type !== 'client') {
         const errorMsg = 'You must be logged in as a client to purchase.';
-        console.warn('🚫 Not a logged-in client');
         setError(errorMsg);
         onPurchaseError?.(errorMsg);
 
@@ -73,18 +79,15 @@ export default function PurchaseButton({
         return;
       }
 
-      await fetch('/api/stripe/create-client-checkout', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify({
-    cleanerId,
-    day: selectedDay,         // <-- must be defined in component
-    hour: selectedHourKey,    // <-- must be defined in component
-  }),
-});
+      console.log('🧾 Sending Stripe payload:', { cleanerId, day, hour });
 
+      const res = await fetch('/api/stripe/create-client-checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ cleanerId, day, hour }),
+      });
 
       const data = await res.json();
       console.log('🧾 Stripe response:', data);
@@ -126,14 +129,19 @@ export default function PurchaseButton({
           setError('');
           setShowPopup(true);
         }}
-        disabled={disabled || loading}
+        disabled={disabled || loading || !selectedSlot?.day || !selectedSlot?.hour}
         className={`px-6 py-3 rounded-full font-medium transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-lg ${
           disabled || loading
             ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
             : 'bg-gradient-to-r from-teal-600 to-teal-700 text-white hover:from-teal-700 hover:to-teal-800'
         }`}
       >
-        {loading ? 'Processing...' : 'Unlock Contact Details (£2.99)'}
+        {loading
+  ? 'Processing...'
+  : !selectedSlot?.day || !selectedSlot?.hour
+    ? 'Select a Time Slot'
+    : 'Unlock Contact Details (£2.99)'}
+
       </button>
 
       {showPopup && (
