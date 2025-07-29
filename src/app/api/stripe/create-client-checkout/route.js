@@ -6,7 +6,6 @@ import { protectRoute } from '@/lib/auth';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-// ✅ POST: Create Stripe Checkout Session (with metadata)
 export async function POST(req) {
   const { valid, user, response } = await protectRoute(req);
 
@@ -15,10 +14,11 @@ export async function POST(req) {
   }
 
   try {
-    const { cleanerId } = await req.json();
+    const body = await req.json();
+    const { cleanerId, day, hour } = body;
 
-    if (!cleanerId) {
-      return NextResponse.json({ error: 'Missing cleanerId' }, { status: 400 });
+    if (!cleanerId || !day || !hour) {
+      return NextResponse.json({ error: 'Missing cleanerId, day or hour' }, { status: 400 });
     }
 
     await connectToDatabase();
@@ -31,7 +31,8 @@ export async function POST(req) {
       type: 'clientBooking',
       cleanerId: cleaner._id.toString(),
       clientId: user._id.toString(),
-      testMeta: '✅ present', // ✅ Helps confirm metadata is received
+      day,
+      hour,
     };
 
     console.log('📦 Sending Stripe metadata:', metadata);
@@ -43,7 +44,7 @@ export async function POST(req) {
         {
           price_data: {
             currency: 'gbp',
-            unit_amount: 299, // £2.99 in pence
+            unit_amount: 299, // £2.99
             product_data: {
               name: `Unlock Cleaner Contact: ${cleaner.realName || 'Cleaner'}`,
               description: `Access cleaner's contact details and gallery.`,
@@ -64,7 +65,6 @@ export async function POST(req) {
   }
 }
 
-// ✅ GET: Retrieve Stripe session by ID (unchanged)
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
   const sessionId = searchParams.get('session_id');
@@ -81,3 +81,4 @@ export async function GET(req) {
     return NextResponse.json({ success: false, message: 'Failed to retrieve session' }, { status: 500 });
   }
 }
+
