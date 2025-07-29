@@ -16,7 +16,7 @@ function isSafeEmbed(code) {
   return hasIframe && !forbidden.some(frag => lower.includes(frag));
 }
 
-// ✅ Integrated Availability Component
+// ✅ Fixed Availability Component - removed canViewContact check for buttons
 function AvailabilitySection({ availability, onSlotClick, canViewContact, selectedSlot }) {
   const [showGrid, setShowGrid] = useState(false);
 
@@ -110,43 +110,28 @@ function AvailabilitySection({ availability, onSlotClick, canViewContact, select
                     return (
                       <td key={hour} style={{ padding: '4px' }}>
                         {isAvailable ? (
-                          canViewContact ? (
-                            <button
-                              onClick={() => onSlotClick(day, hour.toString())}
-                              style={{
-                                width: '100%',
-                                padding: '8px 4px',
-                                background: isSelected 
-                                  ? 'linear-gradient(135deg, #0D9488 0%, #0F766E 100%)'
-                                  : 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '8px',
-                                cursor: 'pointer',
-                                fontSize: '12px',
-                                fontWeight: '600',
-                                transition: 'all 0.3s ease',
-                                boxShadow: isSelected ? '0 4px 12px rgba(13, 148, 136, 0.4)' : 'none'
-                              }}
-                              onMouseEnter={e => e.target.style.transform = 'scale(1.05)'}
-                              onMouseLeave={e => e.target.style.transform = 'scale(1)'}
-                            >
-                              {isSelected ? '✓ SELECTED' : 'BOOK'}
-                            </button>
-                          ) : (
-                            <div style={{
+                          <button
+                            onClick={() => onSlotClick(day, hour.toString())}
+                            style={{
                               width: '100%',
                               padding: '8px 4px',
-                              background: 'linear-gradient(135deg, #A7F3D0 0%, #6EE7B7 100%)',
-                              color: '#065F46',
+                              background: isSelected 
+                                ? 'linear-gradient(135deg, #0D9488 0%, #0F766E 100%)'
+                                : 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                              color: 'white',
+                              border: 'none',
                               borderRadius: '8px',
-                              textAlign: 'center',
+                              cursor: 'pointer',
                               fontSize: '12px',
-                              fontWeight: '600'
-                            }}>
-                              ✓
-                            </div>
-                          )
+                              fontWeight: '600',
+                              transition: 'all 0.3s ease',
+                              boxShadow: isSelected ? '0 4px 12px rgba(13, 148, 136, 0.4)' : 'none'
+                            }}
+                            onMouseEnter={e => e.target.style.transform = 'scale(1.05)'}
+                            onMouseLeave={e => e.target.style.transform = 'scale(1)'}
+                          >
+                            {isSelected ? '✓ SELECTED' : 'BOOK'}
+                          </button>
                         ) : (
                           <div style={{
                             textAlign: 'center',
@@ -631,8 +616,8 @@ export default function CleanerProfile() {
           />
         </div>
 
-        {/* Booking Section */}
-        {canViewContact && selectedSlot && getCleanerId(cleaner, id) && (
+        {/* ✅ FIXED: Booking Section - removed canViewContact check */}
+        {selectedSlot && getCleanerId(cleaner, id) && (
           <div className="bg-white/25 backdrop-blur-xl border border-white/20 rounded-3xl p-8 shadow-2xl">
             <h2 className="text-2xl font-bold text-center mb-6 bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent">
               🎯 Booking for {selectedSlot.day} at {selectedSlot.hour}:00
