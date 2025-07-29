@@ -170,6 +170,23 @@ export default function CleanerProfile() {
   if (loading) return <LoadingSpinner />;
 
   if (error) {
+    useEffect(() => {
+  const overlay = document.createElement('div');
+  overlay.style.position = 'fixed';
+  overlay.style.inset = '0';
+  overlay.style.zIndex = '9999999999999';
+  overlay.style.pointerEvents = 'none';
+  overlay.style.border = '5px dashed red';
+  overlay.style.boxSizing = 'border-box';
+  overlay.style.opacity = '0.5';
+  overlay.innerText = 'OVERLAY DETECTOR';
+  document.body.appendChild(overlay);
+
+  return () => {
+    document.body.removeChild(overlay);
+  };
+}, []);
+
     return (
       <div style={{ padding: '20px', textAlign: 'center' }}>
         <h1 style={{ color: 'red' }}>Error</h1>
