@@ -294,21 +294,23 @@ export default function CleanerProfile() {
                         {isAvailable ? (
                           canViewContact ? (
                             <button
-  onClick={() => alert('IT WORKS!')}
+  onClick={() => alert(`💥 SLOT CLICKED: ${day} ${hourKey}:00`)}
   style={{
-    position: 'relative', // ✅ Keep this
-    zIndex: 999999,
     width: '100%',
     height: '30px',
-    backgroundColor: '#28a745',
+    backgroundColor: '#007acc',
     color: 'white',
-    border: 'none',
+    fontWeight: 'bold',
+    fontSize: '12px',
     cursor: 'pointer',
-    fontSize: '12px'
+    zIndex: 999999,
+    position: 'relative',
+    pointerEvents: 'auto'
   }}
 >
-  TEST ALERT
+  BOOK
 </button>
+
 
 
                           ) : (
@@ -403,6 +405,18 @@ export default function CleanerProfile() {
   >
     🔥 CLICK ME
   </button>
+
+  {/* DEBUG: Wipe Out Any Bad Overlays */}
+<div
+  style={{
+    position: 'fixed',
+    inset: 0,
+    zIndex: 1,
+    pointerEvents: 'none',
+    background: 'transparent'
+  }}
+></div>
+
 </div>
 
     </div>
