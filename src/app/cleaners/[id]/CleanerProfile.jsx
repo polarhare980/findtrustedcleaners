@@ -377,6 +377,34 @@ export default function CleanerProfile() {
           client: {client?.email || 'Not loaded'}
         </div>
       )}
+      {/* 💥 ABSOLUTE FLOATING TEST BUTTON */}
+<div
+  style={{
+    position: 'fixed',
+    bottom: '20px',
+    left: '20px',
+    zIndex: 999999999,
+    pointerEvents: 'auto'
+  }}
+>
+  <button
+    onClick={() => alert('💥 WORKING')}
+    style={{
+      padding: '12px 20px',
+      backgroundColor: 'red',
+      color: 'white',
+      fontWeight: 'bold',
+      fontSize: '16px',
+      borderRadius: '8px',
+      border: 'none',
+      cursor: 'pointer',
+      pointerEvents: 'auto'
+    }}
+  >
+    🔥 CLICK ME
+  </button>
+</div>
+
     </div>
   );
 }
