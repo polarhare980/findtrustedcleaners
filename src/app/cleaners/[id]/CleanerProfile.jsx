@@ -486,8 +486,7 @@ useEffect(() => {
             const hour = 7 + hourIndex;
             const hourKey = `${hour}`;
             // ✅ Fixed: Check availability more defensively
-            const isAvailable = cleaner?.availability?.[day]?.[hourKey] === true || 
-                               cleaner?.availability?.[day]?.[hour] === true;
+             const isAvailable = true; // 👈 Force slots to always show for test
 
             return (
               <div key={hourKey} className="h-10 w-full">
@@ -496,11 +495,12 @@ useEffect(() => {
                     <button
                       type="button" // ✅ Explicit button type
                       onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        console.log('🎯 Slot clicked:', { day, hour: hourKey });
-                        setSelectedSlot({ day, hour: hourKey });
-                      }}
+  e.preventDefault();
+  e.stopPropagation();
+  console.log('✅ SLOT CLICKED:', { day, hour: hourKey });
+  setSelectedSlot({ day, hour: hourKey });
+}}
+
                       className={`w-full h-full rounded-xl font-medium transition-all duration-300 hover:transform hover:scale-105 hover:shadow-lg cursor-pointer relative z-20 ${
                         selectedSlot?.day === day && selectedSlot?.hour === hourKey
                           ? 'bg-gradient-to-r from-teal-600 to-teal-700 text-white shadow-lg'
@@ -544,8 +544,8 @@ useEffect(() => {
             const hour = 7 + hourIndex;
             const hourKey = `${hour}`;
             // ✅ Fixed: Check availability more defensively
-            const isAvailable = cleaner?.availability?.[day]?.[hourKey] === true || 
-                               cleaner?.availability?.[day]?.[hour] === true;
+            const isAvailable = true;
+
 
             return (
               <div key={hour} className="w-full">
@@ -554,11 +554,12 @@ useEffect(() => {
                     <button
                       type="button" // ✅ Explicit button type
                       onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        console.log('🎯 Mobile slot clicked:', { day, hour: hourKey });
-                        setSelectedSlot({ day, hour: hourKey });
-                      }}
+  e.preventDefault();
+  e.stopPropagation();
+  console.log('📱 SLOT CLICKED:', { day, hour: hourKey });
+  setSelectedSlot({ day, hour: hourKey });
+}}
+
                       className={`w-full rounded-xl py-2 px-3 font-medium transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-lg text-sm cursor-pointer relative z-20 ${
                         selectedSlot?.day === day && selectedSlot?.hour === hourKey
                           ? 'bg-gradient-to-r from-teal-600 to-teal-700 text-white shadow-lg'
