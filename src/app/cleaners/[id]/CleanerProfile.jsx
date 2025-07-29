@@ -500,40 +500,34 @@ useEffect(() => {
             return (
               <div key={hourKey} className="h-10 w-full">
                 {isAvailable ? (
-                  canViewContact ? (
-                    <button
-                      type="button" // ✅ Explicit button type
-                      onClick={(e) => {
-  e.preventDefault();
-  e.stopPropagation();
-  console.log('✅ SLOT CLICKED:', { day, hour: hourKey });
-  setSelectedSlot({ day, hour: hourKey });
-}}
-
-                      className={`w-full h-full rounded-xl font-medium transition-all duration-300 hover:transform hover:scale-105 hover:shadow-lg cursor-pointer relative z-20 ${
-                        selectedSlot?.day === day && selectedSlot?.hour === hourKey
-                          ? 'bg-gradient-to-r from-teal-600 to-teal-700 text-white shadow-lg'
-                          : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white'
-                      }`}
-                      style={{ 
-                        pointerEvents: 'auto',
-                        isolation: 'isolate' 
-                      }}
-                    >
-                      {selectedSlot?.day === day && selectedSlot?.hour === hourKey ? '✓' : 'Book'}
-                    </button>
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-r from-green-300 to-green-400 text-green-800 rounded-xl flex items-center justify-center font-medium">
-                      ✓
-                    </div>
-                  )
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-r from-red-300 to-red-400 text-red-800 rounded-xl flex items-center justify-center font-medium">
-                    ✗
-                  </div>
-                )}
-              </div>
-            );
+      canViewContact ? (
+        <button
+          type="button"
+          onClick={testClick} // 🧪 Use testClick temporarily
+          className={`w-full h-full rounded-xl font-medium transition-all duration-300 hover:transform hover:scale-105 hover:shadow-lg cursor-pointer relative z-20 ${
+            selectedSlot?.day === day && selectedSlot?.hour === hourKey
+              ? 'bg-gradient-to-r from-teal-600 to-teal-700 text-white shadow-lg'
+              : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white'
+          }`}
+          style={{
+            pointerEvents: 'auto',
+            isolation: 'isolate',
+          }}
+        >
+          {selectedSlot?.day === day && selectedSlot?.hour === hourKey ? '✓' : 'Book'}
+        </button>
+      ) : (
+        <div className="w-full h-full bg-gradient-to-r from-green-300 to-green-400 text-green-800 rounded-xl flex items-center justify-center font-medium">
+          ✓
+        </div>
+      )
+    ) : (
+      <div className="w-full h-full bg-gradient-to-r from-red-300 to-red-400 text-red-800 rounded-xl flex items-center justify-center font-medium">
+        ✗
+      </div>
+    )}
+  </div>
+);
           })}
         </React.Fragment>
       ))}
