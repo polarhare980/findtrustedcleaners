@@ -255,15 +255,21 @@ export default function CleanerProfile() {
       {/* SIMPLE AVAILABILITY GRID */}
 <div
   style={{
-    border: '1px solid #ccc',
+    position: 'fixed',             // ✅ Make it floating
+    top: '100px',                  // ✅ Adjust position as needed
+    left: '50%',
+    transform: 'translateX(-50%)',
+    backgroundColor: '#fff',
+    border: '2px solid #333',
     padding: '20px',
-    marginBottom: '20px',
-    backgroundColor: '#ffffff', // ✅ Ensure solid background
-    position: 'relative',        // ✅ Required to use zIndex
-    zIndex: 999999,              // ✅ Force above any backdrop-blur layers
-    pointerEvents: 'auto'        // ✅ Ensure click events are allowed
+    zIndex: 999999999,
+    pointerEvents: 'auto',
+    boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
+    maxWidth: '95vw',
+    overflowX: 'auto',
   }}
 >
+
   <h2>Availability</h2>
         
         {/* Desktop Grid */}
