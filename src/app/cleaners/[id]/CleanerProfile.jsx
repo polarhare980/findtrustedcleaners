@@ -162,6 +162,10 @@ export default function CleanerProfile() {
     setCanViewContact(true);
   }, []);
 
+  useEffect(() => {
+  document.body.style.pointerEvents = 'auto'; // ✅ Kill any global blocks
+}, []);
+
   if (!mounted) return null;
   if (loading) return <LoadingSpinner />;
 
@@ -248,8 +252,19 @@ export default function CleanerProfile() {
       )}
 
       {/* SIMPLE AVAILABILITY GRID */}
-      <div style={{ border: '1px solid #ccc', padding: '20px', marginBottom: '20px' }}>
-        <h2>Availability</h2>
+      {/* SIMPLE AVAILABILITY GRID */}
+<div
+  style={{
+    border: '1px solid #ccc',
+    padding: '20px',
+    marginBottom: '20px',
+    backgroundColor: '#ffffff', // ✅ Ensure solid background
+    position: 'relative',        // ✅ Required to use zIndex
+    zIndex: 999999,              // ✅ Force above any backdrop-blur layers
+    pointerEvents: 'auto'        // ✅ Ensure click events are allowed
+  }}
+>
+  <h2>Availability</h2>
         
         {/* Desktop Grid */}
         <div style={{ display: 'block' }}>
