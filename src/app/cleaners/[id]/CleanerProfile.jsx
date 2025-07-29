@@ -474,8 +474,11 @@ useEffect(() => {
           // Fixed Availability Section - Replace your existing availability section with this:
 
 {/* Availability Section */}
-<div className="bg-white/30 backdrop-blur-md rounded-2xl p-6 border border-white/20 relative z-10">
-  <h2 className="text-2xl font-bold text-teal-800 mb-6 flex items-center gap-2">
+<div
+  className="bg-white/30 backdrop-blur-md rounded-2xl p-6 border border-white/20 relative z-10"
+  style={{ pointerEvents: 'auto', isolation: 'isolate' }}
+>
+ <h2 className="text-2xl font-bold text-teal-800 mb-6 flex items-center gap-2">
     <span>📅</span> Availability
   </h2>
 
