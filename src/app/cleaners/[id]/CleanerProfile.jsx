@@ -296,9 +296,11 @@ export default function CleanerProfile() {
                             <button
   onClick={() => alert('IT WORKS!')}
   style={{
+    position: 'relative', // ✅ Keep this
+    zIndex: 999999,
     width: '100%',
     height: '30px',
-    backgroundColor: '#007acc',
+    backgroundColor: '#28a745',
     color: 'white',
     border: 'none',
     cursor: 'pointer',
@@ -307,6 +309,7 @@ export default function CleanerProfile() {
 >
   TEST ALERT
 </button>
+
 
                           ) : (
                             <div style={{
