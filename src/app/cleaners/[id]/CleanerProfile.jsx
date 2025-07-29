@@ -294,7 +294,10 @@ export default function CleanerProfile() {
                         {isAvailable ? (
                           canViewContact ? (
                             <button
-  onClick={() => alert(`💥 SLOT CLICKED: ${day} ${hourKey}:00`)}
+  onClick={() => {
+    alert(`💥 SLOT CLICKED: ${day} ${hourKey}:00`);
+    setSelectedSlot({ day, hour: hourKey });
+  }}
   style={{
     width: '100%',
     height: '30px',
@@ -303,13 +306,19 @@ export default function CleanerProfile() {
     fontWeight: 'bold',
     fontSize: '12px',
     cursor: 'pointer',
-    zIndex: 999999,
     position: 'relative',
-    pointerEvents: 'auto'
+    zIndex: 999999,
+    pointerEvents: 'auto',
+    isolation: 'isolate',            // ✅ isolate stacking context
+    WebkitAppearance: 'none',        // ✅ override any browser styling
+    appearance: 'none',              // ✅ for Firefox
+    border: 'none',
+    display: 'block'                 // ✅ ensure not hidden by table layout
   }}
 >
   BOOK
 </button>
+
 
 
 
