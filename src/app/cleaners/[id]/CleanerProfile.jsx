@@ -309,15 +309,13 @@ export default function CleanerProfile() {
     position: 'relative',
     zIndex: 999999,
     pointerEvents: 'auto',
-    isolation: 'isolate',            // ✅ isolate stacking context
-    WebkitAppearance: 'none',        // ✅ override any browser styling
-    appearance: 'none',              // ✅ for Firefox
     border: 'none',
-    display: 'block'                 // ✅ ensure not hidden by table layout
+    display: 'block'
   }}
 >
   BOOK
 </button>
+
 
 
 
