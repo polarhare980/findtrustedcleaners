@@ -558,80 +558,71 @@ export default function HomePage() {
     </>
   );
 }
-
 function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
-  console.log("🧪 Cleaner data:", cleaner);
-  console.log("📅 Availability:", cleaner.availability);
-
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
   return (
-    <div className="flex gap-2 mb-2">
-  {isPremium && (
-    <div className="premium-badge">
-      <span className="text-xs font-semibold">Premium Cleaner</span>
-    </div>
-  )}
-  {cleaner.businessInsurance && (
-    <div className="premium-badge bg-green-500">
-      <span className="text-xs font-semibold">✔ Insured</span>
-    </div>
-  )}
-
-
-
-      <div className="cleaner-image">
-        <img
-  src={typeof cleaner.image === 'string' && cleaner.image.trim() !== '' ? cleaner.image : '/default-avatar.png'}
-  alt={cleaner.realName || 'Cleaner'}
-  loading="lazy"
-  className="w-full h-full object-cover"
-/>
-
-
+    <div className="cleaner-card">
+      {/* Badges */}
+      <div className="flex gap-2 mb-4">
+        {isPremium && (
+          <div className="premium-badge">
+            <span className="text-xs font-semibold">Premium Cleaner</span>
+          </div>
+        )}
+        {cleaner.businessInsurance && (
+          <div className="insured-badge">
+            <span className="text-xs font-semibold">✔ Insured</span>
+          </div>
+        )}
       </div>
 
+      {/* Image */}
+      <div className="cleaner-image">
+        <img
+          src={typeof cleaner.image === 'string' && cleaner.image.trim() !== '' ? cleaner.image : '/default-avatar.png'}
+          alt={cleaner.realName || 'Cleaner'}
+          loading="lazy"
+          className="w-full h-full object-cover"
+        />
+      </div>
+
+      {/* Info */}
       <div className="cleaner-info">
-        <div className="cleaner-info">
-  <h3 className="cleaner-name">{cleaner.realName}</h3>
+        <h3 className="cleaner-name">{cleaner.realName}</h3>
 
-{cleaner.businessInsurance && (
-  <div className="mt-1 mb-2 inline-block bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold border border-green-300 shadow-sm">
-    ✔ Insured
-  </div>
-)}
-
-  {Array.isArray(cleaner.services) && cleaner.services.length > 0 && (
-  <div className="mt-2">
-    <h4 className="font-semibold text-teal-700 text-sm mb-1">Services Offered:</h4>
-    <div className="flex flex-wrap gap-2">
-      {cleaner.services.map((service, index) => (
-        <span
-          key={index}
-          className="text-xs px-2 py-1 rounded-full bg-teal-100 text-teal-800 border border-teal-300"
-        >
-          {service}
-        </span>
-      ))}
-    </div>
-  </div>
-)}
-
-
-  {cleaner.googleReviewRating && cleaner.googleReviewCount ? (
-    <p className="cleaner-rating">
-      ⭐ {cleaner.googleReviewRating} ({cleaner.googleReviewCount})
-    </p>
-  ) : (
-    <p className="cleaner-rating">⭐ Not rated yet</p>
-  )}
-
-  <p className="cleaner-rate">
-    💷 {cleaner.rates ? `£${cleaner.rates}/hr` : 'Rate not set'}
-  </p>
+        {/* Services */}
+        {Array.isArray(cleaner.services) && cleaner.services.length > 0 && (
+          <div className="mt-2">
+            <h4 className="font-semibold text-teal-700 text-sm mb-1">Services Offered:</h4>
+            <div className="flex flex-wrap gap-2">
+              {cleaner.services.map((service, index) => (
+                <span
+                  key={index}
+                  className="text-xs px-2 py-1 rounded-full bg-teal-100 text-teal-800 border border-teal-300"
+                >
+                  {service}
+                </span>
+              ))}
+            </div>
           </div>
-        
+        )}
 
+        {/* Ratings */}
+        {cleaner.googleReviewRating && cleaner.googleReviewCount ? (
+          <p className="cleaner-rating">
+            ⭐ {cleaner.googleReviewRating} ({cleaner.googleReviewCount})
+          </p>
+        ) : (
+          <p className="cleaner-rating">⭐ Not rated yet</p>
+        )}
+
+        {/* Rate */}
+        <p className="cleaner-rate">
+          💷 {cleaner.rates ? `£${cleaner.rates}/hr` : 'Rate not set'}
+        </p>
+
+        {/* Availability */}
         {isPremium && cleaner.availability && (
           <div className="availability-grid mt-4">
             <h4 className="font-semibold text-teal-700 mb-2 text-center">Availability</h4>
@@ -649,7 +640,6 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
                       const hour = (7 + i).toString();
                       const value = slots[hour];
                       const status = value === true ? 'available' : 'unavailable';
-
                       return (
                         <div
                           key={`${day}-${hour}`}
@@ -668,24 +658,23 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
           </div>
         )}
 
+        {/* Button */}
         <div className="cleaner-actions mt-4">
-           <Link href={`/cleaners/${cleaner._id}`}>
-           <a className="btn-request-booking">View Profile</a>
-         </Link>
+          <Link href={`/cleaners/${cleaner._id}`}>
+            <a className="btn-request-booking">View Profile</a>
+          </Link>
         </div>
       </div>
 
+      {/* Styles */}
       <style jsx>{`
         .cleaner-card {
-          min-width: 280px;
           background: rgba(255, 255, 255, 0.95);
-          backdrop-filter: blur(10px);
           border: 1px solid rgba(255, 255, 255, 0.3);
           border-radius: 16px;
           padding: 20px;
-          flex-shrink: 0;
-          transition: all 0.3s ease;
           box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+          transition: all 0.3s ease;
         }
 
         .cleaner-card:hover {
@@ -698,9 +687,17 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
           color: white;
           padding: 4px 12px;
           border-radius: 20px;
-          margin-bottom: 12px;
           display: inline-block;
           box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+        }
+
+        .insured-badge {
+          background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+          color: white;
+          padding: 4px 12px;
+          border-radius: 20px;
+          display: inline-block;
+          box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
         }
 
         .cleaner-image {
@@ -741,53 +738,27 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
           font-size: 14px;
         }
 
-        .cleaner-reviews {
-          margin: 12px 0;
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-        }
-
-        .review-link {
-          color: #2563EB;
-          text-decoration: none;
-          font-size: 13px;
-          transition: color 0.3s ease;
-        }
-
-        .review-link:hover {
-          color: #1D4ED8;
-          text-decoration: underline;
-        }
-
         .cleaner-actions {
           display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 12px;
+          justify-content: center;
           margin-top: 16px;
         }
 
         .btn-request-booking {
-          background: linear-gradient(135deg, #10B981 0%, #059669 100%) !important;
-          color: white !important;
-          border: none !important;
-          padding: 12px 20px !important;
-          border-radius: 8px !important;
-          font-size: 16px !important;
-          font-weight: 600 !important;
-          cursor: pointer !important;
-          transition: all 0.3s ease !important;
-          box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3) !important;
-          width: 160px !important;
-          text-align: center !important;
-          text-decoration: none !important;
-          display: inline-block !important;
+          background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+          color: white;
+          padding: 12px 20px;
+          border-radius: 8px;
+          font-size: 16px;
+          font-weight: 600;
+          text-decoration: none;
+          transition: all 0.3s ease;
+          box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
         }
 
         .btn-request-booking:hover {
-          transform: translateY(-1px) !important;
-          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4) !important;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
         }
       `}</style>
     </div>
