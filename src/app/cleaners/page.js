@@ -129,7 +129,7 @@ export default function FindCleanerPage() {
             className="bg-white/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] shadow-[0_8px_32px_rgba(0,0,0,0.1)] p-8 mb-12"
           >
             <h2 className="text-2xl font-bold text-teal-800 mb-6 text-center">Search Filters</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Location
@@ -143,59 +143,58 @@ export default function FindCleanerPage() {
                 />
               </div>
               
-<div>
-  <label className="block text-sm font-medium text-gray-700 mb-2">
-    Minimum Rating
-  </label>
-  <select
-    value={minRating}
-    onChange={(e) => setMinRating(Number(e.target.value))}
-    className="w-full p-3 bg-white/80 backdrop-blur-sm border border-white/30 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent transition-all duration-300"
-  >
-    <option value={0}>Any Rating</option>
-    <option value={3}>3★ & above</option>
-    <option value={4}>4★ & above</option>
-    <option value={5}>5★ only</option>
-  </select>
-</div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Minimum Rating
+                </label>
+                <select
+                  value={minRating}
+                  onChange={(e) => setMinRating(Number(e.target.value))}
+                  className="w-full p-3 bg-white/80 backdrop-blur-sm border border-white/30 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent transition-all duration-300"
+                >
+                  <option value={0}>Any Rating</option>
+                  <option value={3}>3★ & above</option>
+                  <option value={4}>4★ & above</option>
+                  <option value={5}>5★ only</option>
+                </select>
+              </div>
 
-<div>
-  <label className="block text-sm font-medium text-gray-700 mb-2">
-    Availability
-  </label>
-  <select
-    value={bookingStatus}
-    onChange={(e) => setBookingStatus(e.target.value)}
-    className="w-full p-3 bg-white/80 backdrop-blur-sm border border-white/30 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent transition-all duration-300"
-  >
-    <option value="all">All Statuses</option>
-    <option value="available">Available</option>
-    <option value="pending">Pending</option>
-    <option value="booked">Booked</option>
-  </select>
-</div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Availability
+                </label>
+                <select
+                  value={bookingStatus}
+                  onChange={(e) => setBookingStatus(e.target.value)}
+                  className="w-full p-3 bg-white/80 backdrop-blur-sm border border-white/30 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent transition-all duration-300"
+                >
+                  <option value="all">All Statuses</option>
+                  <option value="available">Available</option>
+                  <option value="pending">Pending</option>
+                  <option value="booked">Booked</option>
+                </select>
+              </div>
 
-<div>
-  <label className="block text-sm font-medium text-gray-700 mb-2">
-    Service Type
-  </label>
-  <select
-    value={serviceType}
-    onChange={(e) => setServiceType(e.target.value)}
-    className="w-full p-3 bg-white/80 backdrop-blur-sm border border-white/30 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent transition-all duration-300"
-  >
-    <option value="">All Services</option>
-    <option value="Window Cleaning">Window Cleaning</option>
-    <option value="Bin Cleaning">Bin Cleaning</option>
-    <option value="Oven Cleaning">Oven Cleaning</option>
-    <option value="Gutter Cleaning">Gutter Cleaning</option>
-    <option value="Car Valeting">Car Valeting</option>
-    <option value="Domestic Cleaning">Domestic Cleaning</option>
-    <option value="End of Tenancy">End of Tenancy</option>
-    <option value="Carpet Cleaning">Carpet Cleaning</option>
-  </select>
-</div>
-
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Service Type
+                </label>
+                <select
+                  value={serviceType}
+                  onChange={(e) => setServiceType(e.target.value)}
+                  className="w-full p-3 bg-white/80 backdrop-blur-sm border border-white/30 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent transition-all duration-300"
+                >
+                  <option value="">All Services</option>
+                  <option value="Window Cleaning">Window Cleaning</option>
+                  <option value="Bin Cleaning">Bin Cleaning</option>
+                  <option value="Oven Cleaning">Oven Cleaning</option>
+                  <option value="Gutter Cleaning">Gutter Cleaning</option>
+                  <option value="Car Valeting">Car Valeting</option>
+                  <option value="Domestic Cleaning">Domestic Cleaning</option>
+                  <option value="End of Tenancy">End of Tenancy</option>
+                  <option value="Carpet Cleaning">Carpet Cleaning</option>
+                </select>
+              </div>
             </div>
           </motion.div>
 
@@ -255,32 +254,38 @@ export default function FindCleanerPage() {
                           </div>
                           
                           <div className="flex flex-wrap items-center gap-4 mb-4">
-  {/* ⭐ Rating Display */}
-  <div className="flex items-center bg-white/50 px-3 py-1 rounded-full">
-    <span className="text-sm font-medium text-gray-700">
-      ⭐ {cleaner.googleReviewRating || cleaner.rating || 'Unrated'}
-      {cleaner.googleReviewCount ? ` (${cleaner.googleReviewCount} reviews)` : ''}
-    </span>
-  </div>
+                            {/* ⭐ Rating Display */}
+                            <div className="flex items-center bg-white/50 px-3 py-1 rounded-full">
+                              <span className="text-sm font-medium text-gray-700">
+                                ⭐ {cleaner.googleReviewRating || cleaner.rating || 'Unrated'}
+                                {cleaner.googleReviewCount ? ` (${cleaner.googleReviewCount} reviews)` : ''}
+                              </span>
+                            </div>
 
-  {/* 💷 Rates Display */}
-  {cleaner.rates && (
-    <div className="flex items-center bg-white/50 px-3 py-1 rounded-full">
-      <span className="text-sm font-medium text-gray-700">💷 {cleaner.rates}</span>
-    </div>
-  )}
+                            {/* 💷 Rates Display */}
+                            {cleaner.rates && (
+                              <div className="flex items-center bg-white/50 px-3 py-1 rounded-full">
+                                <span className="text-sm font-medium text-gray-700">💷 {cleaner.rates}</span>
+                              </div>
+                            )}
 
-  {/* ✅ Insured Badge */}
-  {cleaner.businessInsurance && (
-    <div className="flex items-center bg-green-100 px-3 py-1 rounded-full border border-green-300 shadow-sm">
-      <span className="text-sm font-semibold text-green-800">✔ Insured</span>
-    </div>
-  )}
-</div>
-</div>
-</div>
+                            {/* 👑 Premium Badge */}
+                            {cleaner.isPremium && (
+                              <div className="flex items-center bg-gradient-to-r from-yellow-400 to-yellow-500 px-3 py-1 rounded-full border border-yellow-300 shadow-lg">
+                                <span className="text-sm font-bold text-yellow-900">👑 Premium</span>
+                              </div>
+                            )}
 
-                      
+                            {/* 🛡️ Insurance Badge */}
+                            {cleaner.businessInsurance && (
+                              <div className="flex items-center bg-gradient-to-r from-blue-500 to-blue-600 px-3 py-1 rounded-full border border-blue-300 shadow-lg">
+                                <span className="text-sm font-bold text-white">🛡️ Insured</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
                       <div className="flex-shrink-0">
                         <Link
                           href={`/cleaners/${cleaner._id}`}

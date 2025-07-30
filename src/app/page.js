@@ -561,6 +561,9 @@ export default function HomePage() {
 function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
+  // Debug: Log the cleaner object to see available properties
+  console.log('Cleaner data:', cleaner);
+
   return (
     <div className="cleaner-card">
       {/* Badges */}
@@ -570,7 +573,8 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
             <span className="text-xs font-semibold">Premium Cleaner</span>
           </div>
         )}
-        {cleaner.businessInsurance && (
+        {/* Check multiple possible insurance property names */}
+        {(cleaner.businessInsurance || cleaner.isInsured || cleaner.hasInsurance || cleaner.business_insurance) && (
           <div className="insured-badge">
             <span className="text-xs font-semibold">✔ Insured</span>
           </div>
@@ -660,8 +664,8 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
 
         {/* Button */}
         <div className="cleaner-actions mt-4">
-          <Link href={`/cleaners/${cleaner._id}`}>
-            <a className="btn-request-booking">View Profile</a>
+          <Link href={`/cleaners/${cleaner._id}`} className="btn-request-booking">
+            View Profile
           </Link>
         </div>
       </div>
@@ -675,6 +679,9 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
           padding: 20px;
           box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
           transition: all 0.3s ease;
+          min-width: 300px; /* Fixed width for consistent layout */
+          max-width: 350px;
+          flex: 0 0 auto; /* Prevent flex shrinking */
         }
 
         .cleaner-card:hover {
@@ -754,11 +761,13 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
           text-decoration: none;
           transition: all 0.3s ease;
           box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+          display: inline-block;
         }
 
         .btn-request-booking:hover {
           transform: translateY(-1px);
           box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+          color: white;
         }
       `}</style>
     </div>
