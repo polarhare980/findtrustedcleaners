@@ -566,12 +566,19 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
   return (
-    <div className="cleaner-card">
-      {isPremium && (
-        <div className="premium-badge">
-          <span className="text-xs font-semibold">Premium Cleaner</span>
-        </div>
-      )}
+    <div className="flex gap-2 mb-2">
+  {isPremium && (
+    <div className="premium-badge">
+      <span className="text-xs font-semibold">Premium Cleaner</span>
+    </div>
+  )}
+  {cleaner.businessInsurance && (
+    <div className="premium-badge bg-green-500">
+      <span className="text-xs font-semibold">✔ Insured</span>
+    </div>
+  )}
+
+
 
       <div className="cleaner-image">
         <img
