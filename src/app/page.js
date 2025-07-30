@@ -587,6 +587,13 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
       <div className="cleaner-info">
         <div className="cleaner-info">
   <h3 className="cleaner-name">{cleaner.realName}</h3>
+
+{cleaner.businessInsurance && (
+  <div className="mt-1 mb-2 inline-block bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold border border-green-300 shadow-sm">
+    ✔ Insured
+  </div>
+)}
+
   {Array.isArray(cleaner.services) && cleaner.services.length > 0 && (
   <div className="mt-2">
     <h4 className="font-semibold text-teal-700 text-sm mb-1">Services Offered:</h4>

@@ -255,23 +255,31 @@ export default function FindCleanerPage() {
                           </div>
                           
                           <div className="flex flex-wrap items-center gap-4 mb-4">
-                            {/* Proper Rating Display */}
-                            <div className="flex items-center bg-white/50 px-3 py-1 rounded-full">
-                              <span className="text-sm font-medium text-gray-700">
-                                ⭐ {cleaner.googleReviewRating || cleaner.rating || 'Unrated'}
-                                {cleaner.googleReviewCount ? ` (${cleaner.googleReviewCount} reviews)` : ''}
-                              </span>
-                            </div>
-                            
-                            {/* Rates Display */}
-                            {cleaner.rates && (
-                              <div className="flex items-center bg-white/50 px-3 py-1 rounded-full">
-                                <span className="text-sm font-medium text-gray-700">💷 {cleaner.rates}</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
+  {/* ⭐ Rating Display */}
+  <div className="flex items-center bg-white/50 px-3 py-1 rounded-full">
+    <span className="text-sm font-medium text-gray-700">
+      ⭐ {cleaner.googleReviewRating || cleaner.rating || 'Unrated'}
+      {cleaner.googleReviewCount ? ` (${cleaner.googleReviewCount} reviews)` : ''}
+    </span>
+  </div>
+
+  {/* 💷 Rates Display */}
+  {cleaner.rates && (
+    <div className="flex items-center bg-white/50 px-3 py-1 rounded-full">
+      <span className="text-sm font-medium text-gray-700">💷 {cleaner.rates}</span>
+    </div>
+  )}
+
+  {/* ✅ Insured Badge */}
+  {cleaner.businessInsurance && (
+    <div className="flex items-center bg-green-100 px-3 py-1 rounded-full border border-green-300 shadow-sm">
+      <span className="text-sm font-semibold text-green-800">✔ Insured</span>
+    </div>
+  )}
+</div>
+</div>
+</div>
+
                       
                       <div className="flex-shrink-0">
                         <Link
