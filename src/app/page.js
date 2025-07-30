@@ -587,6 +587,22 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
       <div className="cleaner-info">
         <div className="cleaner-info">
   <h3 className="cleaner-name">{cleaner.realName}</h3>
+  {Array.isArray(cleaner.services) && cleaner.services.length > 0 && (
+  <div className="mt-2">
+    <h4 className="font-semibold text-teal-700 text-sm mb-1">Services Offered:</h4>
+    <div className="flex flex-wrap gap-2">
+      {cleaner.services.map((service, index) => (
+        <span
+          key={index}
+          className="text-xs px-2 py-1 rounded-full bg-teal-100 text-teal-800 border border-teal-300"
+        >
+          {service}
+        </span>
+      ))}
+    </div>
+  </div>
+)}
+
 
   {cleaner.googleReviewRating && cleaner.googleReviewCount ? (
     <p className="cleaner-rating">

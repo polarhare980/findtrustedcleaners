@@ -30,7 +30,40 @@ export default function CleanerRegister() {
 
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const hours = Array.from({ length: 13 }, (_, i) => 7 + i);
-  const servicesList = ['Window Cleaning', 'End of Tenancy', 'Carpet Cleaning', 'Oven Cleaning', 'White Goods'];
+  const serviceCategories = {
+  '🏠 Domestic Cleaning': [
+    'Regular House Cleaning',
+    'Deep Cleaning',
+    'Spring Cleaning',
+    'End of Tenancy',
+    'After-party Cleaning',
+    'Holiday Let Cleaning',
+  ],
+  '🧼 Specialist Cleaning': [
+    'Oven Cleaning',
+    'Carpet Cleaning',
+    'Upholstery Cleaning',
+    'Mattress Cleaning',
+    'Curtain Cleaning',
+    'Mould Removal',
+  ],
+  '🪟 Exterior Cleaning': [
+    'Window Cleaning',
+    'Gutter Cleaning',
+    'Roof Cleaning',
+    'Pressure Washing',
+  ],
+  '🚗 Vehicle Cleaning': [
+    'Car Valeting',
+    'Fleet Cleaning',
+  ],
+  '🏢 Commercial Cleaning': [
+    'Office Cleaning',
+    'Retail Cleaning',
+    'Gym Cleaning',
+  ],
+};
+
 
   const toggleAvailability = (day, hour) => {
     const key = `${day}-${hour}`;
@@ -369,16 +402,25 @@ export default function CleanerRegister() {
             <div className={`p-4 bg-white rounded border shadow-sm ${errors.services ? 'border-red-500' : ''}`}>
               <h2 className="text-lg font-semibold mb-2 text-gray-600">Services You Offer</h2>
               <div className="grid grid-cols-2 gap-2 text-gray-600">
-                {servicesList.map(service => (
-                  <label key={service} className="flex items-center gap-2">
-                    <input 
-                      type="checkbox" 
-                      checked={form.services.includes(service)} 
-                      onChange={() => handleServiceToggle(service)} 
-                    />
-                    {service}
-                  </label>
-                ))}
+                {Object.entries(serviceCategories).map(([category, services]) => (
+  <div key={category} className="mb-4">
+    <h3 className="text-md font-semibold mb-2">{category}</h3>
+    <div className="grid grid-cols-2 gap-2 text-gray-600">
+      {services.map(service => (
+        <label key={service} className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={form.services.includes(service)}
+            onChange={() => handleServiceToggle(service)}
+            className="accent-teal-700"
+          />
+          {service}
+        </label>
+      ))}
+    </div>
+  </div>
+))}
+
               </div>
               {errors.services && <p className="text-red-500 text-sm mt-2">{errors.services}</p>}
               

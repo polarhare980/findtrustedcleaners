@@ -10,12 +10,14 @@ export default function FindCleanerPage() {
   const [minRating, setMinRating] = useState(0);
   const [bookingStatus, setBookingStatus] = useState('all');
   const [loading, setLoading] = useState(true);
+  const [serviceType, setServiceType] = useState('');
+
 
   useEffect(() => {
     const fetchFilteredCleaners = async () => {
       try {
         setLoading(true);
-        const url = `/api/cleaners?postcode=${postcode}&minRating=${minRating}&bookingStatus=${bookingStatus}`;
+        const url = `/api/cleaners?postcode=${postcode}&minRating=${minRating}&bookingStatus=${bookingStatus}&serviceType=${encodeURIComponent(serviceType)}`;
         const res = await fetch(url);
         const { cleaners } = await res.json();
         setFilteredCleaners(cleaners);
@@ -141,37 +143,59 @@ export default function FindCleanerPage() {
                 />
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Minimum Rating
-                </label>
-                <select
-                  value={minRating}
-                  onChange={(e) => setMinRating(Number(e.target.value))}
-                  className="w-full p-3 bg-white/80 backdrop-blur-sm border border-white/30 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent transition-all duration-300"
-                >
-                  <option value={0}>Any Rating</option>
-                  <option value={3}>3★ & above</option>
-                  <option value={4}>4★ & above</option>
-                  <option value={5}>5★ only</option>
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Availability
-                </label>
-                <select
-                  value={bookingStatus}
-                  onChange={(e) => setBookingStatus(e.target.value)}
-                  className="w-full p-3 bg-white/80 backdrop-blur-sm border border-white/30 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent transition-all duration-300"
-                >
-                  <option value="all">All Statuses</option>
-                  <option value="pending">Pending</option>
-                  <option value="available">Available</option>
-                  <option value="booked">Booked</option>
-                </select>
-              </div>
+<div>
+  <label className="block text-sm font-medium text-gray-700 mb-2">
+    Minimum Rating
+  </label>
+  <select
+    value={minRating}
+    onChange={(e) => setMinRating(Number(e.target.value))}
+    className="w-full p-3 bg-white/80 backdrop-blur-sm border border-white/30 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent transition-all duration-300"
+  >
+    <option value={0}>Any Rating</option>
+    <option value={3}>3★ & above</option>
+    <option value={4}>4★ & above</option>
+    <option value={5}>5★ only</option>
+  </select>
+</div>
+
+<div>
+  <label className="block text-sm font-medium text-gray-700 mb-2">
+    Availability
+  </label>
+  <select
+    value={bookingStatus}
+    onChange={(e) => setBookingStatus(e.target.value)}
+    className="w-full p-3 bg-white/80 backdrop-blur-sm border border-white/30 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent transition-all duration-300"
+  >
+    <option value="all">All Statuses</option>
+    <option value="available">Available</option>
+    <option value="pending">Pending</option>
+    <option value="booked">Booked</option>
+  </select>
+</div>
+
+<div>
+  <label className="block text-sm font-medium text-gray-700 mb-2">
+    Service Type
+  </label>
+  <select
+    value={serviceType}
+    onChange={(e) => setServiceType(e.target.value)}
+    className="w-full p-3 bg-white/80 backdrop-blur-sm border border-white/30 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent transition-all duration-300"
+  >
+    <option value="">All Services</option>
+    <option value="Window Cleaning">Window Cleaning</option>
+    <option value="Bin Cleaning">Bin Cleaning</option>
+    <option value="Oven Cleaning">Oven Cleaning</option>
+    <option value="Gutter Cleaning">Gutter Cleaning</option>
+    <option value="Car Valeting">Car Valeting</option>
+    <option value="Domestic Cleaning">Domestic Cleaning</option>
+    <option value="End of Tenancy">End of Tenancy</option>
+    <option value="Carpet Cleaning">Carpet Cleaning</option>
+  </select>
+</div>
+
             </div>
           </motion.div>
 

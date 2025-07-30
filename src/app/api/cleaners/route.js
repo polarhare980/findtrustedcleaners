@@ -29,6 +29,8 @@ export async function GET(req) {
   const postcode = searchParams.get('postcode')?.trim() || '';
   const minRating = parseFloat(searchParams.get('minRating')) || 0;
   const bookingStatus = searchParams.get('bookingStatus') || 'all';
+  const serviceType = searchParams.get('serviceType')?.trim();
+
 
   try {
     if (id) {
@@ -71,6 +73,11 @@ export async function GET(req) {
     if (minRating > 0) {
       query.rating = { $gte: minRating };
     }
+
+    if (serviceType) {
+  query.services = { $in: [serviceType] };
+}
+
 
     const rawCleaners = await Cleaner.find(query)
       .select('-password')

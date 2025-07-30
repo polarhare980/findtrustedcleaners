@@ -642,20 +642,31 @@ const reformattedAvailability = formData.availability;
             </div>
 
             <div className="space-y-2 md:col-span-2 lg:col-span-3">
-              <label className="text-sm font-medium text-gray-600">Services Offered</label>
-              {editMode ? (
-                <input
-                  type="text"
-                  value={editData.services?.join(', ') || ''}
-                  onChange={(e) => handleServicesChange(e.target.value)}
-                  placeholder="e.g., Deep cleaning, Regular cleaning, Move-in/out"
-                  className="w-full p-3 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-300"
-                />
-              ) : (
-                <p className="text-gray-800 font-medium">
-                  {formData.services?.length > 0 ? formData.services.join(', ') : 'No services listed'}
-                </p>
-              )}
+  <label className="text-sm font-medium text-gray-600">Services Offered</label>
+  {editMode ? (
+    <input
+      type="text"
+      value={editData.services?.join(', ') || ''}
+      onChange={(e) => handleServicesChange(e.target.value)}
+      placeholder="e.g., Deep cleaning, Regular cleaning, Move-in/out"
+      className="w-full p-3 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-300"
+    />
+  ) : formData.services?.length > 0 ? (
+    <div className="flex flex-wrap gap-2">
+      {formData.services.map((service, i) => (
+        <span
+          key={i}
+          className="text-xs px-2 py-1 rounded-full bg-teal-100 text-teal-800 border border-teal-300"
+        >
+          {service}
+        </span>
+      ))}
+    </div>
+  ) : (
+    <p className="text-gray-800 font-medium">No services listed</p>
+  )}
+
+
             </div>
 
             {/* Enhanced Profile Image Upload */}
