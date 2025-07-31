@@ -31,7 +31,6 @@ export async function GET(req) {
   const bookingStatus = searchParams.get('bookingStatus') || 'all';
   const serviceType = searchParams.get('serviceType')?.trim();
 
-
   try {
     if (id) {
       const cleaner = await Cleaner.findById(id).select('-password');
@@ -56,6 +55,8 @@ export async function GET(req) {
           facebookReviewUrl: cleaner.facebookReviewUrl || null,
           googleReviewRating: cleaner.googleReviewRating || null,
           googleReviewCount: cleaner.googleReviewCount || 0,
+          businessInsurance: cleaner.businessInsurance || false,
+          insurance: cleaner.businessInsurance || false, // alias for JSX use
         }
       }, { status: 200 });
     }
@@ -75,9 +76,8 @@ export async function GET(req) {
     }
 
     if (serviceType) {
-  query.services = { $in: [serviceType] };
-}
-
+      query.services = { $in: [serviceType] };
+    }
 
     const rawCleaners = await Cleaner.find(query)
       .select('-password')
@@ -85,7 +85,9 @@ export async function GET(req) {
 
     const cleaners = rawCleaners.map(obj => {
       try {
-        const c = typeof obj.toObject === 'function' ? obj.toObject() : JSON.parse(JSON.stringify(obj));
+        const c = typeof obj.toObject === 'function'
+          ? obj.toObject()
+          : JSON.parse(JSON.stringify(obj));
 
         const bookingStatusDerived = determineBookingStatus(c.availability || {});
 
@@ -104,6 +106,8 @@ export async function GET(req) {
           googleReviewRating: c.googleReviewRating || null,
           googleReviewCount: c.googleReviewCount || 0,
           bookingStatus: bookingStatusDerived,
+          businessInsurance: c.businessInsurance || false,
+          insurance: c.businessInsurance || false, // alias for JSX use
         };
       } catch (err) {
         console.error('❌ Failed to format cleaner object:', err);
@@ -121,7 +125,6 @@ export async function GET(req) {
     return NextResponse.json({ success: false, message: 'Failed to fetch cleaner(s).' }, { status: 500 });
   }
 }
-
 
 // POST - Register new cleaner
 export async function POST(req) {
