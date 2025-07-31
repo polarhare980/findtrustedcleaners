@@ -558,7 +558,8 @@ export default function HomePage() {
     </>
   );
 }
-function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
+function CleanerCard({ cleaner, handleBookingRequest, isPremium, isFavourite, onToggleFavourite }) {
+
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
   // Debug: Log the cleaner object to see available properties
@@ -566,6 +567,18 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
 
   return (
     <div className="cleaner-card">
+      {/* Favorite Toggle */}
+    <div className="absolute top-3 right-3 z-10">
+      <button
+        onClick={() => onToggleFavourite(cleaner._id)}
+        className={`text-2xl transition-transform duration-200 ${
+          isFavourite ? 'text-red-500' : 'text-gray-300'
+        } hover:scale-110`}
+        title={isFavourite ? 'Remove from favorites' : 'Add to favorites'}
+      >
+        {isFavourite ? '❤️' : '🤍'}
+      </button>
+    </div>
       {/* Badges */}
       <div className="flex gap-2 mb-4">
         {isPremium && (
@@ -613,13 +626,23 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium }) {
         )}
 
         {/* Ratings */}
-        {cleaner.googleReviewRating && cleaner.googleReviewCount ? (
-          <p className="cleaner-rating">
-            ⭐ {cleaner.googleReviewRating} ({cleaner.googleReviewCount})
-          </p>
-        ) : (
-          <p className="cleaner-rating">⭐ Not rated yet</p>
-        )}
+{(cleaner.rating || cleaner.googleReviewRating) ? (
+  <div className="cleaner-rating">
+    {cleaner.rating && (
+      <p className="text-sm text-yellow-600">
+        ⭐ {cleaner.rating} ({cleaner.reviewCount || 0}) from site users
+      </p>
+    )}
+    {cleaner.googleReviewRating && cleaner.googleReviewCount && (
+      <p className="text-sm text-yellow-600">
+        ⭐ {cleaner.googleReviewRating} ({cleaner.googleReviewCount}) from Google
+      </p>
+    )}
+  </div>
+) : (
+  <p className="cleaner-rating text-sm text-gray-600">⭐ Not rated yet</p>
+)}
+
 
         {/* Rate */}
         <p className="cleaner-rate">
