@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import Link from 'next/link';
-import { fetchClient } from '@/lib/fetchClient'; // ✅ Shared helper import
+import { fetchClient } from '@/lib/fetchClient'; // ✅ REUSABLE client fetch helper
+import { secureFetch } from '@/lib/secureFetch';
 
 export default function ClientDashboardComponent() {
   const router = useRouter();
@@ -21,52 +22,64 @@ export default function ClientDashboardComponent() {
     address: { houseNameNumber: '', street: '', county: '', postcode: '' },
   });
 
-  const [bookings, setBookings] = useState([]);
   const [purchases, setPurchases] = useState([]);
+  const [upcomingBookings, setUpcomingBookings] = useState([]);
+  const [favorites, setFavorites] = useState([]);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const loadClientData = async () => {
-        try {
-          const user = await fetchClient();
+ useEffect(() => {
+  if (typeof window !== 'undefined') {
+    const loadClientData = async () => {
+      try {
+        
 
-          if (!user || user.type !== 'client') {
-            setError('Access denied. Please log in.');
-            router.push('/login/clients');
-            return;
-          }
+const res = await secureFetch('/api/auth/me');
+const data = await res.json();
 
-          setClient(user);
-          setFormData({
-            fullName: user.fullName,
-            phone: user.phone,
-            address: {
-              houseNameNumber: user.address?.houseNameNumber || '',
-              street: user.address?.street || '',
-              county: user.address?.county || '',
-              postcode: user.address?.postcode || '',
-            },
-          });
 
-          const bookingsRes = await fetch('/api/clients/bookings', { credentials: 'include' });
-          const bookingsData = await bookingsRes.json();
-          if (bookingsData.success) setBookings(bookingsData.bookings);
-
-          const purchasesRes = await fetch('/api/clients/purchases', { credentials: 'include' });
-          const purchasesData = await purchasesRes.json();
-          if (purchasesData.success) setPurchases(purchasesData.purchases);
-        } catch (err) {
-          console.error('Error fetching client data:', err);
-          setError('Failed to fetch client data.');
+        if (!data.success || data.user.type !== 'client') {
+          setError('Access denied. Please log in.');
           router.push('/login/clients');
-        } finally {
-          setLoading(false);
+          return;
         }
-      };
 
-      loadClientData();
-      setMounted(true);
-    }
+        const user = data.user;
+        setClient(user);
+        setFormData({
+          fullName: user.fullName,
+          phone: user.phone,
+          address: {
+            houseNameNumber: user.address?.houseNameNumber || '',
+            street: user.address?.street || '',
+            county: user.address?.county || '',
+            postcode: user.address?.postcode || '',
+          },
+        });
+
+        const purchasesRes = await fetch('/api/clients/purchases', { credentials: 'include' });
+        const purchasesData = await purchasesRes.json();
+        if (purchasesData.success) setPurchases(purchasesData.purchases);
+
+        // Fetch upcoming bookings
+        const upcomingRes = await fetch('/api/clients/upcoming-bookings', { credentials: 'include' });
+        const upcomingData = await upcomingRes.json();
+        if (upcomingData.success) setUpcomingBookings(upcomingData.bookings);
+
+        // Fetch favorites
+        const favoritesRes = await fetch('/api/clients/favorites', { credentials: 'include' });
+        const favoritesData = await favoritesRes.json();
+        if (favoritesData.success) setFavorites(favoritesData.favorites);
+
+        setLoading(false);
+      } catch (err) {
+        console.error('Error loading client data:', err);
+        setError('Something went wrong.');
+        setLoading(false);
+      }
+    };
+
+    loadClientData();
+    setMounted(true);
+  }
   }, [router]);
 
   const handleChange = (e) => {
@@ -80,6 +93,7 @@ export default function ClientDashboardComponent() {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
+
 
   const handleSave = async () => {
     setSaving(true);
@@ -130,6 +144,63 @@ export default function ClientDashboardComponent() {
       console.error('Error deleting account:', err);
       setError('An error occurred while deleting account.');
     }
+  };
+
+  const handleRateService = async (purchaseId, rating, review) => {
+    try {
+      const res = await fetch(`/api/clients/rate-service`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ purchaseId, rating, review }),
+      });
+
+      if (res.ok) {
+        setSuccess('✅ Rating submitted successfully!');
+        // Refresh purchases to show updated rating
+        const purchasesRes = await fetch('/api/clients/purchases', { credentials: 'include' });
+        const purchasesData = await purchasesRes.json();
+        if (purchasesData.success) setPurchases(purchasesData.purchases);
+      }
+    } catch (err) {
+      console.error('Error rating service:', err);
+      setError('❌ Error submitting rating.');
+    }
+  };
+
+  const handleToggleFavorite = async (cleanerId) => {
+    try {
+      const res = await fetch('/api/clients/toggle-favorite', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cleanerId }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setFavorites(data.favorites);
+        setSuccess(data.added ? '✅ Added to favorites!' : '✅ Removed from favorites!');
+      }
+    } catch (err) {
+      console.error('Error toggling favorite:', err);
+      setError('❌ Error updating favorites.');
+    }
+  };
+
+  const getTimeUntil = (dateTime) => {
+    const now = new Date();
+    const target = new Date(dateTime);
+    const diff = target - now;
+    
+    if (diff < 0) return 'Past';
+    
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    
+    if (days > 0) return `${days} day${days > 1 ? 's' : ''}`;
+    if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''}`;
+    return 'Soon';
   };
 
   if (!mounted) return null;
@@ -297,19 +368,19 @@ export default function ClientDashboardComponent() {
               <h3 className="text-xl font-bold text-teal-800 mb-4">Quick Actions</h3>
               <div className="space-y-3">
                 <Link
-                  href="/book-cleaning"
-                  className="block w-full bg-gradient-to-r from-teal-600 to-teal-700 text-white text-center px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 hover:scale-105"
-                >
-                  📅 Book New Cleaning
-                </Link>
-                <Link
                   href="/cleaners"
-                  className="block w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white text-center px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 hover:scale-105"
+                  className="block w-full bg-gradient-to-r from-teal-600 to-teal-700 text-white text-center px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 hover:scale-105"
                 >
                   👥 Browse Cleaners
                 </Link>
                 <Link
-                  href="/support"
+                  href="/my-favorites"
+                  className="block w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white text-center px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 hover:scale-105"
+                >
+                  ❤️ My Favorite Cleaners
+                </Link>
+                <Link
+                  href="/contact-us"
                   className="block w-full bg-gradient-to-r from-amber-400 to-amber-500 text-white text-center px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 hover:scale-105"
                 >
                   💬 Get Support
@@ -330,66 +401,186 @@ export default function ClientDashboardComponent() {
           </div>
         </div>
 
-        {/* Bookings Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+        {/* Upcoming Appointments */}
+        <div className="mt-8">
           <div className="bg-white/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] p-8 shadow-[0_8px_32px_rgba(0,0,0,0.1)] animate-slide-up">
-            <h2 className="text-3xl font-bold text-teal-800 mb-6">Recent Bookings</h2>
-            {bookings.length === 0 ? (
+            <h2 className="text-3xl font-bold text-teal-800 mb-6">📅 Upcoming Appointments</h2>
+            {upcomingBookings.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-gray-600 mb-4">No bookings yet</p>
+                <p className="text-gray-600 mb-4">No upcoming appointments</p>
                 <Link
-                  href="/book-cleaning"
+                  href="/cleaners"
                   className="inline-block bg-gradient-to-r from-teal-600 to-teal-700 text-white px-6 py-3 rounded-[50px] font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 hover:scale-105"
                 >
-                  Book Your First Cleaning
+                  Book Your Next Cleaning
                 </Link>
               </div>
             ) : (
-              <div className="space-y-4">
-                {bookings.slice(0, 3).map((booking) => (
-                  <div key={booking._id} className="bg-white/80 p-4 rounded-2xl hover:shadow-lg transition-all duration-300">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {upcomingBookings.slice(0, 6).map((booking) => (
+                  <div key={booking._id} className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-2xl border-l-4 border-blue-500 hover:shadow-lg transition-all duration-300">
                     <div className="flex justify-between items-start mb-2">
-                      <h4 className="font-semibold text-teal-800">{booking.service}</h4>
-                      <span className={`px-3 py-1 rounded-[50px] text-sm font-medium ${
-                        booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                        booking.status === 'pending' ? 'bg-amber-100 text-amber-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {booking.status}
+                      <h4 className="font-semibold text-blue-800">
+                        {booking.cleanerId?.companyName || booking.cleanerId?.realName || 'Cleaner'}
+                      </h4>
+                      <span className="text-xs bg-blue-200 text-blue-800 px-2 py-1 rounded-full">
+                        {getTimeUntil(booking.scheduledDateTime)}
                       </span>
                     </div>
-                    <p className="text-gray-600 text-sm">{new Date(booking.date).toLocaleDateString()}</p>
-                    <p className="text-gray-700 font-medium">£{booking.price}</p>
+                    <p className="text-blue-600 text-sm mb-2">
+                      {new Date(booking.scheduledDateTime).toLocaleDateString()} at {booking.time}
+                    </p>
+                    <p className="text-blue-700 font-medium mb-3">
+                      {booking.day} - {booking.service || 'Cleaning Service'}
+                    </p>
+                    <div className="flex gap-2">
+                      <button className="text-xs bg-blue-600 text-white px-3 py-1 rounded-full hover:bg-blue-700 transition-colors">
+                        Reschedule
+                      </button>
+                      <button className="text-xs bg-gray-500 text-white px-3 py-1 rounded-full hover:bg-gray-600 transition-colors">
+                        Cancel
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
             )}
           </div>
+        </div>
 
-          {/* Purchase History */}
+        {/* Favorite Cleaners */}
+        {favorites.length > 0 && (
+          <div className="mt-8">
+            <div className="bg-white/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] p-8 shadow-[0_8px_32px_rgba(0,0,0,0.1)] animate-slide-up">
+              <h2 className="text-3xl font-bold text-teal-800 mb-6">❤️ Your Favorite Cleaners</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {favorites.slice(0, 6).map((favorite) => (
+                  <div key={favorite._id} className="bg-white/80 p-4 rounded-2xl hover:shadow-lg transition-all duration-300">
+                    <div className="flex justify-between items-start mb-2">
+                      <h4 className="font-semibold text-teal-800">
+                        {favorite.companyName || favorite.realName}
+                      </h4>
+                      <button
+                        onClick={() => handleToggleFavorite(favorite._id)}
+                        className="text-red-500 hover:text-red-600 transition-colors"
+                      >
+                        ❤️
+                      </button>
+                    </div>
+                    <p className="text-gray-600 text-sm mb-2">
+                      {favorite.services?.join(', ') || 'Cleaning Services'}
+                    </p>
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="flex text-yellow-400">
+                        {'★'.repeat(Math.floor(favorite.rating || 5))}
+                      </div>
+                      <span className="text-sm text-gray-600">
+                        ({favorite.reviewCount || 0} reviews)
+                      </span>
+                    </div>
+                    <div className="flex gap-2">
+                      <Link
+                        href={`/cleaners/${favorite._id}`}
+                        className="text-xs bg-teal-600 text-white px-3 py-1 rounded-full hover:bg-teal-700 transition-colors"
+                      >
+                        View Profile
+                      </Link>
+                      <Link
+                        href={`/book/${favorite._id}`}
+                        className="text-xs bg-green-600 text-white px-3 py-1 rounded-full hover:bg-green-700 transition-colors"
+                      >
+                        Book Now
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Your Bookings Section */}
+        <div className="mt-8">
           <div className="bg-white/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] p-8 shadow-[0_8px_32px_rgba(0,0,0,0.1)] animate-slide-up">
-            <h2 className="text-3xl font-bold text-teal-800 mb-6">Purchase History</h2>
+            <h2 className="text-3xl font-bold text-teal-800 mb-6">Your Bookings</h2>
             {purchases.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-gray-600">No purchases yet</p>
+                <p className="text-gray-600">No bookings yet</p>
               </div>
             ) : (
               <div className="space-y-4">
                 {purchases.slice(0, 3).map((purchase) => (
                   <div key={purchase._id} className="bg-white/80 p-4 rounded-2xl hover:shadow-lg transition-all duration-300">
-                    <h4 className="font-semibold text-teal-800 mb-2">
-  Unlock: {purchase.cleanerId?.companyName || purchase.cleanerId?.realName || 'Cleaner'}
-</h4>
-<p className="text-gray-600 text-sm">
-  Slot: {purchase.day} at {purchase.hour}
-</p>
-<p className="text-gray-600 text-sm">
-  Purchased: {new Date(purchase.purchasedAt || purchase.createdAt).toLocaleDateString()}
-</p>
-<p className="text-gray-700 font-medium">
-  £{purchase.amount?.toFixed(2) || '—'}
-</p>
-
+                    <div className="flex justify-between items-start mb-2">
+                      <h4 className="font-semibold text-teal-800">
+                        Access to {purchase.cleanerId?.companyName || purchase.cleanerId?.realName || 'Cleaner'}
+                      </h4>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleToggleFavorite(purchase.cleanerId?._id)}
+                          className="text-gray-400 hover:text-red-500 transition-colors"
+                          title="Add to favorites"
+                        >
+                          {favorites.some(fav => fav._id === purchase.cleanerId?._id) ? '❤️' : '🤍'}
+                        </button>
+                        <span className={`px-3 py-1 rounded-[50px] text-sm font-medium ${
+                          purchase.status === 'approved' ? 'bg-green-100 text-green-800' :
+                          purchase.status === 'pending' ? 'bg-amber-100 text-amber-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {purchase.status}
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-gray-600 text-sm">
+                      Purchased on {new Date(purchase.createdAt).toLocaleDateString()} at {purchase.hour}, {purchase.day}
+                    </p>
+                    {purchase.amount && (
+                      <p className="text-gray-700 font-medium mb-3">£{(purchase.amount).toFixed(2)}</p>
+                    )}
+                    
+                    {/* Rating & Review Section */}
+                    {purchase.status === 'approved' && (
+                      <div className="mt-3 pt-3 border-t border-gray-200">
+                        {purchase.rating ? (
+                          <div className="flex items-center gap-2">
+                            <div className="flex text-yellow-400">
+                              {'★'.repeat(purchase.rating)}{'☆'.repeat(5 - purchase.rating)}
+                            </div>
+                            <span className="text-sm text-gray-600">You rated this service</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-4">
+                            <button
+                              onClick={() => {
+                                const rating = prompt('Rate this service (1-5 stars):');
+                                const review = prompt('Leave a review (optional):');
+                                if (rating && rating >= 1 && rating <= 5) {
+                                  handleRateService(purchase._id, parseInt(rating), review || '');
+                                }
+                              }}
+                              className="text-amber-500 hover:text-amber-600 text-sm font-medium flex items-center gap-1 transition-colors"
+                            >
+                              ⭐ Rate Service
+                            </button>
+                            <button
+                              onClick={() => {
+                                const review = prompt('Write a review:');
+                                if (review) {
+                                  handleRateService(purchase._id, 5, review);
+                                }
+                              }}
+                              className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1 transition-colors"
+                            >
+                              ✍️ Write Review
+                            </button>
+                          </div>
+                        )}
+                        {purchase.review && (
+                          <p className="text-sm text-gray-600 mt-2 italic">"{purchase.review}"</p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
