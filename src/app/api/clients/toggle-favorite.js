@@ -2,7 +2,7 @@
 
 import dbConnect from '@/lib/dbConnect';
 import Client from '@/models/Client';
-import { verifyToken } from '@/lib/auth';
+import { protectApiRoute } from '@/lib/auth';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -12,11 +12,8 @@ export default async function handler(req, res) {
   try {
     await dbConnect();
 
-    import { protectApiRoute } from '@/lib/auth';
-
-const { valid, user, response } = await protectApiRoute(req, 'client');
-if (!valid) return response;
-
+    const { valid, user, response } = await protectApiRoute(req, 'client');
+    if (!valid) return response;
 
     const { cleanerId } = req.body;
     if (!cleanerId) {
