@@ -5,6 +5,8 @@ import Client from '@/models/Client';
 import { protectApiRoute } from '@/lib/auth';
 
 export default async function handler(req, res) {
+  console.log('💥 toggle-favorite hit:', req.method);
+
   if (req.method !== 'POST') {
     return res.status(405).json({ success: false, message: 'Method Not Allowed' });
   }
