@@ -215,91 +215,110 @@ export default function FindCleanerPage() {
             ) : (
               <div className="grid gap-6">
                 {filteredCleaners.map((cleaner, index) => (
-                  <motion.div
-                    key={cleaner._id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: index * 0.1 }}
-                    className="bg-white/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] shadow-[0_8px_32px_rgba(0,0,0,0.1)] p-8 hover:shadow-[0_12px_40px_rgba(0,0,0,0.15)] hover:-translate-y-1 transition-all duration-300 ease-in-out"
-                  >
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-                      <div className="flex items-center gap-6">
-                        {/* Cleaner Profile Image */}
-                        <div className="flex-shrink-0">
-                          <img
-                            src={cleaner.image || '/default-avatar.png'}
-                            alt={cleaner.realName || 'Cleaner'}
-                            className="w-20 h-20 object-cover rounded-full border-2 border-white/50 shadow-lg"
-                          />
-                        </div>
-                        
-                        <div className="flex-1">
-                          <div className="flex items-start justify-between mb-4">
-                            <div>
-                              <h3 className="text-2xl font-bold text-teal-800 mb-2">{cleaner.realName}</h3>
-                              <p className="text-gray-700 font-medium mb-2">{cleaner.companyName}</p>
-                              <p className="text-sm text-gray-600 mb-3">Postcode: {cleaner.postcode}</p>
-                            </div>
-                            <div className="flex-shrink-0 ml-4">
-                              <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                                cleaner.bookingStatus === 'available' 
-                                  ? 'bg-gradient-to-r from-green-500 to-green-600 text-white' 
-                                  : cleaner.bookingStatus === 'pending'
-                                  ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-white'
-                                  : 'bg-gradient-to-r from-gray-400 to-gray-500 text-white'
-                              }`}>
-                                {cleaner.bookingStatus?.charAt(0).toUpperCase() + cleaner.bookingStatus?.slice(1) || 'Unknown'}
-                              </span>
-                            </div>
-                          </div>
-                          
-                          <div className="flex flex-wrap items-center gap-4 mb-4">
-                            {/* ⭐ Rating Display */}
-                            <div className="flex items-center bg-white/50 px-3 py-1 rounded-full">
-                              <span className="text-sm font-medium text-gray-700">
-                                ⭐ {cleaner.googleReviewRating || cleaner.rating || 'Unrated'}
-                                {cleaner.googleReviewCount ? ` (${cleaner.googleReviewCount} reviews)` : ''}
-                              </span>
-                            </div>
+  <motion.div
+    key={cleaner._id}
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.5, delay: index * 0.1 }}
+    className="bg-white/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] shadow-[0_8px_32px_rgba(0,0,0,0.1)] p-8 hover:shadow-[0_12px_40px_rgba(0,0,0,0.15)] hover:-translate-y-1 transition-all duration-300 ease-in-out relative"
+  >
+    {/* Favorite Toggle */}
+    <button
+      onClick={() => toggleFavorite(cleaner._id)}
+      className={`absolute top-3 right-3 text-2xl transition-transform duration-200 z-10 ${
+        isFavourite(cleaner._id) ? 'text-red-500' : 'text-gray-300'
+      } hover:scale-110`}
+      title={isFavourite(cleaner._id) ? 'Remove from favorites' : 'Add to favorites'}
+    >
+      {isFavourite(cleaner._id) ? '❤️' : '🤍'}
+    </button>
 
-                            {/* 💷 Rates Display */}
-                            {cleaner.rates && (
-                              <div className="flex items-center bg-white/50 px-3 py-1 rounded-full">
-                                <span className="text-sm font-medium text-gray-700">💷 {cleaner.rates}</span>
-                              </div>
-                            )}
+    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+      <div className="flex items-center gap-6">
+        {/* Profile Image */}
+        <div className="flex-shrink-0">
+          <img
+            src={cleaner.image || '/default-avatar.png'}
+            alt={cleaner.realName || 'Cleaner'}
+            className="w-20 h-20 object-cover rounded-full border-2 border-white/50 shadow-lg"
+          />
+        </div>
 
-                            {/* 👑 Premium Badge */}
-                            {cleaner.isPremium && (
-                              <div className="flex items-center bg-gradient-to-r from-yellow-400 to-yellow-500 px-3 py-1 rounded-full border border-yellow-300 shadow-lg">
-                                <span className="text-sm font-bold text-yellow-900">👑 Premium</span>
-                              </div>
-                            )}
+        <div className="flex-1">
+          <div className="flex items-start justify-between mb-4">
+            <div>
+              <h3 className="text-2xl font-bold text-teal-800 mb-2">{cleaner.realName}</h3>
+              <p className="text-gray-700 font-medium mb-2">{cleaner.companyName}</p>
+              <p className="text-sm text-gray-600 mb-3">Postcode: {cleaner.postcode}</p>
+            </div>
+            <div className="flex-shrink-0 ml-4">
+              <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                cleaner.bookingStatus === 'available' ? 'bg-gradient-to-r from-green-500 to-green-600 text-white'
+                : cleaner.bookingStatus === 'pending' ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-white'
+                : 'bg-gradient-to-r from-gray-400 to-gray-500 text-white'
+              }`}>
+                {cleaner.bookingStatus?.charAt(0).toUpperCase() + cleaner.bookingStatus?.slice(1) || 'Unknown'}
+              </span>
+            </div>
+          </div>
 
-                            {/* 🛡️ Insurance Badge */}
-                            {cleaner.businessInsurance && (
-                              <div className="flex items-center bg-gradient-to-r from-blue-500 to-blue-600 px-3 py-1 rounded-full border border-blue-300 shadow-lg">
-                                <span className="text-sm font-bold text-white">🛡️ Insured</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
+          <div className="flex flex-wrap items-center gap-4 mb-4">
+            {/* Site + Google Ratings */}
+            {(cleaner.rating || cleaner.googleReviewRating) ? (
+              <div className="flex flex-col bg-white/50 px-3 py-1 rounded-xl text-sm text-yellow-600">
+                {cleaner.rating && (
+                  <span>⭐ {cleaner.rating} ({cleaner.reviewCount || 0}) from site users</span>
+                )}
+                {cleaner.googleReviewRating && cleaner.googleReviewCount && (
+                  <span>⭐ {cleaner.googleReviewRating} ({cleaner.googleReviewCount}) from Google</span>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center bg-white/50 px-3 py-1 rounded-full">
+                <span className="text-sm font-medium text-gray-700">⭐ Unrated</span>
+              </div>
+            )}
 
-                      <div className="flex-shrink-0">
-                        <Link
-                          href={`/cleaners/${cleaner._id}`}
-                          className="inline-flex items-center bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-full shadow-lg hover:shadow-xl hover:-translate-y-0.5 hover:scale-105 transition-all duration-300 ease-in-out font-medium group"
-                        >
-                          View Profile
-                          <svg className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-                          </svg>
-                        </Link>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
+            {/* Rates */}
+            {cleaner.rates && (
+              <div className="flex items-center bg-white/50 px-3 py-1 rounded-full">
+                <span className="text-sm font-medium text-gray-700">💷 {cleaner.rates}</span>
+              </div>
+            )}
+
+            {/* Premium Badge */}
+            {cleaner.isPremium && (
+              <div className="flex items-center bg-gradient-to-r from-yellow-400 to-yellow-500 px-3 py-1 rounded-full border border-yellow-300 shadow-lg">
+                <span className="text-sm font-bold text-yellow-900">👑 Premium</span>
+              </div>
+            )}
+
+            {/* Insurance Badge */}
+            {cleaner.businessInsurance && (
+              <div className="flex items-center bg-gradient-to-r from-blue-500 to-blue-600 px-3 py-1 rounded-full border border-blue-300 shadow-lg">
+                <span className="text-sm font-bold text-white">🛡️ Insured</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Profile Link */}
+      <div className="flex-shrink-0">
+        <Link
+          href={`/cleaners/${cleaner._id}`}
+          className="inline-flex items-center bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-full shadow-lg hover:shadow-xl hover:-translate-y-0.5 hover:scale-105 transition-all duration-300 ease-in-out font-medium group"
+        >
+          View Profile
+          <svg className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </Link>
+      </div>
+    </div>
+  </motion.div>
+))}
+
               </div>
             )}
           </motion.div>
