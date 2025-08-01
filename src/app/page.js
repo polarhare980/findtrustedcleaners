@@ -19,44 +19,38 @@ export default function HomePage() {
   const [showPrice, setShowPrice] = useState(false);
   const [premiumCleaners, setPremiumCleaners] = useState([]);
   const [freeCleaners, setFreeCleaners] = useState([]);
+  const [favouriteIds, setFavouriteIds] = useState([]);
 
   const { data, error, isLoading } = useSWR('/api/cleaners?bookingStatus=all', fetcher);
 
+  // Load saved favourites from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('favourites');
+    if (saved) {
+      try {
+        setFavouriteIds(JSON.parse(saved));
+      } catch (e) {
+        console.error('Could not parse favourites from localStorage:', e);
+      }
+    }
+  }, []);
+
+  // Set premium and free cleaners
   useEffect(() => {
     if (data?.cleaners) {
       const premium = data.cleaners.filter(c => c.isPremium === true).slice(0, 5);
       const free = data.cleaners.filter(c => c.isPremium !== true).slice(0, 5);
-
-
-
       setPremiumCleaners(premium);
       setFreeCleaners(free);
     }
   }, [data]);
 
-  const priceChart = {
-    studio: { regular: 200, deep: 200, tenancy: 200 },
-    '1-bed': { regular: 240, deep: 240, tenancy: 240 },
-    '2-bed': { regular: 285, deep: 285, tenancy: 285 },
-    '3-bed': { regular: 330, deep: 330, tenancy: 330 },
-    '4-5-bed': { regular: 404, deep: 404, tenancy: 404 },
-    '6+-bed': { regular: 450, deep: 450, tenancy: 450 },
-  };
-
-  // Fisher-Yates shuffle algorithm for random ordering
-  const shuffleArray = (array) => {
-    const shuffled = [...array];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled;
-  };
-
+  // Only run once on client side
   useEffect(() => {
     if (typeof window !== 'undefined') setMounted(true);
   }, []);
 
+  // Booking handler
   const handleBookingRequest = (cleanerId) => {
     const clientId = localStorage.getItem('clientId');
     if (!clientId) {
@@ -66,13 +60,48 @@ export default function HomePage() {
     }
   };
 
+  // Favourite toggle handler
+  const handleToggleFavourite = (cleanerId) => {
+    let updatedFavourites;
+
+    if (favouriteIds.includes(cleanerId)) {
+      updatedFavourites = favouriteIds.filter(id => id !== cleanerId);
+    } else {
+      updatedFavourites = [...favouriteIds, cleanerId];
+    }
+
+    setFavouriteIds(updatedFavourites);
+    localStorage.setItem('favourites', JSON.stringify(updatedFavourites));
+  };
+
+  // Price chart and calculator
+  const priceChart = {
+    studio: { regular: 200, deep: 200, tenancy: 200 },
+    '1-bed': { regular: 240, deep: 240, tenancy: 240 },
+    '2-bed': { regular: 285, deep: 285, tenancy: 285 },
+    '3-bed': { regular: 330, deep: 330, tenancy: 330 },
+    '4-5-bed': { regular: 404, deep: 404, tenancy: 404 },
+    '6+-bed': { regular: 450, deep: 450, tenancy: 450 },
+  };
+
   const handleCalculatePrice = () => {
     const price = priceChart[propertySize][cleaningType];
     setEstimatedPrice(price);
     setShowPrice(true);
   };
 
+  // Fisher-Yates shuffle (still usable if needed)
+  const shuffleArray = (array) => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  };
+
   if (!mounted) return null;
+
 
   return (
     <>
@@ -186,7 +215,15 @@ export default function HomePage() {
             ) : (
               <div className="flex overflow-x-auto gap-6 pb-4 px-2 scrollbar-hide">
                 {premiumCleaners.map((cleaner) => (
-                  <CleanerCard key={cleaner._id} cleaner={cleaner} handleBookingRequest={handleBookingRequest} isPremium />
+                  <CleanerCard 
+  key={cleaner._id} 
+  cleaner={cleaner} 
+  handleBookingRequest={handleBookingRequest} 
+  isPremium 
+  isFavourite={false} 
+  onToggleFavourite={handleToggleFavourite}
+/>
+
                 ))}
               </div>
             )}
@@ -278,7 +315,14 @@ export default function HomePage() {
             ) : (
               <div className="flex overflow-x-auto gap-6 pb-4 px-2 scrollbar-hide">
                 {freeCleaners.map((cleaner) => (
-                  <CleanerCard key={cleaner._id} cleaner={cleaner} handleBookingRequest={handleBookingRequest} />
+                  <CleanerCard 
+  key={cleaner._id} 
+  cleaner={cleaner} 
+  handleBookingRequest={handleBookingRequest} 
+  isFavourite={false} 
+  onToggleFavourite={handleToggleFavourite}
+/>
+
                 ))}
               </div>
             )}

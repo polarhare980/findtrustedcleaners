@@ -46,19 +46,34 @@ export default function FindCleanerPage() {
   }, []);
 
   const toggleFavorite = async (cleanerId) => {
-    try {
-      const res = await fetch('/api/clients/toggle-favorite', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cleanerId }),
-      });
-      const data = await res.json();
-      if (data.success) setFavorites(data.favorites);
-    } catch (err) {
-      console.error('Toggle favorite failed:', err);
+  try {
+    const res = await fetch('/api/clients/toggle-favorite', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include', // 🔐 ensures cookies (auth) are sent
+      body: JSON.stringify({ cleanerId }),
+    });
+
+    if (!res.ok) {
+      const errorText = await res.text(); // to debug server errors
+      console.error('Toggle favorite failed:', errorText);
+      return;
     }
-  };
+
+    const data = await res.json();
+
+    if (data.success) {
+      setFavorites(data.favorites); // Replace entire favourites list
+    } else {
+      console.error('Toggle favorite failed (server returned false):', data.message);
+    }
+  } catch (err) {
+    console.error('Toggle favorite failed (JS error):', err);
+  }
+};
+
 
   const isFavourite = (id) => favorites.some(f => f._id === id);
 
