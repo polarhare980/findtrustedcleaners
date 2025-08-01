@@ -11,7 +11,7 @@ export default function FindCleanerPage() {
   const [bookingStatus, setBookingStatus] = useState('all');
   const [loading, setLoading] = useState(true);
   const [serviceType, setServiceType] = useState('');
-
+  const [favorites, setFavorites] = useState([]);
 
   useEffect(() => {
     const fetchFilteredCleaners = async () => {
@@ -29,16 +29,45 @@ export default function FindCleanerPage() {
     };
 
     fetchFilteredCleaners();
-  }, [postcode, minRating, bookingStatus]);
+  }, [postcode, minRating, bookingStatus, serviceType]);
 
-  // Loading component
+  useEffect(() => {
+    const fetchFavorites = async () => {
+      try {
+        const res = await fetch('/api/clients/favorites', { credentials: 'include' });
+        const data = await res.json();
+        if (data.success) setFavorites(data.favorites);
+      } catch (err) {
+        console.error('Failed to load favorites:', err);
+      }
+    };
+
+    fetchFavorites();
+  }, []);
+
+  const toggleFavorite = async (cleanerId) => {
+    try {
+      const res = await fetch('/api/clients/toggle-favorite', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cleanerId }),
+      });
+      const data = await res.json();
+      if (data.success) setFavorites(data.favorites);
+    } catch (err) {
+      console.error('Toggle favorite failed:', err);
+    }
+  };
+
+  const isFavourite = (id) => favorites.some(f => f._id === id);
+
   const LoadingSpinner = () => (
     <div className="flex justify-center items-center py-16">
       <div className="w-12 h-12 border-4 border-teal-600/20 border-t-teal-600 rounded-full animate-spin"></div>
     </div>
   );
 
-  // Empty state component
   const EmptyState = () => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}

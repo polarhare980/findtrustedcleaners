@@ -568,17 +568,18 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium, isFavourite, on
   return (
     <div className="cleaner-card">
       {/* Favorite Toggle */}
-    <div className="absolute top-3 right-3 z-10">
-      <button
-        onClick={() => onToggleFavourite(cleaner._id)}
-        className={`text-2xl transition-transform duration-200 ${
-          isFavourite ? 'text-red-500' : 'text-gray-300'
-        } hover:scale-110`}
-        title={isFavourite ? 'Remove from favorites' : 'Add to favorites'}
-      >
-        {isFavourite ? '❤️' : '🤍'}
-      </button>
-    </div>
+    <div className="text-right mb-2">
+  <button
+    onClick={() => onToggleFavourite(cleaner._id)}
+    className={`text-2xl transition-transform duration-200 ${
+      isFavourite ? 'text-red-500' : 'text-gray-400'
+    } hover:scale-110`}
+    title={isFavourite ? 'Remove from favourites' : 'Add to favourites'}
+  >
+    {isFavourite ? '❤️' : '🤍'}
+  </button>
+</div>
+
       {/* Badges */}
       <div className="flex gap-2 mb-4">
         {isPremium && (
