@@ -12,12 +12,11 @@ export default async function handler(req, res) {
   try {
     await dbConnect();
 
-    const token = req.cookies.token;
-    const user = await verifyToken(token);
+    import { protectApiRoute } from '@/lib/auth';
 
-    if (!user || user.type !== 'client') {
-      return res.status(401).json({ success: false, message: 'Unauthorized' });
-    }
+const { valid, user, response } = await protectApiRoute(req, 'client');
+if (!valid) return response;
+
 
     const { cleanerId } = req.body;
     if (!cleanerId) {
