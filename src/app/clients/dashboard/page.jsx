@@ -374,7 +374,7 @@ const data = await res.json();
                   👥 Browse Cleaners
                 </Link>
                 <Link
-                  href="/client/my-favorites"
+                  href="/clients/my-favorites"
                   className="block w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white text-center px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 hover:scale-105"
                 >
                   ❤️ My Favorite Cleaners
