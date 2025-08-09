@@ -25,14 +25,13 @@ export default function HomePage() {
 
   // Load saved favourites from localStorage
   useEffect(() => {
-    const saved = localStorage.getItem('favourites');
-    if (saved) {
-      try {
-        setFavouriteIds(JSON.parse(saved));
-      } catch (e) {
-        console.error('Could not parse favourites from localStorage:', e);
-      }
-    }
+  const saved = localStorage.getItem('favourites');
+  if (saved) {
+    try {
+      const arr = JSON.parse(saved);
+      setFavouriteIds(Array.isArray(arr) ? arr.map(String) : []);
+    } catch (e) { console.error('Could not parse favourites from localStorage:', e); }
+  }
   }, []);
 
   // Set premium and free cleaners
@@ -62,17 +61,13 @@ export default function HomePage() {
 
   // Favourite toggle handler
   const handleToggleFavourite = (cleanerId) => {
-    let updatedFavourites;
-
-    if (favouriteIds.includes(cleanerId)) {
-      updatedFavourites = favouriteIds.filter(id => id !== cleanerId);
-    } else {
-      updatedFavourites = [...favouriteIds, cleanerId];
-    }
-
-    setFavouriteIds(updatedFavourites);
-    localStorage.setItem('favourites', JSON.stringify(updatedFavourites));
-  };
+  const id = String(cleanerId);
+  const updated = favouriteIds.includes(id)
+    ? favouriteIds.filter(x => x !== id)
+    : [...favouriteIds, id];
+  setFavouriteIds(updated);
+  localStorage.setItem('favourites', JSON.stringify(updated));
+};
 
   // Price chart and calculator
   const priceChart = {
@@ -220,8 +215,8 @@ export default function HomePage() {
   cleaner={cleaner} 
   handleBookingRequest={handleBookingRequest} 
   isPremium 
-  isFavourite={false} 
-  onToggleFavourite={handleToggleFavourite}
+  isFavourite={favouriteIds.includes(String(cleaner._id))}         // ✅ derive from state
+    onToggleFavourite={(id) => handleToggleFavourite(String(id))}    // ✅ normalise to string
 />
 
                 ))}
@@ -319,8 +314,8 @@ export default function HomePage() {
   key={cleaner._id} 
   cleaner={cleaner} 
   handleBookingRequest={handleBookingRequest} 
-  isFavourite={false} 
-  onToggleFavourite={handleToggleFavourite}
+  isFavourite={favouriteIds.includes(String(cleaner._id))}         // ✅ derive from state
+    onToggleFavourite={(id) => handleToggleFavourite(String(id))}    // ✅ normalise to string
 />
 
                 ))}
@@ -614,14 +609,14 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium, isFavourite, on
       {/* Favorite Toggle */}
     <div className="text-right mb-2">
   <button
-    onClick={() => onToggleFavourite(cleaner._id)}
-    className={`text-2xl transition-transform duration-200 ${
-      isFavourite ? 'text-red-500' : 'text-gray-400'
-    } hover:scale-110`}
-    title={isFavourite ? 'Remove from favourites' : 'Add to favourites'}
-  >
-    {isFavourite ? '❤️' : '🤍'}
-  </button>
+  onClick={(e) => { e.preventDefault(); e.stopPropagation(); onToggleFavourite(cleaner._id); }}
+  className={`text-2xl transition-transform duration-200 ${isFavourite ? 'text-red-500' : 'text-gray-400'} hover:scale-110`}
+  aria-pressed={!!isFavourite}
+  title={isFavourite ? 'Remove from favourites' : 'Add to favourites'}
+>
+  {isFavourite ? '❤️' : '🤍'}
+</button>
+
 </div>
 
       {/* Badges */}
