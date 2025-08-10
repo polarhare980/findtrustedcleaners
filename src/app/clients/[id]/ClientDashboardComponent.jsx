@@ -291,7 +291,7 @@ export default function ClientDashboardComponent() {
 
         {/* Success Message */}
         {success && (
-          <div className="mb-6 bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-xl shadow-lg animate-slide-up">
+          <div className="mb-6 bg-gradient-to-r from-green-500 to-green-600 text-red px-6 py-3 rounded-xl shadow-lg animate-slide-up">
             {success}
           </div>
         )}
