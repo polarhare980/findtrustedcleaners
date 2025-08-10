@@ -1,6 +1,6 @@
 // File: src/app/clients/[id]/page.jsx
 
-import ClientDashboardComponent from './ClientDashboardComponent';
+import ClientDashboardComponent from './clients/Dashboard';
 
 export const metadata = {
   title: 'Client Dashboard | Find Trusted Cleaners',
