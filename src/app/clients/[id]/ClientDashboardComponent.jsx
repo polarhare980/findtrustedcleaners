@@ -183,6 +183,19 @@ export default function ClientDashboardComponent() {
     }
   };
 
+  const handleLogout = async () => {
+  try {
+    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+    localStorage.removeItem('favourites'); // clear local favourites
+    sessionStorage.removeItem('favMergeDone');
+    router.push('/login/clients');
+  } catch (err) {
+    console.error('Logout failed:', err);
+    setError('❌ Error logging out.');
+  }
+};
+
+
   const handleRateService = async (purchaseId, rating, review) => {
     try {
       const res = await fetch(`/api/clients/rate-service`, {
@@ -446,15 +459,24 @@ export default function ClientDashboardComponent() {
             </div>
 
             {/* Account Management */}
-            <div className="bg-white/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] p-6 shadow-[0_8px_32px_rgba(0,0,0,0.1)] animate-slide-up">
-              <h3 className="text-xl font-bold text-teal-800 mb-4">Account Management</h3>
-              <button
-                onClick={handleDeleteAccount}
-                className="w-full bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 hover:scale-105"
-              >
-                🗑️ Delete Account
-              </button>
-            </div>
+<div className="bg-white/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] p-6 shadow-[0_8px_32px_rgba(0,0,0,0.1)] animate-slide-up">
+  <h3 className="text-xl font-bold text-teal-800 mb-4">Account Management</h3>
+  
+  <button
+    onClick={handleLogout}
+    className="w-full bg-gradient-to-r from-gray-500 to-gray-600 text-white px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 hover:scale-105 mb-3"
+  >
+    🚪 Logout
+  </button>
+
+  <button
+    onClick={handleDeleteAccount}
+    className="w-full bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 hover:scale-105"
+  >
+    🗑️ Delete Account
+  </button>
+</div>
+
           </div>
         </div>
 
