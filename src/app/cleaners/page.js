@@ -15,6 +15,9 @@ export default function FindCleanerPage() {
   // ✅ Local-only favourites (ids)
   const [favouriteIds, setFavouriteIds] = useState([]);
 
+  // ✅ Logged-in client detection
+  const [isClient, setIsClient] = useState(false);
+
   // Load cleaners whenever filters change
   useEffect(() => {
     const fetchFilteredCleaners = async () => {
@@ -49,6 +52,22 @@ export default function FindCleanerPage() {
       console.error('Bad favourites in localStorage', e);
       setFavouriteIds([]);
     }
+  }, []);
+
+  // ✅ Check if user is a logged-in client
+  useEffect(() => {
+    let ignore = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/auth/me', { credentials: 'include' });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!ignore) setIsClient(data?.user?.type === 'client');
+      } catch {
+        // ignore
+      }
+    })();
+    return () => { ignore = true; };
   }, []);
 
   // ✅ Helpers for local favourites
@@ -118,6 +137,17 @@ export default function FindCleanerPage() {
               <Link href="/register/cleaners" className="text-teal-800 hover:text-teal-600 transition-colors duration-300">
                 Register Cleaner
               </Link>
+
+              {/* ✅ Only show to logged-in clients */}
+              {isClient && (
+                <Link
+                  href="/clients/dashboard"
+                  className="text-teal-800 hover:text-teal-600 transition-colors duration-300"
+                >
+                  Client Dashboard
+                </Link>
+              )}
+
               <Link
                 href="/login"
                 className="bg-gradient-to-r from-teal-600 to-teal-700 text-white px-4 py-2 rounded-full hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
@@ -357,6 +387,16 @@ export default function FindCleanerPage() {
           </motion.div>
         </div>
       </div>
+
+      {/* ✅ Floating "Back to Dashboard" button — only for logged-in clients */}
+      {isClient && (
+        <Link
+          href="/clients/dashboard"
+          className="fixed bottom-6 right-6 bg-gradient-to-r from-green-500 to-green-600 text-white px-5 py-3 rounded-full shadow-lg hover:shadow-xl hover:-translate-y-0.5 hover:scale-105 transition-all duration-300 z-50"
+        >
+          ← Back to Dashboard
+        </Link>
+      )}
 
       {/* Footer */}
       <footer className="relative z-10 bg-white/25 backdrop-blur-[20px] border-t border-white/20 shadow-[0_-8px_32px_rgba(0,0,0,0.1)] mt-16">
