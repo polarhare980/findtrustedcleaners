@@ -428,7 +428,7 @@ export default function ClientDashboardComponent() {
                   href="/cleaners"
                   className="block w-full bg-gradient-to-r from-teal-600 to-teal-700 text-white text-center px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 hover:scale-105"
                 >
-                  👥 t
+                  👥 Browse Cleaners
                 </Link>
                 <Link
                   href="/clients/my-favorites"
