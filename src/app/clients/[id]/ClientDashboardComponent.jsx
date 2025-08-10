@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import Link from 'next/link';
-import { fetchClient } from '@/lib/fetchClient'; // ✅ REUSABLE client fetch helper
+import { fetchClient } from '@/lib/fetchClient'; // (kept if you use elsewhere)
 import { secureFetch } from '@/lib/secureFetch';
 
 export default function ClientDashboardComponent() {
@@ -24,19 +24,19 @@ export default function ClientDashboardComponent() {
 
   const [purchases, setPurchases] = useState([]);
   const [upcomingBookings, setUpcomingBookings] = useState([]);
-  const [favorites, setFavorites] = useState([]);
+  const [favorites, setFavorites] = useState([]); // docs array
 
- useEffect(() => {
-  if (typeof window !== 'undefined') {
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
     const loadClientData = async () => {
       try {
-        
+        // --- Auth check ---
+        const res = await secureFetch('/api/auth/me');
+        const ct = res.headers.get('content-type') || '';
+        const data = ct.includes('application/json') ? await res.json() : null;
 
-const res = await secureFetch('/api/auth/me');
-const data = await res.json();
-
-
-        if (!data.success || data.user.type !== 'client') {
+        if (!res.ok || !data?.success || data.user?.type !== 'client') {
           setError('Access denied. Please log in.');
           router.push('/login/clients');
           return;
@@ -55,19 +55,58 @@ const data = await res.json();
           },
         });
 
+        // --- Merge local favourites into DB (run once per session) ---
+        try {
+          if (!sessionStorage.getItem('favMergeDone')) {
+            const localFavs = JSON.parse(localStorage.getItem('favourites') || '[]');
+
+            const resMerge = await fetch('/api/clients/favorites-merge', {
+              method: 'POST',
+              credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ favourites: Array.isArray(localFavs) ? localFavs : [] }),
+            });
+
+            const ctMerge = resMerge.headers.get('content-type') || '';
+            const dataMerge = ctMerge.includes('application/json') ? await resMerge.json() : null;
+
+            if (resMerge.ok && dataMerge?.success) {
+              const mergedIds = dataMerge.favourites || dataMerge.favorites || [];
+              localStorage.setItem('favourites', JSON.stringify(mergedIds));
+            }
+            sessionStorage.setItem('favMergeDone', '1');
+          }
+        } catch (e) {
+          console.warn('Favourites merge skipped:', e);
+        }
+
+        // --- Purchases ---
         const purchasesRes = await fetch('/api/clients/purchases', { credentials: 'include' });
-        const purchasesData = await purchasesRes.json();
-        if (purchasesData.success) setPurchases(purchasesData.purchases);
+        const purchasesCT = purchasesRes.headers.get('content-type') || '';
+        const purchasesData = purchasesCT.includes('application/json') ? await purchasesRes.json() : null;
+        if (purchasesRes.ok && purchasesData?.success) setPurchases(purchasesData.purchases || []);
 
-        // Fetch upcoming bookings
+        // --- Upcoming bookings ---
         const upcomingRes = await fetch('/api/clients/upcoming-bookings', { credentials: 'include' });
-        const upcomingData = await upcomingRes.json();
-        if (upcomingData.success) setUpcomingBookings(upcomingData.bookings);
+        const upcomingCT = upcomingRes.headers.get('content-type') || '';
+        const upcomingData = upcomingCT.includes('application/json') ? await upcomingRes.json() : null;
+        if (upcomingRes.ok && upcomingData?.success) setUpcomingBookings(upcomingData.bookings || []);
 
-        // Fetch favorites
+        // --- Favorites (docs) ---
         const favoritesRes = await fetch('/api/clients/favorites', { credentials: 'include' });
-        const favoritesData = await favoritesRes.json();
-        if (favoritesData.success) setFavorites(favoritesData.favorites);
+        const favCT = favoritesRes.headers.get('content-type') || '';
+        const favoritesData = favCT.includes('application/json') ? await favoritesRes.json() : null;
+
+        if (favoritesRes.ok && favoritesData?.success) {
+          setFavorites(favoritesData.favorites || []);
+          // keep localStorage in sync if backend returns ids
+          if (Array.isArray(favoritesData.favouriteIds)) {
+            localStorage.setItem('favourites', JSON.stringify(favoritesData.favouriteIds));
+          } else if (Array.isArray(favoritesData.favorites)) {
+            // fall back to extracting ids from docs
+            localStorage.setItem('favourites', JSON.stringify(favoritesData.favorites.map(f => String(f._id))));
+          }
+        }
 
         setLoading(false);
       } catch (err) {
@@ -79,7 +118,6 @@ const data = await res.json();
 
     loadClientData();
     setMounted(true);
-  }
   }, [router]);
 
   const handleChange = (e) => {
@@ -93,7 +131,6 @@ const data = await res.json();
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
-
 
   const handleSave = async () => {
     setSaving(true);
@@ -157,10 +194,10 @@ const data = await res.json();
 
       if (res.ok) {
         setSuccess('✅ Rating submitted successfully!');
-        // Refresh purchases to show updated rating
         const purchasesRes = await fetch('/api/clients/purchases', { credentials: 'include' });
-        const purchasesData = await purchasesRes.json();
-        if (purchasesData.success) setPurchases(purchasesData.purchases);
+        const ct = purchasesRes.headers.get('content-type') || '';
+        const purchasesData = ct.includes('application/json') ? await purchasesRes.json() : null;
+        if (purchasesRes.ok && purchasesData?.success) setPurchases(purchasesData.purchases || []);
       }
     } catch (err) {
       console.error('Error rating service:', err);
@@ -168,6 +205,7 @@ const data = await res.json();
     }
   };
 
+  // 🔁 Toggle favourite with server + keep localStorage in sync
   const handleToggleFavorite = async (cleanerId) => {
     try {
       const res = await fetch('/api/clients/toggle-favorite', {
@@ -177,10 +215,29 @@ const data = await res.json();
         body: JSON.stringify({ cleanerId }),
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        setFavorites(data.favorites);
+      const ct = res.headers.get('content-type') || '';
+      const data = ct.includes('application/json') ? await res.json() : null;
+
+      if (res.ok && data?.success) {
+        // update rendered docs
+        const ids = (data.favourites || data.favorites || []).map(String);
+
+        // if we have current docs, adjust them to reflect the toggle
+        setFavorites((prev) => {
+          const isNowFav = ids.includes(String(cleanerId));
+          const hadDoc = prev.some((d) => String(d._id) === String(cleanerId));
+          if (isNowFav && hadDoc) return prev; // already present
+          if (!isNowFav) return prev.filter((d) => String(d._id) !== String(cleanerId));
+          // If newly added but doc not in list, leave as-is (it will show elsewhere); we keep the list trimmed here
+          return prev;
+        });
+
+        // sync localStorage with server truth
+        localStorage.setItem('favourites', JSON.stringify(ids));
+
         setSuccess(data.added ? '✅ Added to favorites!' : '✅ Removed from favorites!');
+      } else {
+        setError('❌ Error updating favorites.');
       }
     } catch (err) {
       console.error('Error toggling favorite:', err);
@@ -192,12 +249,12 @@ const data = await res.json();
     const now = new Date();
     const target = new Date(dateTime);
     const diff = target - now;
-    
+
     if (diff < 0) return 'Past';
-    
+
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    
+
     if (days > 0) return `${days} day${days > 1 ? 's' : ''}`;
     if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''}`;
     return 'Soon';
@@ -538,7 +595,7 @@ const data = await res.json();
                     {purchase.amount && (
                       <p className="text-gray-700 font-medium mb-3">£{(purchase.amount).toFixed(2)}</p>
                     )}
-                    
+
                     {/* Rating & Review Section */}
                     {purchase.status === 'approved' && (
                       <div className="mt-3 pt-3 border-t border-gray-200">
