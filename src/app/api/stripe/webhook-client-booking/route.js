@@ -4,18 +4,15 @@ import { connectToDatabase } from '@/lib/db';
 import Purchase from '@/models/Purchase';
 
 export const config = {
-  api: {
-    bodyParser: false, // Required to verify Stripe signature
-  },
+  api: { bodyParser: false }, // pages API style; App Router ignores this but harmless
 };
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-// ⛓️ Convert ReadableStream to Buffer
+// ⛓️ Convert ReadableStream to Uint8Array (works in App Router)
 async function getRawBody(readable) {
   const chunks = [];
   const reader = readable.getReader();
-
   try {
     while (true) {
       const { done, value } = await reader.read();
@@ -25,31 +22,19 @@ async function getRawBody(readable) {
   } finally {
     reader.releaseLock();
   }
-
-  const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
-  const result = new Uint8Array(totalLength);
+  const total = chunks.reduce((acc, c) => acc + c.length, 0);
+  const out = new Uint8Array(total);
   let offset = 0;
-
-  for (const chunk of chunks) {
-    result.set(chunk, offset);
-    offset += chunk.length;
+  for (const c of chunks) {
+    out.set(c, offset);
+    offset += c.length;
   }
-
-  return result;
+  return out;
 }
 
-// 🚀 Webhook Handler
 export async function POST(req) {
-  console.log('🔥 WEBHOOK HIT: Booking webhook triggered');
-
   const sig = req.headers.get('stripe-signature');
   const rawBody = await getRawBody(req.body);
-
-  console.log('📍 Stripe signature header:', sig);
-  console.log('📦 Raw body length:', rawBody.length);
-  console.log('🔧 Env check:');
-  console.log('- STRIPE_SECRET_KEY:', !!process.env.STRIPE_SECRET_KEY);
-  console.log('- STRIPE_WEBHOOK_CLIENT_BOOKING_SECRET:', !!process.env.STRIPE_WEBHOOK_CLIENT_BOOKING_SECRET);
 
   let event;
   try {
@@ -58,61 +43,63 @@ export async function POST(req) {
       sig,
       process.env.STRIPE_WEBHOOK_CLIENT_BOOKING_SECRET
     );
-    console.log('✅ Stripe signature verified. Event type:', event.type);
   } catch (err) {
-    console.error('❌ Signature verification failed:', err.message);
+    console.error('❌ Stripe signature verification failed:', err.message);
     return new Response(`Webhook Error: ${err.message}`, { status: 400 });
   }
 
+  // We care about the Checkout completing so we can attach IDs to our existing Purchase
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
-    const metadata = session.metadata || {};
+    const md = session.metadata || {};
+    const piId = session.payment_intent || session.payment_intent_id || null;
 
-    console.log('📦 Session metadata:', metadata);
+    const {
+      purchaseId,   // ✅ we passed this from the client
+      clientId,
+      cleanerId,
+      day,
+      hour,
+    } = md;
 
-    const { clientId, cleanerId, day, hour } = metadata;
-
-    if (!clientId || !cleanerId || !day || !hour) {
-      console.error('❌ Missing required metadata (clientId, cleanerId, day, hour)');
+    if (!purchaseId || !clientId || !cleanerId || !day || !hour) {
+      console.error('❌ Missing metadata. Need purchaseId, clientId, cleanerId, day, hour.');
       return new Response('Missing required metadata', { status: 400 });
     }
 
     try {
-      console.log('🔌 Connecting to MongoDB...');
       await connectToDatabase();
-      console.log('✅ Connected to MongoDB');
 
-      const clientObjectId = new mongoose.Types.ObjectId(clientId);
-      const cleanerObjectId = new mongoose.Types.ObjectId(cleanerId);
-
-      const existing = await Purchase.findOne({
-        clientId: clientObjectId,
-        cleanerId: cleanerObjectId,
-        stripeSessionId: session.id,
-      });
-
-      if (existing) {
-        console.log('ℹ️ Purchase already exists:', existing._id);
-      } else {
-        const newPurchase = await Purchase.create({
-          clientId: clientObjectId,
-          cleanerId: cleanerObjectId,
-          stripeSessionId: session.id,
-          paymentIntentId: session.payment_intent,
-          amount: session.amount_total ? session.amount_total / 100 : null,
-          day,
-          hour,
-          status: 'pending_approval',
+      // ⚠️ IMPORTANT: Update the existing Purchase created before Checkout
+      const purchase = await Purchase.findById(purchaseId);
+      if (!purchase) {
+        // Fallback: don’t create a new one; just log (prevents duplicates/desync)
+        console.warn('⚠️ Purchase not found by purchaseId. No new record created.', {
+          purchaseId, sessionId: session.id,
         });
-        console.log('✅ New Purchase saved to DB:', newPurchase._id);
+        return new Response('OK', { status: 200 });
       }
+
+      // Attach Stripe IDs/amount; keep status as 'pending' (awaiting cleaner approval)
+      purchase.stripeSessionId = session.id;
+      if (piId) purchase.paymentIntentId = typeof piId === 'string' ? piId : String(piId);
+      if (typeof session.amount_total === 'number') {
+        purchase.amount = session.amount_total / 100;
+      }
+      // Keep whatever you used earlier: 'pending' is consistent with dashboards
+      if (!purchase.status || purchase.status === 'pending_approval') {
+        purchase.status = 'pending';
+      }
+
+      await purchase.save();
+
+      return new Response('OK', { status: 200 });
     } catch (err) {
-      console.error('❌ MongoDB Save Error:', err.message);
+      console.error('❌ Webhook DB error:', err);
       return new Response('Database error', { status: 500 });
     }
-  } else {
-    console.log('🔕 Unhandled event type:', event.type);
   }
 
-  return new Response('Webhook received', { status: 200 });
+  // (Optional) handle other events (expired, payment_failed) if you want
+  return new Response('Unhandled event', { status: 200 });
 }

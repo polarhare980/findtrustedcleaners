@@ -6,7 +6,7 @@ import { secureFetch } from '@/lib/secureFetch';
 
 export default function PurchaseButton({
   cleanerId,
-  selectedSlot, // ✅ new prop from parent
+  selectedSlot, // { day: 'Monday', hour: '10' }
   onPurchaseSuccess,
   onPurchaseStart,
   onPurchaseError,
@@ -20,7 +20,6 @@ export default function PurchaseButton({
 
   useEffect(() => {
     if (localStorage.getItem('purchaseIntent') === 'true') {
-      console.log('🔁 Reopening popup after login');
       localStorage.removeItem('purchaseIntent');
       setShowPopup(true);
     }
@@ -28,16 +27,12 @@ export default function PurchaseButton({
 
   useEffect(() => {
     document.body.style.overflow = showPopup ? 'hidden' : 'unset';
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
+    return () => { document.body.style.overflow = 'unset'; };
   }, [showPopup]);
 
   useEffect(() => {
     const handleEscape = (e) => {
-      if (e.key === 'Escape' && showPopup && !loading) {
-        handleCancel();
-      }
+      if (e.key === 'Escape' && showPopup && !loading) handleCancel();
     };
     if (showPopup) {
       document.addEventListener('keydown', handleEscape);
@@ -46,8 +41,6 @@ export default function PurchaseButton({
   }, [showPopup, loading]);
 
   const handlePurchase = async () => {
-    console.log('🟢 Purchase triggered');
-
     const day = selectedSlot?.day;
     const hour = selectedSlot?.hour;
 
@@ -63,9 +56,9 @@ export default function PurchaseButton({
     onPurchaseStart?.();
 
     try {
+      // 1) Auth check
       const authRes = await secureFetch('/api/auth/me');
       const authData = await authRes.json();
-      console.log('🔍 AUTH DEBUG:', authData);
 
       if (!authData.success || authData.user?.type !== 'client') {
         const errorMsg = 'You must be logged in as a client to purchase.';
@@ -79,21 +72,51 @@ export default function PurchaseButton({
         return;
       }
 
-      console.log('🧾 Sending Stripe payload:', { cleanerId, day, hour });
+      // 2) Create the Purchase (server sets status:'pending' and marks slot ⏳)
+      //    IMPORTANT: this calls /api/clients/purchases (Step 2 you added)
+      const purchaseRes = await fetch('/api/clients/purchases', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cleanerId,
+          day,
+          hour,
+          amount: 2.99, // adjust if you change price server-side
+        }),
+      });
 
+      const purchaseData = await purchaseRes.json();
+      if (!purchaseRes.ok || !purchaseData?.success) {
+        const errorMsg = purchaseData?.message || 'Could not create purchase.';
+        setError(errorMsg);
+        onPurchaseError?.(errorMsg);
+        setLoading(false);
+        return;
+      }
+
+      const purchaseId = purchaseData.purchase?._id;
+      if (!purchaseId) {
+        const errorMsg = 'Purchase created but no ID returned.';
+        setError(errorMsg);
+        onPurchaseError?.(errorMsg);
+        setLoading(false);
+        return;
+      }
+
+      // 3) Start Stripe checkout, pass purchaseId so webhook/return knows which purchase to attach
       const res = await fetch('/api/stripe/create-client-checkout', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ cleanerId, day, hour }),
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cleanerId, day, hour, purchaseId }),
       });
 
       const data = await res.json();
-      console.log('🧾 Stripe response:', data);
 
       if (res.ok && data.url) {
         setSuccess(true);
+        onPurchaseSuccess?.(purchaseId);
         window.location.href = data.url;
       } else {
         const errorMsg = data.error || 'Checkout failed.';
@@ -101,7 +124,7 @@ export default function PurchaseButton({
         onPurchaseError?.(errorMsg);
       }
     } catch (err) {
-      console.error('❌ Stripe purchase error:', err);
+      console.error('❌ Purchase flow error:', err);
       const errorMsg = 'Server error. Please try again.';
       setError(errorMsg);
       onPurchaseError?.(errorMsg);
@@ -117,18 +140,19 @@ export default function PurchaseButton({
   };
 
   const handleBackdropClick = (e) => {
-    if (e.target === e.currentTarget && !loading) {
-      handleCancel();
-    }
+    if (e.target === e.currentTarget && !loading) handleCancel();
   };
+
+  const buttonLabel = loading
+    ? 'Processing...'
+    : !selectedSlot?.day || !selectedSlot?.hour
+      ? 'Select a Time Slot'
+      : 'Unlock Contact Details (£2.99)';
 
   return (
     <>
       <button
-        onClick={() => {
-          setError('');
-          setShowPopup(true);
-        }}
+        onClick={() => { setError(''); setShowPopup(true); }}
         disabled={disabled || loading || !selectedSlot?.day || !selectedSlot?.hour}
         className={`px-6 py-3 rounded-full font-medium transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-lg ${
           disabled || loading
@@ -136,12 +160,7 @@ export default function PurchaseButton({
             : 'bg-gradient-to-r from-teal-600 to-teal-700 text-white hover:from-teal-700 hover:to-teal-800'
         }`}
       >
-        {loading
-  ? 'Processing...'
-  : !selectedSlot?.day || !selectedSlot?.hour
-    ? 'Select a Time Slot'
-    : 'Unlock Contact Details (£2.99)'}
-
+        {buttonLabel}
       </button>
 
       {showPopup && (
@@ -237,5 +256,3 @@ export default function PurchaseButton({
     </>
   );
 }
-
-
