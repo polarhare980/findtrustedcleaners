@@ -11,7 +11,9 @@ export default function FindCleanerPage() {
   const [bookingStatus, setBookingStatus] = useState('all');
   const [loading, setLoading] = useState(true);
   const [serviceType, setServiceType] = useState('');
-  const [favorites, setFavorites] = useState([]); // array of cleaner docs (or ids)
+
+  // ✅ Local-only favourites (ids)
+  const [favouriteIds, setFavouriteIds] = useState([]);
 
   // Load cleaners whenever filters change
   useEffect(() => {
@@ -38,75 +40,26 @@ export default function FindCleanerPage() {
     fetchFilteredCleaners();
   }, [postcode, minRating, bookingStatus, serviceType]);
 
-  // Initial favourites fetch (user may or may not be logged in)
+  // ✅ Load favourites from localStorage once
   useEffect(() => {
-    const fetchFavorites = async () => {
-      try {
-        const res = await fetch('/api/clients/favorites', { credentials: 'include' });
-        if (!res.ok) return; // unauthenticated is fine; just skip
-        const data = await res.json();
-        if (data.success && Array.isArray(data.favorites)) {
-          setFavorites(data.favorites);
-        }
-      } catch (err) {
-        console.error('Failed to load favorites:', err);
-      }
-    };
-
-    fetchFavorites();
+    try {
+      const saved = JSON.parse(localStorage.getItem('favourites') || '[]');
+      setFavouriteIds(Array.isArray(saved) ? saved.map(String) : []);
+    } catch (e) {
+      console.error('Bad favourites in localStorage', e);
+      setFavouriteIds([]);
+    }
   }, []);
 
-  // Helper: is this cleaner in favourites?
-  const isFavourite = (id) => favorites.some((f) => (f?._id || f) === id);
-
-  // Optimistic toggle + server sync
-  const toggleFavorite = async (cleanerId) => {
-    const id = String(cleanerId);
-
-    // Build optimistic state using ids (works whether favorites are docs or ids)
-    const currentIds = favorites.map((f) => String(f?._id || f));
-    const wasFav = currentIds.includes(id);
-
-    const optimisticIds = wasFav
-      ? currentIds.filter((x) => x !== id)
-      : [...currentIds, id];
-
-    // Apply optimistic UI (as ids)
-    setFavorites(optimisticIds);
-
-    try {
-      const res = await fetch('/api/clients/toggle-favorite', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ cleanerId: id }),
-      });
-
-      if (res.status === 401 || res.status === 403) {
-        // rollback
-        setFavorites(currentIds);
-        // redirect to login with return
-        const next = encodeURIComponent(window.location.pathname + window.location.search);
-        window.location.href = `/login/clients?next=${next}`;
-        return;
-      }
-
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        // rollback on failure
-        setFavorites(currentIds);
-        console.error('Toggle favorite failed:', data?.message || res.statusText);
-        return;
-      }
-
-      // Trust server list (it may return docs or ids)
-      const normalized = (data.favorites || []).map((f) => f?._id || f);
-      setFavorites(normalized);
-    } catch (err) {
-      // rollback on error
-      setFavorites(currentIds);
-      console.error('Toggle favorite failed (JS error):', err);
-    }
+  // ✅ Helpers for local favourites
+  const isFavourite = (id) => favouriteIds.includes(String(id));
+  const toggleFavourite = (id) => {
+    const s = String(id);
+    setFavouriteIds((prev) => {
+      const next = prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s];
+      localStorage.setItem('favourites', JSON.stringify(next));
+      return next;
+    });
   };
 
   const LoadingSpinner = () => (
@@ -297,13 +250,14 @@ export default function FindCleanerPage() {
                     transition={{ duration: 0.5, delay: index * 0.1 }}
                     className="bg-white/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] shadow-[0_8px_32px_rgba(0,0,0,0.1)] p-8 hover:shadow-[0_12px_40px_rgba(0,0,0,0.15)] hover:-translate-y-1 transition-all duration-300 ease-in-out relative"
                   >
-                    {/* Favorite Toggle */}
+                    {/* ❤️ Favourite toggle (local only) */}
                     <button
-                      onClick={() => toggleFavorite(cleaner._id)}
+                      type="button"
+                      onClick={() => toggleFavourite(cleaner._id)}
                       className={`absolute top-3 right-3 text-2xl transition-transform duration-200 z-10 ${
                         isFavourite(cleaner._id) ? 'text-red-500' : 'text-gray-300'
                       } hover:scale-110`}
-                      title={isFavourite(cleaner._id) ? 'Remove from favorites' : 'Add to favorites'}
+                      title={isFavourite(cleaner._id) ? 'Remove from favourites' : 'Add to favourites'}
                       aria-pressed={isFavourite(cleaner._id)}
                     >
                       {isFavourite(cleaner._id) ? '❤️' : '🤍'}
