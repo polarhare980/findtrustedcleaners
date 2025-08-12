@@ -52,6 +52,25 @@ const injectPendingFromPurchases = (availability = {}, purchasesList = []) => {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
+
+  // ✅ put this back in (you removed it)
+const normaliseAvailability = (availability = {}, bookingsList = []) => {
+  const updated = JSON.parse(JSON.stringify(availability || {}));
+  for (const day in updated) {
+    for (const hour in updated[day]) {
+      const slot = updated[day][hour];
+      if (slot === 'pending') {
+        const booking = (bookingsList || []).find(
+          b => b?.day === day && String(b?.hour) === String(hour)
+        );
+        updated[day][hour] = { status: 'pending', bookingId: booking?._id || null };
+      }
+    }
+  }
+  return updated;
+};
+
+
     const fetchEverything = async () => {
       try {
         // who am I?
