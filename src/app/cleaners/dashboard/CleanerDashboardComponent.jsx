@@ -31,24 +31,23 @@ export default function CleanerDashboardComponent() {
   const [imageUploading, setImageUploading] = useState(false);
 
   // ⬇️ helper: make "pending" slots objects with bookingId so ✓ / ✗ show & work
-  const normaliseAvailability = (availability = {}, bookingsList = []) => {
-    const updated = JSON.parse(JSON.stringify(availability || {}));
-    for (const day in updated) {
-      for (const hour in updated[day]) {
-        const slot = updated[day][hour];
-        if (slot === 'pending') {
-          const booking = bookingsList.find(
-            (b) => b?.day === day && String(b?.hour) === String(hour)
-          );
-          updated[day][hour] = {
-            status: 'pending',
-            bookingId: booking?._id || null,
-          };
-        }
-      }
+  // inject pending purchases as pending slots if missing
+const injectPendingFromPurchases = (availability = {}, purchasesList = []) => {
+  const updated = JSON.parse(JSON.stringify(availability || {}));
+  for (const p of purchasesList || []) {
+    if (p?.status !== 'pending') continue;
+    const day = p?.day;
+    const hour = String(p?.hour);
+    if (!day || !hour) continue;
+    if (!updated[day]) updated[day] = {};
+    const slot = updated[day][hour];
+    if (!slot || slot === true || slot === 'unavailable') {
+      updated[day][hour] = { status: 'pending', bookingId: p?._id || null };
     }
-    return updated;
-  };
+  }
+  return updated;
+};
+
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -73,40 +72,61 @@ export default function CleanerDashboardComponent() {
         // get bookings for this cleaner (RETURN the array)
         const fetchBookings = async () => {
   try {
-    const res = await fetch(`/api/bookings/cleaner/${cleanerUser._id}`, {
-      credentials: 'include',
-    });
+    const res = await fetch(`/api/bookings/cleaner/${cleanerUser._id}`, { credentials: 'include' });
     const data = await res.json();
-    if (data.success) {
-      console.log('📋 Dashboard received bookings →', data.bookings.map(b => ({
-        id: b?._id,
-        status: b?.status,
-        day: b?.day,
-        hour: String(b?.hour)
+    if (data?.success) {
+      console.log('📋 Dashboard received bookings →', (data.bookings || []).map(b => ({
+        id: b?._id, status: b?.status, day: b?.day, hour: String(b?.hour)
       })));
       setBookings(data.bookings);
-    } else {
-      console.warn('Failed to load bookings:', data.message);
+      return data.bookings;
     }
+    console.warn('Failed to load bookings:', data?.message);
+    return [];
   } catch (err) {
     console.error('Booking fetch failed:', err);
+    return [];
   }
 };
 
+// get pending purchases
+const fetchPurchases = async () => {
+  try {
+    const res = await fetch(`/api/purchases/cleaner/${cleanerUser._id}`, { credentials: 'include' });
+    const data = await res.json();
+    if (data?.success) {
+      const purchases = data.purchases || data.bookings || []; // handles either key
+      console.log('🧾 Dashboard received purchases →', purchases.map(p => ({
+        id: p?._id, status: p?.status, day: p?.day, hour: String(p?.hour)
+      })));
+      return purchases;
+    }
+    console.warn('Failed to load purchases:', data?.message || data?.error);
+    return [];
+  } catch (err) {
+    console.error('Purchase fetch failed:', err);
+    return [];
+  }
+};
 
-        const bookingsList = await fetchBookings();
+const bookingsList = await fetchBookings();
+const purchasesList = await fetchPurchases();
 
-        // build dashboard state and NORMALISE availability
-        const cleanerData = {
-          ...cleanerUser,
-          services: cleanerUser.services || [],
-          availability: normaliseAvailability(cleanerUser.availability || {}, bookingsList),
-          businessInsurance: cleanerUser.businessInsurance || false,
-          bio: cleanerUser.bio || '',
-        };
+const availabilityRaw = cleanerUser.availability || {};
+const availabilityWithPurchases = injectPendingFromPurchases(availabilityRaw, purchasesList);
+const availabilityFinal = normaliseAvailability(availabilityWithPurchases, bookingsList);
 
-        setFormData(cleanerData);
-        setEditData(cleanerData);
+const cleanerData = {
+  ...cleanerUser,
+  services: cleanerUser.services || [],
+  availability: availabilityFinal,
+  businessInsurance: cleanerUser.businessInsurance || false,
+  bio: cleanerUser.bio || '',
+};
+
+setFormData(cleanerData);
+setEditData(cleanerData);
+
       } catch {
         router.push('/login');
       } finally {
