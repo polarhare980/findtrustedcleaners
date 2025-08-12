@@ -139,52 +139,79 @@ export default function CleanerDashboardComponent() {
   };
 
   const handleConfirm = async (day, hour) => {
-    try {
-      const slot = formData.availability?.[day]?.[hour];
-      const bookingId = slot?.bookingId;
+  try {
+    const slot = formData?.availability?.[day]?.[hour];
+    let bookingId = slot?.bookingId;
 
-      const res = await fetch(`/api/booking/accept-order/${bookingId}`, {
-        method: 'PUT',
-        credentials: 'include',
-      });
-      const data = await res.json();
-
-      if (res.ok && data.success) {
-        setFormData(prev => ({ ...prev, availability: data.updatedAvailability }));
-        setAvailabilityChanged(true);
-        setMessage('✅ Booking accepted and payment captured!');
-      } else {
-        alert(data.message || 'Error accepting booking.');
-      }
-    } catch (err) {
-      console.error('Accept booking error:', err);
-      alert('Server error.');
+    // Fallback: find a pending item in the fetched bookings list for this day/hour
+    if (!bookingId) {
+      const match = bookings.find(
+        b => b?.status === 'pending' && b?.day === day && String(b?.hour) === String(hour)
+      );
+      bookingId = match?._id;
     }
-  };
 
-  const handleDecline = async (day, hour) => {
-    try {
-      const slot = formData.availability?.[day]?.[hour];
-      const bookingId = slot?.bookingId;
-
-      const res = await fetch(`/api/booking/decline-order/${bookingId}`, {
-        method: 'PUT',
-        credentials: 'include',
-      });
-      const data = await res.json();
-
-      if (res.ok && data.success) {
-        setFormData(prev => ({ ...prev, availability: data.updatedAvailability }));
-        setAvailabilityChanged(true);
-        setMessage('✅ Booking declined and slot freed.');
-      } else {
-        alert(data.message || 'Error declining booking.');
-      }
-    } catch (err) {
-      console.error('Decline booking error:', err);
-      alert('Server error.');
+    if (!bookingId) {
+      alert('No booking found for this slot.');
+      return;
     }
-  };
+
+    const res = await fetch(`/api/booking/accept-order/${bookingId}`, {
+      method: 'PUT',
+      credentials: 'include',
+    });
+    const data = await res.json();
+
+    if (res.ok && data.success) {
+      setFormData(prev => ({ ...prev, availability: data.updatedAvailability }));
+      setAvailabilityChanged(true);
+      setMessage('✅ Booking accepted and payment captured!');
+    } else {
+      alert(data.message || 'Error accepting booking.');
+    }
+  } catch (err) {
+    console.error('Accept booking error:', err);
+    alert('Server error.');
+  }
+};
+
+const handleDecline = async (day, hour) => {
+  try {
+    const slot = formData?.availability?.[day]?.[hour];
+    let bookingId = slot?.bookingId;
+
+    // Fallback: find a pending item in the fetched bookings list for this day/hour
+    if (!bookingId) {
+      const match = bookings.find(
+        b => b?.status === 'pending' && b?.day === day && String(b?.hour) === String(hour)
+      );
+      bookingId = match?._id;
+    }
+
+    if (!bookingId) {
+      alert('No booking found for this slot.');
+      return;
+    }
+
+    const res = await fetch(`/api/booking/decline-order/${bookingId}`, {
+      method: 'PUT',
+      credentials: 'include',
+    });
+    const data = await res.json();
+
+    if (res.ok && data.success) {
+      setFormData(prev => ({ ...prev, availability: data.updatedAvailability }));
+      setAvailabilityChanged(true);
+      setMessage('✅ Booking declined and slot freed.');
+    } else {
+      alert(data.message || 'Error declining booking.');
+    }
+  } catch (err) {
+    console.error('Decline booking error:', err);
+    alert('Server error.');
+  }
+};
+
 
 
   const handleSave = async () => {
