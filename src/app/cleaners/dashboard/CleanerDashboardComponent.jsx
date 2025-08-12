@@ -25,75 +25,96 @@ export default function CleanerDashboardComponent() {
   const [bookings, setBookings] = useState([]);
   const [postcodeInput, setPostcodeInput] = useState('');
 
-
   // Image upload states
   const [selectedFile, setSelectedFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
   const [imageUploading, setImageUploading] = useState(false);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const fetchCleaner = async () => {
-        try {
-          
-
-// Inside useEffect
-const res = await secureFetch('/api/auth/me');
-const data = await res.json();
-
-
-          if (!data.success || data.user.type !== 'cleaner') {
-            router.push('/login');
-            return;
-          }
-          const cleanerUser = {
-            ...data.user,
-            _id: data.user._id?.toString() || data.user.id?.toString(),
+  // ⬇️ helper: make "pending" slots objects with bookingId so ✓ / ✗ show & work
+  const normaliseAvailability = (availability = {}, bookingsList = []) => {
+    const updated = JSON.parse(JSON.stringify(availability || {}));
+    for (const day in updated) {
+      for (const hour in updated[day]) {
+        const slot = updated[day][hour];
+        if (slot === 'pending') {
+          const booking = bookingsList.find(
+            (b) => b?.day === day && String(b?.hour) === String(hour)
+          );
+          updated[day][hour] = {
+            status: 'pending',
+            bookingId: booking?._id || null,
           };
-
-          setCleaner(cleanerUser);
-
-          // 📦 Fetch bookings
-const fetchBookings = async () => {
-  try {
-    const res = await fetch(`/api/bookings/cleaner/${cleanerUser._id}`, {
-      credentials: 'include',
-    });
-    const data = await res.json();
-    if (data.success) {
-      setBookings(data.bookings);
-    } else {
-      console.warn('Failed to load bookings:', data.message);
-    }
-  } catch (err) {
-    console.error('Booking fetch failed:', err);
-  }
-};
-fetchBookings();
-
-
-          const cleanerData = {
-            ...cleanerUser,
-            services: cleanerUser.services || [],
-            availability: cleanerUser.availability || {},
-            businessInsurance: cleanerUser.businessInsurance || false,
-            bio: cleanerUser.bio || '',
-          };
-
-          setFormData(cleanerData);
-          setEditData(cleanerData);
-
-        } catch {
-          router.push('/login');
-        } finally {
-          setMounted(true);
-          setLoading(false);
         }
-      };
-
-      fetchCleaner();
+      }
     }
+    return updated;
+  };
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const fetchEverything = async () => {
+      try {
+        // who am I?
+        const resMe = await secureFetch('/api/auth/me');
+        const dataMe = await resMe.json();
+
+        if (!dataMe?.success || dataMe?.user?.type !== 'cleaner') {
+          router.push('/login');
+          return;
+        }
+
+        const cleanerUser = {
+          ...dataMe.user,
+          _id: dataMe.user._id?.toString() || dataMe.user.id?.toString(),
+        };
+        setCleaner(cleanerUser);
+
+        // get bookings for this cleaner (RETURN the array)
+        const fetchBookings = async () => {
+          try {
+            const res = await fetch(`/api/bookings/cleaner/${cleanerUser._id}`, {
+              credentials: 'include',
+            });
+            const data = await res.json();
+            if (data?.success) {
+              setBookings(data.bookings);
+              return data.bookings; // ✅ important
+            }
+            console.warn('Failed to load bookings:', data?.message);
+            return [];
+          } catch (err) {
+            console.error('Booking fetch failed:', err);
+            return [];
+          }
+        };
+
+        const bookingsList = await fetchBookings();
+
+        // build dashboard state and NORMALISE availability
+        const cleanerData = {
+          ...cleanerUser,
+          services: cleanerUser.services || [],
+          availability: normaliseAvailability(cleanerUser.availability || {}, bookingsList),
+          businessInsurance: cleanerUser.businessInsurance || false,
+          bio: cleanerUser.bio || '',
+        };
+
+        setFormData(cleanerData);
+        setEditData(cleanerData);
+      } catch {
+        router.push('/login');
+      } finally {
+        setMounted(true);
+        setLoading(false);
+      }
+    };
+
+    fetchEverything();
   }, [router]);
+
+  // (leave the rest of your component — including toggleAvailability — as-is)
+
 
   const toggleAvailability = (day, hour) => {
     const slot = formData.availability?.[day]?.[hour];
