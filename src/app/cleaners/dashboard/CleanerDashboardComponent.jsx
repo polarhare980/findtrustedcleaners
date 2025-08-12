@@ -72,22 +72,27 @@ export default function CleanerDashboardComponent() {
 
         // get bookings for this cleaner (RETURN the array)
         const fetchBookings = async () => {
-          try {
-            const res = await fetch(`/api/bookings/cleaner/${cleanerUser._id}`, {
-              credentials: 'include',
-            });
-            const data = await res.json();
-            if (data?.success) {
-              setBookings(data.bookings);
-              return data.bookings; // ✅ important
-            }
-            console.warn('Failed to load bookings:', data?.message);
-            return [];
-          } catch (err) {
-            console.error('Booking fetch failed:', err);
-            return [];
-          }
-        };
+  try {
+    const res = await fetch(`/api/bookings/cleaner/${cleanerUser._id}`, {
+      credentials: 'include',
+    });
+    const data = await res.json();
+    if (data.success) {
+      console.log('📋 Dashboard received bookings →', data.bookings.map(b => ({
+        id: b?._id,
+        status: b?.status,
+        day: b?.day,
+        hour: String(b?.hour)
+      })));
+      setBookings(data.bookings);
+    } else {
+      console.warn('Failed to load bookings:', data.message);
+    }
+  } catch (err) {
+    console.error('Booking fetch failed:', err);
+  }
+};
+
 
         const bookingsList = await fetchBookings();
 
