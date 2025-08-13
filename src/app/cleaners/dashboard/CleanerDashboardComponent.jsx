@@ -1,4 +1,4 @@
-'use client';
+'use client'; 
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -7,6 +7,40 @@ import { secureFetch } from '@/lib/secureFetch';
 
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const hours = Array.from({ length: 13 }, (_, i) => `${7 + i}`);
+
+// ⬇️ helper: inject pending purchases as pending slots if missing
+const injectPendingFromPurchases = (availability = {}, purchasesList = []) => {
+  const updated = JSON.parse(JSON.stringify(availability || {}));
+  for (const p of purchasesList || []) {
+    if (p?.status !== 'pending') continue;
+    const day = p?.day;
+    const hour = String(p?.hour);
+    if (!day || !hour) continue;
+    if (!updated[day]) updated[day] = {};
+    const slot = updated[day][hour];
+    if (!slot || slot === true || slot === 'unavailable') {
+      updated[day][hour] = { status: 'pending', bookingId: p?._id || null };
+    }
+  }
+  return updated;
+};
+
+// ✅ helper: turn "pending" strings into objects with bookingId from bookings list
+const normaliseAvailability = (availability = {}, bookingsList = []) => {
+  const updated = JSON.parse(JSON.stringify(availability || {}));
+  for (const day in updated) {
+    for (const hour in updated[day]) {
+      const slot = updated[day][hour];
+      if (slot === 'pending') {
+        const booking = (bookingsList || []).find(
+          b => b?.day === day && String(b?.hour) === String(hour)
+        );
+        updated[day][hour] = { status: 'pending', bookingId: booking?._id || null };
+      }
+    }
+  }
+  return updated;
+};
 
 export default function CleanerDashboardComponent() {
   const router = useRouter();
@@ -30,45 +64,13 @@ export default function CleanerDashboardComponent() {
   const [imagePreview, setImagePreview] = useState('');
   const [imageUploading, setImageUploading] = useState(false);
 
-  // ⬇️ helper: inject pending purchases as pending slots if missing
-  const injectPendingFromPurchases = (availability = {}, purchasesList = []) => {
-    const updated = JSON.parse(JSON.stringify(availability || {}));
-    for (const p of purchasesList || []) {
-      if (p?.status !== 'pending') continue;
-      const day = p?.day;
-      const hour = String(p?.hour);
-      if (!day || !hour) continue;
-      if (!updated[day]) updated[day] = {};
-      const slot = updated[day][hour];
-      if (!slot || slot === true || slot === 'unavailable') {
-        updated[day][hour] = { status: 'pending', bookingId: p?._id || null };
-      }
-    }
-    return updated;
-  };
-
-  // ✅ restore this helper so pending strings become objects with bookingId
-  const normaliseAvailability = (availability = {}, bookingsList = []) => {
-    const updated = JSON.parse(JSON.stringify(availability || {}));
-    for (const day in updated) {
-      for (const hour in updated[day]) {
-        const slot = updated[day][hour];
-        if (slot === 'pending') {
-          const booking = (bookingsList || []).find(
-            b => b?.day === day && String(b?.hour) === String(hour)
-          );
-          updated[day][hour] = { status: 'pending', bookingId: booking?._id || null };
-        }
-      }
-    }
-    return updated;
-  };
-
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
     const fetchEverything = async () => {
       try {
+        setLoading(true);
+
         // who am I?
         const resMe = await secureFetch('/api/auth/me');
         const dataMe = await resMe.json();
@@ -84,7 +86,7 @@ export default function CleanerDashboardComponent() {
         };
         setCleaner(cleanerUser);
 
-        // get bookings for this cleaner (RETURN the array)
+        // get bookings for this cleaner
         const fetchBookings = async () => {
           try {
             const res = await fetch(`/api/bookings/cleaner/${cleanerUser._id}`, { credentials: 'include' });
@@ -104,17 +106,15 @@ export default function CleanerDashboardComponent() {
           }
         };
 
-        // ✅ safer purchases fetch (won't blow up on 404 HTML/redirects)
+        // get pending purchases (safe-parse only JSON)
         const fetchPurchases = async () => {
           try {
             const res = await fetch(`/api/purchases/cleaner/${cleanerUser._id}`, { credentials: 'include' });
-
             const ct = res.headers.get('content-type') || '';
             if (!ct.includes('application/json')) {
               console.warn('Purchases API returned non-JSON:', res.status);
               return [];
             }
-
             const data = await res.json();
             if (res.ok && data?.success) {
               const purchases = data.purchases || data.bookings || [];
@@ -123,7 +123,6 @@ export default function CleanerDashboardComponent() {
               })));
               return purchases;
             }
-
             console.warn('Failed to load purchases:', data?.message || data?.error);
             return [];
           } catch (err) {
@@ -133,9 +132,6 @@ export default function CleanerDashboardComponent() {
         };
 
         const bookingsList = await fetchBookings();
-
-        // If you haven't created /api/purchases/cleaner/[id] yet, you can temporarily skip:
-        // const purchasesList = [];
         const purchasesList = await fetchPurchases();
 
         const availabilityRaw = cleanerUser.availability || {};
@@ -152,7 +148,8 @@ export default function CleanerDashboardComponent() {
 
         setFormData(cleanerData);
         setEditData(cleanerData);
-      } catch {
+      } catch (e) {
+        console.error('Dashboard load failed:', e);
         router.push('/login');
       } finally {
         setMounted(true);
@@ -163,13 +160,11 @@ export default function CleanerDashboardComponent() {
     fetchEverything();
   }, [router]);
 
-  // (leave the rest of your component — including toggleAvailability — as-is)
-
   const toggleAvailability = (day, hour) => {
     const slot = formData.availability?.[day]?.[hour];
     const status = typeof slot === 'object' ? slot.status : slot;
 
-    if (status === false || status === 'pending') return;
+    if (status === false || status === 'pending' || status === 'booked') return;
 
     setFormData(prev => {
       const updated = { ...prev.availability };
@@ -206,7 +201,8 @@ export default function CleanerDashboardComponent() {
       const data = await res.json();
 
       if (res.ok && data.success) {
-        setFormData(prev => ({ ...prev, availability: data.updatedAvailability }));
+        // server returns updatedAvailability — keep UI in sync
+        setFormData(prev => ({ ...prev, availability: data.updatedAvailability || prev.availability }));
         setAvailabilityChanged(true);
         setMessage('✅ Booking accepted and payment captured!');
       } else {
@@ -242,7 +238,7 @@ export default function CleanerDashboardComponent() {
       const data = await res.json();
 
       if (res.ok && data.success) {
-        setFormData(prev => ({ ...prev, availability: data.updatedAvailability }));
+        setFormData(prev => ({ ...prev, availability: data.updatedAvailability || prev.availability }));
         setAvailabilityChanged(true);
         setMessage('✅ Booking declined and slot freed.');
       } else {
@@ -256,8 +252,7 @@ export default function CleanerDashboardComponent() {
 
   const handleSave = async () => {
     setSaving(true);
-    console.log('Saving availability...');
-
+    setMessage('');
     const reformattedAvailability = formData.availability;
 
     try {
@@ -296,6 +291,7 @@ export default function CleanerDashboardComponent() {
 
   const handleEditSave = async () => {
     setSaving(true);
+    setMessage('');
     try {
       const res = await fetch(`/api/cleaners/${cleaner._id}`, {
         method: 'PUT',
@@ -403,11 +399,7 @@ export default function CleanerDashboardComponent() {
       });
 
       if (res.ok) {
-        // Logout and redirect
-        await fetch('/api/auth/logout', { 
-          method: 'POST', 
-          credentials: 'include' 
-        });
+        await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
         router.push('/');
       } else {
         alert('Failed to delete profile. Please try again.');
@@ -429,22 +421,17 @@ export default function CleanerDashboardComponent() {
         body: JSON.stringify({ cleanerId: cleaner._id }),
       });
       const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      }
+      if (data.url) window.location.href = data.url;
     } catch (err) {
       console.error('Upgrade failed:', err);
       alert('Something went wrong while starting your upgrade.');
     }
   };
 
-  // Navigation functions
+  // Navigation
   const handleLogout = async () => {
     try {
-      await fetch('/api/auth/logout', { 
-        method: 'POST', 
-        credentials: 'include' 
-      });
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
       router.push('/login');
     } catch (err) {
       console.error('Logout error:', err);
@@ -452,9 +439,7 @@ export default function CleanerDashboardComponent() {
     }
   };
 
-  const handleGoHome = () => {
-    router.push('/');
-  };
+  const handleGoHome = () => router.push('/');
 
   if (!mounted) return null;
   if (loading || !formData) return <LoadingSpinner />;
@@ -472,7 +457,6 @@ export default function CleanerDashboardComponent() {
               <p className="text-gray-600">Manage your cleaning services and availability</p>
             </div>
             <div className="flex flex-wrap gap-3 mt-4 md:mt-0">
-              {/* Navigation Buttons */}
               <button
                 onClick={handleGoHome}
                 className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg font-medium transition-all duration-300 hover:transform hover:-translate-y-0.5 hover:shadow-lg"
@@ -485,7 +469,6 @@ export default function CleanerDashboardComponent() {
               >
                 🔐 Logout
               </button>
-              {/* Profile Edit Buttons */}
               <button
                 onClick={handleEditToggle}
                 className="px-4 py-2 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white rounded-lg font-medium transition-all duration-300 hover:transform hover:-translate-y-0.5 hover:shadow-lg"
@@ -501,7 +484,6 @@ export default function CleanerDashboardComponent() {
                   {saving ? '⏳ Saving...' : '💾 Save Profile'}
                 </button>
               )}
-              {/* Delete Profile Button */}
               <button
                 onClick={() => setShowDeleteModal(true)}
                 className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg font-medium transition-all duration-300 hover:transform hover:-translate-y-0.5 hover:shadow-lg"
@@ -852,7 +834,6 @@ export default function CleanerDashboardComponent() {
               <label className="text-sm font-medium text-gray-600">📸 Profile Picture</label>
               
               <div className="flex flex-col lg:flex-row gap-6 items-start">
-                {/* Current/Preview Image */}
                 <div className="flex-shrink-0">
                   {(imagePreview || formData.image) && (
                     <div className="relative">
@@ -867,7 +848,6 @@ export default function CleanerDashboardComponent() {
                         loading="lazy"
                         className="w-32 h-32 object-cover rounded-full border-4 border-teal-200 shadow-lg transition-transform duration-300 hover:scale-105" 
                       />
-
                       {!imagePreview && (
                         <div className="absolute -top-2 -right-2 bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs">
                           ✓
@@ -882,7 +862,6 @@ export default function CleanerDashboardComponent() {
                   )}
                 </div>
 
-                {/* Upload Controls */}
                 <div className="flex-1 space-y-4">
                   <input
                     type="file"
@@ -1187,7 +1166,6 @@ export default function CleanerDashboardComponent() {
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* 📄 Export Cleaner Data */}
             <button
               onClick={() => window.open('/api/cleaners/export-data', '_blank')}
               className="flex items-center justify-center gap-3 px-5 py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl font-semibold transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
@@ -1195,8 +1173,6 @@ export default function CleanerDashboardComponent() {
               <span className="text-xl">📄</span>
               <span>Export My Data</span>
             </button>
-
-            {/* 📋 View All Bookings */}
             <button
               onClick={() => router.push('/cleaner/bookings')}
               className="flex items-center justify-center gap-3 px-5 py-4 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-xl font-semibold transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
@@ -1204,8 +1180,6 @@ export default function CleanerDashboardComponent() {
               <span className="text-xl">📋</span>
               <span>View All Bookings</span>
             </button>
-
-            {/* 💰 View Earnings */}
             <button
               onClick={() => router.push('/cleaners/earnings')}
               className="flex items-center justify-center gap-3 px-5 py-4 bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-700 hover:to-yellow-800 text-white rounded-xl font-semibold transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
