@@ -107,29 +107,44 @@ export default function CleanerDashboardComponent() {
         };
 
         // get pending purchases (safe-parse only JSON)
-        const fetchPurchases = async () => {
-          try {
-            const res = await fetch(`/api/purchases/cleaner/${cleanerUser._id}`, { credentials: 'include' });
-            const ct = res.headers.get('content-type') || '';
-            if (!ct.includes('application/json')) {
-              console.warn('Purchases API returned non-JSON:', res.status);
-              return [];
-            }
-            const data = await res.json();
-            if (res.ok && data?.success) {
-              const purchases = data.purchases || data.bookings || [];
-              console.log('🧾 Dashboard purchases →', purchases.map(p => ({
-                id: p?._id, status: p?.status, day: p?.day, hour: String(p?.hour)
-              })));
-              return purchases;
-            }
-            console.warn('Failed to load purchases:', data?.message || data?.error);
-            return [];
-          } catch (err) {
-            console.error('Purchase fetch failed:', err);
-            return [];
-          }
-        };
+        // get pending purchases for the logged-in cleaner
+const fetchPurchases = async () => {
+  try {
+    const res = await fetch(`/api/purchase`, { credentials: 'include' });
+
+    // guard against HTML responses (redirects/404 pages)
+    const ct = res.headers.get('content-type') || '';
+    if (!ct.includes('application/json')) {
+      console.error('Purchases API returned non-JSON:', res.status);
+      return [];
+    }
+
+    const data = await res.json();
+    if (res.ok && data?.success) {
+      // api/purchase already filters by the logged-in cleaner
+      const purchases = (data.purchases || []).filter(p => p?.status === 'pending');
+
+      console.log(
+        '🧾 Dashboard received purchases →',
+        purchases.map(p => ({
+          id: p?._id,
+          status: p?.status,
+          day: p?.day,
+          hour: String(p?.hour),
+        }))
+      );
+
+      return purchases;
+    } else {
+      console.warn('Failed to load purchases:', data?.message || data?.error);
+      return [];
+    }
+  } catch (err) {
+    console.error('Purchase fetch failed:', err);
+    return [];
+  }
+};
+
 
         const bookingsList = await fetchBookings();
         const purchasesList = await fetchPurchases();
