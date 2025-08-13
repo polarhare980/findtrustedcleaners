@@ -110,7 +110,7 @@ export default function CleanerDashboardComponent() {
         // get pending purchases for the logged-in cleaner
 const fetchPurchases = async () => {
   try {
-    const res = await fetch(`/api/purchase`, { credentials: 'include' });
+    const res = await fetch(`/api/purchase-cleaner`, { credentials: 'include' });
 
     // guard against HTML responses (redirects/404 pages)
     const ct = res.headers.get('content-type') || '';
