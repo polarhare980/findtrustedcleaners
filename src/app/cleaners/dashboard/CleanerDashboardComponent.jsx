@@ -21,8 +21,8 @@ const injectPendingFromPurchases = (availability = {}, purchasesList = []) => {
     if (!updated[day]) updated[day] = {};
     const slot = updated[day][hour];
     if (!slot || slot === true || slot === 'unavailable') {
-      updated[day][hour] = { status: 'pending', bookingId: p?._id || null };
-    }
+  updated[day][hour] = { status: p?.status, bookingId: p?._id || null };
+}
   }
   return updated;
 };
@@ -123,7 +123,8 @@ const fetchPurchases = async (id) => {
 
     const data = await res.json();
     if (res.ok && data?.success) {
-      const purchases = (data.purchases || []).filter(p => p?.status === 'pending');
+      const purchases = (data.purchases || []).filter(
+  p => p?.status === 'pending' || p?.status === 'pending_approval'
 
       console.log(
         '🧾 Dashboard received purchases →',
@@ -180,7 +181,12 @@ const fetchPurchases = async (id) => {
     const slot = formData.availability?.[day]?.[hour];
     const status = typeof slot === 'object' ? slot.status : slot;
 
-    if (status === false || status === 'pending' || status === 'booked') return;
+    if (
+  status === false ||
+  status === 'pending' ||
+  status === 'pending_approval' ||
+  status === 'booked'
+) return;
 
     setFormData(prev => {
       const updated = { ...prev.availability };
@@ -1050,7 +1056,7 @@ const fetchPurchases = async (id) => {
                     const status = typeof slot === 'object' ? slot.status : slot;
                     const isAvailable = status === true;
                     const isUnavailable = status === 'unavailable';
-                    const isPending = status === 'pending';
+                    const isPending = status === 'pending' || status === 'pending_approval';
                     const isBooked = status === 'booked';
 
                     return (
