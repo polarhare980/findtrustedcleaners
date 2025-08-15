@@ -16,7 +16,7 @@ function isSafeEmbed(code) {
   return hasIframe && !forbidden.some(frag => lower.includes(frag));
 }
 
-// ✅ Fixed Availability Component - removed canViewContact check for buttons
+// ✅ Availability with PENDING support
 function AvailabilitySection({ availability, onSlotClick, canViewContact, selectedSlot }) {
   const [showGrid, setShowGrid] = useState(false);
 
@@ -36,17 +36,13 @@ function AvailabilitySection({ availability, onSlotClick, canViewContact, select
       boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h3 style={{
-          fontSize: '1.5rem',
-          fontWeight: 'bold',
-          color: '#115E59'
-        }}>
+        <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#115E59' }}>
           📅 Availability
         </h3>
         <button
           onClick={() => setShowGrid(prev => !prev)}
           style={{
-            background: showGrid 
+            background: showGrid
               ? 'linear-gradient(135deg, #DC2626 0%, #B91C1C 100%)'
               : 'linear-gradient(135deg, #0D9488 0%, #0F766E 100%)',
             color: 'white',
@@ -57,7 +53,7 @@ function AvailabilitySection({ availability, onSlotClick, canViewContact, select
             fontWeight: '600',
             cursor: 'pointer',
             transition: 'all 0.3s ease',
-            boxShadow: '0 4px 16px rgba(13, 148, 136, 0.3)'
+            boxShadow: '0 4px 16px rgba(13, 148, 136, 0.3)',
           }}
         >
           {showGrid ? 'Hide Availability' : 'Show Availability'}
@@ -69,7 +65,7 @@ function AvailabilitySection({ availability, onSlotClick, canViewContact, select
           overflowX: 'auto',
           border: '1px solid rgba(255, 255, 255, 0.3)',
           borderRadius: '12px',
-          background: 'rgba(255, 255, 255, 0.1)'
+          background: 'rgba(255, 255, 255, 0.1)',
         }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '800px' }}>
             <thead>
@@ -78,14 +74,14 @@ function AvailabilitySection({ availability, onSlotClick, canViewContact, select
                   border: '1px solid rgba(255, 255, 255, 0.2)',
                   padding: '12px',
                   fontWeight: 'bold',
-                  color: '#115E59'
+                  color: '#115E59',
                 }}>Day</th>
                 {hours.map(hour => (
                   <th key={hour} style={{
                     border: '1px solid rgba(255, 255, 255, 0.2)',
                     padding: '8px',
                     fontSize: '14px',
-                    color: '#115E59'
+                    color: '#115E59',
                   }}>
                     {hour}:00
                   </th>
@@ -99,14 +95,22 @@ function AvailabilitySection({ availability, onSlotClick, canViewContact, select
                     fontWeight: 'bold',
                     padding: '12px',
                     background: 'rgba(255, 255, 255, 0.2)',
-                    color: '#374151'
+                    color: '#374151',
                   }}>
                     {day}
                   </td>
+
                   {hours.map(hour => {
-                    const isAvailable = availability?.[day]?.[hour.toString()];
-                    const isSelected = selectedSlot?.day === day && selectedSlot?.hour === hour.toString();
-                    
+                    const raw = availability?.[day]?.[hour.toString()];
+                    const status = typeof raw === 'object' ? raw?.status : raw;
+
+                    const isAvailable = status === true;
+                    const isUnavailable = status === 'unavailable' || status === false || status === undefined;
+                    const isPending =
+                      status === 'pending' || status === 'pending_approval';
+                    const isSelected =
+                      selectedSlot?.day === day && selectedSlot?.hour === hour.toString();
+
                     return (
                       <td key={hour} style={{ padding: '4px' }}>
                         {isAvailable ? (
@@ -115,7 +119,7 @@ function AvailabilitySection({ availability, onSlotClick, canViewContact, select
                             style={{
                               width: '100%',
                               padding: '8px 4px',
-                              background: isSelected 
+                              background: isSelected
                                 ? 'linear-gradient(135deg, #0D9488 0%, #0F766E 100%)'
                                 : 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
                               color: 'white',
@@ -125,19 +129,35 @@ function AvailabilitySection({ availability, onSlotClick, canViewContact, select
                               fontSize: '12px',
                               fontWeight: '600',
                               transition: 'all 0.3s ease',
-                              boxShadow: isSelected ? '0 4px 12px rgba(13, 148, 136, 0.4)' : 'none'
+                              boxShadow: isSelected ? '0 4px 12px rgba(13, 148, 136, 0.4)' : 'none',
                             }}
-                            onMouseEnter={e => e.target.style.transform = 'scale(1.05)'}
-                            onMouseLeave={e => e.target.style.transform = 'scale(1)'}
+                            onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.05)')}
+                            onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
                           >
                             {isSelected ? '✓ SELECTED' : 'BOOK'}
                           </button>
+                        ) : isPending ? (
+                          <div
+                            title="Pending approval – temporarily unavailable"
+                            style={{
+                              width: '100%',
+                              padding: '8px 4px',
+                              background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
+                              color: 'white',
+                              borderRadius: '8px',
+                              fontSize: '12px',
+                              fontWeight: '700',
+                              textAlign: 'center',
+                            }}
+                          >
+                            ⏳ PENDING
+                          </div>
                         ) : (
                           <div style={{
                             textAlign: 'center',
                             color: '#9CA3AF',
                             fontSize: '16px',
-                            padding: '8px'
+                            padding: '8px',
                           }}>
                             ✗
                           </div>
@@ -159,18 +179,20 @@ function AvailabilitySection({ availability, onSlotClick, canViewContact, select
           padding: '12px',
           background: '#FEF3C7',
           borderRadius: '8px',
-          fontSize: '14px'
+          fontSize: '14px',
         }}>
           <strong>Selected:</strong> {selectedSlot.day} at {selectedSlot.hour}:00
           <br />
           <strong>Can View Contact:</strong> {canViewContact.toString()}
           <br />
-          <strong>Availability Data:</strong> {JSON.stringify(availability?.[selectedSlot.day], null, 2)}
+          <strong>Slot data:</strong>{' '}
+          {JSON.stringify(availability?.[selectedSlot.day]?.[selectedSlot.hour] ?? null)}
         </div>
       )}
     </div>
   );
 }
+
 
 export default function CleanerProfile() {
   const { id } = useParams();
