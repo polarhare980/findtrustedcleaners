@@ -124,7 +124,8 @@ const fetchPurchases = async (id) => {
     const data = await res.json();
     if (res.ok && data?.success) {
       const purchases = (data.purchases || []).filter(
-  p => p?.status === 'pending' || p?.status === 'pending_approval'
+  (p) => p?.status === 'pending' || p?.status === 'pending_approval'
+      );
 
       console.log(
         '🧾 Dashboard received purchases →',
