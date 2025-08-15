@@ -9,6 +9,29 @@ import PurchaseButton from '@/components/PurchaseButton';
 import { getCleanerId } from '@/lib/utils';
 import { fetchClient } from '@/lib/fetchClient'; // ✅ Import the shared helper
 
+// ---- NEW: public purchases endpoint + injector ----
+const PURCHASES_API = (id) => `/api/public/purchases/cleaners/${id}`;
+
+const injectPendingFromPurchases = (availability = {}, purchasesList = []) => {
+  const updated = JSON.parse(JSON.stringify(availability || {}));
+  for (const p of purchasesList || []) {
+    if (p?.status !== 'pending_approval') continue;
+    const day = p?.day;
+    const hour = String(p?.hour);
+    if (!day || !hour) continue;
+
+    if (!updated[day]) updated[day] = {};
+    const slot = updated[day][hour];
+
+    // don't overwrite hard-booked or explicitly off
+    if (slot === true || slot === 'unavailable') continue;
+
+    // mark visible as pending
+    updated[day][hour] = 'pending_approval';
+  }
+  return updated;
+};
+
 function isSafeEmbed(code) {
   const hasIframe = code.includes('<iframe') && code.includes('src=');
   const forbidden = ['<script', '<style', 'onerror', 'onload', 'javascript:'];
@@ -193,7 +216,6 @@ function AvailabilitySection({ availability, onSlotClick, canViewContact, select
   );
 }
 
-
 export default function CleanerProfile() {
   const { id } = useParams();
 
@@ -225,11 +247,10 @@ export default function CleanerProfile() {
         setClient(null);
       }
     };
-
     loadClient();
   }, []);
 
-  // ✅ Load cleaner by ID
+  // ✅ Load cleaner by ID + inject public pending slots
   useEffect(() => {
     if (!id) return;
 
@@ -239,7 +260,6 @@ export default function CleanerProfile() {
         setError('');
 
         const res = await fetch(`/api/cleaners/${id}`, { credentials: 'include' });
-
         if (!res.ok) {
           const errorText = await res.text();
           console.error('Fetch error:', res.status, errorText);
@@ -248,13 +268,35 @@ export default function CleanerProfile() {
         }
 
         const data = await res.json();
-
         if (!data?.success || !data.cleaner) {
           setError('Cleaner not found.');
           return;
         }
 
-        setCleaner(data.cleaner);
+        const baseCleaner = data.cleaner;
+        const cleanerId = getCleanerId(baseCleaner, id);
+
+        // --- NEW: fetch public pending purchases and merge into availability
+        let availabilityMerged = baseCleaner.availability || {};
+        try {
+          const pRes = await fetch(PURCHASES_API(cleanerId), { credentials: 'include' });
+          const isJson = pRes.headers.get('content-type')?.includes('application/json');
+          const pData = isJson ? await pRes.json() : { success: false, purchases: [] };
+          const purchasesList = pData?.success ? (pData?.purchases || []) : [];
+          availabilityMerged = injectPendingFromPurchases(availabilityMerged, purchasesList);
+
+          if (process.env.NODE_ENV === 'development') {
+            console.log('🔎 pending purchases fetched:', purchasesList);
+            console.log('🧩 availability merged:', availabilityMerged);
+          }
+        } catch (e) {
+          console.warn('Public purchases fetch failed; using raw availability', e);
+        }
+
+        setCleaner({
+          ...baseCleaner,
+          availability: availabilityMerged,
+        });
         setHasAccess(data.hasAccess || false);
       } catch (err) {
         console.error('❌ Failed to load cleaner profile', err);
@@ -280,10 +322,6 @@ export default function CleanerProfile() {
       try {
         const cleanerId = getCleanerId(cleaner, id);
 
-        console.log('🧪 Checking unlock status...');
-        console.log('👤 client._id:', client?._id);
-        console.log('🧼 cleanerId:', cleanerId);
-
         const res = await fetch('/api/unlock-status', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -298,7 +336,6 @@ export default function CleanerProfile() {
 
         if (res.ok && result.success) {
           setCanViewContact(result.unlocked);
-          console.log('🔐 Permission check result:', result.unlocked);
         } else {
           console.error('❌ Unlock API Error:', result.message);
           setCanViewContact(false);
@@ -312,32 +349,23 @@ export default function CleanerProfile() {
     };
 
     checkPermissions();
-  }, [cleaner, client]);
+  }, [cleaner, client, id]);
 
   const handlePurchaseSuccess = (cleanerData) => {
     console.log('✅ Purchase successful, received data:', cleanerData);
-    
-    // Update access status
     setHasAccess(true);
     setCanViewContact(true);
-    
-    // Update cleaner data with the contact information
     setCleaner((prev) => ({
       ...prev,
       phone: cleanerData.phone || prev.phone,
       email: cleanerData.email || prev.email,
-      // Handle both cleanerName and realName
       companyName: cleanerData.companyName || cleanerData.cleanerName || prev.companyName || prev.realName,
-      // Ensure we keep all existing data
       ...cleanerData
     }));
-    
     setPurchaseLoading(false);
   };
 
-  const handlePurchaseStart = () => {
-    setPurchaseLoading(true);
-  };
+  const handlePurchaseStart = () => setPurchaseLoading(true);
 
   const handlePurchaseError = (error) => {
     console.error('❌ Purchase failed:', error);
@@ -345,7 +373,7 @@ export default function CleanerProfile() {
     setError('Purchase failed. Please try again.');
   };
 
-  // ✅ Handle slot selection for the integrated availability component
+  // ✅ Handle slot selection
   const handleSlotClick = (day, hour) => {
     console.log('🎯 Slot clicked:', { day, hour });
     setSelectedSlot({ day, hour });
