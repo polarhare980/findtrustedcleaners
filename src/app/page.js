@@ -9,6 +9,26 @@ import useSWR from 'swr';
 
 const fetcher = (url) => fetch(url).then((res) => res.json());
 
+// ---- Pending purchases helper (shared with profile/dashboard) ----
+const PURCHASES_API = (id) => `/api/public/purchases/cleaners/${id}`;
+
+const injectPendingFromPurchases = (availability = {}, purchasesList = []) => {
+  const updated = JSON.parse(JSON.stringify(availability || {}));
+  for (const p of purchasesList || []) {
+    // accept both legacy and current labels
+    if (p?.status !== 'pending_approval' && p?.status !== 'pending') continue;
+    const day = p?.day;
+    const hour = String(p?.hour);
+    if (!day || !hour) continue;
+    if (!updated[day]) updated[day] = {};
+    const slot = updated[day][hour];
+    // don't overwrite hard-booked or explicit off
+    if (slot === true || slot === 'unavailable' || slot === false) continue;
+    updated[day][hour] = 'pending_approval';
+  }
+  return updated;
+};
+
 export default function HomePage() {
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
@@ -25,23 +45,47 @@ export default function HomePage() {
 
   // Load saved favourites from localStorage
   useEffect(() => {
-  const saved = localStorage.getItem('favourites');
-  if (saved) {
-    try {
-      const arr = JSON.parse(saved);
-      setFavouriteIds(Array.isArray(arr) ? arr.map(String) : []);
-    } catch (e) { console.error('Could not parse favourites from localStorage:', e); }
-  }
+    const saved = localStorage.getItem('favourites');
+    if (saved) {
+      try {
+        const arr = JSON.parse(saved);
+        setFavouriteIds(Array.isArray(arr) ? arr.map(String) : []);
+      } catch (e) { console.error('Could not parse favourites from localStorage:', e); }
+    }
   }, []);
 
-  // Set premium and free cleaners
+  // Set premium and free cleaners + merge PENDING
   useEffect(() => {
-    if (data?.cleaners) {
-      const premium = data.cleaners.filter(c => c.isPremium === true).slice(0, 5);
-      const free = data.cleaners.filter(c => c.isPremium !== true).slice(0, 5);
-      setPremiumCleaners(premium);
-      setFreeCleaners(free);
-    }
+    if (!data?.cleaners) return;
+
+    const premium = data.cleaners.filter(c => c.isPremium === true).slice(0, 5);
+    const free = data.cleaners.filter(c => c.isPremium !== true).slice(0, 5);
+
+    const mergePendingForList = async (list) => {
+      const merged = await Promise.all((list || []).map(async (c) => {
+        try {
+          const res = await fetch(PURCHASES_API(c._id), { credentials: 'include' });
+          const isJson = res.headers.get('content-type')?.includes('application/json');
+          const data = isJson ? await res.json() : { success: false, purchases: [] };
+          const purchases = data?.success ? (data.purchases || []) : [];
+          const availabilityMerged = injectPendingFromPurchases(c.availability || {}, purchases);
+          return { ...c, availabilityMerged };
+        } catch (e) {
+          console.warn('Public purchases fetch failed for cleaner', c._id, e);
+          return { ...c, availabilityMerged: c.availability || {} };
+        }
+      }));
+      return merged;
+    };
+
+    (async () => {
+      const [premiumMerged, freeMerged] = await Promise.all([
+        mergePendingForList(premium),
+        mergePendingForList(free),
+      ]);
+      setPremiumCleaners(premiumMerged);
+      setFreeCleaners(freeMerged);
+    })();
   }, [data]);
 
   // Only run once on client side
@@ -61,13 +105,13 @@ export default function HomePage() {
 
   // Favourite toggle handler
   const handleToggleFavourite = (cleanerId) => {
-  const id = String(cleanerId);
-  const updated = favouriteIds.includes(id)
-    ? favouriteIds.filter(x => x !== id)
-    : [...favouriteIds, id];
-  setFavouriteIds(updated);
-  localStorage.setItem('favourites', JSON.stringify(updated));
-};
+    const id = String(cleanerId);
+    const updated = favouriteIds.includes(id)
+      ? favouriteIds.filter(x => x !== id)
+      : [...favouriteIds, id];
+    setFavouriteIds(updated);
+    localStorage.setItem('favourites', JSON.stringify(updated));
+  };
 
   // Price chart and calculator
   const priceChart = {
@@ -85,7 +129,7 @@ export default function HomePage() {
     setShowPrice(true);
   };
 
-  // Fisher-Yates shuffle (still usable if needed)
+  // Fisher-Yates shuffle (kept if you want to randomise cards later)
   const shuffleArray = (array) => {
     const shuffled = [...array];
     for (let i = shuffled.length - 1; i > 0; i--) {
@@ -96,7 +140,6 @@ export default function HomePage() {
   };
 
   if (!mounted) return null;
-
 
   return (
     <>
@@ -128,7 +171,7 @@ export default function HomePage() {
           </div>
         </header>
 
-        {/* Hero Section with enhanced glass morphism */}
+        {/* Hero Section */}
         <section className="container mx-auto px-6 py-16">
           <div className="glass-card text-center p-8 sm:p-12 animate-fade-in">
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent mb-6 leading-tight">
@@ -211,14 +254,13 @@ export default function HomePage() {
               <div className="flex overflow-x-auto gap-6 pb-4 px-2 scrollbar-hide">
                 {premiumCleaners.map((cleaner) => (
                   <CleanerCard 
-  key={cleaner._id} 
-  cleaner={cleaner} 
-  handleBookingRequest={handleBookingRequest} 
-  isPremium 
-  isFavourite={favouriteIds.includes(String(cleaner._id))}         // ✅ derive from state
-    onToggleFavourite={(id) => handleToggleFavourite(String(id))}    // ✅ normalise to string
-/>
-
+                    key={cleaner._id} 
+                    cleaner={cleaner} 
+                    handleBookingRequest={handleBookingRequest} 
+                    isPremium 
+                    isFavourite={favouriteIds.includes(String(cleaner._id))}
+                    onToggleFavourite={(id) => handleToggleFavourite(String(id))}
+                  />
                 ))}
               </div>
             )}
@@ -311,13 +353,12 @@ export default function HomePage() {
               <div className="flex overflow-x-auto gap-6 pb-4 px-2 scrollbar-hide">
                 {freeCleaners.map((cleaner) => (
                   <CleanerCard 
-  key={cleaner._id} 
-  cleaner={cleaner} 
-  handleBookingRequest={handleBookingRequest} 
-  isFavourite={favouriteIds.includes(String(cleaner._id))}         // ✅ derive from state
-    onToggleFavourite={(id) => handleToggleFavourite(String(id))}    // ✅ normalise to string
-/>
-
+                    key={cleaner._id} 
+                    cleaner={cleaner} 
+                    handleBookingRequest={handleBookingRequest} 
+                    isFavourite={favouriteIds.includes(String(cleaner._id))}
+                    onToggleFavourite={(id) => handleToggleFavourite(String(id))}
+                  />
                 ))}
               </div>
             )}
@@ -360,7 +401,7 @@ export default function HomePage() {
       </main>
 
       {/* Styles go inside the return */}
-       <style jsx global>{`
+      <style jsx global>{`
         /* Modern Glass Morphism Styles */
         .glass-card {
           background: rgba(255, 255, 255, 0.25);
@@ -544,80 +585,49 @@ export default function HomePage() {
 
         /* Animations */
         @keyframes fade-in {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
         }
-
         @keyframes slide-up {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+          from { opacity: 0; transform: translateY(30px); }
+          to { opacity: 1; transform: translateY(0); }
         }
-
-        .animate-fade-in {
-          animation: fade-in 0.8s ease-out;
-        }
-
-        .animate-slide-up {
-          animation: slide-up 0.5s ease-out;
-        }
+        .animate-fade-in { animation: fade-in 0.8s ease-out; }
+        .animate-slide-up { animation: slide-up 0.5s ease-out; }
 
         /* Scrollbar Hide */
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
 
         /* Responsive Container */
-        .container {
-          max-width: 1200px;
-          margin: 0 auto;
-        }
+        .container { max-width: 1200px; margin: 0 auto; }
 
         /* Active tap effect */
-        .active-tap:active {
-          transform: scale(0.98);
-        }
+        .active-tap:active { transform: scale(0.98); }
       `}</style>
     </>
   );
 }
-function CleanerCard({ cleaner, handleBookingRequest, isPremium, isFavourite, onToggleFavourite }) {
 
+function CleanerCard({ cleaner, handleBookingRequest, isPremium, isFavourite, onToggleFavourite }) {
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-  // Debug: Log the cleaner object to see available properties
-  console.log('Cleaner data:', cleaner);
+  // Prefer merged availability (with pending), fallback to raw
+  const availability = cleaner.availabilityMerged || cleaner.availability || {};
 
   return (
     <div className="cleaner-card">
       {/* Favorite Toggle */}
-    <div className="text-right mb-2">
-  <button
-  onClick={(e) => { e.preventDefault(); e.stopPropagation(); onToggleFavourite(cleaner._id); }}
-  className={`text-2xl transition-transform duration-200 ${isFavourite ? 'text-red-500' : 'text-gray-400'} hover:scale-110`}
-  aria-pressed={!!isFavourite}
-  title={isFavourite ? 'Remove from favourites' : 'Add to favourites'}
->
-  {isFavourite ? '❤️' : '🤍'}
-</button>
-
-</div>
+      <div className="text-right mb-2">
+        <button
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onToggleFavourite(cleaner._id); }}
+          className={`text-2xl transition-transform duration-200 ${isFavourite ? 'text-red-500' : 'text-gray-400'} hover:scale-110`}
+          aria-pressed={!!isFavourite}
+          title={isFavourite ? 'Remove from favourites' : 'Add to favourites'}
+        >
+          {isFavourite ? '❤️' : '🤍'}
+        </button>
+      </div>
 
       {/* Badges */}
       <div className="flex gap-2 mb-4">
@@ -626,7 +636,6 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium, isFavourite, on
             <span className="text-xs font-semibold">Premium Cleaner</span>
           </div>
         )}
-        {/* Check multiple possible insurance property names */}
         {(cleaner.businessInsurance || cleaner.isInsured || cleaner.hasInsurance || cleaner.business_insurance) && (
           <div className="insured-badge">
             <span className="text-xs font-semibold">✔ Insured</span>
@@ -666,31 +675,30 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium, isFavourite, on
         )}
 
         {/* Ratings */}
-{(cleaner.rating || cleaner.googleReviewRating) ? (
-  <div className="cleaner-rating">
-    {cleaner.rating && (
-      <p className="text-sm text-yellow-600">
-        ⭐ {cleaner.rating} ({cleaner.reviewCount || 0}) from site users
-      </p>
-    )}
-    {cleaner.googleReviewRating && cleaner.googleReviewCount && (
-      <p className="text-sm text-yellow-600">
-        ⭐ {cleaner.googleReviewRating} ({cleaner.googleReviewCount}) from Google
-      </p>
-    )}
-  </div>
-) : (
-  <p className="cleaner-rating text-sm text-gray-600">⭐ Not rated yet</p>
-)}
-
+        {(cleaner.rating || cleaner.googleReviewRating) ? (
+          <div className="cleaner-rating">
+            {cleaner.rating && (
+              <p className="text-sm text-yellow-600">
+                ⭐ {cleaner.rating} ({cleaner.reviewCount || 0}) from site users
+              </p>
+            )}
+            {cleaner.googleReviewRating && cleaner.googleReviewCount && (
+              <p className="text-sm text-yellow-600">
+                ⭐ {cleaner.googleReviewRating} ({cleaner.googleReviewCount}) from Google
+              </p>
+            )}
+          </div>
+        ) : (
+          <p className="cleaner-rating text-sm text-gray-600">⭐ Not rated yet</p>
+        )}
 
         {/* Rate */}
         <p className="cleaner-rate">
           💷 {cleaner.rates ? `£${cleaner.rates}/hr` : 'Rate not set'}
         </p>
 
-        {/* Availability */}
-        {isPremium && cleaner.availability && (
+        {/* Availability mini grid (show for premium only, as before) */}
+        {isPremium && availability && (
           <div className="availability-grid mt-4">
             <h4 className="font-semibold text-teal-700 mb-2 text-center">Availability</h4>
             <div className="grid grid-cols-[60px_repeat(13,1fr)] text-xs border border-gray-200 rounded overflow-hidden">
@@ -699,22 +707,32 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium, isFavourite, on
                 <div key={`hour-head-${i}`} className="bg-gray-100 p-1 text-center">{7 + i}</div>
               ))}
               {daysOfWeek.map(day => {
-                const slots = cleaner.availability[day] || {};
+                const slots = availability[day] || {};
                 return (
                   <React.Fragment key={day}>
                     <div className="bg-gray-50 p-1 font-medium text-center">{day.slice(0, 3)}</div>
                     {Array.from({ length: 13 }, (_, i) => {
                       const hour = (7 + i).toString();
                       const value = slots[hour];
-                      const status = value === true ? 'available' : 'unavailable';
+                      const statusVal = typeof value === 'object' ? value?.status : value;
+
+                      let status = 'unavailable';
+                      if (statusVal === true || statusVal === 'available') status = 'available';
+                      else if (statusVal === 'pending' || statusVal === 'pending_approval') status = 'pending';
+
                       return (
                         <div
                           key={`${day}-${hour}`}
                           className={`p-1 text-center ${
-                            status === 'available' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                            status === 'available'
+                              ? 'bg-green-100 text-green-800'
+                              : status === 'pending'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-red-100 text-red-800'
                           }`}
+                          title={status === 'pending' ? 'Pending approval' : status}
                         >
-                          {status === 'available' ? '✅' : '❌'}
+                          {status === 'available' ? '✅' : status === 'pending' ? '⏳' : '❌'}
                         </div>
                       );
                     })}
@@ -790,30 +808,11 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium, isFavourite, on
           transform: scale(1.05);
         }
 
-        .cleaner-info {
-          text-align: left;
-        }
+        .cleaner-info { text-align: left; }
+        .cleaner-name { font-size: 18px; font-weight: 700; color: #0F766E; margin-bottom: 8px; }
+        .cleaner-rating, .cleaner-rate { color: #4B5563; margin-bottom: 4px; font-size: 14px; }
 
-        .cleaner-name {
-          font-size: 18px;
-          font-weight: 700;
-          color: #0F766E;
-          margin-bottom: 8px;
-        }
-
-        .cleaner-rating,
-        .cleaner-rate {
-          color: #4B5563;
-          margin-bottom: 4px;
-          font-size: 14px;
-        }
-
-        .cleaner-actions {
-          display: flex;
-          justify-content: center;
-          margin-top: 16px;
-        }
-
+        .cleaner-actions { display: flex; justify-content: center; margin-top: 16px; }
         .btn-request-booking {
           background: linear-gradient(135deg, #10B981 0%, #059669 100%);
           color: white;
@@ -826,7 +825,6 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium, isFavourite, on
           box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
           display: inline-block;
         }
-
         .btn-request-booking:hover {
           transform: translateY(-1px);
           box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);

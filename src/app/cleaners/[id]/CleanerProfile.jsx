@@ -7,15 +7,17 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import BookingPaymentWrapper from '@/components/BookingPaymentForm';
 import PurchaseButton from '@/components/PurchaseButton';
 import { getCleanerId } from '@/lib/utils';
-import { fetchClient } from '@/lib/fetchClient'; // ✅ Import the shared helper
+import { fetchClient } from '@/lib/fetchClient';
 
-// ---- NEW: public purchases endpoint + injector ----
+// ---- Public purchases endpoint + injector ----
 const PURCHASES_API = (id) => `/api/public/purchases/cleaners/${id}`;
 
 const injectPendingFromPurchases = (availability = {}, purchasesList = []) => {
   const updated = JSON.parse(JSON.stringify(availability || {}));
   for (const p of purchasesList || []) {
-    if (p?.status !== 'pending_approval') continue;
+    // ✅ accept both legacy 'pending' and current 'pending_approval'
+    if (p?.status !== 'pending_approval' && p?.status !== 'pending') continue;
+
     const day = p?.day;
     const hour = String(p?.hour);
     if (!day || !hour) continue;
@@ -23,10 +25,9 @@ const injectPendingFromPurchases = (availability = {}, purchasesList = []) => {
     if (!updated[day]) updated[day] = {};
     const slot = updated[day][hour];
 
-    // don't overwrite hard-booked or explicitly off
-    if (slot === true || slot === 'unavailable') continue;
+    // don't overwrite hard booked (true) or explicit off
+    if (slot === true || slot === 'unavailable' || slot === false) continue;
 
-    // mark visible as pending
     updated[day][hour] = 'pending_approval';
   }
   return updated;
@@ -127,10 +128,10 @@ function AvailabilitySection({ availability, onSlotClick, canViewContact, select
                     const raw = availability?.[day]?.[hour.toString()];
                     const status = typeof raw === 'object' ? raw?.status : raw;
 
-                    const isAvailable = status === true;
-                    const isUnavailable = status === 'unavailable' || status === false || status === undefined;
-                    const isPending =
-                      status === 'pending' || status === 'pending_approval';
+                    const isAvailable = status === true || status === 'available';
+                    const isPending = status === 'pending' || status === 'pending_approval';
+                    const isUnavailable = !isAvailable && !isPending;
+
                     const isSelected =
                       selectedSlot?.day === day && selectedSlot?.hour === hour.toString();
 
@@ -276,7 +277,7 @@ export default function CleanerProfile() {
         const baseCleaner = data.cleaner;
         const cleanerId = getCleanerId(baseCleaner, id);
 
-        // --- NEW: fetch public pending purchases and merge into availability
+        // --- fetch public pending purchases and merge into availability
         let availabilityMerged = baseCleaner.availability || {};
         try {
           const pRes = await fetch(PURCHASES_API(cleanerId), { credentials: 'include' });
@@ -390,8 +391,8 @@ export default function CleanerProfile() {
             Error
           </h1>
           <p className="text-gray-700 mb-4">{error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
+          <button
+            onClick={() => window.location.reload()}
             className="bg-gradient-to-r from-teal-600 to-teal-700 text-white px-6 py-2 rounded-full hover:from-teal-700 hover:to-teal-800 transition-all duration-300"
           >
             Try Again
@@ -409,15 +410,15 @@ export default function CleanerProfile() {
           {/* Profile Header */}
           <div className="flex flex-col md:flex-row items-center md:items-start gap-6 mb-8">
             <div className="relative group">
-              <img 
-                 src={cleaner.image?.trim() ? cleaner.image : '/default-avatar.png'} 
-                 alt={cleaner.realName || 'Cleaner'} 
-                 loading="lazy"
-                 className="w-32 h-32 md:w-40 md:h-40 object-cover rounded-full border-4 border-white/30 shadow-lg transition-transform duration-300 group-hover:scale-105" 
+              <img
+                src={cleaner.image?.trim() ? cleaner.image : '/default-avatar.png'}
+                alt={cleaner.realName || 'Cleaner'}
+                loading="lazy"
+                className="w-32 h-32 md:w-40 md:h-40 object-cover rounded-full border-4 border-white/30 shadow-lg transition-transform duration-300 group-hover:scale-105"
               />
               <div className="absolute inset-0 rounded-full bg-gradient-to-br from-teal-600/20 to-teal-800/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             </div>
-            
+
             <div className="flex-1 text-center md:text-left">
               <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent">
                 {cleaner.realName}
@@ -440,7 +441,7 @@ export default function CleanerProfile() {
                   ✨ Premium Cleaner
                 </div>
               )}
-           
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700">
                 <div className="bg-white/40 backdrop-blur-md rounded-2xl p-4 border border-white/30">
                   <div className="flex items-center gap-2">
@@ -456,7 +457,7 @@ export default function CleanerProfile() {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="bg-white/40 backdrop-blur-md rounded-2xl p-4 border border-white/30">
                   <div className="flex items-center gap-2">
                     <span className="text-teal-600 font-semibold">💰</span>
@@ -472,7 +473,6 @@ export default function CleanerProfile() {
 
           {/* Contact Details Section - WITH PERMISSION CHECK */}
           <div className="bg-white/30 backdrop-blur-md rounded-2xl p-6 border border-white/20 mb-6 relative z-50" style={{isolation: 'isolate'}}>
-            {/* Enhanced debug info in development */}
             {process.env.NODE_ENV === 'development' && (
               <div className="text-xs text-gray-500 mb-4 bg-yellow-100 p-2 rounded">
                 Debug: cleanerId={getCleanerId(cleaner, id)}, hasAccess={hasAccess.toString()}, canViewContact={canViewContact.toString()}, purchaseLoading={purchaseLoading.toString()}
@@ -486,7 +486,7 @@ export default function CleanerProfile() {
                 Permission Loading: {permissionLoading.toString()}
               </div>
             )}
-            
+
             {permissionLoading ? (
               <div className="text-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 mx-auto mb-4"></div>
@@ -519,8 +519,7 @@ export default function CleanerProfile() {
                   <span className="text-2xl">🔒</span>
                   <p className="text-gray-600 italic mt-2">Contact details locked — purchase access to unlock</p>
                 </div>
-                
-                {/* Fixed condition to handle both _id and id */}
+
                 {cleaner && getCleanerId(cleaner, id) ? (
                   <div className="relative z-50">
                     {purchaseLoading && (
@@ -528,12 +527,11 @@ export default function CleanerProfile() {
                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-teal-600"></div>
                       </div>
                     )}
-                    {/* Purchase button with maximum z-index and isolation */}
                     <div style={{position: 'relative', zIndex: 9999, isolation: 'isolate'}}>
                       {client?.type === 'client' ? (
                         <PurchaseButton
                           cleanerId={getCleanerId(cleaner, id)}
-                          selectedSlot={selectedSlot} // ✅ ← Pass the selected day/hour
+                          selectedSlot={selectedSlot}
                           onPurchaseSuccess={handlePurchaseSuccess}
                           onPurchaseStart={handlePurchaseStart}
                           onPurchaseError={handlePurchaseError}
@@ -563,7 +561,7 @@ export default function CleanerProfile() {
             )}
           </div>
 
-          {/* Services Section - MOVED BELOW CONTACT DETAILS */}
+          {/* Services Section */}
           <div className="bg-white/30 backdrop-blur-md rounded-2xl p-6 border border-white/20 mb-6 relative z-10">
             <h2 className="text-2xl font-bold text-teal-800 mb-4 flex items-center gap-2">
               <span>🧹</span> Services Offered
@@ -651,7 +649,7 @@ export default function CleanerProfile() {
               </div>
 
               {cleaner.embedCode && isSafeEmbed(cleaner.embedCode) && (
-                <div className="bg-white/40 backdrop-blur-sm rounded-xl p-4 border border-white/30" 
+                <div className="bg-white/40 backdrop-blur-sm rounded-xl p-4 border border-white/30"
                      dangerouslySetInnerHTML={{ __html: cleaner.embedCode }} />
               )}
             </div>
@@ -666,7 +664,7 @@ export default function CleanerProfile() {
           />
         </div>
 
-        {/* ✅ FIXED: Booking Section - removed canViewContact check */}
+        {/* ✅ Booking Section */}
         {selectedSlot && getCleanerId(cleaner, id) && (
           <div className="bg-white/25 backdrop-blur-xl border border-white/20 rounded-3xl p-8 shadow-2xl">
             <h2 className="text-2xl font-bold text-center mb-6 bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent">
