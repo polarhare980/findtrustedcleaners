@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db';
 import { protectApiRoute } from '@/lib/auth';
-import Purchase from '@/models/Purchase'; // <-- make sure file name/case matches your models folder
+import Purchase from '@/models/Purchase';
 
 export async function GET(req, { params }) {
   await connectToDatabase();
 
   const { valid, user, response } = await protectApiRoute(req);
-  if (!valid) return response; // returns JSON 401/403 (not HTML)
+  if (!valid) return response;
 
   const cleanerId = params.id;
   const isSelf = user.type === 'cleaner' && String(user._id) === String(cleanerId);
@@ -17,12 +17,14 @@ export async function GET(req, { params }) {
   }
 
   try {
-    const purchases = await Purchase.find({ cleanerId, status: 'pending' })
-      .select('_id status day hour cleanerId clientId createdAt')
+    const purchases = await Purchase.find({
+      cleanerId,
+      status: 'pending_approval',           // <-- important
+    })
+      .select('_id status day hour cleanerId clientId createdAt') // keep lean
       .lean();
 
-    // Debug in server logs
-    console.log('API /purchases/cleaner/:id →', {
+    console.log('API /purchases/cleaners/:id →', {
       cleanerId,
       pendingCount: purchases.length,
       sample: purchases.slice(0, 3).map(p => ({
@@ -33,6 +35,6 @@ export async function GET(req, { params }) {
     return NextResponse.json({ success: true, purchases });
   } catch (err) {
     console.error('❌ Fetch Cleaner Purchases Error:', err);
-    return NextResponse.json({ success: false, message: 'Error fetching purchases' }, { status: 500 });
+    return NextResponse.json({ success: false, message: 'Server error' }, { status: 500 });
   }
 }

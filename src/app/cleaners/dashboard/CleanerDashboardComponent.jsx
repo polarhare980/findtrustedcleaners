@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { secureFetch } from '@/lib/secureFetch';
 
+const PURCHASES_API = (id) => `/api/purchases/cleaners/${id}`;
+
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const hours = Array.from({ length: 13 }, (_, i) => `${7 + i}`);
 
@@ -12,7 +14,7 @@ const hours = Array.from({ length: 13 }, (_, i) => `${7 + i}`);
 const injectPendingFromPurchases = (availability = {}, purchasesList = []) => {
   const updated = JSON.parse(JSON.stringify(availability || {}));
   for (const p of purchasesList || []) {
-    if (p?.status !== 'pending') continue;
+    if (p?.status !== 'pending' && p?.status !== 'pending_approval') continue;
     const day = p?.day;
     const hour = String(p?.hour);
     if (!day || !hour) continue;
@@ -108,9 +110,9 @@ export default function CleanerDashboardComponent() {
 
         // get pending purchases (safe-parse only JSON)
         // get pending purchases for the logged-in cleaner
-const fetchPurchases = async () => {
+const fetchPurchases = async (id) => {
   try {
-    const res = await fetch(`/api/purchase-cleaner`, { credentials: 'include' });
+    const res = await fetch(`/api/purchases/cleaners/${id}`, { credentials: 'include' });
 
     // guard against HTML responses (redirects/404 pages)
     const ct = res.headers.get('content-type') || '';
@@ -121,7 +123,6 @@ const fetchPurchases = async () => {
 
     const data = await res.json();
     if (res.ok && data?.success) {
-      // api/purchase already filters by the logged-in cleaner
       const purchases = (data.purchases || []).filter(p => p?.status === 'pending');
 
       console.log(
@@ -145,9 +146,9 @@ const fetchPurchases = async () => {
   }
 };
 
-
         const bookingsList = await fetchBookings();
-        const purchasesList = await fetchPurchases();
+        const purchasesList = await fetchPurchases(cleanerUser._id);
+
 
         const availabilityRaw = cleanerUser.availability || {};
         const availabilityWithPurchases = injectPendingFromPurchases(availabilityRaw, purchasesList);
