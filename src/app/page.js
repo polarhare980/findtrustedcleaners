@@ -655,6 +655,11 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium, isFavourite, on
             <span className="text-xs font-semibold">✔ Insured</span>
           </div>
         )}
+  {cleaner.dbsChecked && (
+    <div className="dbs-badge">
+      <span className="text-xs font-semibold">✔ DBS Checked</span>
+    </div>
+  )}
       </div>
 
       {/* Image */}
@@ -801,6 +806,15 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium, isFavourite, on
           display: inline-block;
           box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
         }
+          .dbs-badge {
+  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  display: inline-block;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+}
+
 
         .cleaner-image {
           width: 100%;

@@ -1,4 +1,4 @@
-'use client'; 
+'use client';
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -21,8 +21,8 @@ const injectPendingFromPurchases = (availability = {}, purchasesList = []) => {
     if (!updated[day]) updated[day] = {};
     const slot = updated[day][hour];
     if (!slot || slot === true || slot === 'unavailable') {
-  updated[day][hour] = { status: p?.status, bookingId: p?._id || null };
-}
+      updated[day][hour] = { status: p?.status, bookingId: p?._id || null };
+    }
   }
   return updated;
 };
@@ -94,63 +94,35 @@ export default function CleanerDashboardComponent() {
             const res = await fetch(`/api/bookings/cleaner/${cleanerUser._id}`, { credentials: 'include' });
             const data = await res.json();
             if (data?.success) {
-              console.log('📋 Dashboard received bookings →', (data.bookings || []).map(b => ({
-                id: b?._id, status: b?.status, day: b?.day, hour: String(b?.hour)
-              })));
               setBookings(data.bookings);
               return data.bookings;
             }
-            console.warn('Failed to load bookings:', data?.message);
             return [];
-          } catch (err) {
-            console.error('Booking fetch failed:', err);
+          } catch {
             return [];
           }
         };
 
-        // get pending purchases (safe-parse only JSON)
         // get pending purchases for the logged-in cleaner
-const fetchPurchases = async (id) => {
-  try {
-    const res = await fetch(`/api/purchases/cleaners/${id}`, { credentials: 'include' });
-
-    // guard against HTML responses (redirects/404 pages)
-    const ct = res.headers.get('content-type') || '';
-    if (!ct.includes('application/json')) {
-      console.error('Purchases API returned non-JSON:', res.status);
-      return [];
-    }
-
-    const data = await res.json();
-    if (res.ok && data?.success) {
-      const purchases = (data.purchases || []).filter(
-  (p) => p?.status === 'pending' || p?.status === 'pending_approval'
-      );
-
-      console.log(
-        '🧾 Dashboard received purchases →',
-        purchases.map(p => ({
-          id: p?._id,
-          status: p?.status,
-          day: p?.day,
-          hour: String(p?.hour),
-        }))
-      );
-
-      return purchases;
-    } else {
-      console.warn('Failed to load purchases:', data?.message || data?.error);
-      return [];
-    }
-  } catch (err) {
-    console.error('Purchase fetch failed:', err);
-    return [];
-  }
-};
+        const fetchPurchases = async (id) => {
+          try {
+            const res = await fetch(PURCHASES_API(id), { credentials: 'include' });
+            const ct = res.headers.get('content-type') || '';
+            if (!ct.includes('application/json')) return [];
+            const data = await res.json();
+            if (res.ok && data?.success) {
+              return (data.purchases || []).filter(
+                (p) => p?.status === 'pending' || p?.status === 'pending_approval'
+              );
+            }
+            return [];
+          } catch {
+            return [];
+          }
+        };
 
         const bookingsList = await fetchBookings();
         const purchasesList = await fetchPurchases(cleanerUser._id);
-
 
         const availabilityRaw = cleanerUser.availability || {};
         const availabilityWithPurchases = injectPendingFromPurchases(availabilityRaw, purchasesList);
@@ -160,7 +132,8 @@ const fetchPurchases = async (id) => {
           ...cleanerUser,
           services: cleanerUser.services || [],
           availability: availabilityFinal,
-          businessInsurance: cleanerUser.businessInsurance || false,
+          businessInsurance: !!cleanerUser.businessInsurance,
+          dbsChecked: !!cleanerUser.dbsChecked, // ✅ ensure boolean
           bio: cleanerUser.bio || '',
         };
 
@@ -181,13 +154,7 @@ const fetchPurchases = async (id) => {
   const toggleAvailability = (day, hour) => {
     const slot = formData.availability?.[day]?.[hour];
     const status = typeof slot === 'object' ? slot.status : slot;
-
-    if (
-  status === false ||
-  status === 'pending' ||
-  status === 'pending_approval' ||
-  status === 'booked'
-) return;
+    if (status === false || status === 'pending' || status === 'pending_approval' || status === 'booked') return;
 
     setFormData(prev => {
       const updated = { ...prev.availability };
@@ -217,14 +184,10 @@ const fetchPurchases = async (id) => {
         return;
       }
 
-      const res = await fetch(`/api/booking/accept-order/${bookingId}`, {
-        method: 'PUT',
-        credentials: 'include',
-      });
+      const res = await fetch(`/api/booking/accept-order/${bookingId}`, { method: 'PUT', credentials: 'include' });
       const data = await res.json();
 
       if (res.ok && data.success) {
-        // server returns updatedAvailability — keep UI in sync
         setFormData(prev => ({ ...prev, availability: data.updatedAvailability || prev.availability }));
         setAvailabilityChanged(true);
         setMessage('✅ Booking accepted and payment captured!');
@@ -254,10 +217,7 @@ const fetchPurchases = async (id) => {
         return;
       }
 
-      const res = await fetch(`/api/booking/decline-order/${bookingId}`, {
-        method: 'PUT',
-        credentials: 'include',
-      });
+      const res = await fetch(`/api/booking/decline-order/${bookingId}`, { method: 'PUT', credentials: 'include' });
       const data = await res.json();
 
       if (res.ok && data.success) {
@@ -283,10 +243,7 @@ const fetchPurchases = async (id) => {
         method: 'PUT',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          availability: reformattedAvailability,
-        }),
+        body: JSON.stringify({ ...formData, availability: reformattedAvailability }),
       });
 
       if (!res.ok) throw new Error('Update failed');
@@ -343,42 +300,29 @@ const fetchPurchases = async (id) => {
       const [parent, child] = field.split('.');
       setEditData(prev => ({
         ...prev,
-        [parent]: {
-          ...prev[parent],
-          [child]: value
-        }
+        [parent]: { ...prev[parent], [child]: value }
       }));
     } else {
-      setEditData(prev => ({
-        ...prev,
-        [field]: value
-      }));
+      setEditData(prev => ({ ...prev, [field]: value }));
     }
   };
 
   const handleServicesChange = (value) => {
     const services = value.split(',').map(s => s.trim()).filter(s => s);
-    setEditData(prev => ({
-      ...prev,
-      services
-    }));
+    setEditData(prev => ({ ...prev, services }));
   };
 
   // Enhanced image upload handler
   const handleImageUpload = async () => {
     if (!selectedFile) return alert('Please select a file.');
-    
     setImageUploading(true);
     const formDataUpload = new FormData();
     formDataUpload.append('file', selectedFile);
-    
+
     try {
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: formDataUpload,
-      });
+      const res = await fetch('/api/upload', { method: 'POST', body: formDataUpload });
       const data = await res.json();
-      
+
       if (data.success) {
         const updateRes = await fetch(`/api/cleaners/${cleaner._id}`, {
           method: 'PUT',
@@ -386,7 +330,7 @@ const fetchPurchases = async (id) => {
           credentials: 'include',
           body: JSON.stringify({ image: data.url }),
         });
-        
+
         if (updateRes.ok) {
           setMessage('✅ Profile picture updated successfully!');
           setFormData((prev) => ({ ...prev, image: data.url }));
@@ -416,11 +360,7 @@ const fetchPurchases = async (id) => {
 
     setDeleting(true);
     try {
-      const res = await fetch(`/api/cleaners/${cleaner._id}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      });
-
+      const res = await fetch(`/api/cleaners/${cleaner._id}`, { method: 'DELETE', credentials: 'include' });
       if (res.ok) {
         await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
         router.push('/');
@@ -479,7 +419,14 @@ const fetchPurchases = async (id) => {
               </h1>
               <p className="text-gray-600">Manage your cleaning services and availability</p>
             </div>
-            <div className="flex flex-wrap gap-3 mt-4 md:mt-0">
+
+            {/* Actions + DBS badge on the right */}
+            <div className="flex flex-wrap items-center gap-3 mt-4 md:mt-0">
+              {formData?.dbsChecked && (
+                <span className="inline-flex items-center gap-2 px-2 py-1 bg-emerald-600 text-white text-xs font-semibold rounded-lg shadow-sm">
+                  ✅ DBS Checked
+                </span>
+              )}
               <button
                 onClick={handleGoHome}
                 className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg font-medium transition-all duration-300 hover:transform hover:-translate-y-0.5 hover:shadow-lg"
@@ -557,10 +504,13 @@ const fetchPurchases = async (id) => {
           </div>
         )}
 
+        {/* Flash message */}
         {message && (
-          <div className={`mb-6 text-center text-white py-3 px-4 rounded-lg font-medium backdrop-blur-md border border-white/20 ${
-            message.includes('✅') ? 'bg-green-500/80' : 'bg-red-500/80'
-          }`}>
+          <div
+            className={`mb-6 text-center text-white py-3 px-4 rounded-lg font-medium backdrop-blur-md border border-white/20 ${
+              message.includes('✅') ? 'bg-green-500/80' : 'bg-red-500/80'
+            }`}
+          >
             {message}
           </div>
         )}
@@ -586,10 +536,32 @@ const fetchPurchases = async (id) => {
 
         {/* Profile Information */}
         <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl mb-6 p-6">
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent mb-6">
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent mb-4">
             👤 Profile Information
           </h2>
-          
+
+          {/* Badges row (matches card style: Premium / Insured / DBS) */}
+          <div className="flex flex-wrap gap-2 mb-6">
+            {formData.isPremium && (
+              <span className="inline-block text-xs font-semibold text-white px-3 py-1 rounded-full"
+                    style={{ background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)', boxShadow: '0 2px 8px rgba(245, 158, 11, 0.3)' }}>
+                Premium Cleaner
+              </span>
+            )}
+            {formData.businessInsurance && (
+              <span className="inline-block text-xs font-semibold text-white px-3 py-1 rounded-full"
+                    style={{ background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)', boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)' }}>
+                ✔ Insured
+              </span>
+            )}
+            {formData.dbsChecked && (
+              <span className="inline-block text-xs font-semibold text-white px-3 py-1 rounded-full"
+                    style={{ background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)', boxShadow: '0 2px 8px rgba(37, 99, 235, 0.3)' }}>
+                ✔ DBS Checked
+              </span>
+            )}
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-600">Real Name</label>
@@ -660,7 +632,7 @@ const fetchPurchases = async (id) => {
                 </p>
               )}
             </div>
- 
+
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-600">Company Name</label>
               {editMode ? (
@@ -730,6 +702,23 @@ const fetchPurchases = async (id) => {
                 </select>
               ) : (
                 <p className="text-gray-800 font-medium">{formData.businessInsurance ? 'Yes' : 'No'}</p>
+              )}
+            </div>
+
+            {/* ✅ DBS Checked */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-600">DBS Checked</label>
+              {editMode ? (
+                <select
+                  value={editData.dbsChecked ? 'true' : 'false'}
+                  onChange={(e) => handleInputChange('dbsChecked', e.target.value === 'true')}
+                  className="w-full p-3 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-300"
+                >
+                  <option value="false">No</option>
+                  <option value="true">Yes</option>
+                </select>
+              ) : (
+                <p className="text-gray-800 font-medium">{formData.dbsChecked ? 'Yes' : 'No'}</p>
               )}
             </div>
 
@@ -835,9 +824,7 @@ const fetchPurchases = async (id) => {
                     type="url"
                     placeholder="https://yourvideo.com"
                     value={formData.videoUrl || ''}
-                    onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, videoUrl: e.target.value }))
-                    }
+                    onChange={(e) => setFormData((prev) => ({ ...prev, videoUrl: e.target.value }))}
                     onBlur={async () => {
                       await fetch(`/api/cleaners/${cleaner._id}`, {
                         method: 'PUT',
@@ -855,21 +842,19 @@ const fetchPurchases = async (id) => {
             {/* Enhanced Profile Image Upload */}
             <div className="space-y-2 md:col-span-2 lg:col-span-3">
               <label className="text-sm font-medium text-gray-600">📸 Profile Picture</label>
-              
+
               <div className="flex flex-col lg:flex-row gap-6 items-start">
                 <div className="flex-shrink-0">
                   {(imagePreview || formData.image) && (
                     <div className="relative">
-                      <img 
+                      <img
                         src={
                           imagePreview ||
-                          (formData.image?.trim()
-                            ? formData.image
-                            : '/default-avatar.png')
+                          (formData.image?.trim() ? formData.image : '/default-avatar.png')
                         }
                         alt="Profile"
                         loading="lazy"
-                        className="w-32 h-32 object-cover rounded-full border-4 border-teal-200 shadow-lg transition-transform duration-300 hover:scale-105" 
+                        className="w-32 h-32 object-cover rounded-full border-4 border-teal-200 shadow-lg transition-transform duration-300 hover:scale-105"
                       />
                       {!imagePreview && (
                         <div className="absolute -top-2 -right-2 bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs">
@@ -898,7 +883,7 @@ const fetchPurchases = async (id) => {
                     }}
                     className="w-full p-3 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-300"
                   />
-                  
+
                   <div className="flex flex-wrap gap-3">
                     <button
                       onClick={handleImageUpload}
@@ -907,7 +892,7 @@ const fetchPurchases = async (id) => {
                     >
                       {imageUploading ? '📤 Uploading...' : '📤 Upload New Picture'}
                     </button>
-                    
+
                     {imagePreview && (
                       <button
                         onClick={() => {
@@ -920,7 +905,7 @@ const fetchPurchases = async (id) => {
                       </button>
                     )}
                   </div>
-                  
+
                   <p className="text-sm text-gray-600">
                     📝 Upload a professional headshot for better client trust. Max size: 5MB
                   </p>
@@ -1022,9 +1007,17 @@ const fetchPurchases = async (id) => {
         {/* Availability Grid */}
         <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl mb-6 p-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent mb-4 md:mb-0">
-              🗓️ Availability Management
-            </h2>
+            <div className="flex items-center gap-3">
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent">
+                🗓️ Availability Management
+              </h2>
+              {formData?.dbsChecked && (
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-emerald-600 text-white">
+                  ✅ DBS Checked
+                </span>
+              )}
+            </div>
+
             {availabilityChanged && (
               <button
                 onClick={handleSave}

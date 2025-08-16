@@ -28,18 +28,15 @@ const injectPendingFromPurchases = (availability = {}, purchasesList = []) => {
     if (!day || !hour) continue;
     if (!updated[day]) updated[day] = {};
     const slot = updated[day][hour];
-// guard booked object → don't overwrite booked
-if (typeof slot === 'object') continue;
-// keep explicit unavailable as-is
-if (slot === false || slot === 'unavailable') continue;
-
-// allow overwriting true (available) with pending
-updated[day][hour] = 'pending_approval';
-
+    // guard booked object → don't overwrite booked
+    if (typeof slot === 'object') continue;
+    // keep explicit unavailable as-is
+    if (slot === false || slot === 'unavailable') continue;
+    // allow overwriting true (available) with pending
+    updated[day][hour] = 'pending_approval';
   }
   return updated;
 };
-
 
 function isSafeEmbed(code) {
   const hasIframe = code.includes('<iframe') && code.includes('src=');
@@ -390,7 +387,6 @@ export default function CleanerProfile() {
 
   // ✅ Handle slot selection
   const handleSlotClick = (day, hour) => {
-    console.log('🎯 Slot clicked:', { day, hour });
     setSelectedSlot({ day, hour });
   };
 
@@ -416,6 +412,15 @@ export default function CleanerProfile() {
     );
   }
 
+  // ✅ unified flags for badges
+  const isInsured =
+    cleaner?.businessInsurance ||
+    cleaner?.isInsured ||
+    cleaner?.hasInsurance ||
+    cleaner?.business_insurance;
+
+  const dbsChecked = !!(cleaner?.dbsChecked || cleaner?.dbs_verified);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-900/20 to-teal-700/10 p-6 relative">
       <div className="max-w-4xl mx-auto">
@@ -434,28 +439,48 @@ export default function CleanerProfile() {
             </div>
 
             <div className="flex-1 text-center md:text-left">
-              <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent">
+              <h1 className="text-4xl md:text-5xl font-bold mb-3 bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent">
                 {cleaner.realName}
               </h1>
 
-              {cleaner.pending && (
-                <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-4 mb-6 rounded-xl shadow">
-                  ⚠️ This profile is currently pending approval for a recent booking and may be unavailable.
-                </div>
-              )}
-
+              {/* ⭐ Rating line (optional) */}
               {cleaner.googleReviewRating && cleaner.googleReviewCount && (
-                <p className="text-lg font-medium text-teal-800">
+                <p className="text-lg font-medium text-teal-800 mb-3">
                   ⭐ {cleaner.googleReviewRating} from {cleaner.googleReviewCount} reviews
                 </p>
               )}
 
-              {cleaner?.isPremium && (
-                <div className="inline-block bg-yellow-400 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md mb-4">
-                  ✨ Premium Cleaner
-                </div>
-              )}
+              {/* 🔖 Badges row: Premium / Insured / DBS */}
+              <div className="flex flex-wrap items-center gap-2 mb-4">
+                {cleaner?.isPremium && (
+                  <span
+                    className="inline-block text-xs font-semibold text-white px-3 py-1 rounded-full"
+                    style={{ background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)', boxShadow: '0 2px 8px rgba(245, 158, 11, 0.3)' }}
+                  >
+                    ✨ Premium Cleaner
+                  </span>
+                )}
 
+                {isInsured && (
+                  <span
+                    className="inline-block text-xs font-semibold text-white px-3 py-1 rounded-full"
+                    style={{ background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)', boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)' }}
+                  >
+                    ✔ Insured
+                  </span>
+                )}
+
+                {dbsChecked && (
+                  <span
+                    className="inline-block text-xs font-semibold text-white px-3 py-1 rounded-full"
+                    style={{ background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)', boxShadow: '0 2px 8px rgba(37, 99, 235, 0.3)' }}
+                  >
+                    ✔ DBS Checked
+                  </span>
+                )}
+              </div>
+
+              {/* Two quick facts */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700">
                 <div className="bg-white/40 backdrop-blur-md rounded-2xl p-4 border border-white/30">
                   <div className="flex items-center gap-2">

@@ -23,6 +23,8 @@ export default function CleanerRegister() {
     availability: {},
     services: [],
     businessInsurance: false,
+    // ✅ NEW: DBS flag
+    dbsChecked: false,
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -31,39 +33,31 @@ export default function CleanerRegister() {
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const hours = Array.from({ length: 13 }, (_, i) => 7 + i);
   const serviceCategories = {
-  '🏠 Domestic Cleaning': [
-    'Regular House Cleaning',
-    'Deep Cleaning',
-    'Spring Cleaning',
-    'End of Tenancy',
-    'After-party Cleaning',
-    'Holiday Let Cleaning',
-  ],
-  '🧼 Specialist Cleaning': [
-    'Oven Cleaning',
-    'Carpet Cleaning',
-    'Upholstery Cleaning',
-    'Mattress Cleaning',
-    'Curtain Cleaning',
-    'Mould Removal',
-  ],
-  '🪟 Exterior Cleaning': [
-    'Window Cleaning',
-    'Gutter Cleaning',
-    'Roof Cleaning',
-    'Pressure Washing',
-  ],
-  '🚗 Vehicle Cleaning': [
-    'Car Valeting',
-    'Fleet Cleaning',
-  ],
-  '🏢 Commercial Cleaning': [
-    'Office Cleaning',
-    'Retail Cleaning',
-    'Gym Cleaning',
-  ],
-};
-
+    '🏠 Domestic Cleaning': [
+      'Regular House Cleaning',
+      'Deep Cleaning',
+      'Spring Cleaning',
+      'End of Tenancy',
+      'After-party Cleaning',
+      'Holiday Let Cleaning',
+    ],
+    '🧼 Specialist Cleaning': [
+      'Oven Cleaning',
+      'Carpet Cleaning',
+      'Upholstery Cleaning',
+      'Mattress Cleaning',
+      'Curtain Cleaning',
+      'Mould Removal',
+    ],
+    '🪟 Exterior Cleaning': [
+      'Window Cleaning',
+      'Gutter Cleaning',
+      'Roof Cleaning',
+      'Pressure Washing',
+    ],
+    '🚗 Vehicle Cleaning': ['Car Valeting', 'Fleet Cleaning'],
+    '🏢 Commercial Cleaning': ['Office Cleaning', 'Retail Cleaning', 'Gym Cleaning'],
+  };
 
   const toggleAvailability = (day, hour) => {
     const key = `${day}-${hour}`;
@@ -71,8 +65,8 @@ export default function CleanerRegister() {
       ...prev,
       availability: {
         ...prev.availability,
-        [key]: !prev.availability[key]
-      }
+        [key]: !prev.availability[key],
+      },
     }));
   };
 
@@ -81,32 +75,23 @@ export default function CleanerRegister() {
       const exists = prev.services.includes(service);
       return {
         ...prev,
-        services: exists ? prev.services.filter(s => s !== service) : [...prev.services, service]
+        services: exists ? prev.services.filter(s => s !== service) : [...prev.services, service],
       };
     });
-    // Clear services error when user selects a service
-    if (errors.services) {
-      setErrors(prev => ({ ...prev, services: '' }));
-    }
+    if (errors.services) setErrors(prev => ({ ...prev, services: '' }));
   };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setForm(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === 'checkbox' ? checked : value,
     }));
-    
-    // Clear field error when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
-    }
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
   };
 
   const validateForm = () => {
     const newErrors = {};
-
-    // Check required fields
     if (!form.realName.trim()) newErrors.realName = 'Real name is required';
     if (!form.companyName.trim()) newErrors.companyName = 'Company name is required';
     if (!form.houseNameNumber.trim()) newErrors.houseNameNumber = 'House name/number is required';
@@ -118,121 +103,103 @@ export default function CleanerRegister() {
     if (!form.password) newErrors.password = 'Password is required';
     if (!form.confirmPassword) newErrors.confirmPassword = 'Please confirm your password';
     if (!form.rates.trim()) newErrors.rates = 'Hourly rate is required';
+    if (form.password !== form.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
+    if (form.services.length === 0) newErrors.services = 'Please select at least one service';
 
-    // Check password match
-    if (form.password !== form.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
-    }
-
-    // Check services
-    if (form.services.length === 0) {
-      newErrors.services = 'Please select at least one service';
-    }
-
-    // Check rates
     const parsedRates = parseFloat(form.rates.replace(/[^0-9.]/g, '')) || 0;
-    // ✅ Reformat availability keys like "Mon-9" → { Monday: { "9": true } }
-
-    if (parsedRates <= 0) {
-      newErrors.rates = 'Please enter a valid hourly rate greater than 0';
-    }
+    if (parsedRates <= 0) newErrors.rates = 'Please enter a valid hourly rate greater than 0';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
- const handleSubmit = async (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validateForm()) return;
 
-  if (!validateForm()) {
-    return;
-  }
+    setIsSubmitting(true);
+    setErrors({});
 
-  setIsSubmitting(true);
-  setErrors({});
-
-  // ✅ Reformat availability keys like "Mon-9" → { Monday: { "9": true } }
-  const reformattedAvailability = {};
-  Object.entries(form.availability).forEach(([key, value]) => {
-    const [shortDay, hour] = key.split('-');
-    const dayMap = {
-      Mon: 'Monday',
-      Tue: 'Tuesday',
-      Wed: 'Wednesday',
-      Thu: 'Thursday',
-      Fri: 'Friday',
-      Sat: 'Saturday',
-      Sun: 'Sunday',
-    };
-    const fullDay = dayMap[shortDay];
-    if (!reformattedAvailability[fullDay]) {
-      reformattedAvailability[fullDay] = {};
-    }
-    reformattedAvailability[fullDay][hour] = value;
-  });
-
-  const parsedRates = parseFloat(form.rates.replace(/[^0-9.]/g, '')) || 0;
-
-  try {
-    console.log('🚀 Submitting form data...');
-
-    const payload = {
-      realName: form.realName.trim(),
-      companyName: form.companyName.trim(),
-      email: form.email.trim(),
-      password: form.password,
-      phone: form.phone.trim(),
-      rates: parsedRates,
-      services: form.services,
-      address: {
-        houseNameNumber: form.houseNameNumber.trim(),
-        street: form.street.trim(),
-        county: form.county.trim(),
-        postcode: form.postcode.trim(),
-      },
-      availability: reformattedAvailability, // ✅ Use the corrected format
-      businessInsurance: form.businessInsurance,
-      userType: 'cleaner',
-    };
-
-    console.log('📦 Payload:', JSON.stringify(payload, null, 2));
-
-    const res = await fetch('/api/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(payload),
+    // ✅ Reformat availability keys like "Mon-9" → { Monday: { "9": true } }
+    const reformattedAvailability = {};
+    Object.entries(form.availability).forEach(([key, value]) => {
+      const [shortDay, hour] = key.split('-');
+      const dayMap = {
+        Mon: 'Monday',
+        Tue: 'Tuesday',
+        Wed: 'Wednesday',
+        Thu: 'Thursday',
+        Fri: 'Friday',
+        Sat: 'Saturday',
+        Sun: 'Sunday',
+      };
+      const fullDay = dayMap[shortDay];
+      if (!reformattedAvailability[fullDay]) reformattedAvailability[fullDay] = {};
+      reformattedAvailability[fullDay][hour] = value;
     });
 
-    const data = await res.json();
-    console.log('📥 Response:', data);
+    const parsedRates = parseFloat(form.rates.replace(/[^0-9.]/g, '')) || 0;
 
-    if (res.ok && data.success) {
-      console.log('✅ Registration successful');
-      router.push('/cleaners/dashboard');
-    } else {
-      console.error('❌ Registration failed:', data.message);
-      setErrors({ submit: data.message || 'Registration failed. Please try again.' });
+    try {
+      const payload = {
+        realName: form.realName.trim(),
+        companyName: form.companyName.trim(),
+        email: form.email.trim(),
+        password: form.password,
+        phone: form.phone.trim(),
+        rates: parsedRates,
+        services: form.services,
+        address: {
+          houseNameNumber: form.houseNameNumber.trim(),
+          street: form.street.trim(),
+          county: form.county.trim(),
+          postcode: form.postcode.trim(),
+        },
+        availability: reformattedAvailability,
+        businessInsurance: form.businessInsurance,
+        // ✅ Send DBS flag
+        dbsChecked: !!form.dbsChecked,
+        userType: 'cleaner',
+      };
+
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        router.push('/cleaners/dashboard');
+      } else {
+        setErrors({ submit: data.message || 'Registration failed. Please try again.' });
+      }
+    } catch (err) {
+      setErrors({ submit: 'An unexpected error occurred. Please try again.' });
+    } finally {
+      setIsSubmitting(false);
     }
-  } catch (err) {
-    console.error('💥 Registration error:', err);
-    setErrors({ submit: 'An unexpected error occurred. Please try again.' });
-  } finally {
-    setIsSubmitting(false);
-  }
-};
-
-
-
+  };
 
   return (
     <>
       <Head>
         <title>Register as a Cleaner | Find Trusted Cleaners</title>
-        <meta name="description" content="Join Find Trusted Cleaners and connect with local clients. Showcase availability, services, and start growing your cleaning business today." />
-        <meta name="keywords" content="cleaner registration, cleaning services, become a cleaner, local cleaners UK, Find Trusted Cleaners" />
+        <meta
+          name="description"
+          content="Join Find Trusted Cleaners and connect with local clients. Showcase availability, services, and start growing your cleaning business today."
+        />
+        <meta
+          name="keywords"
+          content="cleaner registration, cleaning services, become a cleaner, local cleaners UK, Find Trusted Cleaners"
+        />
         <meta property="og:title" content="Register as a Cleaner - Find Trusted Cleaners" />
-        <meta property="og:description" content="Create your cleaner profile, set availability, and list services on Find Trusted Cleaners." />
+        <meta
+          property="og:description"
+          content="Create your cleaner profile, set availability, and list services on Find Trusted Cleaners."
+        />
         <meta property="og:type" content="website" />
       </Head>
 
@@ -253,7 +220,7 @@ export default function CleanerRegister() {
 
         <section className="max-w-3xl mx-auto p-6">
           <h1 className="text-3xl font-bold text-[#0D9488] mb-4">Register as a Cleaner</h1>
-          
+
           {errors.submit && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
               {errors.submit}
@@ -262,49 +229,49 @@ export default function CleanerRegister() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <input 
-                name="realName" 
-                onChange={handleChange} 
-                value={form.realName} 
-                placeholder="Real Name" 
+              <input
+                name="realName"
+                onChange={handleChange}
+                value={form.realName}
+                placeholder="Real Name"
                 className={`w-full p-2 border rounded text-[#0D9488] bg-white ${errors.realName ? 'border-red-500' : ''}`}
-                required 
+                required
               />
               {errors.realName && <p className="text-red-500 text-sm mt-1">{errors.realName}</p>}
             </div>
 
             <div>
-              <input 
-                name="companyName" 
-                onChange={handleChange} 
-                value={form.companyName} 
-                placeholder="Company Name" 
+              <input
+                name="companyName"
+                onChange={handleChange}
+                value={form.companyName}
+                placeholder="Company Name"
                 className={`w-full p-2 border rounded text-[#0D9488] bg-white ${errors.companyName ? 'border-red-500' : ''}`}
-                required 
+                required
               />
               {errors.companyName && <p className="text-red-500 text-sm mt-1">{errors.companyName}</p>}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <input 
-                  name="houseNameNumber" 
-                  onChange={handleChange} 
-                  value={form.houseNameNumber} 
-                  placeholder="House Name/Number" 
+                <input
+                  name="houseNameNumber"
+                  onChange={handleChange}
+                  value={form.houseNameNumber}
+                  placeholder="House Name/Number"
                   className={`w-full p-2 border rounded text-[#0D9488] bg-white ${errors.houseNameNumber ? 'border-red-500' : ''}`}
-                  required 
+                  required
                 />
                 {errors.houseNameNumber && <p className="text-red-500 text-sm mt-1">{errors.houseNameNumber}</p>}
               </div>
               <div>
-                <input 
-                  name="street" 
-                  onChange={handleChange} 
-                  value={form.street} 
-                  placeholder="Street" 
+                <input
+                  name="street"
+                  onChange={handleChange}
+                  value={form.street}
+                  placeholder="Street"
                   className={`w-full p-2 border rounded text-[#0D9488] bg-white ${errors.street ? 'border-red-500' : ''}`}
-                  required 
+                  required
                 />
                 {errors.street && <p className="text-red-500 text-sm mt-1">{errors.street}</p>}
               </div>
@@ -312,89 +279,89 @@ export default function CleanerRegister() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <input 
-                  name="county" 
-                  onChange={handleChange} 
-                  value={form.county} 
-                  placeholder="County" 
+                <input
+                  name="county"
+                  onChange={handleChange}
+                  value={form.county}
+                  placeholder="County"
                   className={`w-full p-2 border rounded text-[#0D9488] bg-white ${errors.county ? 'border-red-500' : ''}`}
-                  required 
+                  required
                 />
                 {errors.county && <p className="text-red-500 text-sm mt-1">{errors.county}</p>}
               </div>
               <div>
-                <input 
-                  name="postcode" 
-                  onChange={handleChange} 
-                  value={form.postcode} 
-                  placeholder="Postcode" 
+                <input
+                  name="postcode"
+                  onChange={handleChange}
+                  value={form.postcode}
+                  placeholder="Postcode"
                   className={`w-full p-2 border rounded text-[#0D9488] bg-white ${errors.postcode ? 'border-red-500' : ''}`}
-                  required 
+                  required
                 />
                 {errors.postcode && <p className="text-red-500 text-sm mt-1">{errors.postcode}</p>}
               </div>
             </div>
 
             <div>
-              <input 
-                name="email" 
-                onChange={handleChange} 
-                value={form.email} 
-                placeholder="Email" 
-                type="email" 
+              <input
+                name="email"
+                onChange={handleChange}
+                value={form.email}
+                placeholder="Email"
+                type="email"
                 className={`w-full p-2 border rounded text-[#0D9488] bg-white ${errors.email ? 'border-red-500' : ''}`}
-                required 
+                required
               />
               {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
             </div>
 
             <div>
-              <input 
-                name="phone" 
-                onChange={handleChange} 
-                value={form.phone} 
-                placeholder="Phone" 
-                type="tel" 
+              <input
+                name="phone"
+                onChange={handleChange}
+                value={form.phone}
+                placeholder="Phone"
+                type="tel"
                 className={`w-full p-2 border rounded text-[#0D9488] bg-white ${errors.phone ? 'border-red-500' : ''}`}
-                required 
+                required
               />
               {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
             </div>
 
             <div>
-              <input 
-                name="password" 
-                onChange={handleChange} 
-                value={form.password} 
-                placeholder="Password" 
-                type="password" 
+              <input
+                name="password"
+                onChange={handleChange}
+                value={form.password}
+                placeholder="Password"
+                type="password"
                 className={`w-full p-2 border rounded text-[#0D9488] bg-white ${errors.password ? 'border-red-500' : ''}`}
-                required 
+                required
               />
               {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
             </div>
 
             <div>
-              <input 
-                name="confirmPassword" 
-                onChange={handleChange} 
-                value={form.confirmPassword} 
-                placeholder="Confirm Password" 
-                type="password" 
+              <input
+                name="confirmPassword"
+                onChange={handleChange}
+                value={form.confirmPassword}
+                placeholder="Confirm Password"
+                type="password"
                 className={`w-full p-2 border rounded text-[#0D9488] bg-white ${errors.confirmPassword ? 'border-red-500' : ''}`}
-                required 
+                required
               />
               {errors.confirmPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>}
             </div>
 
             <div>
-              <input 
-                name="rates" 
-                onChange={handleChange} 
-                value={form.rates} 
-                placeholder="Hourly Rate (e.g. £15/hr)" 
+              <input
+                name="rates"
+                onChange={handleChange}
+                value={form.rates}
+                placeholder="Hourly Rate (e.g. £15/hr)"
                 className={`w-full p-2 border rounded text-[#0D9488] bg-white ${errors.rates ? 'border-red-500' : ''}`}
-                required 
+                required
               />
               {errors.rates && <p className="text-red-500 text-sm mt-1">{errors.rates}</p>}
             </div>
@@ -403,37 +370,48 @@ export default function CleanerRegister() {
               <h2 className="text-lg font-semibold mb-2 text-gray-600">Services You Offer</h2>
               <div className="grid grid-cols-2 gap-2 text-gray-600">
                 {Object.entries(serviceCategories).map(([category, services]) => (
-  <div key={category} className="mb-4">
-    <h3 className="text-md font-semibold mb-2">{category}</h3>
-    <div className="grid grid-cols-2 gap-2 text-gray-600">
-      {services.map(service => (
-        <label key={service} className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={form.services.includes(service)}
-            onChange={() => handleServiceToggle(service)}
-            className="accent-teal-700"
-          />
-          {service}
-        </label>
-      ))}
-    </div>
-  </div>
-))}
-
+                  <div key={category} className="mb-4">
+                    <h3 className="text-md font-semibold mb-2">{category}</h3>
+                    <div className="grid grid-cols-2 gap-2 text-gray-600">
+                      {services.map(service => (
+                        <label key={service} className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={form.services.includes(service)}
+                            onChange={() => handleServiceToggle(service)}
+                            className="accent-teal-700"
+                          />
+                          {service}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
               {errors.services && <p className="text-red-500 text-sm mt-2">{errors.services}</p>}
-              
-              <div className="mt-4 pt-4 border-t">
+
+              <div className="mt-4 pt-4 border-t space-y-2">
                 <label className="flex items-center gap-2 text-sm">
-                  <input 
-                    type="checkbox" 
-                    name="businessInsurance" 
-                    checked={form.businessInsurance} 
-                    onChange={handleChange} 
-                    className="accent-teal-700" 
+                  <input
+                    type="checkbox"
+                    name="businessInsurance"
+                    checked={form.businessInsurance}
+                    onChange={handleChange}
+                    className="accent-teal-700"
                   />
                   <span>I have business insurance</span>
+                </label>
+
+                {/* ✅ NEW: DBS checkbox */}
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    name="dbsChecked"
+                    checked={form.dbsChecked}
+                    onChange={handleChange}
+                    className="accent-teal-700"
+                  />
+                  <span>I have a valid DBS check</span>
                 </label>
               </div>
             </div>
@@ -444,7 +422,9 @@ export default function CleanerRegister() {
                 <div className="grid grid-cols-[auto_repeat(13,minmax(40px,1fr))] gap-px bg-gray-300 text-sm">
                   <div className="bg-white p-1 text-center font-semibold">Day/Hour</div>
                   {hours.map(hour => (
-                    <div key={hour} className="bg-white p-1 text-center font-semibold">{hour}:00</div>
+                    <div key={hour} className="bg-white p-1 text-center font-semibold">
+                      {hour}:00
+                    </div>
                   ))}
                   {days.map(day => (
                     <React.Fragment key={day}>
@@ -478,13 +458,11 @@ export default function CleanerRegister() {
               </span>
             </label>
 
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={isSubmitting}
               className={`mt-4 w-full py-3 rounded shadow text-white font-medium ${
-                isSubmitting 
-                  ? 'bg-gray-400 cursor-not-allowed' 
-                  : 'bg-[#0D9488] hover:bg-teal-700'
+                isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#0D9488] hover:bg-teal-700'
               }`}
             >
               {isSubmitting ? 'Registering...' : 'Register Cleaner'}
@@ -506,11 +484,13 @@ export default function CleanerRegister() {
           <p className="mb-2">&copy; {new Date().getFullYear()} FindTrustedCleaners. All rights reserved.</p>
 
           <p className="text-xs">
-            FindTrustedCleaners is committed to GDPR compliance. Read our <Link href="/privacy-policy" className="underline">Privacy Policy</Link> and <Link href="/cookie-policy" className="underline">Cookie Policy</Link> for details on how we protect your data. You may <Link href="/contact" className="underline">contact us</Link> at any time to manage your personal information.
+            FindTrustedCleaners is committed to GDPR compliance. Read our{' '}
+            <Link href="/privacy-policy" className="underline">Privacy Policy</Link> and{' '}
+            <Link href="/cookie-policy" className="underline">Cookie Policy</Link> for details on how we protect your data.
+            You may <Link href="/contact" className="underline">contact us</Link> at any time to manage your personal information.
           </p>
         </footer>
       </main>
     </>
   );
 }
-
