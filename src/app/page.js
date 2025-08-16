@@ -9,24 +9,46 @@ import useSWR from 'swr';
 
 const fetcher = (url) => fetch(url).then((res) => res.json());
 
-// ---- Pending purchases helper (shared with profile/dashboard) ----
+// ---- Pending purchases helpers ----
 const PURCHASES_API = (id) => `/api/public/purchases/cleaners/${id}`;
 
+// Merge pending purchases into availability
 const injectPendingFromPurchases = (availability = {}, purchasesList = []) => {
   const updated = JSON.parse(JSON.stringify(availability || {}));
   for (const p of purchasesList || []) {
-    // accept both legacy and current labels
     if (p?.status !== 'pending_approval' && p?.status !== 'pending') continue;
     const day = p?.day;
     const hour = String(p?.hour);
     if (!day || !hour) continue;
     if (!updated[day]) updated[day] = {};
     const slot = updated[day][hour];
-    // don't overwrite hard-booked or explicit off
-    if (slot === true || slot === 'unavailable' || slot === false) continue;
+    // don't overwrite explicit booleans/unavailable
+    if (slot === true || slot === false || slot === 'unavailable') continue;
     updated[day][hour] = 'pending_approval';
   }
   return updated;
+};
+
+// Fetch public pending purchases per cleaner and attach availabilityMerged
+const hydrateCleanersWithPending = async (cleaners) => {
+  const withMerged = await Promise.all(
+    (cleaners || []).map(async (c) => {
+      try {
+        const res = await fetch(PURCHASES_API(c._id), { credentials: 'include' });
+        const isJson = (res.headers.get('content-type') || '').includes('application/json');
+        const data = isJson ? await res.json() : { success: false, purchases: [] };
+        const purchases = data?.success ? (data.purchases || []) : [];
+        return {
+          ...c,
+          availabilityMerged: injectPendingFromPurchases(c.availability || {}, purchases),
+        };
+      } catch (e) {
+        console.warn('Public purchases fetch failed for cleaner', c._id, e);
+        return { ...c, availabilityMerged: c.availability || {} };
+      }
+    })
+  );
+  return withMerged;
 };
 
 export default function HomePage() {
@@ -45,6 +67,7 @@ export default function HomePage() {
 
   // Load saved favourites from localStorage
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     const saved = localStorage.getItem('favourites');
     if (saved) {
       try {
@@ -61,27 +84,10 @@ export default function HomePage() {
     const premium = data.cleaners.filter(c => c.isPremium === true).slice(0, 5);
     const free = data.cleaners.filter(c => c.isPremium !== true).slice(0, 5);
 
-    const mergePendingForList = async (list) => {
-      const merged = await Promise.all((list || []).map(async (c) => {
-        try {
-          const res = await fetch(PURCHASES_API(c._id), { credentials: 'include' });
-          const isJson = res.headers.get('content-type')?.includes('application/json');
-          const data = isJson ? await res.json() : { success: false, purchases: [] };
-          const purchases = data?.success ? (data.purchases || []) : [];
-          const availabilityMerged = injectPendingFromPurchases(c.availability || {}, purchases);
-          return { ...c, availabilityMerged };
-        } catch (e) {
-          console.warn('Public purchases fetch failed for cleaner', c._id, e);
-          return { ...c, availabilityMerged: c.availability || {} };
-        }
-      }));
-      return merged;
-    };
-
     (async () => {
       const [premiumMerged, freeMerged] = await Promise.all([
-        mergePendingForList(premium),
-        mergePendingForList(free),
+        hydrateCleanersWithPending(premium),
+        hydrateCleanersWithPending(free),
       ]);
       setPremiumCleaners(premiumMerged);
       setFreeCleaners(freeMerged);
@@ -95,7 +101,7 @@ export default function HomePage() {
 
   // Booking handler
   const handleBookingRequest = (cleanerId) => {
-    const clientId = localStorage.getItem('clientId');
+    const clientId = typeof window !== 'undefined' ? localStorage.getItem('clientId') : null;
     if (!clientId) {
       router.push(`/login/clients?next=/cleaners/${cleanerId}/checkout`);
     } else {
@@ -110,7 +116,9 @@ export default function HomePage() {
       ? favouriteIds.filter(x => x !== id)
       : [...favouriteIds, id];
     setFavouriteIds(updated);
-    localStorage.setItem('favourites', JSON.stringify(updated));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('favourites', JSON.stringify(updated));
+    }
   };
 
   // Price chart and calculator

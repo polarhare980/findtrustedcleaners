@@ -12,22 +12,24 @@ import { fetchClient } from '@/lib/fetchClient';
 // ---- Public purchases endpoint + injector ----
 const PURCHASES_API = (id) => `/api/public/purchases/cleaners/${id}`;
 
+// ✅ tiny helper: normalise photos to objects { url, public_id?, hasText? }
+const normalizePhotos = (arr) => {
+  if (!Array.isArray(arr)) return [];
+  return arr.map((p) => (typeof p === 'string' ? { url: p } : p)).filter((p) => p?.url);
+};
+
+// ✅ Merge pending purchases into availability
 const injectPendingFromPurchases = (availability = {}, purchasesList = []) => {
   const updated = JSON.parse(JSON.stringify(availability || {}));
   for (const p of purchasesList || []) {
-    // ✅ accept both legacy 'pending' and current 'pending_approval'
     if (p?.status !== 'pending_approval' && p?.status !== 'pending') continue;
-
     const day = p?.day;
     const hour = String(p?.hour);
     if (!day || !hour) continue;
-
     if (!updated[day]) updated[day] = {};
     const slot = updated[day][hour];
-
-    // don't overwrite hard booked (true) or explicit off
-    if (slot === true || slot === 'unavailable' || slot === false) continue;
-
+    // don't overwrite explicit available/unavailable booleans
+    if (slot === true || slot === false || slot === 'unavailable') continue;
     updated[day][hour] = 'pending_approval';
   }
   return updated;
@@ -294,9 +296,13 @@ export default function CleanerProfile() {
           console.warn('Public purchases fetch failed; using raw availability', e);
         }
 
+        // ✅ normalise photos here so rendering is robust
+        const photosNormalized = normalizePhotos(baseCleaner.photos || []);
+
         setCleaner({
           ...baseCleaner,
           availability: availabilityMerged,
+          photos: photosNormalized,
         });
         setHasAccess(data.hasAccess || false);
       } catch (err) {
@@ -361,7 +367,9 @@ export default function CleanerProfile() {
       phone: cleanerData.phone || prev.phone,
       email: cleanerData.email || prev.email,
       companyName: cleanerData.companyName || cleanerData.cleanerName || prev.companyName || prev.realName,
-      ...cleanerData
+      ...cleanerData,
+      // in case backend now returns photos as strings/objects mix after unlock:
+      photos: normalizePhotos(cleanerData.photos || prev.photos || []),
     }));
     setPurchaseLoading(false);
   };
@@ -589,30 +597,35 @@ export default function CleanerProfile() {
             </div>
           )}
 
-          {/* Gallery Section */}
-          {cleaner.photos?.length > 0 && (
+          {/* Gallery Section (now robust) */}
+          {Array.isArray(cleaner.photos) && cleaner.photos.length > 0 && (
             <div className="bg-white/30 backdrop-blur-md rounded-2xl p-6 border border-white/20 mb-6 relative z-10">
               <h2 className="text-2xl font-bold text-teal-800 mb-4 flex items-center gap-2">
                 <span>🖼️</span> Cleaner Gallery
               </h2>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                {cleaner.photos.map((photo, index) => (
-                  <div key={index} className="relative group overflow-hidden rounded-xl border border-white/30">
-                    <img
-                      src={photo.url}
-                      alt={`Gallery photo ${index + 1}`}
-                      className={`w-full h-auto transition-all duration-300 object-cover ${
-                        !canViewContact && photo.hasText ? 'blur-sm grayscale brightness-75' : ''
-                      }`}
-                    />
-                    {!canViewContact && photo.hasText && (
-                      <div className="absolute inset-0 bg-black/30 flex items-center justify-center text-white text-sm font-medium">
-                        🔒 Unlock to view
-                      </div>
-                    )}
-                  </div>
-                ))}
+                {cleaner.photos.map((photo, index) => {
+                  const obj = typeof photo === 'string' ? { url: photo } : photo;
+                  const src = obj.url;
+                  const lock = !canViewContact && !!obj.hasText;
+
+                  return (
+                    <div key={obj.public_id || src || index} className="relative group overflow-hidden rounded-xl border border-white/30">
+                      <img
+                        src={src}
+                        alt={`Gallery photo ${index + 1}`}
+                        className={`w-full h-auto transition-all duration-300 object-cover ${lock ? 'blur-sm grayscale brightness-75' : ''}`}
+                        loading="lazy"
+                      />
+                      {lock && (
+                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center text-white text-sm font-medium">
+                          🔒 Unlock to view
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
