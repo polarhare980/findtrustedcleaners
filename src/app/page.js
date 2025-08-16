@@ -22,12 +22,18 @@ const injectPendingFromPurchases = (availability = {}, purchasesList = []) => {
     if (!day || !hour) continue;
     if (!updated[day]) updated[day] = {};
     const slot = updated[day][hour];
-    // don't overwrite explicit booleans/unavailable
-    if (slot === true || slot === false || slot === 'unavailable') continue;
-    updated[day][hour] = 'pending_approval';
+// guard booked object → don't overwrite booked
+if (typeof slot === 'object') continue;
+// keep explicit unavailable as-is
+if (slot === false || slot === 'unavailable') continue;
+
+// allow overwriting true (available) with pending
+updated[day][hour] = 'pending_approval';
+
   }
   return updated;
 };
+
 
 // Fetch public pending purchases per cleaner and attach availabilityMerged
 const hydrateCleanersWithPending = async (cleaners) => {
