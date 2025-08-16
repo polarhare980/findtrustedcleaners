@@ -28,12 +28,15 @@ const injectPendingFromPurchases = (availability = {}, purchasesList = []) => {
     if (!day || !hour) continue;
     if (!updated[day]) updated[day] = {};
     const slot = updated[day][hour];
-    // don't overwrite explicit available/unavailable booleans
+    // don't overwrite explicit booleans/unavailable
     if (slot === true || slot === false || slot === 'unavailable') continue;
+    // 🆕 don't overwrite booked objects either
+    if (typeof slot === 'object') continue;
     updated[day][hour] = 'pending_approval';
   }
   return updated;
 };
+
 
 function isSafeEmbed(code) {
   const hasIframe = code.includes('<iframe') && code.includes('src=');

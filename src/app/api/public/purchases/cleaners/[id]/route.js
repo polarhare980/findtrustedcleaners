@@ -37,7 +37,7 @@ export async function GET(_req, { params }) {
 
     const res = NextResponse.json({ success: true, purchases: rows || [] });
     // Small public cache to reduce DB hits (adjust as needed)
-    res.headers.set('Cache-Control', 'public, max-age=30, s-maxage=60');
+    res.headers.set('Cache-Control', 'no-store');
     res.headers.set('Vary', 'Accept-Encoding'); // friendly for CDNs
     return res;
   } catch (err) {
