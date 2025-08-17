@@ -184,7 +184,7 @@ export default function CleanerDashboardComponent() {
         return;
       }
 
-      const res = await fetch(`/api/booking/accept-order/${bookingId}`, { method: 'PUT', credentials: 'include' });
+      const res = await fetch(`/api/bookings/accept-order/${bookingId}`, { method: 'PUT', credentials: 'include' });
       const data = await res.json();
 
       if (res.ok && data.success) {
@@ -217,7 +217,7 @@ export default function CleanerDashboardComponent() {
         return;
       }
 
-      const res = await fetch(`/api/booking/decline-order/${bookingId}`, { method: 'PUT', credentials: 'include' });
+      const res = await fetch(`/api/bookings/decline-order/${bookingId}`, { method: 'PUT', credentials: 'include' });
       const data = await res.json();
 
       if (res.ok && data.success) {
@@ -1190,7 +1190,7 @@ export default function CleanerDashboardComponent() {
               <span>Export My Data</span>
             </button>
             <button
-              onClick={() => router.push('/cleaner/bookings')}
+              onClick={() => router.push('/cleaners/bookings')}
               className="flex items-center justify-center gap-3 px-5 py-4 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-xl font-semibold transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
             >
               <span className="text-xl">📋</span>
