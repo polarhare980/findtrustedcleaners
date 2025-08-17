@@ -109,6 +109,8 @@ export async function GET(req) {
           bookingStatus: bookingStatusDerived,
           businessInsurance: c.businessInsurance || false,
           insurance: c.businessInsurance || false, // alias for JSX use
+          dbsChecked: !!cleaner.dbsChecked,       // ✅ add this
+
         };
       } catch (err) {
         console.error('❌ Failed to format cleaner object:', err);
