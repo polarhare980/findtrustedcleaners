@@ -57,6 +57,7 @@ export async function GET(req) {
           googleReviewCount: cleaner.googleReviewCount || 0,
           businessInsurance: cleaner.businessInsurance || false,
           insurance: cleaner.businessInsurance || false, // alias for JSX use
+          dbsChecked: !!c.dbsChecked,       // ✅ added for DBS badge
         }
       }, { status: 200 });
     }
