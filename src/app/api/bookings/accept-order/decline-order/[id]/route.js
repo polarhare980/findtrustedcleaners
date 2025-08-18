@@ -34,10 +34,13 @@ export async function PUT(req, { params }) {
     }
 
     // ✅ Cancel the held payment
+    if (!booking.stripePaymentIntentId) {
+    return NextResponse.json({ success: false, message: 'Payment not found for this booking.' }, { status: 400 });
+    }
     await stripe.paymentIntents.cancel(booking.stripePaymentIntentId);
 
     // ✅ Update booking to declined
-    booking.status = 'declined';
+    booking.status = 'rejected';
     await booking.save();
 
     // ✅ Free up cleaner availability

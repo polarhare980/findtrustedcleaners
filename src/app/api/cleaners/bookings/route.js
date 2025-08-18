@@ -9,7 +9,11 @@ export async function GET(req) {
   await connectToDatabase();
 
   const { valid, user, response } = await protectApiRoute(req);
-  if (!valid || user.type !== 'cleaner') return response;
+if (!valid) return response;
+if (user.type !== 'cleaner') {
+  return NextResponse.json({ success: false, message: 'Access denied.' }, { status: 403 });
+}
+
 
   try {
     const bookings = await Booking.find({ cleanerId: user._id })

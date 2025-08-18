@@ -34,10 +34,13 @@ export async function PUT(req, { params }) {
     }
 
     // ✅ Capture the held payment
+    if (!booking.stripePaymentIntentId) {
+    return NextResponse.json({ success: false, message: 'Payment not found for this booking.' }, { status: 400 });
+    }
     await stripe.paymentIntents.capture(booking.stripePaymentIntentId);
 
     // ✅ Update booking to confirmed
-    booking.status = 'confirmed';
+    booking.status = 'accepted';
     booking.acceptedBy = user._id;
     await booking.save();
 
