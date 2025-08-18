@@ -1,730 +1,612 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
-import React from 'react';
-import LoadingSpinner from '@/components/LoadingSpinner';
-import BookingPaymentWrapper from '@/components/BookingPaymentForm';
-import PurchaseButton from '@/components/PurchaseButton';
-import { getCleanerId } from '@/lib/utils';
-import { fetchClient } from '@/lib/fetchClient';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 
-// ---- Public purchases endpoint + injector ----
-const PURCHASES_API = (id) => `/api/public/purchases/cleaners/${id}`;
+import { injectPendingFromPurchases, hasContiguousAvailability, requiredHourSpan } from '@/lib/availability';
 
-// ✅ tiny helper: normalise photos to objects { url, public_id?, hasText? }
-const normalizePhotos = (arr) => {
+// Public APIs
+const PUBLIC_CLEANER_API = (id) => `/api/public/cleaners/${id}`;
+const PUBLIC_PURCHASES_API = (id) => `/api/public/purchases/cleaners/${id}`;
+
+// Client APIs
+const CREATE_PURCHASE_API = '/api/clients/purchases';
+const CONTACT_UNLOCK_API = '/api/clients/contact-unlock';
+
+const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+const HOURS = Array.from({ length: 13 }, (_, i) => 7 + i); // 7..19
+
+/* ----------------------------- Utility Helpers ---------------------------- */
+
+function normalizePhotos(arr) {
   if (!Array.isArray(arr)) return [];
-  return arr.map((p) => (typeof p === 'string' ? { url: p } : p)).filter((p) => p?.url);
-};
+  return arr
+    .map((p) => (typeof p === 'string' ? { url: p } : p))
+    .filter((p) => p?.url);
+}
 
-// ✅ Merge pending purchases into availability
-const injectPendingFromPurchases = (availability = {}, purchasesList = []) => {
-  const updated = JSON.parse(JSON.stringify(availability || {}));
-  for (const p of purchasesList || []) {
-    if (p?.status !== 'pending_approval' && p?.status !== 'pending') continue;
-    const day = p?.day;
-    const hour = String(p?.hour);
-    if (!day || !hour) continue;
-    if (!updated[day]) updated[day] = {};
-    const slot = updated[day][hour];
-    // guard booked object → don't overwrite booked
-    if (typeof slot === 'object') continue;
-    // keep explicit unavailable as-is
-    if (slot === false || slot === 'unavailable') continue;
-    // allow overwriting true (available) with pending
-    updated[day][hour] = 'pending_approval';
-  }
-  return updated;
-};
-
-function isSafeEmbed(code) {
-  const hasIframe = code.includes('<iframe') && code.includes('src=');
+function isSafeEmbed(code = '') {
+  const lower = String(code).toLowerCase();
+  const hasIframe = lower.includes('<iframe') && lower.includes('src=');
   const forbidden = ['<script', '<style', 'onerror', 'onload', 'javascript:'];
-  const lower = code.toLowerCase();
-  return hasIframe && !forbidden.some(frag => lower.includes(frag));
+  return hasIframe && !forbidden.some((frag) => lower.includes(frag));
 }
 
-// ✅ Availability with PENDING support
-function AvailabilitySection({ availability, onSlotClick, canViewContact, selectedSlot }) {
-  const [showGrid, setShowGrid] = useState(false);
-
-  const days = [
-    'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday',
-  ];
-  const hours = Array.from({ length: 13 }, (_, i) => 7 + i);
-
-  return (
-    <div style={{
-      background: 'rgba(255, 255, 255, 0.25)',
-      backdropFilter: 'blur(20px)',
-      border: '1px solid rgba(255, 255, 255, 0.2)',
-      borderRadius: '20px',
-      padding: '32px',
-      marginBottom: '30px',
-      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-    }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#115E59' }}>
-          📅 Availability
-        </h3>
-        <button
-          onClick={() => setShowGrid(prev => !prev)}
-          style={{
-            background: showGrid
-              ? 'linear-gradient(135deg, #DC2626 0%, #B91C1C 100%)'
-              : 'linear-gradient(135deg, #0D9488 0%, #0F766E 100%)',
-            color: 'white',
-            border: 'none',
-            borderRadius: '50px',
-            padding: '12px 24px',
-            fontSize: '16px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
-            boxShadow: '0 4px 16px rgba(13, 148, 136, 0.3)',
-          }}
-        >
-          {showGrid ? 'Hide Availability' : 'Show Availability'}
-        </button>
-      </div>
-
-      {showGrid && (
-        <div style={{
-          overflowX: 'auto',
-          border: '1px solid rgba(255, 255, 255, 0.3)',
-          borderRadius: '12px',
-          background: 'rgba(255, 255, 255, 0.1)',
-        }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '800px' }}>
-            <thead>
-              <tr style={{ background: 'rgba(13, 148, 136, 0.1)' }}>
-                <th style={{
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  padding: '12px',
-                  fontWeight: 'bold',
-                  color: '#115E59',
-                }}>Day</th>
-                {hours.map(hour => (
-                  <th key={hour} style={{
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    padding: '8px',
-                    fontSize: '14px',
-                    color: '#115E59',
-                  }}>
-                    {hour}:00
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {days.map(day => (
-                <tr key={day}>
-                  <td style={{
-                    fontWeight: 'bold',
-                    padding: '12px',
-                    background: 'rgba(255, 255, 255, 0.2)',
-                    color: '#374151',
-                  }}>
-                    {day}
-                  </td>
-
-                  {hours.map(hour => {
-                    const raw = availability?.[day]?.[hour.toString()];
-                    const status = typeof raw === 'object' ? raw?.status : raw;
-
-                    const isAvailable = status === true || status === 'available';
-                    const isPending = status === 'pending' || status === 'pending_approval';
-                    const isUnavailable = !isAvailable && !isPending;
-
-                    const isSelected =
-                      selectedSlot?.day === day && selectedSlot?.hour === hour.toString();
-
-                    return (
-                      <td key={hour} style={{ padding: '4px' }}>
-                        {isAvailable ? (
-                          <button
-                            onClick={() => onSlotClick(day, hour.toString())}
-                            style={{
-                              width: '100%',
-                              padding: '8px 4px',
-                              background: isSelected
-                                ? 'linear-gradient(135deg, #0D9488 0%, #0F766E 100%)'
-                                : 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '8px',
-                              cursor: 'pointer',
-                              fontSize: '12px',
-                              fontWeight: '600',
-                              transition: 'all 0.3s ease',
-                              boxShadow: isSelected ? '0 4px 12px rgba(13, 148, 136, 0.4)' : 'none',
-                            }}
-                            onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.05)')}
-                            onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
-                          >
-                            {isSelected ? '✓ SELECTED' : 'BOOK'}
-                          </button>
-                        ) : isPending ? (
-                          <div
-                            title="Pending approval – temporarily unavailable"
-                            style={{
-                              width: '100%',
-                              padding: '8px 4px',
-                              background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
-                              color: 'white',
-                              borderRadius: '8px',
-                              fontSize: '12px',
-                              fontWeight: '700',
-                              textAlign: 'center',
-                            }}
-                          >
-                            ⏳ PENDING
-                          </div>
-                        ) : (
-                          <div style={{
-                            textAlign: 'center',
-                            color: '#9CA3AF',
-                            fontSize: '16px',
-                            padding: '8px',
-                          }}>
-                            ✗
-                          </div>
-                        )}
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* Debug Info (remove in production) */}
-      {process.env.NODE_ENV === 'development' && selectedSlot && (
-        <div style={{
-          marginTop: '16px',
-          padding: '12px',
-          background: '#FEF3C7',
-          borderRadius: '8px',
-          fontSize: '14px',
-        }}>
-          <strong>Selected:</strong> {selectedSlot.day} at {selectedSlot.hour}:00
-          <br />
-          <strong>Can View Contact:</strong> {canViewContact.toString()}
-          <br />
-          <strong>Slot data:</strong>{' '}
-          {JSON.stringify(availability?.[selectedSlot.day]?.[selectedSlot.hour] ?? null)}
-        </div>
-      )}
-    </div>
-  );
+function labelForHour(h) {
+  const hh = String(h).padStart(2, '0');
+  return `${hh}:00`;
 }
 
-export default function CleanerProfile() {
+/* ------------------------------- Main Page ------------------------------- */
+
+export default function CleanerProfilePage() {
+  const router = useRouter();
   const { id } = useParams();
 
   const [mounted, setMounted] = useState(false);
-  const [cleaner, setCleaner] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [cleaner, setCleaner] = useState(null);
   const [error, setError] = useState('');
-  const [selectedSlot, setSelectedSlot] = useState(null);
-  const [hasAccess, setHasAccess] = useState(false);
-  const [purchaseLoading, setPurchaseLoading] = useState(false);
-  const [canViewContact, setCanViewContact] = useState(false);
-  const [permissionLoading, setPermissionLoading] = useState(false);
-  const [client, setClient] = useState(null);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setMounted(true);
-    }
-  }, []);
+  // contact unlock
+  const [unlockLoading, setUnlockLoading] = useState(false);
+  const [contactUnlocked, setContactUnlocked] = useState(false);
 
-  // ✅ Load logged-in client (if any)
-  useEffect(() => {
-    const loadClient = async () => {
-      try {
-        const user = await fetchClient();
-        setClient(user);
-      } catch (err) {
-        console.error('Failed to fetch client data:', err);
-        setClient(null);
-      }
-    };
-    loadClient();
-  }, []);
+  // booking controls
+  const [selectedServiceKey, setSelectedServiceKey] = useState('');
+  const [durationMins, setDurationMins] = useState(60);
+  const [bufferBeforeMins, setBufferBeforeMins] = useState(0);
+  const [bufferAfterMins, setBufferAfterMins] = useState(0);
 
-  // ✅ Load cleaner by ID + inject public pending slots
+  const [selectedDay, setSelectedDay] = useState('');
+  const [selectedHour, setSelectedHour] = useState(null); // number
+  const [creating, setCreating] = useState(false);
+  const [toast, setToast] = useState('');
+
+  useEffect(() => setMounted(true), []);
+
+  /* ------------------------------ Data Fetch ------------------------------ */
+
   useEffect(() => {
     if (!id) return;
+    let cancelled = false;
 
-    const fetchCleaner = async () => {
+    (async () => {
       try {
         setLoading(true);
         setError('');
 
-        const res = await fetch(`/api/cleaners/${id}`, { credentials: 'include' });
-        if (!res.ok) {
-          const errorText = await res.text();
-          console.error('Fetch error:', res.status, errorText);
-          setError(`Cleaner not found or server error (${res.status})`);
-          return;
-        }
-
+        // 1) public cleaner
+        const res = await fetch(PUBLIC_CLEANER_API(id), { credentials: 'include' });
         const data = await res.json();
-        if (!data?.success || !data.cleaner) {
-          setError('Cleaner not found.');
-          return;
+        if (!res.ok || !data?.success || !data.cleaner) {
+          throw new Error(data?.message || 'Cleaner not found.');
         }
+        let c = data.cleaner;
 
-        const baseCleaner = data.cleaner;
-        const cleanerId = getCleanerId(baseCleaner, id);
-
-        // --- fetch public pending purchases and merge into availability
-        let availabilityMerged = baseCleaner.availability || {};
+        // 2) purchases feed -> inject pending/accepted into grid
         try {
-          const pRes = await fetch(PURCHASES_API(cleanerId), { credentials: 'include' });
-          const isJson = pRes.headers.get('content-type')?.includes('application/json');
-          const pData = isJson ? await pRes.json() : { success: false, purchases: [] };
-          const purchasesList = pData?.success ? (pData?.purchases || []) : [];
-          availabilityMerged = injectPendingFromPurchases(availabilityMerged, purchasesList);
-
-          if (process.env.NODE_ENV === 'development') {
-            console.log('🔎 pending purchases fetched:', purchasesList);
-            console.log('🧩 availability merged:', availabilityMerged);
+          const pRes = await fetch(PUBLIC_PURCHASES_API(c._id), { credentials: 'include' });
+          const p = await pRes.json();
+          if (p?.success) {
+            c = {
+              ...c,
+              availability: injectPendingFromPurchases(c.availability || {}, p.purchases || []),
+            };
           }
-        } catch (e) {
-          console.warn('Public purchases fetch failed; using raw availability', e);
+        } catch {
+          // ignore: fall back to raw availability
         }
 
-        // ✅ normalise photos here so rendering is robust
-        const photosNormalized = normalizePhotos(baseCleaner.photos || []);
+        c.photos = normalizePhotos(c.photos);
+        if (!cancelled) {
+          setCleaner(c);
 
-        setCleaner({
-          ...baseCleaner,
-          availability: availabilityMerged,
-          photos: photosNormalized,
-        });
-        setHasAccess(data.hasAccess || false);
-      } catch (err) {
-        console.error('❌ Failed to load cleaner profile', err);
-        setError('Failed to fetch cleaner profile.');
+          // Prime booking controls from first active serviceDetailed
+          const firstActive = (c.servicesDetailed || []).find((s) => s.active !== false);
+          if (firstActive) {
+            setSelectedServiceKey(firstActive.key);
+            setDurationMins(firstActive.defaultDurationMins ?? 60);
+            setBufferBeforeMins(firstActive.bufferBeforeMins ?? 0);
+            setBufferAfterMins(firstActive.bufferAfterMins ?? 0);
+          }
+        }
+      } catch (e) {
+        if (!cancelled) setError(e.message || 'Failed to load profile.');
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
-    };
+    })();
 
-    fetchCleaner();
+    return () => { cancelled = true; };
   }, [id]);
 
-  // ✅ Check permissions when cleaner or client changes
+  /* ---------------------------- Derived Values ---------------------------- */
+
+  const service = useMemo(() => {
+    if (!cleaner) return null;
+    return (cleaner.servicesDetailed || []).find((s) => s.key === selectedServiceKey) || null;
+  }, [cleaner, selectedServiceKey]);
+
+  const increment = useMemo(() => {
+    return service?.incrementMins ?? 60;
+  }, [service]);
+
+  const minDuration = useMemo(() => service?.minDurationMins ?? 60, [service]);
+  const maxDuration = useMemo(() => service?.maxDurationMins ?? 240, [service]);
+
+  // Span required for this booking config
+  const span = useMemo(
+    () => requiredHourSpan({ durationMins, bufferBeforeMins, bufferAfterMins }),
+    [durationMins, bufferBeforeMins, bufferAfterMins]
+  );
+
+  const canSelectStart = useMemo(() => {
+    if (!cleaner || !selectedDay || selectedHour == null) return false;
+    if (selectedHour + span > 24) return false;
+    return hasContiguousAvailability(cleaner.availability || {}, selectedDay, selectedHour, span);
+  }, [cleaner, selectedDay, selectedHour, span]);
+
+  /* ---------------------------- Contact Unlock ---------------------------- */
+
   useEffect(() => {
-    const checkPermissions = async () => {
-      if (!cleaner || !client?.email) {
-        setCanViewContact(false);
-        return;
-      }
+    if (!cleaner) return;
 
-      setPermissionLoading(true);
-
+    (async () => {
+      setUnlockLoading(true);
       try {
-        const cleanerId = getCleanerId(cleaner, id);
-
-        const res = await fetch('/api/unlock-status', {
+        const res = await fetch(CONTACT_UNLOCK_API, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({
-            cleanerId,
-            clientId: client._id,
-          }),
+          body: JSON.stringify({ cleanerId: cleaner._id }),
         });
-
-        const result = await res.json();
-
-        if (res.ok && result.success) {
-          setCanViewContact(result.unlocked);
-        } else {
-          console.error('❌ Unlock API Error:', result.message);
-          setCanViewContact(false);
+        const j = await res.json();
+        setContactUnlocked(res.ok && j?.success && (j.unlocked === true || j.status === 'accepted'));
+        if (res.ok && j?.success && j.phone) {
+          // enrich cleaner with contacts if returned
+          setCleaner((prev) => ({ ...prev, phone: j.phone, email: j.email }));
         }
-      } catch (err) {
-        console.error('Permission check failed:', err);
-        setCanViewContact(false);
+      } catch {
+        setContactUnlocked(false);
       } finally {
-        setPermissionLoading(false);
+        setUnlockLoading(false);
       }
-    };
+    })();
+  }, [cleaner?._id]);
 
-    checkPermissions();
-  }, [cleaner, client, id]);
+  /* ----------------------------- Event Handlers --------------------------- */
 
-  const handlePurchaseSuccess = (cleanerData) => {
-    console.log('✅ Purchase successful, received data:', cleanerData);
-    setHasAccess(true);
-    setCanViewContact(true);
-    setCleaner((prev) => ({
-      ...prev,
-      phone: cleanerData.phone || prev.phone,
-      email: cleanerData.email || prev.email,
-      companyName: cleanerData.companyName || cleanerData.cleanerName || prev.companyName || prev.realName,
-      ...cleanerData,
-      // in case backend now returns photos as strings/objects mix after unlock:
-      photos: normalizePhotos(cleanerData.photos || prev.photos || []),
-    }));
-    setPurchaseLoading(false);
-  };
+  function selectCell(day, hour) {
+    setSelectedDay(day);
+    setSelectedHour(hour);
+  }
 
-  const handlePurchaseStart = () => setPurchaseLoading(true);
+  async function createBooking() {
+    if (!cleaner?._id) return;
+    if (!selectedDay || selectedHour == null) {
+      setToast('Please select a start time.');
+      return;
+    }
+    if (!service) {
+      setToast('Please choose a service.');
+      return;
+    }
+    if (!canSelectStart) {
+      setToast('Selected start time cannot fit the required duration.');
+      return;
+    }
 
-  const handlePurchaseError = (error) => {
-    console.error('❌ Purchase failed:', error);
-    setPurchaseLoading(false);
-    setError('Purchase failed. Please try again.');
-  };
+    setCreating(true);
+    setToast('');
+    try {
+      const res = await fetch(CREATE_PURCHASE_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          cleanerId: cleaner._id,
+          day: selectedDay,
+          hour: selectedHour, // number
+          serviceKey: service.key,
+          durationMins,
+          bufferBeforeMins,
+          bufferAfterMins,
+        }),
+      });
+      const j = await res.json();
+      if (!res.ok || !j?.success) {
+        throw new Error(j?.message || 'Failed to create booking.');
+      }
+      setToast('Booking request sent! Awaiting cleaner approval.');
+      // Optionally refresh purchases overlay
+      try {
+        const pRes = await fetch(PUBLIC_PURCHASES_API(cleaner._id), { credentials: 'include' });
+        const p = await pRes.json();
+        if (p?.success) {
+          setCleaner((prev) => ({
+            ...prev,
+            availability: injectPendingFromPurchases(prev.availability || {}, p.purchases || []),
+          }));
+        }
+      } catch {}
+    } catch (e) {
+      setToast(e.message || 'Booking failed.');
+    } finally {
+      setCreating(false);
+      // Scroll to top toast
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
 
-  // ✅ Handle slot selection
-  const handleSlotClick = (day, hour) => {
-    setSelectedSlot({ day, hour });
-  };
+  /* -------------------------------- Render -------------------------------- */
 
   if (!mounted) return null;
-  if (loading) return <LoadingSpinner />;
 
-  if (error) {
+  if (loading) {
     return (
-      <main className="min-h-screen bg-gradient-to-br from-teal-900/20 to-teal-700/10 p-6 flex items-center justify-center">
-        <div className="bg-white/25 backdrop-blur-xl border border-white/20 rounded-3xl p-8 shadow-2xl text-center">
-          <h1 className="text-3xl font-bold mb-4 bg-gradient-to-r from-red-600 to-red-800 bg-clip-text text-transparent">
-            Error
-          </h1>
-          <p className="text-gray-700 mb-4">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="bg-gradient-to-r from-teal-600 to-teal-700 text-white px-6 py-2 rounded-full hover:from-teal-700 hover:to-teal-800 transition-all duration-300"
-          >
-            Try Again
-          </button>
+      <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-900/20 to-teal-700/10">
+        <div className="text-center text-teal-800">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-teal-700 mx-auto mb-3" />
+          Loading profile…
         </div>
       </main>
     );
   }
 
-  // ✅ unified flags for badges
-  const isInsured =
-    cleaner?.businessInsurance ||
-    cleaner?.isInsured ||
-    cleaner?.hasInsurance ||
-    cleaner?.business_insurance;
+  if (error || !cleaner) {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-900/20 to-teal-700/10">
+        <div className="bg-white/70 backdrop-blur-md border border-white/30 rounded-2xl p-8 text-center">
+          <h1 className="text-2xl font-semibold text-red-700 mb-2">Error</h1>
+          <p className="text-gray-700 mb-4">{error || 'Cleaner not found.'}</p>
+          <Link href="/" className="inline-block px-5 py-2 rounded-full bg-teal-700 text-white">Back home</Link>
+        </div>
+      </main>
+    );
+  }
 
-  const dbsChecked = !!(cleaner?.dbsChecked || cleaner?.dbs_verified);
+  const isInsured = !!cleaner.businessInsurance;
+  const dbsChecked = !!cleaner.dbsChecked;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-900/20 to-teal-700/10 p-6 relative">
-      <div className="max-w-4xl mx-auto">
-        {/* Main Profile Card */}
-        <div className="bg-white/25 backdrop-blur-xl border border-white/20 rounded-3xl p-8 shadow-2xl mb-6 transition-all duration-300 hover:shadow-3xl">
-          {/* Profile Header */}
-          <div className="flex flex-col md:flex-row items-center md:items-start gap-6 mb-8">
-            <div className="relative group">
+    <main className="min-h-screen bg-gradient-to-br from-teal-900/20 to-teal-700/10 p-6">
+      <div className="max-w-5xl mx-auto space-y-6">
+        {/* Toast */}
+        {toast && (
+          <div className="bg-yellow-50 border border-yellow-300 text-yellow-800 rounded-xl p-3">
+            {toast}
+          </div>
+        )}
+
+        {/* Header Card */}
+        <section className="bg-white/25 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-xl">
+          <div className="flex items-start gap-6">
+            <div className="relative">
               <img
                 src={cleaner.image?.trim() ? cleaner.image : '/default-avatar.png'}
-                alt={cleaner.realName || 'Cleaner'}
-                loading="lazy"
-                className="w-32 h-32 md:w-40 md:h-40 object-cover rounded-full border-4 border-white/30 shadow-lg transition-transform duration-300 group-hover:scale-105"
+                alt={cleaner.companyName || cleaner.realName || 'Cleaner'}
+                className="w-28 h-28 md:w-36 md:h-36 object-cover rounded-2xl border-4 border-white/30"
               />
-              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-teal-600/20 to-teal-800/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             </div>
-
-            <div className="flex-1 text-center md:text-left">
-              <h1 className="text-4xl md:text-5xl font-bold mb-3 bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent">
-                {cleaner.realName}
+            <div className="flex-1">
+              <h1 className="text-3xl md:text-4xl font-extrabold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent">
+                {cleaner.companyName || cleaner.realName}
               </h1>
 
-              {/* ⭐ Rating line (optional) */}
-              {cleaner.googleReviewRating && cleaner.googleReviewCount && (
-                <p className="text-lg font-medium text-teal-800 mb-3">
-                  ⭐ {cleaner.googleReviewRating} from {cleaner.googleReviewCount} reviews
-                </p>
-              )}
-
-              {/* 🔖 Badges row: Premium / Insured / DBS */}
-              <div className="flex flex-wrap items-center gap-2 mb-4">
-                {cleaner?.isPremium && (
-                  <span
-                    className="inline-block text-xs font-semibold text-white px-3 py-1 rounded-full"
-                    style={{ background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)', boxShadow: '0 2px 8px rgba(245, 158, 11, 0.3)' }}
-                  >
-                    ✨ Premium Cleaner
+              <div className="flex flex-wrap gap-2 mt-3">
+                {cleaner.isPremium && (
+                  <span className="text-xs text-white px-3 py-1 rounded-full" style={{ background: 'linear-gradient(135deg,#F59E0B,#D97706)' }}>
+                    ✨ Premium
                   </span>
                 )}
-
                 {isInsured && (
-                  <span
-                    className="inline-block text-xs font-semibold text-white px-3 py-1 rounded-full"
-                    style={{ background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)', boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)' }}
-                  >
+                  <span className="text-xs text-white px-3 py-1 rounded-full" style={{ background: 'linear-gradient(135deg,#10B981,#059669)' }}>
                     ✔ Insured
                   </span>
                 )}
-
                 {dbsChecked && (
-                  <span
-                    className="inline-block text-xs font-semibold text-white px-3 py-1 rounded-full"
-                    style={{ background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)', boxShadow: '0 2px 8px rgba(37, 99, 235, 0.3)' }}
-                  >
+                  <span className="text-xs text-white px-3 py-1 rounded-full" style={{ background: 'linear-gradient(135deg,#2563EB,#1D4ED8)' }}>
                     ✔ DBS Checked
                   </span>
                 )}
               </div>
 
-              {/* Two quick facts */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700">
-                <div className="bg-white/40 backdrop-blur-md rounded-2xl p-4 border border-white/30">
-                  <div className="flex items-center gap-2">
-                    <span className="text-teal-600 font-semibold">📍</span>
-                    <div>
-                      <span className="font-semibold text-teal-800">Postcode:</span>
-                      <div className="text-lg">{cleaner.postcode}</div>
-                      {cleaner.additionalPostcodes?.length > 0 && (
-                        <div className="text-sm text-yellow-800 mt-1">
-                          <span className="font-medium">Also covers:</span> {cleaner.additionalPostcodes.join(', ')}
-                        </div>
-                      )}
-                    </div>
-                  </div>
+              <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-700">
+                <div className="bg-white/50 rounded-2xl p-3 border border-white/30">
+                  <div className="font-semibold text-teal-800">📍 Postcode</div>
+                  <div className="text-lg">{cleaner.address?.postcode || '—'}</div>
                 </div>
-
-                <div className="bg-white/40 backdrop-blur-md rounded-2xl p-4 border border-white/30">
-                  <div className="flex items-center gap-2">
-                    <span className="text-teal-600 font-semibold">💰</span>
-                    <div>
-                      <span className="font-semibold text-teal-800">Hourly Rate:</span>
-                      <div className="text-lg font-bold text-teal-700">£{cleaner.rates || cleaner.rate || 'Not set'}</div>
-                    </div>
-                  </div>
+                <div className="bg-white/50 rounded-2xl p-3 border border-white/30">
+                  <div className="font-semibold text-teal-800">💷 Hourly Rate</div>
+                  <div className="text-lg">£{typeof cleaner.rates === 'number' ? cleaner.rates : '—'}/hr</div>
                 </div>
               </div>
             </div>
           </div>
+        </section>
 
-          {/* Contact Details Section - WITH PERMISSION CHECK */}
-          <div className="bg-white/30 backdrop-blur-md rounded-2xl p-6 border border-white/20 mb-6 relative z-50" style={{isolation: 'isolate'}}>
-            {process.env.NODE_ENV === 'development' && (
-              <div className="text-xs text-gray-500 mb-4 bg-yellow-100 p-2 rounded">
-                Debug: cleanerId={getCleanerId(cleaner, id)}, hasAccess={hasAccess.toString()}, canViewContact={canViewContact.toString()}, purchaseLoading={purchaseLoading.toString()}
-                <br />
-                URL param ID: {id}
-                <br />
-                Client Email: {client?.email || 'Not loaded'}
-                <br />
-                Selected Slot: {selectedSlot ? `${selectedSlot.day} at ${selectedSlot.hour}:00` : 'None'}
-                <br />
-                Permission Loading: {permissionLoading.toString()}
-              </div>
-            )}
-
-            {permissionLoading ? (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 mx-auto mb-4"></div>
-                <p className="text-gray-600">Checking permissions...</p>
-              </div>
-            ) : canViewContact ? (
-              <div className="contact-info">
-                <div className="text-center mb-4">
-                  <span className="text-2xl">🔓</span>
-                  <p className="text-green-600 font-semibold mt-2">Contact details unlocked!</p>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="text-center md:text-left">
-                    <div className="text-teal-600 font-semibold mb-1">📞 Phone</div>
-                    <div className="text-gray-800 font-medium">{cleaner.phone || 'Not provided'}</div>
-                  </div>
-                  <div className="text-center md:text-left">
-                    <div className="text-teal-600 font-semibold mb-1">📧 Email</div>
-                    <div className="text-gray-800 font-medium">{cleaner.email || 'Not provided'}</div>
-                  </div>
-                  <div className="text-center md:text-left">
-                    <div className="text-teal-600 font-semibold mb-1">🏢 Company</div>
-                    <div className="text-gray-800 font-medium">{cleaner.companyName || cleaner.realName}</div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="blurred-overlay text-center">
-                <div className="mb-4">
-                  <span className="text-2xl">🔒</span>
-                  <p className="text-gray-600 italic mt-2">Contact details locked — purchase access to unlock</p>
-                </div>
-
-                {cleaner && getCleanerId(cleaner, id) ? (
-                  <div className="relative z-50">
-                    {purchaseLoading && (
-                      <div className="absolute inset-0 bg-white/50 backdrop-blur-sm rounded-full flex items-center justify-center z-[60]">
-                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-teal-600"></div>
-                      </div>
-                    )}
-                    <div style={{position: 'relative', zIndex: 9999, isolation: 'isolate'}}>
-                      {client?.type === 'client' ? (
-                        <PurchaseButton
-                          cleanerId={getCleanerId(cleaner, id)}
-                          selectedSlot={selectedSlot}
-                          onPurchaseSuccess={handlePurchaseSuccess}
-                          onPurchaseStart={handlePurchaseStart}
-                          onPurchaseError={handlePurchaseError}
-                          disabled={purchaseLoading}
-                        />
-                      ) : (
-                        <button
-                          onClick={() => {
-                            if (typeof window !== 'undefined') {
-                              localStorage.setItem('redirectAfterLogin', `/cleaners/${cleaner._id || id}`);
-                              window.location.href = `/login/clients?next=/cleaners/${cleaner._id || id}`;
-                            }
-                          }}
-                          className="bg-gradient-to-r from-teal-600 to-teal-700 text-white px-6 py-2 rounded-full font-semibold shadow hover:from-teal-700 hover:to-teal-800 transition-all duration-300"
-                        >
-                          Log in to Purchase Access
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-red-600 font-semibold">
-                    ⚠️ Unable to load purchase button - cleaner ID missing
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Services Section */}
-          <div className="bg-white/30 backdrop-blur-md rounded-2xl p-6 border border-white/20 mb-6 relative z-10">
-            <h2 className="text-2xl font-bold text-teal-800 mb-4 flex items-center gap-2">
-              <span>🧹</span> Services Offered
-            </h2>
-            {Array.isArray(cleaner.services) && cleaner.services.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {cleaner.services.map((service, i) => (
-                  <div key={i} className="bg-white/40 backdrop-blur-sm rounded-xl p-3 border border-white/30 flex items-center gap-2">
-                    <span className="text-teal-600">✨</span>
-                    <span className="text-gray-800">{service}</span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="italic text-gray-600 text-center py-4">No services listed</p>
-            )}
-          </div>
-
-          {cleaner.bio && (
-            <div className="bg-white/30 backdrop-blur-md rounded-2xl p-6 border border-white/20 mb-6 relative z-10">
-              <h2 className="text-2xl font-bold text-teal-800 mb-4 flex items-center gap-2">
-                <span>🧾</span> About This Cleaner
-              </h2>
-              <p className="text-gray-800 whitespace-pre-wrap">{cleaner.bio}</p>
+        {/* Contact unlock */}
+        <section className="bg-white/25 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-xl">
+          {unlockLoading ? (
+            <div className="text-center text-gray-700">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-700 mx-auto mb-3" />
+              Checking booking status…
+            </div>
+          ) : contactUnlocked ? (
+            <div className="grid sm:grid-cols-3 gap-4 text-gray-800">
+              <div><div className="text-teal-700 font-semibold">📞 Phone</div><div>{cleaner.phone || '—'}</div></div>
+              <div><div className="text-teal-700 font-semibold">📧 Email</div><div>{cleaner.email || '—'}</div></div>
+              <div><div className="text-teal-700 font-semibold">🏢 Company</div><div>{cleaner.companyName || cleaner.realName}</div></div>
+            </div>
+          ) : (
+            <div className="text-center">
+              <div className="text-2xl mb-2">🔒</div>
+              <p className="text-gray-700">Contact details unlock after an accepted booking.</p>
             </div>
           )}
+        </section>
 
-          {/* Gallery Section (now robust) */}
-          {Array.isArray(cleaner.photos) && cleaner.photos.length > 0 && (
-            <div className="bg-white/30 backdrop-blur-md rounded-2xl p-6 border border-white/20 mb-6 relative z-10">
-              <h2 className="text-2xl font-bold text-teal-800 mb-4 flex items-center gap-2">
-                <span>🖼️</span> Cleaner Gallery
-              </h2>
+        {/* Services Detailed (selector) */}
+        <section className="bg-white/25 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-xl">
+          <h2 className="text-xl font-bold text-teal-800 mb-4">🧹 Services & Duration</h2>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                {cleaner.photos.map((photo, index) => {
-                  const obj = typeof photo === 'string' ? { url: photo } : photo;
-                  const src = obj.url;
-                  const lock = !canViewContact && !!obj.hasText;
+          {Array.isArray(cleaner.servicesDetailed) && cleaner.servicesDetailed.filter(s => s.active !== false).length > 0 ? (
+            <div className="grid md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm text-gray-700">Service</label>
+                <select
+                  className="modern-select w-full"
+                  value={selectedServiceKey}
+                  onChange={(e) => {
+                    const nextKey = e.target.value;
+                    setSelectedServiceKey(nextKey);
+                    const svc = (cleaner.servicesDetailed || []).find(s => s.key === nextKey);
+                    if (svc) {
+                      setDurationMins(svc.defaultDurationMins ?? 60);
+                      setBufferBeforeMins(svc.bufferBeforeMins ?? 0);
+                      setBufferAfterMins(svc.bufferAfterMins ?? 0);
+                    }
+                  }}
+                >
+                  {(cleaner.servicesDetailed || [])
+                    .filter((s) => s.active !== false)
+                    .map((s) => (
+                      <option key={s.key} value={s.key}>
+                        {s.name || s.key}
+                      </option>
+                    ))}
+                </select>
+                <p className="text-xs text-gray-600">
+                  Increment: {service?.incrementMins ?? 60} mins • Allowed: {minDuration}–{maxDuration} mins
+                </p>
+              </div>
 
+              <div className="space-y-2">
+                <label className="text-sm text-gray-700">Duration (mins)</label>
+                <select
+                  className="modern-select w-full"
+                  value={durationMins}
+                  onChange={(e) => setDurationMins(Number(e.target.value))}
+                >
+                  {Array.from({ length: Math.floor((maxDuration - minDuration) / (increment || 60)) + 1 }, (_, i) => minDuration + i * (increment || 60))
+                    .map((m) => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
+                </select>
+                <p className="text-xs text-gray-600">Required span: {span} hour{span > 1 ? 's' : ''}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-sm text-gray-700">Buffer before</label>
+                  <input
+                    type="number"
+                    className="modern-input w-full"
+                    min={0}
+                    step={15}
+                    value={bufferBeforeMins}
+                    onChange={(e) => setBufferBeforeMins(Math.max(0, Number(e.target.value)))}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-gray-700">Buffer after</label>
+                  <input
+                    type="number"
+                    className="modern-input w-full"
+                    min={0}
+                    step={15}
+                    value={bufferAfterMins}
+                    onChange={(e) => setBufferAfterMins(Math.max(0, Number(e.target.value)))}
+                  />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <p className="text-gray-700">This cleaner hasn’t listed detailed services yet.</p>
+          )}
+        </section>
+
+        {/* Availability + Booking */}
+        <section className="bg-white/25 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-xl">
+          <h2 className="text-xl font-bold text-teal-800 mb-4">📅 Availability</h2>
+
+          <div className="overflow-x-auto border border-white/30 rounded-xl">
+            <table className="w-full min-w-[900px] text-sm">
+              <thead>
+                <tr className="bg-gray-50">
+                  <th className="p-2 text-left">Day</th>
+                  {HOURS.map((h) => (
+                    <th key={`h-${h}`} className="p-2 text-center">{labelForHour(h)}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {DAYS.map((day) => {
+                  const row = cleaner.availability?.[day] || {};
                   return (
-                    <div key={obj.public_id || src || index} className="relative group overflow-hidden rounded-xl border border-white/30">
-                      <img
-                        src={src}
-                        alt={`Gallery photo ${index + 1}`}
-                        className={`w-full h-auto transition-all duration-300 object-cover ${lock ? 'blur-sm grayscale brightness-75' : ''}`}
-                        loading="lazy"
-                      />
-                      {lock && (
-                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center text-white text-sm font-medium">
-                          🔒 Unlock to view
-                        </div>
-                      )}
-                    </div>
+                    <tr key={day} className="border-t">
+                      <td className="p-2 font-medium">{day}</td>
+                      {HOURS.map((h) => {
+                        const raw = row[String(h)];
+                        const statusVal = typeof raw === 'object' ? raw?.status : raw;
+
+                        // states
+                        const isAvailable = statusVal === true || statusVal === 'available';
+                        const isPending = statusVal === 'pending' || statusVal === 'pending_approval';
+                        const isBooked = statusVal === 'booked' || statusVal === false || statusVal === 'unavailable';
+
+                        // for selection: ensure span fits
+                        const fits =
+                          isAvailable &&
+                          h + span <= 24 &&
+                          hasContiguousAvailability(cleaner.availability || {}, day, h, span);
+
+                        const isSelected = selectedDay === day && selectedHour === h;
+
+                        const cls =
+                          fits
+                            ? isSelected
+                              ? 'bg-teal-600 text-white'
+                              : 'bg-green-100 text-green-800 hover:bg-green-200 cursor-pointer'
+                            : isPending
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : isBooked
+                            ? 'bg-red-100 text-red-800'
+                            : 'bg-gray-100 text-gray-500';
+
+                        return (
+                          <td
+                            key={`${day}-${h}`}
+                            className={`p-1 text-center select-none ${cls}`}
+                            onClick={() => (fits ? selectCell(day, h) : null)}
+                            title={
+                              fits
+                                ? `Start at ${labelForHour(h)} (blocks ${span}h)`
+                                : isPending
+                                ? 'Pending request'
+                                : isBooked
+                                ? 'Unavailable'
+                                : 'Not selectable'
+                            }
+                          >
+                            {fits ? (isSelected ? '✓' : '•') : isPending ? '⏳' : '✗'}
+                          </td>
+                        );
+                      })}
+                    </tr>
                   );
                 })}
-              </div>
+              </tbody>
+            </table>
+          </div>
+
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <button
+              onClick={createBooking}
+              disabled={creating || !selectedDay || selectedHour == null || !service || !canSelectStart}
+              className={`px-5 py-2 rounded-lg text-white font-semibold shadow ${creating || !canSelectStart ? 'bg-teal-300' : 'bg-teal-700 hover:bg-teal-800'}`}
+            >
+              {creating ? 'Sending…' : 'Request Booking'}
+            </button>
+
+            <span className="text-sm text-gray-600">
+              {selectedDay && selectedHour != null
+                ? `Selected: ${selectedDay} at ${labelForHour(selectedHour)} (${span}h block)`
+                : 'Select a start time'}
+            </span>
+          </div>
+        </section>
+
+        {/* Bio */}
+        {cleaner.bio && (
+          <section className="bg-white/25 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-xl">
+            <h2 className="text-xl font-bold text-teal-800 mb-2">🧾 About</h2>
+            <p className="text-gray-800 whitespace-pre-wrap">{cleaner.bio}</p>
+          </section>
+        )}
+
+        {/* Gallery */}
+        {Array.isArray(cleaner.photos) && cleaner.photos.length > 0 && (
+          <section className="bg-white/25 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-xl">
+            <h2 className="text-xl font-bold text-teal-800 mb-4">🖼️ Gallery</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              {cleaner.photos.map((ph, i) => {
+                const lock = !contactUnlocked && !!ph.hasText;
+                return (
+                  <div key={ph.public_id || ph.url || i} className="relative overflow-hidden rounded-xl border border-white/30">
+                    <img
+                      src={ph.url}
+                      alt={`Photo ${i + 1}`}
+                      className={`w-full h-40 object-cover transition ${lock ? 'blur-sm grayscale brightness-75' : ''}`}
+                      loading="lazy"
+                    />
+                    {lock && (
+                      <div className="absolute inset-0 grid place-items-center text-white text-sm bg-black/30">
+                        🔒 Unlock to view
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
-          )}
+          </section>
+        )}
 
-          {/* Reviews Section */}
-          {(cleaner.googleReviewUrl || cleaner.facebookReviewUrl || cleaner.embedCode) && (
-            <div className="bg-white/30 backdrop-blur-md rounded-2xl p-6 border border-white/20 mb-6 relative z-10">
-              <h2 className="text-2xl font-bold text-teal-800 mb-4 flex items-center gap-2">
-                <span>⭐</span> Reviews
-              </h2>
+        {/* Reviews */}
+        {(cleaner.googleReviews?.url || cleaner.facebookReviewUrl || cleaner.embedCode) && (
+          <section className="bg-white/25 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-xl">
+            <h2 className="text-xl font-bold text-teal-800 mb-4">⭐ Reviews</h2>
 
-              <div className="flex flex-col sm:flex-row gap-4 mb-4">
-                {canViewContact && cleaner.googleReviewUrl && (
-                  <a
-                    href={cleaner.googleReviewUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-full text-center font-medium hover:from-blue-700 hover:to-blue-800 transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-lg"
-                  >
-                    📱 View Google Reviews
-                  </a>
-                )}
-
-                {cleaner.facebookReviewUrl && (
-                  <a
-                    href={cleaner.facebookReviewUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-full text-center font-medium hover:from-blue-700 hover:to-blue-800 transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-lg"
-                  >
-                    📘 View Facebook Page
-                  </a>
-                )}
-              </div>
-
-              {cleaner.embedCode && isSafeEmbed(cleaner.embedCode) && (
-                <div className="bg-white/40 backdrop-blur-sm rounded-xl p-4 border border-white/30"
-                     dangerouslySetInnerHTML={{ __html: cleaner.embedCode }} />
+            <div className="flex flex-wrap gap-3">
+              {cleaner.googleReviews?.url && (
+                <a
+                  href={cleaner.googleReviews.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 rounded-full text-white bg-blue-600 hover:bg-blue-700"
+                >
+                  View Google Reviews
+                </a>
+              )}
+              {cleaner.facebookReviewUrl && (
+                <a
+                  href={cleaner.facebookReviewUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 rounded-full text-white bg-blue-600 hover:bg-blue-700"
+                >
+                  View Facebook Page
+                </a>
               )}
             </div>
-          )}
 
-          {/* ✅ INTEGRATED AVAILABILITY SECTION */}
-          <AvailabilitySection
-            availability={cleaner.availability}
-            onSlotClick={handleSlotClick}
-            canViewContact={canViewContact}
-            selectedSlot={selectedSlot}
-          />
-        </div>
-
-        {/* ✅ Booking Section */}
-        {selectedSlot && getCleanerId(cleaner, id) && (
-          <div className="bg-white/25 backdrop-blur-xl border border-white/20 rounded-3xl p-8 shadow-2xl">
-            <h2 className="text-2xl font-bold text-center mb-6 bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent">
-              🎯 Booking for {selectedSlot.day} at {selectedSlot.hour}:00
-            </h2>
-            <div className="bg-white/30 backdrop-blur-md rounded-2xl p-6 border border-white/20">
-              <BookingPaymentWrapper
-                cleanerId={getCleanerId(cleaner, id)}
-                day={selectedSlot.day}
-                time={selectedSlot.hour}
-                price={cleaner.rates || cleaner.rate}
+            {cleaner.embedCode && isSafeEmbed(cleaner.embedCode) && (
+              <div
+                className="mt-4 bg-white/50 rounded-xl p-4 border border-white/30"
+                dangerouslySetInnerHTML={{ __html: cleaner.embedCode }}
               />
-            </div>
-          </div>
+            )}
+          </section>
         )}
       </div>
-    </div>
+
+      <style jsx global>{`
+        .modern-input, .modern-select {
+          background: rgba(255,255,255,0.9);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(13, 148, 136, 0.3);
+          border-radius: 12px;
+          padding: 10px 12px;
+          font-size: 14px;
+          outline: none;
+        }
+        .modern-input:focus, .modern-select:focus {
+          border-color: #0D9488;
+          box-shadow: 0 0 0 3px rgba(13,148,136,0.1);
+        }
+      `}</style>
+    </main>
   );
 }

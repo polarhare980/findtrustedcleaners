@@ -1,125 +1,106 @@
 'use client';
 
-import React from 'react'; 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useEffect, useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
+import { injectPendingFromPurchases } from '@/lib/availability';
 
-const fetcher = (url) => fetch(url).then((res) => res.json());
+const fetcher = (url) =>
+  fetch(url, { credentials: 'include' }).then((r) => r.json());
 
-// ---- Pending purchases helpers ----
+// APIs (public, safe)
+const CLEANERS_API = '/api/public/cleaners';
 const PURCHASES_API = (id) => `/api/public/purchases/cleaners/${id}`;
 
-// Merge pending purchases into availability
-const injectPendingFromPurchases = (availability = {}, purchasesList = []) => {
-  const updated = JSON.parse(JSON.stringify(availability || {}));
-  for (const p of purchasesList || []) {
-    if (p?.status !== 'pending_approval' && p?.status !== 'pending') continue;
-    const day = p?.day;
-    const hour = String(p?.hour);
-    if (!day || !hour) continue;
-    if (!updated[day]) updated[day] = {};
-    const slot = updated[day][hour];
-// guard booked object → don't overwrite booked
-if (typeof slot === 'object') continue;
-// keep explicit unavailable as-is
-if (slot === false || slot === 'unavailable') continue;
+// Hours & days for the mini-grid
+const HOURS = Array.from({ length: 13 }, (_, i) => String(7 + i));
+const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-// allow overwriting true (available) with pending
-updated[day][hour] = 'pending_approval';
-
-  }
-  return updated;
-};
-
-
-// Fetch public pending purchases per cleaner and attach availabilityMerged
-const hydrateCleanersWithPending = async (cleaners) => {
-  const withMerged = await Promise.all(
+/** Fetch purchases for each cleaner and merge into availability (span-aware) */
+async function hydrateCleanersWithPurchases(cleaners) {
+  return Promise.all(
     (cleaners || []).map(async (c) => {
       try {
         const res = await fetch(PURCHASES_API(c._id), { credentials: 'include' });
         const isJson = (res.headers.get('content-type') || '').includes('application/json');
-        const data = isJson ? await res.json() : { success: false, purchases: [] };
-        const purchases = data?.success ? (data.purchases || []) : [];
+        const payload = isJson ? await res.json() : { success: false, purchases: [] };
+        const purchases = payload?.success ? payload.purchases : [];
         return {
           ...c,
           availabilityMerged: injectPendingFromPurchases(c.availability || {}, purchases),
         };
-      } catch (e) {
-        console.warn('Public purchases fetch failed for cleaner', c._id, e);
+      } catch {
         return { ...c, availabilityMerged: c.availability || {} };
       }
     })
   );
-  return withMerged;
-};
+}
 
 export default function HomePage() {
-  const [mounted, setMounted] = useState(false);
   const router = useRouter();
+
+  const [mounted, setMounted] = useState(false);
   const [postcode, setPostcode] = useState('');
   const [propertySize, setPropertySize] = useState('studio');
   const [cleaningType, setCleaningType] = useState('regular');
   const [estimatedPrice, setEstimatedPrice] = useState(null);
   const [showPrice, setShowPrice] = useState(false);
+
   const [premiumCleaners, setPremiumCleaners] = useState([]);
   const [freeCleaners, setFreeCleaners] = useState([]);
   const [favouriteIds, setFavouriteIds] = useState([]);
 
-  const { data, error, isLoading } = useSWR('/api/cleaners?bookingStatus=all', fetcher);
+  const { data, error, isLoading } = useSWR(CLEANERS_API, fetcher);
 
-  // Load saved favourites from localStorage
+  // Mount
+  useEffect(() => setMounted(true), []);
+
+  // Load favourites
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const saved = localStorage.getItem('favourites');
-    if (saved) {
-      try {
+    try {
+      const saved = localStorage.getItem('favourites');
+      if (saved) {
         const arr = JSON.parse(saved);
         setFavouriteIds(Array.isArray(arr) ? arr.map(String) : []);
-      } catch (e) { console.error('Could not parse favourites from localStorage:', e); }
-    }
+      }
+    } catch {}
   }, []);
 
-  // Set premium and free cleaners + merge PENDING
+  // Split premium vs free and hydrate with purchases (span-aware)
   useEffect(() => {
-    if (!data?.cleaners) return;
+    if (!data?.success || !Array.isArray(data.cleaners)) return;
 
-    const premium = data.cleaners.filter(c => c.isPremium === true).slice(0, 5);
-    const free = data.cleaners.filter(c => c.isPremium !== true).slice(0, 5);
+    const premium = data.cleaners.filter((c) => c.isPremium).slice(0, 5);
+    const free = data.cleaners.filter((c) => !c.isPremium).slice(0, 5);
 
     (async () => {
-      const [premiumMerged, freeMerged] = await Promise.all([
-        hydrateCleanersWithPending(premium),
-        hydrateCleanersWithPending(free),
+      const [p, f] = await Promise.all([
+        hydrateCleanersWithPurchases(premium),
+        hydrateCleanersWithPurchases(free),
       ]);
-      setPremiumCleaners(premiumMerged);
-      setFreeCleaners(freeMerged);
+      setPremiumCleaners(p);
+      setFreeCleaners(f);
     })();
-  }, [data]);
-
-  // Only run once on client side
-  useEffect(() => {
-    if (typeof window !== 'undefined') setMounted(true);
-  }, []);
+  }, [data?.success]);
 
   // Booking handler
   const handleBookingRequest = (cleanerId) => {
     const clientId = typeof window !== 'undefined' ? localStorage.getItem('clientId') : null;
     if (!clientId) {
-      router.push(`/login/clients?next=/cleaners/${cleanerId}/checkout`);
+      router.push(`/login/clients?next=/cleaners/${cleanerId}`);
     } else {
-      router.push(`/cleaners/${cleanerId}/checkout`);
+      router.push(`/cleaners/${cleanerId}`);
     }
   };
 
-  // Favourite toggle handler
+  // Favourites
   const handleToggleFavourite = (cleanerId) => {
     const id = String(cleanerId);
     const updated = favouriteIds.includes(id)
-      ? favouriteIds.filter(x => x !== id)
+      ? favouriteIds.filter((x) => x !== id)
       : [...favouriteIds, id];
     setFavouriteIds(updated);
     if (typeof window !== 'undefined') {
@@ -127,7 +108,7 @@ export default function HomePage() {
     }
   };
 
-  // Price chart and calculator
+  // Price calc
   const priceChart = {
     studio: { regular: 200, deep: 200, tenancy: 200 },
     '1-bed': { regular: 240, deep: 240, tenancy: 240 },
@@ -136,21 +117,10 @@ export default function HomePage() {
     '4-5-bed': { regular: 404, deep: 404, tenancy: 404 },
     '6+-bed': { regular: 450, deep: 450, tenancy: 450 },
   };
-
   const handleCalculatePrice = () => {
     const price = priceChart[propertySize][cleaningType];
     setEstimatedPrice(price);
     setShowPrice(true);
-  };
-
-  // Fisher-Yates shuffle (kept if you want to randomise cards later)
-  const shuffleArray = (array) => {
-    const shuffled = [...array];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled;
   };
 
   if (!mounted) return null;
@@ -159,21 +129,28 @@ export default function HomePage() {
     <>
       <Head>
         <title>Compare House Cleaning Services Near You | Find Trusted Cleaners</title>
-        <meta name="description" content="Compare domestic cleaners across the UK. Get instant quotes, find local cleaners, and book easily with Find Trusted Cleaners." />
+        <meta
+          name="description"
+          content="Compare domestic cleaners across the UK. Get instant quotes, find local cleaners, and book easily with Find Trusted Cleaners."
+        />
       </Head>
 
       <main className="relative min-h-screen overflow-hidden text-gray-700">
-        {/* Background with subtle overlay */}
+        {/* Background */}
         <div className="absolute inset-0 -z-10">
           <img src="/background.jpg" alt="Background" className="w-full h-full object-contain" />
           <div className="absolute inset-0 bg-gradient-to-br from-teal-900/20 via-transparent to-teal-700/10"></div>
         </div>
 
-        {/* Header with glass morphism */}
+        {/* Header */}
         <header className="sticky top-0 z-50 bg-gray-600 border-b border-gray-300 shadow-lg">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between px-6 py-4 space-y-2 sm:space-y-0">
             <Link href="/" className="group">
-              <img src="/findtrusted-logo.png" alt="Logo" className="w-32 h-auto transition-all duration-300 group-hover:scale-105" />
+              <img
+                src="/findtrusted-logo.png"
+                alt="Logo"
+                className="w-32 h-auto transition-all duration-300 group-hover:scale-105"
+              />
             </Link>
             <nav className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-8 text-sm font-medium">
               <Link href="/cleaners" className="nav-link">Find a Cleaner</Link>
@@ -185,7 +162,7 @@ export default function HomePage() {
           </div>
         </header>
 
-        {/* Hero Section */}
+        {/* Hero */}
         <section className="container mx-auto px-6 py-16">
           <div className="glass-card text-center p-8 sm:p-12 animate-fade-in">
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent mb-6 leading-tight">
@@ -199,15 +176,15 @@ export default function HomePage() {
             <div className="mb-10">
               <h2 className="text-2xl font-semibold mb-4 text-teal-800">Search Cleaners by Postcode</h2>
               <div className="flex flex-col sm:flex-row justify-center gap-4 max-w-md mx-auto">
-                <input 
-                  type="text" 
-                  value={postcode} 
-                  onChange={(e) => setPostcode(e.target.value)} 
-                  placeholder="Enter Postcode" 
+                <input
+                  type="text"
+                  value={postcode}
+                  onChange={(e) => setPostcode(e.target.value)}
+                  placeholder="Enter Postcode"
                   className="modern-input flex-1"
                 />
-                <button 
-                  onClick={() => router.push(`/cleaners?postcode=${postcode}`)} 
+                <button
+                  onClick={() => router.push(`/cleaners?postcode=${postcode}`)}
                   className="btn-primary"
                 >
                   Search Cleaners
@@ -234,15 +211,15 @@ export default function HomePage() {
                   <option value="tenancy">End of Tenancy</option>
                 </select>
 
-                <button onClick={handleCalculatePrice} className="btn-primary">
-                  Calculate Price
-                </button>
+                <button onClick={handleCalculatePrice} className="btn-primary">Calculate Price</button>
               </div>
 
               {showPrice && estimatedPrice && (
                 <div className="mt-6 p-6 bg-white/80 backdrop-blur-sm rounded-2xl border border-white/30 shadow-lg animate-slide-up">
                   <p className="text-2xl font-bold text-teal-800 mb-2">Estimated Price: £{estimatedPrice}</p>
-                  <p className="text-sm text-gray-600 mb-1">Remember these are ball park averages. To get a better idea of typical cost of cleaning services, please search your postcode.</p>
+                  <p className="text-sm text-gray-600 mb-1">
+                    Remember these are ball park averages. To get a better idea of typical cost of cleaning services, please search your postcode.
+                  </p>
                   <p className="text-sm text-gray-600">Average hourly rate: £22 - £27</p>
                 </div>
               )}
@@ -258,20 +235,17 @@ export default function HomePage() {
             </h2>
 
             {isLoading ? (
-              <div className="text-center text-white">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-                <p className="mt-2">Loading featured cleaners...</p>
-              </div>
-            ) : premiumCleaners.length === 0 ? (
+              <LoadingRow text="Loading featured cleaners..." />
+            ) : (premiumCleaners || []).length === 0 ? (
               <p className="text-center text-white text-lg">No premium cleaners available at this time.</p>
             ) : (
               <div className="flex overflow-x-auto gap-6 pb-4 px-2 scrollbar-hide">
                 {premiumCleaners.map((cleaner) => (
-                  <CleanerCard 
-                    key={cleaner._id} 
-                    cleaner={cleaner} 
-                    handleBookingRequest={handleBookingRequest} 
-                    isPremium 
+                  <CleanerCard
+                    key={cleaner._id}
+                    cleaner={cleaner}
+                    handleBookingRequest={handleBookingRequest}
+                    isPremium
                     isFavourite={favouriteIds.includes(String(cleaner._id))}
                     onToggleFavourite={(id) => handleToggleFavourite(String(id))}
                   />
@@ -281,95 +255,39 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* How It Works Section */}
+        {/* How it works */}
         <section className="container mx-auto px-6 py-12">
           <div className="glass-card p-8 sm:p-12">
             <h2 className="text-3xl font-bold mb-12 text-center text-teal-800">How It Works</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="text-center group">
-                <div className="step-circle group-hover:scale-110 transition-transform duration-300">1</div>
-                <h3 className="text-xl font-semibold mb-3 text-teal-800">Search</h3>
-                <p className="text-gray-700">Enter your postcode to find trusted cleaners in your area.</p>
-              </div>
-              <div className="text-center group">
-                <div className="step-circle group-hover:scale-110 transition-transform duration-300">2</div>
-                <h3 className="text-xl font-semibold mb-3 text-teal-800">Compare</h3>
-                <p className="text-gray-700">Review cleaner profiles, availability, and pricing to choose the best fit.</p>
-              </div>
-              <div className="text-center group">
-                <div className="step-circle group-hover:scale-110 transition-transform duration-300">3</div>
-                <h3 className="text-xl font-semibold mb-3 text-teal-800">Book</h3>
-                <p className="text-gray-700">Request your preferred cleaner and confirm your booking online.</p>
-              </div>
+              <Step n="1" title="Search" desc="Enter your postcode to find trusted cleaners in your area." />
+              <Step n="2" title="Compare" desc="Review cleaner profiles, availability, and pricing to choose the best fit." />
+              <Step n="3" title="Book" desc="Request your preferred cleaner and confirm your booking online." />
             </div>
 
-            {/* Registration Buttons */}
             <div className="flex flex-col sm:flex-row justify-center gap-6 mt-12">
-              <Link href="/register/cleaners" className="btn-success">
-                Register as a Cleaner
-              </Link>
-              <Link href="/register/clients" className="btn-info">
-                Register as a Client
-              </Link>
+              <Link href="/register/cleaners" className="btn-success">Register as a Cleaner</Link>
+              <Link href="/register/clients" className="btn-info">Register as a Client</Link>
             </div>
           </div>
         </section>
 
-        {/* Why Choose Us Section */}
-        <section className="container mx-auto px-6 py-12">
-          <div className="glass-card p-8 sm:p-12">
-            <h2 className="text-3xl font-bold mb-10 text-center text-teal-800">Why Choose Us?</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="feature-card">
-                <div className="feature-icon">✓</div>
-                <h3 className="text-xl font-semibold mb-3">Verified Cleaners</h3>
-                <p>All cleaners are independently verified and vetted to ensure trust and reliability.</p>
-              </div>
-              <div className="feature-card">
-                <div className="feature-icon">📅</div>
-                <h3 className="text-xl font-semibold mb-3">Transparent Availability</h3>
-                <p>View cleaner availability in real-time to book at your convenience.</p>
-              </div>
-              <div className="feature-card">
-                <div className="feature-icon">💳</div>
-                <h3 className="text-xl font-semibold mb-3">No Subscriptions</h3>
-                <p>Enjoy a pay-per-booking model with no hidden fees or ongoing subscriptions.</p>
-              </div>
-              <div className="feature-card">
-                <div className="feature-icon">⭐</div>
-                <h3 className="text-xl font-semibold mb-3">Real Customer Reviews</h3>
-                <p>Read verified reviews from real customers to make confident decisions.</p>
-              </div>
-              <div className="feature-card">
-                <div className="feature-icon">💷</div>
-                <h3 className="text-xl font-semibold mb-3">Simple, Transparent Pricing</h3>
-                <p>Our pricing is clear, simple, and easy to understand. No surprises.</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Free Cleaners Section */}
+        {/* Free Cleaners */}
         <section className="px-6 py-12">
           <div className="container mx-auto">
-            <h2 className="text-3xl font-bold mb-8 text-center text-grey drop-shadow-lg">
-              Free Listed Cleaners
-            </h2>
+            <h2 className="text-3xl font-bold mb-8 text-center text-grey drop-shadow-lg">Free Listed Cleaners</h2>
 
             {isLoading ? (
-              <div className="text-center text-white">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-                <p className="mt-2">Loading cleaners...</p>
-              </div>
-            ) : freeCleaners.length === 0 ? (
+              <LoadingRow text="Loading cleaners..." />
+            ) : (freeCleaners || []).length === 0 ? (
               <p className="text-center text-white text-lg">No free listed cleaners available at this time.</p>
             ) : (
               <div className="flex overflow-x-auto gap-6 pb-4 px-2 scrollbar-hide">
                 {freeCleaners.map((cleaner) => (
-                  <CleanerCard 
-                    key={cleaner._id} 
-                    cleaner={cleaner} 
-                    handleBookingRequest={handleBookingRequest} 
+                  <CleanerCard
+                    key={cleaner._id}
+                    cleaner={cleaner}
+                    handleBookingRequest={handleBookingRequest}
                     isFavourite={favouriteIds.includes(String(cleaner._id))}
                     onToggleFavourite={(id) => handleToggleFavourite(String(id))}
                   />
@@ -393,9 +311,12 @@ export default function HomePage() {
             </nav>
 
             <div className="text-center">
-              <Link 
-                href="#" 
-                onClick={() => { localStorage.removeItem('cookie_consent'); window.location.reload(); }} 
+              <Link
+                href="#"
+                onClick={() => {
+                  localStorage.removeItem('cookie_consent');
+                  window.location.reload();
+                }}
                 className="inline-block mb-4 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full hover:bg-white/30 transition-colors duration-200"
               >
                 Cookie Settings
@@ -414,9 +335,8 @@ export default function HomePage() {
         </footer>
       </main>
 
-      {/* Styles go inside the return */}
+      {/* Styles */}
       <style jsx global>{`
-        /* Modern Glass Morphism Styles */
         .glass-card {
           background: rgba(255, 255, 255, 0.25);
           backdrop-filter: blur(20px);
@@ -424,9 +344,7 @@ export default function HomePage() {
           border-radius: 20px;
           box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
-
-        /* Modern Input Styles */
-        .modern-input {
+        .modern-input, .modern-select {
           background: rgba(255, 255, 255, 0.9);
           backdrop-filter: blur(10px);
           border: 1px solid rgba(13, 148, 136, 0.3);
@@ -436,31 +354,10 @@ export default function HomePage() {
           transition: all 0.3s ease;
           outline: none;
         }
-
-        .modern-input:focus {
-          border-color: #0D9488;
-          box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
-          transform: translateY(-1px);
-        }
-
-        .modern-select {
-          background: rgba(255, 255, 255, 0.9);
-          backdrop-filter: blur(10px);
-          border: 1px solid rgba(13, 148, 136, 0.3);
-          border-radius: 12px;
-          padding: 12px 16px;
-          font-size: 16px;
-          transition: all 0.3s ease;
-          outline: none;
-          cursor: pointer;
-        }
-
-        .modern-select:focus {
+        .modern-input:focus, .modern-select:focus {
           border-color: #0D9488;
           box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
         }
-
-        /* Modern Button Styles */
         .btn-primary {
           background: linear-gradient(135deg, #0D9488 0%, #0F766E 100%);
           color: white;
@@ -473,75 +370,36 @@ export default function HomePage() {
           transition: all 0.3s ease;
           box-shadow: 0 4px 15px rgba(13, 148, 136, 0.3);
         }
-
         .btn-primary:hover {
           transform: translateY(-2px);
           box-shadow: 0 8px 25px rgba(13, 148, 136, 0.4);
         }
-
-        .btn-primary:active {
-          transform: translateY(0);
+        .btn-success, .btn-info {
+          color: white;
+          border: none;
+          border-radius: 50px;
+          padding: 14px 28px;
+          font-size: 18px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          text-decoration: none;
+          display: inline-block;
+          text-align: center;
         }
-
         .btn-success {
           background: linear-gradient(135deg, #059669 0%, #047857 100%);
-          color: white;
-          border: none;
-          border-radius: 50px;
-          padding: 14px 28px;
-          font-size: 18px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.3s ease;
           box-shadow: 0 4px 15px rgba(5, 150, 105, 0.3);
-          text-decoration: none;
-          display: inline-block;
-          text-align: center;
         }
-
-        .btn-success:hover {
-          transform: translateY(-2px) scale(1.05);
-          box-shadow: 0 8px 25px rgba(5, 150, 105, 0.4);
-        }
-
-        .btn-info {
-          background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
-          color: white;
-          border: none;
-          border-radius: 50px;
-          padding: 14px 28px;
-          font-size: 18px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
-          text-decoration: none;
-          display: inline-block;
-          text-align: center;
-        }
-
-        .btn-info:hover {
-          transform: translateY(-2px) scale(1.05);
-          box-shadow: 0 8px 25px rgba(37, 99, 235, 0.4);
-        }
-
-        /* Step Circle */
+        .btn-success:hover { transform: translateY(-2px) scale(1.05); box-shadow: 0 8px 25px rgba(5, 150, 105, 0.4); }
+        .btn-info { background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%); box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3); }
+        .btn-info:hover { transform: translateY(-2px) scale(1.05); box-shadow: 0 8px 25px rgba(37, 99, 235, 0.4); }
         .step-circle {
-          width: 64px;
-          height: 64px;
+          width: 64px; height: 64px;
           background: linear-gradient(135deg, #0D9488 0%, #0F766E 100%);
-          color: white;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 24px;
-          font-weight: bold;
-          margin: 0 auto 16px;
-          box-shadow: 0 4px 15px rgba(13, 148, 136, 0.3);
+          color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+          font-size: 24px; font-weight: bold; margin: 0 auto 16px; box-shadow: 0 4px 15px rgba(13, 148, 136, 0.3);
         }
-
-        /* Feature Card */
         .feature-card {
           background: rgba(255, 255, 255, 0.8);
           backdrop-filter: blur(10px);
@@ -550,83 +408,50 @@ export default function HomePage() {
           padding: 24px;
           text-align: center;
           transition: all 0.3s ease;
-          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+          box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
-
-        .feature-card:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-        }
-
-        .feature-icon {
-          font-size: 32px;
-          margin-bottom: 12px;
-        }
-
-        /* Navigation Links */
-        .nav-link {
-          color: white;
-          text-decoration: none;
-          position: relative;
-          padding: 8px 16px;
-          border-radius: 8px;
-          transition: all 0.3s ease;
-          font-weight: 500;
-        }
-
-        .nav-link:hover {
-          background: rgba(255, 255, 255, 0.1);
-          color: white;
-        }
-
-        .nav-link:active {
-          transform: scale(0.98);
-        }
-
-        /* Footer Links */
-        .footer-link {
-          color: white;
-          text-decoration: none;
-          padding: 8px 12px;
-          border-radius: 6px;
-          transition: all 0.3s ease;
-        }
-
-        .footer-link:hover {
-          background: rgba(255, 255, 255, 0.1);
-          color: white;
-        }
-
-        /* Animations */
-        @keyframes fade-in {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes slide-up {
-          from { opacity: 0; transform: translateY(30px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
+        .feature-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+        .feature-icon { font-size: 32px; margin-bottom: 12px; }
+        .nav-link { color: white; text-decoration: none; position: relative; padding: 8px 16px; border-radius: 8px; transition: all 0.3s ease; font-weight: 500; }
+        .nav-link:hover { background: rgba(255,255,255,0.1); color: white; }
+        .footer-link { color: white; text-decoration: none; padding: 8px 12px; border-radius: 6px; transition: all 0.3s ease; }
+        .footer-link:hover { background: rgba(255, 255, 255, 0.1); color: white; }
+        @keyframes fade-in { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slide-up { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fade-in 0.8s ease-out; }
         .animate-slide-up { animation: slide-up 0.5s ease-out; }
-
-        /* Scrollbar Hide */
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
-
-        /* Responsive Container */
         .container { max-width: 1200px; margin: 0 auto; }
-
-        /* Active tap effect */
         .active-tap:active { transform: scale(0.98); }
       `}</style>
     </>
   );
 }
 
-function CleanerCard({ cleaner, handleBookingRequest, isPremium, isFavourite, onToggleFavourite }) {
-  const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+/* ---------- Subcomponents ---------- */
 
-  // Prefer merged availability (with pending), fallback to raw
+function LoadingRow({ text }) {
+  return (
+    <div className="text-center text-white">
+      <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+      <p className="mt-2">{text}</p>
+    </div>
+  );
+}
+
+function Step({ n, title, desc }) {
+  return (
+    <div className="text-center group">
+      <div className="step-circle group-hover:scale-110 transition-transform duration-300">{n}</div>
+      <h3 className="text-xl font-semibold mb-3 text-teal-800">{title}</h3>
+      <p className="text-gray-700">{desc}</p>
+    </div>
+  );
+}
+
+function CleanerCard({ cleaner, handleBookingRequest, isPremium, isFavourite, onToggleFavourite }) {
+  // Prefer merged availability (with pending/accepted), fallback to raw
   const availability = cleaner.availabilityMerged || cleaner.availability || {};
 
   return (
@@ -634,7 +459,11 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium, isFavourite, on
       {/* Favorite Toggle */}
       <div className="text-right mb-2">
         <button
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onToggleFavourite(cleaner._id); }}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onToggleFavourite(cleaner._id);
+          }}
           className={`text-2xl transition-transform duration-200 ${isFavourite ? 'text-red-500' : 'text-gray-400'} hover:scale-110`}
           aria-pressed={!!isFavourite}
           title={isFavourite ? 'Remove from favourites' : 'Add to favourites'}
@@ -650,23 +479,23 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium, isFavourite, on
             <span className="text-xs font-semibold">Premium Cleaner</span>
           </div>
         )}
-        {(cleaner.businessInsurance || cleaner.isInsured || cleaner.hasInsurance || cleaner.business_insurance) && (
+        {cleaner.businessInsurance && (
           <div className="insured-badge">
             <span className="text-xs font-semibold">✔ Insured</span>
           </div>
         )}
-  {cleaner.dbsChecked && (
-    <div className="dbs-badge">
-      <span className="text-xs font-semibold">✔ DBS Checked</span>
-    </div>
-  )}
+        {cleaner.dbsChecked && (
+          <div className="dbs-badge">
+            <span className="text-xs font-semibold">✔ DBS Checked</span>
+          </div>
+        )}
       </div>
 
       {/* Image */}
       <div className="cleaner-image">
         <img
           src={typeof cleaner.image === 'string' && cleaner.image.trim() !== '' ? cleaner.image : '/default-avatar.png'}
-          alt={cleaner.realName || 'Cleaner'}
+          alt={cleaner.companyName || cleaner.realName || 'Cleaner'}
           loading="lazy"
           className="w-full h-full object-cover"
         />
@@ -674,9 +503,9 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium, isFavourite, on
 
       {/* Info */}
       <div className="cleaner-info">
-        <h3 className="cleaner-name">{cleaner.realName}</h3>
+        <h3 className="cleaner-name">{cleaner.companyName || cleaner.realName}</h3>
 
-        {/* Services */}
+        {/* Services (simple tags) */}
         {Array.isArray(cleaner.services) && cleaner.services.length > 0 && (
           <div className="mt-2">
             <h4 className="font-semibold text-teal-700 text-sm mb-1">Services Offered:</h4>
@@ -693,64 +522,60 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium, isFavourite, on
           </div>
         )}
 
-        {/* Ratings */}
-        {(cleaner.rating || cleaner.googleReviewRating) ? (
-          <div className="cleaner-rating">
-            {cleaner.rating && (
-              <p className="text-sm text-yellow-600">
-                ⭐ {cleaner.rating} ({cleaner.reviewCount || 0}) from site users
-              </p>
-            )}
-            {cleaner.googleReviewRating && cleaner.googleReviewCount && (
-              <p className="text-sm text-yellow-600">
-                ⭐ {cleaner.googleReviewRating} ({cleaner.googleReviewCount}) from Google
-              </p>
-            )}
-          </div>
+        {/* Ratings (prefer virtual googleReviews if present) */}
+        {cleaner.googleReviews?.rating ? (
+          <p className="cleaner-rating text-sm text-yellow-600">
+            ⭐ {cleaner.googleReviews.rating} ({cleaner.googleReviews.count || 0}) on Google
+          </p>
+        ) : cleaner.rating ? (
+          <p className="cleaner-rating text-sm text-yellow-600">
+            ⭐ {cleaner.rating} ({cleaner.reviewCount || 0}) from site users
+          </p>
         ) : (
           <p className="cleaner-rating text-sm text-gray-600">⭐ Not rated yet</p>
         )}
 
         {/* Rate */}
-        <p className="cleaner-rate">
-          💷 {cleaner.rates ? `£${cleaner.rates}/hr` : 'Rate not set'}
-        </p>
+        <p className="cleaner-rate">💷 {typeof cleaner.rates === 'number' ? `£${cleaner.rates}/hr` : 'Rate not set'}</p>
 
-        {/* Availability mini grid (show for premium only, as before) */}
-        {isPremium && availability && (
+        {/* Weekly availability mini-grid (span-aware, shows booked/pending) */}
+        {isPremium && (
           <div className="availability-grid mt-4">
             <h4 className="font-semibold text-teal-700 mb-2 text-center">Availability</h4>
             <div className="grid grid-cols-[60px_repeat(13,1fr)] text-xs border border-gray-200 rounded overflow-hidden">
               <div className="bg-gray-100 p-1 font-bold text-center">Day</div>
-              {Array.from({ length: 13 }, (_, i) => (
-                <div key={`hour-head-${i}`} className="bg-gray-100 p-1 text-center">{7 + i}</div>
+              {HOURS.map((h) => (
+                <div key={`head-${h}`} className="bg-gray-100 p-1 text-center">
+                  {h}
+                </div>
               ))}
-              {daysOfWeek.map(day => {
-                const slots = availability[day] || {};
+              {DAYS.map((day) => {
+                const row = availability?.[day] || {};
                 return (
                   <React.Fragment key={day}>
                     <div className="bg-gray-50 p-1 font-medium text-center">{day.slice(0, 3)}</div>
-                    {Array.from({ length: 13 }, (_, i) => {
-                      const hour = (7 + i).toString();
-                      const value = slots[hour];
-                      const statusVal = typeof value === 'object' ? value?.status : value;
+                    {HOURS.map((h) => {
+                      const v = row?.[h];
+                      const statusVal = typeof v === 'object' ? v?.status : v;
 
-                      let status = 'unavailable';
+                      // Treat values:
+                      // true => available (green)
+                      // 'pending'|'pending_approval' => pending (yellow)
+                      // 'booked'|false|'unavailable' => blocked (red)
+                      let status = 'blocked';
                       if (statusVal === true || statusVal === 'available') status = 'available';
                       else if (statusVal === 'pending' || statusVal === 'pending_approval') status = 'pending';
+                      else if (statusVal === 'booked') status = 'blocked';
+
+                      const cls =
+                        status === 'available'
+                          ? 'bg-green-100 text-green-800'
+                          : status === 'pending'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-red-100 text-red-800';
 
                       return (
-                        <div
-                          key={`${day}-${hour}`}
-                          className={`p-1 text-center ${
-                            status === 'available'
-                              ? 'bg-green-100 text-green-800'
-                              : status === 'pending'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-red-100 text-red-800'
-                          }`}
-                          title={status === 'pending' ? 'Pending approval' : status}
-                        >
+                        <div key={`${day}-${h}`} className={`p-1 text-center ${cls}`} title={status}>
                           {status === 'available' ? '✅' : status === 'pending' ? '⏳' : '❌'}
                         </div>
                       );
@@ -762,15 +587,16 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium, isFavourite, on
           </div>
         )}
 
-        {/* Button */}
-        <div className="cleaner-actions mt-4">
-          <Link href={`/cleaners/${cleaner._id}`} className="btn-request-booking">
-            View Profile
-          </Link>
+        {/* CTA */}
+        <div className="cleaner-actions mt-4 flex justify-center gap-2">
+          <Link href={`/cleaners/${cleaner._id}`} className="btn-request-booking">View Profile</Link>
+          <button onClick={() => handleBookingRequest(cleaner._id)} className="btn-request-booking active-tap">
+            Request Booking
+          </button>
         </div>
       </div>
 
-      {/* Styles */}
+      {/* Card styles */}
       <style jsx>{`
         .cleaner-card {
           background: rgba(255, 255, 255, 0.95);
@@ -779,85 +605,24 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium, isFavourite, on
           padding: 20px;
           box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
           transition: all 0.3s ease;
-          min-width: 300px; /* Fixed width for consistent layout */
+          min-width: 300px;
           max-width: 350px;
-          flex: 0 0 auto; /* Prevent flex shrinking */
+          flex: 0 0 auto;
         }
-
-        .cleaner-card:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-        }
-
-        .premium-badge {
-          background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
-          color: white;
-          padding: 4px 12px;
-          border-radius: 20px;
-          display: inline-block;
-          box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
-        }
-
-        .insured-badge {
-          background: linear-gradient(135deg, #10B981 0%, #059669 100%);
-          color: white;
-          padding: 4px 12px;
-          border-radius: 20px;
-          display: inline-block;
-          box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
-        }
-          .dbs-badge {
-  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
-  color: white;
-  padding: 4px 12px;
-  border-radius: 20px;
-  display: inline-block;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
-}
-
-
-        .cleaner-image {
-          width: 100%;
-          height: 150px;
-          border-radius: 12px;
-          overflow: hidden;
-          margin-bottom: 16px;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        .cleaner-image img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          transition: transform 0.3s ease;
-        }
-
-        .cleaner-card:hover .cleaner-image img {
-          transform: scale(1.05);
-        }
-
+        .cleaner-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15); }
+        .premium-badge { background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); color: white; padding: 4px 12px; border-radius: 20px; display: inline-block; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3); }
+        .insured-badge { background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; padding: 4px 12px; border-radius: 20px; display: inline-block; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3); }
+        .dbs-badge { background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%); color: white; padding: 4px 12px; border-radius: 20px; display: inline-block; box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3); }
+        .cleaner-image { width: 100%; height: 150px; border-radius: 12px; overflow: hidden; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
         .cleaner-info { text-align: left; }
         .cleaner-name { font-size: 18px; font-weight: 700; color: #0F766E; margin-bottom: 8px; }
         .cleaner-rating, .cleaner-rate { color: #4B5563; margin-bottom: 4px; font-size: 14px; }
-
-        .cleaner-actions { display: flex; justify-content: center; margin-top: 16px; }
         .btn-request-booking {
           background: linear-gradient(135deg, #10B981 0%, #059669 100%);
-          color: white;
-          padding: 12px 20px;
-          border-radius: 8px;
-          font-size: 16px;
-          font-weight: 600;
-          text-decoration: none;
-          transition: all 0.3s ease;
-          box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
-          display: inline-block;
+          color: white; padding: 12px 14px; border-radius: 8px; font-size: 14px; font-weight: 600; text-decoration: none;
+          transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
         }
-        .btn-request-booking:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
-          color: white;
-        }
+        .btn-request-booking:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4); color: white; }
       `}</style>
     </div>
   );
