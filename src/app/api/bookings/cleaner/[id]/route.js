@@ -5,7 +5,7 @@ import { protectApiRoute } from '@/lib/auth';
 import Cleaner from '@/models/Cleaner';
 
 // ⚠️ Ensure model filename/case matches your filesystem: "Booking.js"
-import Booking from '@/models/Booking';
+import Booking from '@/models/booking';
 import Purchase from '@/models/Purchase';
 
 export const runtime = 'nodejs';
