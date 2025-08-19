@@ -267,7 +267,7 @@ export default function HomePage() {
 
             <div className="flex flex-col sm:flex-row justify-center gap-6 mt-12">
               <Link href="/register/cleaners" className="btn-success">Register as a Cleaner</Link>
-              <Link href="/register/clients" className="btn-info">Register as a Client</Link>
+              <Link href="/register/client" className="btn-info">Register as a Client</Link>
             </div>
           </div>
         </section>

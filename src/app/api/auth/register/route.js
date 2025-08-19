@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import { connectToDatabase } from '@/lib/db';
-import Cleaner from '@/models/Cleaner';
+import Cleaner from '@/models/Cleaner.js';
 import Client from '@/models/Client.js';
 import bcrypt from 'bcryptjs';
 import { createToken } from '@/lib/auth';
