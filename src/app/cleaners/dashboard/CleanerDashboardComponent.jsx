@@ -547,7 +547,7 @@ export default function CleanerDashboard() {
 
             <Field label="Email" editMode={editMode}>
               {editMode ? (
-                <input type="email" className="w-full p-3 bg-white/80 border rounded-lg" value={editData.email || ''} onChange={(e) => handleInputChange('email', e.target.value))} />
+                <input type="email" className="w-full p-3 bg-white/80 border rounded-lg" value={editData.email || ''} onChange={(e) => handleInputChange('email', e.target.value)} />
               ) : <p className="text-gray-800 font-medium">{formData.email || 'Not set'}</p>}
             </Field>
 
