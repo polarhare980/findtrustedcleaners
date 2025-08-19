@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { injectPendingFromPurchases, hasContiguousAvailability, requiredHourSpan } from '@/lib/availability';
 
 // Public APIs
-const PUBLIC_CLEANER_API = (id) => `/api/public/cleaners/${id}`;
+const PUBLIC_CLEANER_API = (id) => `/api/public-cleaners/${id}`;
 const PUBLIC_PURCHASES_API = (id) => `/api/public/purchases/cleaners/${id}`;
 
 // Client APIs
