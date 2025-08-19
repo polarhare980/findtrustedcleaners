@@ -713,114 +713,167 @@ export default function CleanerDashboard() {
         </div>
 
         {/* Services & Duration (everyone) */}
-        <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl mb-6 p-6">
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent mb-4">
-            🧹 Services & Duration
-          </h2>
+<div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl mb-6 p-6">
+  <h2 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent mb-4">
+    🧹 Services & Duration
+  </h2>
 
-          {editMode ? (
-            <div className="space-y-4">
-              {(editData.servicesDetailed || []).map((svc, idx) => (
-                <div key={svc.key || idx} className="p-4 bg-white/80 rounded-xl border border-gray-200 space-y-2">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    <input
-                      className="w-full p-2 border rounded"
-                      placeholder="Service Name (e.g., Deep clean)"
-                      value={svc.name || ''}
-                      onChange={(e) => {
-                        const next = [...(editData.servicesDetailed || [])];
-                        next[idx] = { ...next[idx], name: e.target.value };
-                        setEditData({ ...editData, servicesDetailed: next });
-                      }}
-                    />
-                    <input
-                      className="w-full p-2 border rounded"
-                      placeholder="Key (unique)"
-                      value={svc.key || ''}
-                      onChange={(e) => {
-                        const next = [...(editData.servicesDetailed || [])];
-                        next[idx] = { ...next[idx], key: e.target.value.trim() };
-                        setEditData({ ...editData, servicesDetailed: next });
-                      }}
-                    />
-                  </div>
+  {editMode ? (
+    <div className="space-y-4">
+      {(editData.servicesDetailed || []).map((svc, idx) => (
+        <div key={idx} className="p-4 bg-white/70 rounded-xl border border-gray-200 space-y-2">
+          {/* Service Name */}
+          <input
+            className="w-full p-2 border rounded"
+            placeholder="Service Name"
+            value={svc.name || ''}
+            onChange={(e) => {
+              const next = [...editData.servicesDetailed];
+              next[idx].name = e.target.value;
+              setEditData({ ...editData, servicesDetailed: next });
+            }}
+          />
 
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                    <NumInput label="Default Duration (mins)" value={svc.defaultDurationMins} onChange={(v) => bumpSvc(idx, { defaultDurationMins: v })} />
-                    <NumInput label="Buffer Before (mins)" value={svc.bufferBeforeMins} onChange={(v) => bumpSvc(idx, { bufferBeforeMins: v })} />
-                    <NumInput label="Buffer After (mins)" value={svc.bufferAfterMins} onChange={(v) => bumpSvc(idx, { bufferAfterMins: v })} />
-                    <NumInput label="Increment (mins)" value={svc.incrementMins} onChange={(v) => bumpSvc(idx, { incrementMins: v })} />
-                    <NumInput label="Min Duration (mins)" value={svc.minDurationMins} onChange={(v) => bumpSvc(idx, { minDurationMins: v })} />
-                    <NumInput label="Max Duration (mins)" value={svc.maxDurationMins} onChange={(v) => bumpSvc(idx, { maxDurationMins: v })} />
-                  </div>
+          {/* Grid of numeric fields */}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+            <input
+              type="number"
+              className="p-2 border rounded"
+              placeholder="Default Duration (mins)"
+              value={svc.defaultDurationMins ?? ''}
+              onChange={(e) => {
+                const next = [...editData.servicesDetailed];
+                next[idx].defaultDurationMins = e.target.value; // keep as string
+                setEditData({ ...editData, servicesDetailed: next });
+              }}
+            />
+            <input
+              type="number"
+              className="p-2 border rounded"
+              placeholder="Buffer Before (mins)"
+              value={svc.bufferBeforeMins ?? ''}
+              onChange={(e) => {
+                const next = [...editData.servicesDetailed];
+                next[idx].bufferBeforeMins = e.target.value;
+                setEditData({ ...editData, servicesDetailed: next });
+              }}
+            />
+            <input
+              type="number"
+              className="p-2 border rounded"
+              placeholder="Buffer After (mins)"
+              value={svc.bufferAfterMins ?? ''}
+              onChange={(e) => {
+                const next = [...editData.servicesDetailed];
+                next[idx].bufferAfterMins = e.target.value;
+                setEditData({ ...editData, servicesDetailed: next });
+              }}
+            />
+            <input
+              type="number"
+              className="p-2 border rounded"
+              placeholder="Increment (mins)"
+              value={svc.incrementMins ?? ''}
+              onChange={(e) => {
+                const next = [...editData.servicesDetailed];
+                next[idx].incrementMins = e.target.value;
+                setEditData({ ...editData, servicesDetailed: next });
+              }}
+            />
+            <input
+              type="number"
+              className="p-2 border rounded"
+              placeholder="Min Duration (mins)"
+              value={svc.minDurationMins ?? ''}
+              onChange={(e) => {
+                const next = [...editData.servicesDetailed];
+                next[idx].minDurationMins = e.target.value;
+                setEditData({ ...editData, servicesDetailed: next });
+              }}
+            />
+            <input
+              type="number"
+              className="p-2 border rounded"
+              placeholder="Max Duration (mins)"
+              value={svc.maxDurationMins ?? ''}
+              onChange={(e) => {
+                const next = [...editData.servicesDetailed];
+                next[idx].maxDurationMins = e.target.value;
+                setEditData({ ...editData, servicesDetailed: next });
+              }}
+            />
+          </div>
 
-                  <label className="inline-flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={svc.active !== false}
-                      onChange={(e) => bumpSvc(idx, { active: e.target.checked })}
-                    />
-                    Active
-                  </label>
+          {/* Active toggle */}
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={svc.active !== false}
+              onChange={(e) => {
+                const next = [...editData.servicesDetailed];
+                next[idx].active = e.target.checked;
+                setEditData({ ...editData, servicesDetailed: next });
+              }}
+            />
+            Active
+          </label>
 
-                  <div className="flex justify-end">
-                    <button
-                      className="text-red-600 text-sm"
-                      onClick={() => {
-                        const next = [...(editData.servicesDetailed || [])];
-                        next.splice(idx, 1);
-                        setEditData({ ...editData, servicesDetailed: next });
-                      }}
-                    >
-                      Remove
-                    </button>
-                  </div>
-                </div>
-              ))}
-
-              <button
-                className="px-4 py-2 bg-teal-600 text-white rounded"
-                onClick={() => {
-                  const nextSvc = {
-                    key: generateServiceKey(),
-                    name: '',
-                    defaultDurationMins: 60,
-                    bufferBeforeMins: 0,
-                    bufferAfterMins: 0,
-                    incrementMins: 60,
-                    minDurationMins: 60,
-                    maxDurationMins: 240,
-                    active: true,
-                  };
-                  setEditData({
-                    ...editData,
-                    servicesDetailed: [...(editData.servicesDetailed || []), nextSvc],
-                  });
-                }}
-              >
-                ➕ Add Service
-              </button>
-            </div>
-          ) : (
-            <>
-              {(formData.servicesDetailed || []).filter(s => s.active !== false).length > 0 ? (
-                <ul className="list-disc list-inside text-gray-800">
-                  {formData.servicesDetailed.filter(s => s.active !== false).map((s, i) => (
-                    <li key={s.key || i}>
-                      <span className="font-medium">{s.name || s.key}</span>{' '}
-                      <span className="text-gray-600">
-                        ({s.defaultDurationMins ?? 60} mins{typeof s.bufferBeforeMins === 'number' || typeof s.bufferAfterMins === 'number'
-                          ? `, buffer ${s.bufferBeforeMins ?? 0}/${s.bufferAfterMins ?? 0} mins` : ''})
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-gray-600">No detailed services listed</p>
-              )}
-            </>
-          )}
+          {/* Remove button */}
+          <button
+            className="text-red-600 text-sm"
+            onClick={() => {
+              const next = [...editData.servicesDetailed];
+              next.splice(idx, 1);
+              setEditData({ ...editData, servicesDetailed: next });
+            }}
+          >
+            Remove
+          </button>
         </div>
+      ))}
+
+      {/* Add new service */}
+      <button
+        className="px-4 py-2 bg-teal-600 text-white rounded"
+        onClick={() =>
+          setEditData({
+            ...editData,
+            servicesDetailed: [
+              ...(editData.servicesDetailed || []),
+              {
+                name: '',
+                defaultDurationMins: '',
+                bufferBeforeMins: '',
+                bufferAfterMins: '',
+                incrementMins: '',
+                minDurationMins: '',
+                maxDurationMins: '',
+                active: true,
+              },
+            ],
+          })
+        }
+      >
+        ➕ Add Service
+      </button>
+    </div>
+  ) : (
+    <>
+      {(formData.servicesDetailed || []).filter((s) => s.active !== false).length > 0 ? (
+        <ul className="list-disc list-inside text-gray-800">
+          {formData.servicesDetailed.map((svc, i) => (
+            <li key={i}>
+              {svc.name} ({svc.defaultDurationMins || 60} mins)
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="text-gray-600">No detailed services listed</p>
+      )}
+    </>
+  )}
+</div>
+
 
         {/* Gallery (Premium only) */}
         {formData.isPremium && (

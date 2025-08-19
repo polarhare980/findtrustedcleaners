@@ -63,7 +63,7 @@ export async function PUT(req, { params }) {
       updateFields.bio = String(body.bio || '').trim();
     }
 
-    // ✅ Core fields (copy through if provided)
+    // ✅ Core fields
     if (body.availability !== undefined) updateFields.availability = body.availability;
     if (body.googleReviewUrl !== undefined) updateFields.googleReviewUrl = body.googleReviewUrl;
     if (body.googleReviewRating !== undefined) updateFields.googleReviewRating = body.googleReviewRating;
@@ -79,14 +79,32 @@ export async function PUT(req, { params }) {
     if (body.address !== undefined) updateFields.address = body.address;
     if (body.additionalPostcodes !== undefined) updateFields.additionalPostcodes = body.additionalPostcodes;
 
-    // ✅ Insurance boolean (already worked before)
+    // ✅ Insurance boolean
     if (body.businessInsurance !== undefined) updateFields.businessInsurance = !!body.businessInsurance;
 
-    // ✅ NEW: DBS boolean must be explicitly whitelisted
+    // ✅ DBS boolean
     if (body.dbsChecked !== undefined) updateFields.dbsChecked = !!body.dbsChecked;
 
-    // ✅ Optional: allow toggling premium flag if your UI needs it
+    // ✅ Premium toggle
     if (body.isPremium !== undefined) updateFields.isPremium = !!body.isPremium;
+
+    // ✅ NEW: Structured services with durations
+    if (body.servicesDetailed !== undefined) {
+      updateFields.servicesDetailed = (body.servicesDetailed || []).map((svc) => ({
+        ...svc,
+        name: String(svc.name || '').trim(),
+        key: String(svc.key || '').trim(),
+        active: svc.active !== false,
+        defaultDurationMins: Number(svc.defaultDurationMins) || 60,
+        minDurationMins: Number(svc.minDurationMins) || 60,
+        maxDurationMins: Number(svc.maxDurationMins) || 240,
+        incrementMins: Number(svc.incrementMins) || 60,
+        bufferBeforeMins: Number(svc.bufferBeforeMins) || 0,
+        bufferAfterMins: Number(svc.bufferAfterMins) || 0,
+        basePrice: svc.basePrice !== undefined ? Number(svc.basePrice) : undefined,
+        pricePerHour: svc.pricePerHour !== undefined ? Number(svc.pricePerHour) : undefined,
+      }));
+    }
 
     const updated = await Cleaner.findByIdAndUpdate(id, updateFields, { new: true });
     return NextResponse.json({ success: true, cleaner: updated });
@@ -115,18 +133,17 @@ export async function GET(req, { params }) {
     const publicData = {
       _id: cleaner._id,
       realName: cleaner.realName,
-      companyName: cleaner.companyName, // harmless publicly
+      companyName: cleaner.companyName,
       postcode: cleaner.address?.postcode,
       rates: cleaner.rates,
       services: cleaner.services,
+      servicesDetailed: cleaner.servicesDetailed || [],
       availability: cleaner.availability || {},
       image: cleaner.image || '/default-avatar.png',
       bio: cleaner.bio || '',
-      // ✅ badges
       businessInsurance: !!cleaner.businessInsurance,
       dbsChecked: !!cleaner.dbsChecked,
       isPremium: !!cleaner.isPremium,
-      // Reviews (already public)
       googleReviewUrl: cleaner.googleReviewUrl || null,
       googleReviewRating: cleaner.googleReviewRating || null,
       googleReviewCount: cleaner.googleReviewCount || 0,
