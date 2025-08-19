@@ -348,12 +348,12 @@ export default function CleanerProfilePage() {
           )}
         </section>
 
-        {/* Services Detailed (selector) */}
+        {/* Services Detailed (selector – READ-ONLY details) */}
         <section className="bg-white/25 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-xl">
-          <h2 className="text-xl font-bold text-teal-800 mb-4">🧹 Services & Duration</h2>
+          <h2 className="text-xl font-bold text-teal-800 mb-4">🧹 Services &amp; Duration</h2>
 
           {Array.isArray(cleaner.servicesDetailed) && cleaner.servicesDetailed.filter(s => s.active !== false).length > 0 ? (
-            <div className="grid md:grid-cols-3 gap-4">
+            <div className="space-y-4">
               <div className="space-y-2">
                 <label className="text-sm text-gray-700">Service</label>
                 <select
@@ -364,6 +364,7 @@ export default function CleanerProfilePage() {
                     setSelectedServiceKey(nextKey);
                     const svc = (cleaner.servicesDetailed || []).find(s => s.key === nextKey);
                     if (svc) {
+                      // 🔒 Read-only: always lock to service defaults
                       setDurationMins(svc.defaultDurationMins ?? 60);
                       setBufferBeforeMins(svc.bufferBeforeMins ?? 0);
                       setBufferAfterMins(svc.bufferAfterMins ?? 0);
@@ -374,54 +375,36 @@ export default function CleanerProfilePage() {
                     .filter((s) => s.active !== false)
                     .map((s) => (
                       <option key={s.key} value={s.key}>
-                        {s.name || s.key}
+                        {s.name || s.key} ({s.defaultDurationMins ?? 60} mins)
                       </option>
                     ))}
                 </select>
                 <p className="text-xs text-gray-600">
-                  Increment: {service?.incrementMins ?? 60} mins • Allowed: {minDuration}–{maxDuration} mins
+                  Increment: {service?.incrementMins ?? 60} mins • Allowed range: {minDuration}–{maxDuration} mins
                 </p>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm text-gray-700">Duration (mins)</label>
-                <select
-                  className="modern-select w-full"
-                  value={durationMins}
-                  onChange={(e) => setDurationMins(Number(e.target.value))}
-                >
-                  {Array.from({ length: Math.floor((maxDuration - minDuration) / (increment || 60)) + 1 }, (_, i) => minDuration + i * (increment || 60))
-                    .map((m) => (
-                      <option key={m} value={m}>{m}</option>
-                    ))}
-                </select>
-                <p className="text-xs text-gray-600">Required span: {span} hour{span > 1 ? 's' : ''}</p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-sm text-gray-700">Buffer before</label>
-                  <input
-                    type="number"
-                    className="modern-input w-full"
-                    min={0}
-                    step={15}
-                    value={bufferBeforeMins}
-                    onChange={(e) => setBufferBeforeMins(Math.max(0, Number(e.target.value)))}
-                  />
+              {/* Read-only info panel */}
+              {service && (
+                <div className="grid md:grid-cols-4 gap-3 bg-white/50 rounded-xl border border-white/30 p-3 text-sm">
+                  <div>
+                    <div className="text-gray-600">Duration</div>
+                    <div className="font-semibold">{durationMins} mins</div>
+                  </div>
+                  <div>
+                    <div className="text-gray-600">Buffer Before</div>
+                    <div className="font-semibold">{bufferBeforeMins} mins</div>
+                  </div>
+                  <div>
+                    <div className="text-gray-600">Buffer After</div>
+                    <div className="font-semibold">{bufferAfterMins} mins</div>
+                  </div>
+                  <div>
+                    <div className="text-gray-600">Required Span</div>
+                    <div className="font-semibold">{span} hour{span > 1 ? 's' : ''}</div>
+                  </div>
                 </div>
-                <div>
-                  <label className="text-sm text-gray-700">Buffer after</label>
-                  <input
-                    type="number"
-                    className="modern-input w-full"
-                    min={0}
-                    step={15}
-                    value={bufferAfterMins}
-                    onChange={(e) => setBufferAfterMins(Math.max(0, Number(e.target.value)))}
-                  />
-                </div>
-              </div>
+              )}
             </div>
           ) : (
             <p className="text-gray-700">This cleaner hasn’t listed detailed services yet.</p>

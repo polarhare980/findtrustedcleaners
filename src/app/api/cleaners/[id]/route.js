@@ -18,7 +18,6 @@ function containsContactInfo(text, cleaner) {
   const norm = (s) => String(s || '').toLowerCase();
   const hay = norm(text);
 
-  // also block their own email/phone/company if present
   if (cleaner) {
     if (norm(cleaner.email) && hay.includes(norm(cleaner.email))) return true;
     if (norm(cleaner.companyName) && hay.includes(norm(cleaner.companyName))) return true;
@@ -26,6 +25,24 @@ function containsContactInfo(text, cleaner) {
   }
 
   return patterns.some((re) => re.test(hay));
+}
+
+// ✅ tiny helper to sanitize photos array
+function sanitizePhotos(photos) {
+  if (!Array.isArray(photos)) return [];
+  return photos
+    .map((p) => {
+      if (!p) return null;
+      if (typeof p === 'string') return { url: p, public_id: undefined, hasText: false };
+      const url = typeof p.url === 'string' ? p.url : '';
+      if (!url) return null;
+      return {
+        url,
+        public_id: typeof p.public_id === 'string' ? p.public_id : undefined,
+        hasText: !!p.hasText,
+      };
+    })
+    .filter(Boolean);
 }
 
 /**
@@ -70,7 +87,11 @@ export async function PUT(req, { params }) {
     if (body.googleReviewCount !== undefined) updateFields.googleReviewCount = body.googleReviewCount;
     if (body.facebookReviewUrl !== undefined) updateFields.facebookReviewUrl = body.facebookReviewUrl;
     if (body.embedCode !== undefined) updateFields.embedCode = body.embedCode;
+
     if (body.image !== undefined) updateFields.image = body.image;
+    if (body.imageHasText !== undefined) updateFields.imageHasText = !!body.imageHasText;
+    if (body.videoUrl !== undefined) updateFields.videoUrl = body.videoUrl;
+
     if (body.rates !== undefined) updateFields.rates = body.rates;
     if (body.services !== undefined) updateFields.services = body.services;
     if (body.phone !== undefined) updateFields.phone = body.phone;
@@ -88,13 +109,13 @@ export async function PUT(req, { params }) {
     // ✅ Premium toggle
     if (body.isPremium !== undefined) updateFields.isPremium = !!body.isPremium;
 
-    // ✅ NEW: Structured services with durations
+    // ✅ Structured services with durations
     if (body.servicesDetailed !== undefined) {
       updateFields.servicesDetailed = (body.servicesDetailed || []).map((svc) => ({
         ...svc,
         name: String(svc.name || '').trim(),
         key: String(svc.key || '').trim(),
-        active: svc.active !== false,
+        active: svc?.active !== false,
         defaultDurationMins: Number(svc.defaultDurationMins) || 60,
         minDurationMins: Number(svc.minDurationMins) || 60,
         maxDurationMins: Number(svc.maxDurationMins) || 240,
@@ -104,6 +125,11 @@ export async function PUT(req, { params }) {
         basePrice: svc.basePrice !== undefined ? Number(svc.basePrice) : undefined,
         pricePerHour: svc.pricePerHour !== undefined ? Number(svc.pricePerHour) : undefined,
       }));
+    }
+
+    // ✅ NEW: Gallery photos
+    if (body.photos !== undefined) {
+      updateFields.photos = sanitizePhotos(body.photos);
     }
 
     const updated = await Cleaner.findByIdAndUpdate(id, updateFields, { new: true });
@@ -140,6 +166,7 @@ export async function GET(req, { params }) {
       servicesDetailed: cleaner.servicesDetailed || [],
       availability: cleaner.availability || {},
       image: cleaner.image || '/default-avatar.png',
+      imageHasText: !!cleaner.imageHasText,
       bio: cleaner.bio || '',
       businessInsurance: !!cleaner.businessInsurance,
       dbsChecked: !!cleaner.dbsChecked,
@@ -148,6 +175,9 @@ export async function GET(req, { params }) {
       googleReviewRating: cleaner.googleReviewRating || null,
       googleReviewCount: cleaner.googleReviewCount || 0,
       facebookReviewUrl: cleaner.facebookReviewUrl || null,
+      // ✅ include gallery + video
+      photos: Array.isArray(cleaner.photos) ? cleaner.photos : [],
+      videoUrl: cleaner.videoUrl || null,
     };
 
     let responseData = { ...publicData };
