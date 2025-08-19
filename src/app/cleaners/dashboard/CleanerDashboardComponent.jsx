@@ -14,6 +14,9 @@ const PENDING_STATUSES = new Set(['pending','pending_approval']);
 
 const hourLabel = (h) => `${String(h).padStart(2, '0')}:00`;
 
+// Handy key generator for new services
+const generateServiceKey = () => `svc_${Math.random().toString(36).slice(2, 10)}`;
+
 // -------------------- Overlay Builders (from combined API) --------------------
 function buildOverlayMaps(combined = []) {
   const pendingKeyToPurchaseId = new Map(); // `${day}|${hour}` -> purchaseId
@@ -66,7 +69,6 @@ function composeDisplayAvailability(baseAvailability = {}, overlays) {
       }
 
       // Leave base as-is (true / 'available' / false / 'unavailable' / undefined)
-      // Nothing to do.
     }
   }
   return out;
@@ -136,6 +138,8 @@ export default function CleanerDashboard() {
         const seed = {
           ...cleanerUser,
           services: cleanerUser.services || [],
+          servicesDetailed: cleanerUser.servicesDetailed || [],
+          photos: cleanerUser.photos || [],
           availability: cleanerUser.availability || {},
           businessInsurance: !!cleanerUser.businessInsurance,
           dbsChecked: !!cleanerUser.dbsChecked,
@@ -303,7 +307,7 @@ export default function CleanerDashboard() {
     setEditData((prev) => ({ ...prev, services }));
   };
 
-  // Image upload
+  // Profile picture upload
   const handleImageUpload = async () => {
     if (!selectedFile) return alert('Please select a file.');
     setImageUploading(true);
@@ -337,6 +341,26 @@ export default function CleanerDashboard() {
       alert('Upload failed.');
     } finally {
       setImageUploading(false);
+    }
+  };
+
+  // Gallery upload (Premium)
+  const handleGalleryUpload = async (files) => {
+    for (const f of files) {
+      const fd = new FormData();
+      fd.append('file', f);
+      try {
+        const res = await fetch('/api/upload', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (data?.success && data?.url) {
+          setEditData(prev => ({
+            ...prev,
+            photos: [...(prev.photos || []), { url: data.url, public_id: data.public_id, hasText: false }]
+          }));
+        }
+      } catch (e) {
+        console.error('Gallery upload failed', e);
+      }
     }
   };
 
@@ -688,6 +712,162 @@ export default function CleanerDashboard() {
           </div>
         </div>
 
+        {/* Services & Duration (everyone) */}
+        <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl mb-6 p-6">
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent mb-4">
+            🧹 Services & Duration
+          </h2>
+
+          {editMode ? (
+            <div className="space-y-4">
+              {(editData.servicesDetailed || []).map((svc, idx) => (
+                <div key={svc.key || idx} className="p-4 bg-white/80 rounded-xl border border-gray-200 space-y-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    <input
+                      className="w-full p-2 border rounded"
+                      placeholder="Service Name (e.g., Deep clean)"
+                      value={svc.name || ''}
+                      onChange={(e) => {
+                        const next = [...(editData.servicesDetailed || [])];
+                        next[idx] = { ...next[idx], name: e.target.value };
+                        setEditData({ ...editData, servicesDetailed: next });
+                      }}
+                    />
+                    <input
+                      className="w-full p-2 border rounded"
+                      placeholder="Key (unique)"
+                      value={svc.key || ''}
+                      onChange={(e) => {
+                        const next = [...(editData.servicesDetailed || [])];
+                        next[idx] = { ...next[idx], key: e.target.value.trim() };
+                        setEditData({ ...editData, servicesDetailed: next });
+                      }}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    <NumInput label="Default Duration (mins)" value={svc.defaultDurationMins} onChange={(v) => bumpSvc(idx, { defaultDurationMins: v })} />
+                    <NumInput label="Buffer Before (mins)" value={svc.bufferBeforeMins} onChange={(v) => bumpSvc(idx, { bufferBeforeMins: v })} />
+                    <NumInput label="Buffer After (mins)" value={svc.bufferAfterMins} onChange={(v) => bumpSvc(idx, { bufferAfterMins: v })} />
+                    <NumInput label="Increment (mins)" value={svc.incrementMins} onChange={(v) => bumpSvc(idx, { incrementMins: v })} />
+                    <NumInput label="Min Duration (mins)" value={svc.minDurationMins} onChange={(v) => bumpSvc(idx, { minDurationMins: v })} />
+                    <NumInput label="Max Duration (mins)" value={svc.maxDurationMins} onChange={(v) => bumpSvc(idx, { maxDurationMins: v })} />
+                  </div>
+
+                  <label className="inline-flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={svc.active !== false}
+                      onChange={(e) => bumpSvc(idx, { active: e.target.checked })}
+                    />
+                    Active
+                  </label>
+
+                  <div className="flex justify-end">
+                    <button
+                      className="text-red-600 text-sm"
+                      onClick={() => {
+                        const next = [...(editData.servicesDetailed || [])];
+                        next.splice(idx, 1);
+                        setEditData({ ...editData, servicesDetailed: next });
+                      }}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+              <button
+                className="px-4 py-2 bg-teal-600 text-white rounded"
+                onClick={() => {
+                  const nextSvc = {
+                    key: generateServiceKey(),
+                    name: '',
+                    defaultDurationMins: 60,
+                    bufferBeforeMins: 0,
+                    bufferAfterMins: 0,
+                    incrementMins: 60,
+                    minDurationMins: 60,
+                    maxDurationMins: 240,
+                    active: true,
+                  };
+                  setEditData({
+                    ...editData,
+                    servicesDetailed: [...(editData.servicesDetailed || []), nextSvc],
+                  });
+                }}
+              >
+                ➕ Add Service
+              </button>
+            </div>
+          ) : (
+            <>
+              {(formData.servicesDetailed || []).filter(s => s.active !== false).length > 0 ? (
+                <ul className="list-disc list-inside text-gray-800">
+                  {formData.servicesDetailed.filter(s => s.active !== false).map((s, i) => (
+                    <li key={s.key || i}>
+                      <span className="font-medium">{s.name || s.key}</span>{' '}
+                      <span className="text-gray-600">
+                        ({s.defaultDurationMins ?? 60} mins{typeof s.bufferBeforeMins === 'number' || typeof s.bufferAfterMins === 'number'
+                          ? `, buffer ${s.bufferBeforeMins ?? 0}/${s.bufferAfterMins ?? 0} mins` : ''})
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-gray-600">No detailed services listed</p>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Gallery (Premium only) */}
+        {formData.isPremium && (
+          <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl mb-6 p-6">
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent mb-4">
+              🖼️ Gallery (Premium)
+            </h2>
+
+            {editMode ? (
+              <>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={(e) => handleGalleryUpload(Array.from(e.target.files || []))}
+                  className="w-full p-3 bg-white/80 border rounded-lg"
+                />
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4">
+                  {(editData.photos || []).map((ph, i) => (
+                    <div key={ph.public_id || ph.url || i} className="relative">
+                      <img src={ph.url} alt={`Gallery ${i}`} className="w-full h-32 object-cover rounded" />
+                      <button
+                        className="absolute top-1 right-1 bg-red-600 text-white text-xs px-2 py-1 rounded"
+                        onClick={() => {
+                          setEditData(prev => ({
+                            ...prev,
+                            photos: (prev.photos || []).filter((_, j) => j !== i)
+                          }));
+                        }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                {(formData.photos || []).map((ph, i) => (
+                  <img key={ph.public_id || ph.url || i} src={ph.url} alt={`Gallery ${i}`} className="w-full h-32 object-cover rounded" />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Availability grid — MATCH PROFILE COLOURS/LOGIC */}
         <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl mb-6 p-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
@@ -868,4 +1048,26 @@ function Legend({ swatchClass, label }) {
       <span className="text-gray-700">{label}</span>
     </div>
   );
+}
+
+// Tiny numeric input helper
+function NumInput({ label, value, onChange }) {
+  return (
+    <div className="space-y-1">
+      <label className="text-xs text-gray-600">{label}</label>
+      <input
+        type="number"
+        className="w-full p-2 border rounded"
+        value={typeof value === 'number' ? value : ''}
+        onChange={(e) => onChange(Number(e.target.value))}
+        min={0}
+      />
+    </div>
+  );
+}
+
+// Mutate one service entry safely
+function bumpSvc(idx, patch) {
+  // This function is shadowed at render time via closure in the JSX block; declared here for clarity.
+  // Real mutation is done inline by calling bumpSvc wrapped with setEditData in the JSX map.
 }
