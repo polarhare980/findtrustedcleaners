@@ -8,6 +8,7 @@ import React from 'react';
 
 export default function CleanerRegister() {
   const router = useRouter();
+
   const [form, setForm] = useState({
     realName: '',
     companyName: '',
@@ -20,18 +21,29 @@ export default function CleanerRegister() {
     password: '',
     confirmPassword: '',
     rates: '',
+    // local toggles: { "Mon-9": true } means available
     availability: {},
     services: [],
     businessInsurance: false,
-    // ✅ NEW: DBS flag
     dbsChecked: false,
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
 
-  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  const hours = Array.from({ length: 13 }, (_, i) => 7 + i);
+  const daysShort = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const dayMap = {
+    Mon: 'Monday',
+    Tue: 'Tuesday',
+    Wed: 'Wednesday',
+    Thu: 'Thursday',
+    Fri: 'Friday',
+    Sat: 'Saturday',
+    Sun: 'Sunday',
+  };
+  const fullDays = Object.values(dayMap);
+  const hours = Array.from({ length: 13 }, (_, i) => 7 + i); // 7..19
+
   const serviceCategories = {
     '🏠 Domestic Cleaning': [
       'Regular House Cleaning',
@@ -59,8 +71,9 @@ export default function CleanerRegister() {
     '🏢 Commercial Cleaning': ['Office Cleaning', 'Retail Cleaning', 'Gym Cleaning'],
   };
 
-  const toggleAvailability = (day, hour) => {
-    const key = `${day}-${hour}`;
+  // Toggle local UI availability (true = available)
+  const toggleAvailability = (shortDay, hour) => {
+    const key = `${shortDay}-${hour}`;
     setForm(prev => ({
       ...prev,
       availability: {
@@ -102,15 +115,38 @@ export default function CleanerRegister() {
     if (!form.phone.trim()) newErrors.phone = 'Phone is required';
     if (!form.password) newErrors.password = 'Password is required';
     if (!form.confirmPassword) newErrors.confirmPassword = 'Please confirm your password';
-    if (!form.rates.trim()) newErrors.rates = 'Hourly rate is required';
     if (form.password !== form.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
     if (form.services.length === 0) newErrors.services = 'Please select at least one service';
 
-    const parsedRates = parseFloat(form.rates.replace(/[^0-9.]/g, '')) || 0;
+    const parsedRates = parseFloat((form.rates || '').toString().replace(/[^0-9.]/g, '')) || 0;
     if (parsedRates <= 0) newErrors.rates = 'Please enter a valid hourly rate greater than 0';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  /**
+   * Build a dense base availability:
+   * Every day/hour initialized as 'unavailable', then any UI toggles overwrite to true.
+   */
+  const buildDenseBaseAvailability = () => {
+    const out = {};
+    // initialize all as 'unavailable'
+    for (const day of fullDays) {
+      out[day] = {};
+      for (const h of hours) {
+        out[day][String(h)] = 'unavailable';
+      }
+    }
+    // apply toggles (true = available)
+    Object.entries(form.availability).forEach(([key, selected]) => {
+      if (!selected) return;
+      const [shortDay, hourNum] = key.split('-');
+      const fullDay = dayMap[shortDay];
+      if (!fullDay) return;
+      out[fullDay][String(hourNum)] = true;
+    });
+    return out;
   };
 
   const handleSubmit = async (e) => {
@@ -120,25 +156,8 @@ export default function CleanerRegister() {
     setIsSubmitting(true);
     setErrors({});
 
-    // ✅ Reformat availability keys like "Mon-9" → { Monday: { "9": true } }
-    const reformattedAvailability = {};
-    Object.entries(form.availability).forEach(([key, value]) => {
-      const [shortDay, hour] = key.split('-');
-      const dayMap = {
-        Mon: 'Monday',
-        Tue: 'Tuesday',
-        Wed: 'Wednesday',
-        Thu: 'Thursday',
-        Fri: 'Friday',
-        Sat: 'Saturday',
-        Sun: 'Sunday',
-      };
-      const fullDay = dayMap[shortDay];
-      if (!reformattedAvailability[fullDay]) reformattedAvailability[fullDay] = {};
-      reformattedAvailability[fullDay][hour] = value;
-    });
-
-    const parsedRates = parseFloat(form.rates.replace(/[^0-9.]/g, '')) || 0;
+    const parsedRates = parseFloat((form.rates || '').toString().replace(/[^0-9.]/g, '')) || 0;
+    const availability = buildDenseBaseAvailability();
 
     try {
       const payload = {
@@ -155,9 +174,8 @@ export default function CleanerRegister() {
           county: form.county.trim(),
           postcode: form.postcode.trim(),
         },
-        availability: reformattedAvailability,
-        businessInsurance: form.businessInsurance,
-        // ✅ Send DBS flag
+        availability, // dense base availability
+        businessInsurance: !!form.businessInsurance,
         dbsChecked: !!form.dbsChecked,
         userType: 'cleaner',
       };
@@ -171,10 +189,10 @@ export default function CleanerRegister() {
 
       const data = await res.json();
 
-      if (res.ok && data.success) {
+      if (res.ok && data?.success) {
         router.push('/cleaners/dashboard');
       } else {
-        setErrors({ submit: data.message || 'Registration failed. Please try again.' });
+        setErrors({ submit: data?.message || 'Registration failed. Please try again.' });
       }
     } catch (err) {
       setErrors({ submit: 'An unexpected error occurred. Please try again.' });
@@ -187,19 +205,10 @@ export default function CleanerRegister() {
     <>
       <Head>
         <title>Register as a Cleaner | Find Trusted Cleaners</title>
-        <meta
-          name="description"
-          content="Join Find Trusted Cleaners and connect with local clients. Showcase availability, services, and start growing your cleaning business today."
-        />
-        <meta
-          name="keywords"
-          content="cleaner registration, cleaning services, become a cleaner, local cleaners UK, Find Trusted Cleaners"
-        />
+        <meta name="description" content="Join Find Trusted Cleaners and connect with local clients. Showcase availability, services, and start growing your cleaning business today." />
+        <meta name="keywords" content="cleaner registration, cleaning services, become a cleaner, local cleaners UK, Find Trusted Cleaners" />
         <meta property="og:title" content="Register as a Cleaner - Find Trusted Cleaners" />
-        <meta
-          property="og:description"
-          content="Create your cleaner profile, set availability, and list services on Find Trusted Cleaners."
-        />
+        <meta property="og:description" content="Create your cleaner profile, set availability, and list services on Find Trusted Cleaners." />
         <meta property="og:type" content="website" />
       </Head>
 
@@ -228,144 +237,59 @@ export default function CleanerRegister() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* identity + contact */}
             <div>
-              <input
-                name="realName"
-                onChange={handleChange}
-                value={form.realName}
-                placeholder="Real Name"
-                className={`w-full p-2 border rounded text-[#0D9488] bg-white ${errors.realName ? 'border-red-500' : ''}`}
-                required
-              />
+              <input name="realName" onChange={handleChange} value={form.realName} placeholder="Real Name" className={`w-full p-2 border rounded text-[#0D9488] bg-white ${errors.realName ? 'border-red-500' : ''}`} required />
               {errors.realName && <p className="text-red-500 text-sm mt-1">{errors.realName}</p>}
             </div>
-
             <div>
-              <input
-                name="companyName"
-                onChange={handleChange}
-                value={form.companyName}
-                placeholder="Company Name"
-                className={`w-full p-2 border rounded text-[#0D9488] bg-white ${errors.companyName ? 'border-red-500' : ''}`}
-                required
-              />
+              <input name="companyName" onChange={handleChange} value={form.companyName} placeholder="Company Name" className={`w-full p-2 border rounded text-[#0D9488] bg-white ${errors.companyName ? 'border-red-500' : ''}`} required />
               {errors.companyName && <p className="text-red-500 text-sm mt-1">{errors.companyName}</p>}
             </div>
-
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <input
-                  name="houseNameNumber"
-                  onChange={handleChange}
-                  value={form.houseNameNumber}
-                  placeholder="House Name/Number"
-                  className={`w-full p-2 border rounded text-[#0D9488] bg-white ${errors.houseNameNumber ? 'border-red-500' : ''}`}
-                  required
-                />
+                <input name="houseNameNumber" onChange={handleChange} value={form.houseNameNumber} placeholder="House Name/Number" className={`w-full p-2 border rounded text-[#0D9488] bg-white ${errors.houseNameNumber ? 'border-red-500' : ''}`} required />
                 {errors.houseNameNumber && <p className="text-red-500 text-sm mt-1">{errors.houseNameNumber}</p>}
               </div>
               <div>
-                <input
-                  name="street"
-                  onChange={handleChange}
-                  value={form.street}
-                  placeholder="Street"
-                  className={`w-full p-2 border rounded text-[#0D9488] bg-white ${errors.street ? 'border-red-500' : ''}`}
-                  required
-                />
+                <input name="street" onChange={handleChange} value={form.street} placeholder="Street" className={`w-full p-2 border rounded text-[#0D9488] bg-white ${errors.street ? 'border-red-500' : ''}`} required />
                 {errors.street && <p className="text-red-500 text-sm mt-1">{errors.street}</p>}
               </div>
             </div>
-
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <input
-                  name="county"
-                  onChange={handleChange}
-                  value={form.county}
-                  placeholder="County"
-                  className={`w-full p-2 border rounded text-[#0D9488] bg-white ${errors.county ? 'border-red-500' : ''}`}
-                  required
-                />
+                <input name="county" onChange={handleChange} value={form.county} placeholder="County" className={`w-full p-2 border rounded text-[#0D9488] bg-white ${errors.county ? 'border-red-500' : ''}`} required />
                 {errors.county && <p className="text-red-500 text-sm mt-1">{errors.county}</p>}
               </div>
               <div>
-                <input
-                  name="postcode"
-                  onChange={handleChange}
-                  value={form.postcode}
-                  placeholder="Postcode"
-                  className={`w-full p-2 border rounded text-[#0D9488] bg-white ${errors.postcode ? 'border-red-500' : ''}`}
-                  required
-                />
+                <input name="postcode" onChange={handleChange} value={form.postcode} placeholder="Postcode" className={`w-full p-2 border rounded text-[#0D9488] bg-white ${errors.postcode ? 'border-red-500' : ''}`} required />
                 {errors.postcode && <p className="text-red-500 text-sm mt-1">{errors.postcode}</p>}
               </div>
             </div>
-
             <div>
-              <input
-                name="email"
-                onChange={handleChange}
-                value={form.email}
-                placeholder="Email"
-                type="email"
-                className={`w-full p-2 border rounded text-[#0D9488] bg-white ${errors.email ? 'border-red-500' : ''}`}
-                required
-              />
+              <input name="email" onChange={handleChange} value={form.email} placeholder="Email" type="email" className={`w-full p-2 border rounded text-[#0D9488] bg-white ${errors.email ? 'border-red-500' : ''}`} required />
               {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
             </div>
-
             <div>
-              <input
-                name="phone"
-                onChange={handleChange}
-                value={form.phone}
-                placeholder="Phone"
-                type="tel"
-                className={`w-full p-2 border rounded text-[#0D9488] bg-white ${errors.phone ? 'border-red-500' : ''}`}
-                required
-              />
+              <input name="phone" onChange={handleChange} value={form.phone} placeholder="Phone" type="tel" className={`w-full p-2 border rounded text-[#0D9488] bg-white ${errors.phone ? 'border-red-500' : ''}`} required />
               {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
             </div>
-
             <div>
-              <input
-                name="password"
-                onChange={handleChange}
-                value={form.password}
-                placeholder="Password"
-                type="password"
-                className={`w-full p-2 border rounded text-[#0D9488] bg-white ${errors.password ? 'border-red-500' : ''}`}
-                required
-              />
+              <input name="password" onChange={handleChange} value={form.password} placeholder="Password" type="password" className={`w-full p-2 border rounded text-[#0D9488] bg-white ${errors.password ? 'border-red-500' : ''}`} required />
               {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
             </div>
-
             <div>
-              <input
-                name="confirmPassword"
-                onChange={handleChange}
-                value={form.confirmPassword}
-                placeholder="Confirm Password"
-                type="password"
-                className={`w-full p-2 border rounded text-[#0D9488] bg-white ${errors.confirmPassword ? 'border-red-500' : ''}`}
-                required
-              />
+              <input name="confirmPassword" onChange={handleChange} value={form.confirmPassword} placeholder="Confirm Password" type="password" className={`w-full p-2 border rounded text-[#0D9488] bg-white ${errors.confirmPassword ? 'border-red-500' : ''}`} required />
               {errors.confirmPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>}
             </div>
 
+            {/* rates */}
             <div>
-              <input
-                name="rates"
-                onChange={handleChange}
-                value={form.rates}
-                placeholder="Hourly Rate (e.g. £15/hr)"
-                className={`w-full p-2 border rounded text-[#0D9488] bg-white ${errors.rates ? 'border-red-500' : ''}`}
-                required
-              />
+              <input name="rates" onChange={handleChange} value={form.rates} placeholder="Hourly Rate (e.g. £22)" className={`w-full p-2 border rounded text-[#0D9488] bg-white ${errors.rates ? 'border-red-500' : ''}`} required />
               {errors.rates && <p className="text-red-500 text-sm mt-1">{errors.rates}</p>}
             </div>
 
+            {/* services */}
             <div className={`p-4 bg-white rounded border shadow-sm ${errors.services ? 'border-red-500' : ''}`}>
               <h2 className="text-lg font-semibold mb-2 text-gray-600">Services You Offer</h2>
               <div className="grid grid-cols-2 gap-2 text-gray-600">
@@ -402,7 +326,6 @@ export default function CleanerRegister() {
                   <span>I have business insurance</span>
                 </label>
 
-                {/* ✅ NEW: DBS checkbox */}
                 <label className="flex items-center gap-2 text-sm">
                   <input
                     type="checkbox"
@@ -416,6 +339,7 @@ export default function CleanerRegister() {
               </div>
             </div>
 
+            {/* availability grid */}
             <div>
               <h2 className="text-lg font-semibold mt-4 mb-2">Set Your Availability</h2>
               <div className="overflow-auto">
@@ -426,18 +350,19 @@ export default function CleanerRegister() {
                       {hour}:00
                     </div>
                   ))}
-                  {days.map(day => (
-                    <React.Fragment key={day}>
-                      <div className="bg-white p-1 text-center font-medium">{day}</div>
+                  {daysShort.map(shortDay => (
+                    <React.Fragment key={shortDay}>
+                      <div className="bg-white p-1 text-center font-medium">{shortDay}</div>
                       {hours.map(hour => {
-                        const key = `${day}-${hour}`;
-                        const active = form.availability[key];
+                        const key = `${shortDay}-${hour}`;
+                        const active = !!form.availability[key];
                         return (
                           <button
                             key={key}
                             type="button"
-                            onClick={() => toggleAvailability(day, hour)}
+                            onClick={() => toggleAvailability(shortDay, hour)}
                             className={`p-1 text-center ${active ? 'bg-green-500' : 'bg-red-300'} text-white`}
+                            title={active ? 'Available' : 'Unavailable'}
                           >
                             {active ? '✓' : '×'}
                           </button>
@@ -447,6 +372,9 @@ export default function CleanerRegister() {
                   ))}
                 </div>
               </div>
+              <p className="text-xs text-gray-600 mt-2">
+                Default is <em>unavailable</em>. Toggle any slot to mark it as available.
+              </p>
             </div>
 
             <label className="flex items-center space-x-2 text-sm mt-4">

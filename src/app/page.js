@@ -11,7 +11,7 @@ const fetcher = (url) =>
   fetch(url, { credentials: 'include' }).then((r) => r.json());
 
 // APIs (public, safe)
-const CLEANERS_API = '/api/public/cleaners';
+const CLEANERS_API = '/api/public-cleaners';
 const PURCHASES_API = (id) => `/api/public/purchases/cleaners/${id}`;
 
 // Hours & days for the mini-grid
