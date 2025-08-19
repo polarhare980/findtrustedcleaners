@@ -5,11 +5,16 @@ import { useRouter } from 'next/navigation';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { secureFetch } from '@/lib/secureFetch';
 
-// Hours / days grid
+// -------------------- Constants (match Profile) --------------------
 const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
-const HOURS = Array.from({ length: 13 }, (_, i) => String(7 + i)); // "7".."19"
+const HOURS = Array.from({ length: 13 }, (_, i) => 7 + i); // 7..19 (numbers like Profile)
 
-// Build fast lookups for overlay states from combined bookings API
+const BOOKED_STATUSES = new Set(['approved','accepted','confirmed','booked']);
+const PENDING_STATUSES = new Set(['pending','pending_approval']);
+
+const hourLabel = (h) => `${String(h).padStart(2, '0')}:00`;
+
+// -------------------- Overlay Builders (from combined API) --------------------
 function buildOverlayMaps(combined = []) {
   const pendingKeyToPurchaseId = new Map(); // `${day}|${hour}` -> purchaseId
   const bookedKeys = new Set();             // `${day}|${hour}`
@@ -22,10 +27,9 @@ function buildOverlayMaps(combined = []) {
     const key = `${day}|${hour}`;
     const status = String(row?.status || '').toLowerCase();
 
-    if (status === 'pending' || status === 'pending_approval') {
-      // For merged purchases we exposed _id as the purchase id
+    if (PENDING_STATUSES.has(status)) {
       pendingKeyToPurchaseId.set(key, String(row?._id || ''));
-    } else if (status === 'accepted' || status === 'booked' || status === 'confirmed' || status === 'approved') {
+    } else if (BOOKED_STATUSES.has(status)) {
       bookedKeys.add(key);
     }
   }
@@ -33,33 +37,49 @@ function buildOverlayMaps(combined = []) {
   return { pendingKeyToPurchaseId, bookedKeys };
 }
 
-// Create a UI availability by overlaying pending/booked on top of base availability
+/**
+ * Compose what we display in the dashboard grid by overlaying:
+ * 1) Booked (blue on old UI, but we’ll style as red like Profile’s “unavailable/booked”)
+ * 2) Pending (yellow)
+ * on top of the base availability.
+ *
+ * IMPORTANT: To truly “match the Profile”, treat base false/'unavailable' as red (booked/unavailable).
+ */
 function composeDisplayAvailability(baseAvailability = {}, overlays) {
   const { pendingKeyToPurchaseId, bookedKeys } = overlays;
   const out = JSON.parse(JSON.stringify(baseAvailability || {}));
+
   for (const day of DAYS) {
     if (!out[day]) out[day] = {};
-    for (const hour of HOURS) {
+    for (const h of HOURS) {
+      const hour = String(h);
       const key = `${day}|${hour}`;
+
+      // Overlay precedence: booked > pending > base
       if (bookedKeys.has(key)) {
         out[day][hour] = { status: 'booked' };
-      } else if (pendingKeyToPurchaseId.has(key)) {
-        out[day][hour] = { status: 'pending', bookingId: pendingKeyToPurchaseId.get(key) };
-      } else {
-        // leave as-is (true / 'unavailable' / undefined)
+        continue;
       }
+      if (pendingKeyToPurchaseId.has(key)) {
+        out[day][hour] = { status: 'pending', bookingId: pendingKeyToPurchaseId.get(key) };
+        continue;
+      }
+
+      // Leave base as-is (true / 'available' / false / 'unavailable' / undefined)
+      // Nothing to do.
     }
   }
   return out;
 }
 
+// -------------------- Component --------------------
 export default function CleanerDashboard() {
   const router = useRouter();
 
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const [me, setMe] = useState(null);                 // logged-in cleaner user doc (auth/me)
+  const [me, setMe] = useState(null);                 // logged-in cleaner doc (auth/me)
   const [formData, setFormData] = useState(null);     // editor state (includes availability)
   const [editMode, setEditMode] = useState(false);
   const [editData, setEditData] = useState({});
@@ -85,9 +105,6 @@ export default function CleanerDashboard() {
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [deleting, setDeleting] = useState(false);
 
-  // Premium extra
-  const [postcodeInput, setPostcodeInput] = useState('');
-
   useEffect(() => setMounted(true), []);
 
   // Load everything
@@ -109,7 +126,7 @@ export default function CleanerDashboard() {
         const cleanerUser = { ...dataMe.user, _id: String(dataMe.user._id || dataMe.user.id) };
         setMe(cleanerUser);
 
-        // Get merged bookings (real + pending purchases)
+        // Get merged bookings (real + pending purchases) — routes unchanged
         const resB = await fetch(`/api/bookings/cleaner/${cleanerUser._id}`, { credentials: 'include' });
         const dataB = await resB.json();
         const merged = dataB?.success ? (dataB.bookings || []) : [];
@@ -136,27 +153,27 @@ export default function CleanerDashboard() {
   }, [router]);
 
   // Toggle base availability (cannot toggle pending or booked)
-  const toggleAvailability = (day, hour) => {
+  const toggleAvailability = (day, hourNumber) => {
+    const hour = String(hourNumber); // store by string keys in object
     const slot = displayAvailability?.[day]?.[hour];
     const status = typeof slot === 'object' ? slot.status : slot;
 
-    if (status === 'pending' || status === 'booked') return; // cannot toggle overlays
+    // Match Profile behaviour: pending or booked (or base false/'unavailable') are not togglable
+    if (status === 'pending' || status === 'booked' || status === false || status === 'unavailable') return;
 
     setFormData(prev => {
-      const next = { ...(prev.availability || {}) };
-      if (!next[day]) next[day] = {};
-
-      // Only toggle true/undefined/'unavailable'
-      const current = next[day][hour];
+      const nextAvail = { ...(prev.availability || {}) };
+      if (!nextAvail[day]) nextAvail[day] = {};
+      const current = nextAvail[day][hour];
       const currentVal = typeof current === 'object' ? current?.status : current;
 
-      if (currentVal === true) {
-        next[day][hour] = 'unavailable';
+      if (currentVal === true || currentVal === 'available') {
+        nextAvail[day][hour] = 'unavailable';
       } else {
-        next[day][hour] = true;
+        nextAvail[day][hour] = true;
       }
 
-      return { ...prev, availability: next };
+      return { ...prev, availability: nextAvail };
     });
 
     setAvailabilityChanged(true);
@@ -164,7 +181,8 @@ export default function CleanerDashboard() {
   };
 
   // Accept pending (uses purchaseId from overlay map)
-  const handleAccept = async (day, hour) => {
+  const handleAccept = async (day, hourNumber) => {
+    const hour = String(hourNumber);
     const key = `${day}|${hour}`;
     const purchaseId = overlays.pendingKeyToPurchaseId.get(key);
     if (!purchaseId) {
@@ -188,7 +206,8 @@ export default function CleanerDashboard() {
   };
 
   // Decline pending
-  const handleDecline = async (day, hour) => {
+  const handleDecline = async (day, hourNumber) => {
+    const hour = String(hourNumber);
     const key = `${day}|${hour}`;
     const purchaseId = overlays.pendingKeyToPurchaseId.get(key);
     if (!purchaseId) {
@@ -470,7 +489,7 @@ export default function CleanerDashboard() {
           </div>
         )}
 
-        {/* Profile info */}
+        {/* Profile info (unchanged UI, minor plumbing stays) */}
         <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl mb-6 p-6">
           <h2 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent mb-4">
             👤 Profile Information
@@ -496,63 +515,54 @@ export default function CleanerDashboard() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Real Name */}
             <Field label="Real Name" editMode={editMode}>
               {editMode ? (
                 <input className="w-full p-3 bg-white/80 border rounded-lg" value={editData.realName || ''} onChange={(e) => handleInputChange('realName', e.target.value)} />
               ) : <p className="text-gray-800 font-medium">{formData.realName || 'Not set'}</p>}
             </Field>
 
-            {/* Google rating */}
             <Field label="⭐ Google Rating (0–5)" editMode={editMode}>
               {editMode ? (
                 <input type="number" step="0.1" min="0" max="5" className="w-full p-3 bg-white/80 border rounded-lg" value={editData.googleReviewRating || ''} onChange={(e) => handleInputChange('googleReviewRating', parseFloat(e.target.value))} />
               ) : <p className="text-gray-800 font-medium">{formData.googleReviewRating ? `${formData.googleReviewRating} / 5` : 'Not set'}</p>}
             </Field>
 
-            {/* Review count */}
             <Field label="🧮 Review Count" editMode={editMode}>
               {editMode ? (
                 <input type="number" min="0" className="w-full p-3 bg-white/80 border rounded-lg" value={editData.googleReviewCount || ''} onChange={(e) => handleInputChange('googleReviewCount', parseInt(e.target.value))} />
               ) : <p className="text-gray-800 font-medium">{formData.googleReviewCount ? `${formData.googleReviewCount} reviews` : 'Not set'}</p>}
             </Field>
 
-            {/* Google URL */}
             <Field wide label="🔗 Google Review Link" editMode={editMode}>
               {editMode ? (
                 <input type="url" className="w-full p-3 bg-white/80 border rounded-lg" value={editData.googleReviewUrl || ''} onChange={(e) => handleInputChange('googleReviewUrl', e.target.value)} placeholder="https://www.google.com/search?q=your+business" />
               ) : <p className="text-blue-600 underline break-words">{formData.googleReviewUrl || 'Not set'}</p>}
             </Field>
 
-            {/* Company */}
             <Field label="Company Name" editMode={editMode}>
               {editMode ? (
                 <input className="w-full p-3 bg-white/80 border rounded-lg" value={editData.companyName || ''} onChange={(e) => handleInputChange('companyName', e.target.value)} />
               ) : <p className="text-gray-800 font-medium">{formData.companyName || 'Not set'}</p>}
             </Field>
 
-            {/* Email */}
             <Field label="Email" editMode={editMode}>
               {editMode ? (
-                <input type="email" className="w-full p-3 bg-white/80 border rounded-lg" value={editData.email || ''} onChange={(e) => handleInputChange('email', e.target.value)} />
+                <input type="email" className="w-full p-3 bg-white/80 border rounded-lg" value={editData.email || ''} onChange={(e) => handleInputChange('email', e.target.value))} />
               ) : <p className="text-gray-800 font-medium">{formData.email || 'Not set'}</p>}
             </Field>
 
-            {/* Phone */}
             <Field label="Phone" editMode={editMode}>
               {editMode ? (
                 <input type="tel" className="w-full p-3 bg-white/80 border rounded-lg" value={editData.phone || ''} onChange={(e) => handleInputChange('phone', e.target.value)} />
               ) : <p className="text-gray-800 font-medium">{formData.phone || 'Not set'}</p>}
             </Field>
 
-            {/* Rates */}
             <Field label="Hourly Rate (£)" editMode={editMode}>
               {editMode ? (
                 <input type="number" className="w-full p-3 bg-white/80 border rounded-lg" value={editData.rates || ''} onChange={(e) => handleInputChange('rates', e.target.value)} />
               ) : <p className="text-gray-800 font-medium">£{formData.rates ?? '0'}</p>}
             </Field>
 
-            {/* Insurance */}
             <Field label="Business Insurance" editMode={editMode}>
               {editMode ? (
                 <select className="w-full p-3 bg-white/80 border rounded-lg" value={editData.businessInsurance ? 'true' : 'false'} onChange={(e) => handleInputChange('businessInsurance', e.target.value === 'true')}>
@@ -562,7 +572,6 @@ export default function CleanerDashboard() {
               ) : <p className="text-gray-800 font-medium">{formData.businessInsurance ? 'Yes' : 'No'}</p>}
             </Field>
 
-            {/* DBS */}
             <Field label="DBS Checked" editMode={editMode}>
               {editMode ? (
                 <select className="w-full p-3 bg-white/80 border rounded-lg" value={editData.dbsChecked ? 'true' : 'false'} onChange={(e) => handleInputChange('dbsChecked', e.target.value === 'true')}>
@@ -572,7 +581,6 @@ export default function CleanerDashboard() {
               ) : <p className="text-gray-800 font-medium">{formData.dbsChecked ? 'Yes' : 'No'}</p>}
             </Field>
 
-            {/* Services */}
             <Field wide label="Services Offered" editMode={editMode}>
               {editMode ? (
                 <input
@@ -650,28 +658,12 @@ export default function CleanerDashboard() {
                     <input className="w-full p-3 bg-white/80 border rounded-lg" placeholder="County" value={editData.address?.county || ''} onChange={(e) => handleInputChange('address.county', e.target.value)} />
                     <input className="w-full p-3 bg-white/80 border rounded-lg" placeholder="Postcode" value={editData.address?.postcode || ''} onChange={(e) => handleInputChange('address.postcode', e.target.value)} />
                   </div>
-
-                  {formData.isPremium && (
-                    <div className="pt-4">
-                      <label className="text-sm font-medium text-gray-600">🗺️ Additional Postcodes (Premium)</label>
-                      <input
-                        className="w-full mt-2 px-4 py-2 border rounded-lg"
-                        value={postcodeInput}
-                        onChange={(e) => setPostcodeInput(e.target.value)}
-                        placeholder="e.g. BN1, RH10, GU2"
-                      />
-                      <p className="text-xs text-gray-500 italic mt-1">Separate with commas.</p>
-                    </div>
-                  )}
                 </>
               ) : (
                 <p className="text-gray-800 font-medium">
                   {formData.address
                     ? `${formData.address.houseNameNumber || ''} ${formData.address.street || ''}, ${formData.address.county || ''} ${formData.address.postcode || ''}`.trim()
                     : 'Address not set'}
-                  {formData.isPremium && formData.additionalPostcodes?.length > 0 && (
-                    <span className="block text-sm text-gray-600 mt-1">Covers: {formData.additionalPostcodes.join(', ')}</span>
-                  )}
                 </p>
               )}
             </Field>
@@ -696,7 +688,7 @@ export default function CleanerDashboard() {
           </div>
         </div>
 
-        {/* Availability grid */}
+        {/* Availability grid — MATCH PROFILE COLOURS/LOGIC */}
         <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl mb-6 p-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
             <div className="flex items-center gap-3">
@@ -728,61 +720,53 @@ export default function CleanerDashboard() {
                 ))}
               </div>
 
-              {HOURS.map((hour) => (
-                <div key={hour} className="grid grid-cols-8 gap-2 mb-2">
-                  <div className="font-medium text-gray-700 text-center py-3 bg-white/40 rounded-lg">{hour}:00</div>
+              {HOURS.map((h) => (
+                <div key={h} className="grid grid-cols-8 gap-2 mb-2">
+                  <div className="font-medium text-gray-700 text-center py-3 bg-white/40 rounded-lg">{hourLabel(h)}</div>
                   {DAYS.map((day) => {
-                    const slot = displayAvailability?.[day]?.[hour];
-                    const status = typeof slot === 'object' ? slot.status : slot;
+                    const slot = displayAvailability?.[day]?.[String(h)];
+                    const statusVal = typeof slot === 'object' ? slot?.status : slot;
 
-                    const isAvailable = status === true;
-                    const isUnavailable = status === 'unavailable';
-                    const isPending = status === 'pending' || status === 'pending_approval';
-                    const isBooked = status === 'booked';
+                    const isAvailable = statusVal === true || statusVal === 'available';
+                    const isPending = statusVal === 'pending' || statusVal === 'pending_approval';
+                    const isBooked = statusVal === 'booked' || statusVal === false || statusVal === 'unavailable';
 
                     return (
-                      <div key={`${day}-${hour}`} className="relative">
+                      <div key={`${day}-${h}`} className="relative">
                         <button
-                          onClick={() => toggleAvailability(day, hour)}
+                          onClick={() => toggleAvailability(day, h)}
                           disabled={isPending || isBooked}
                           className={`w-full h-12 rounded-lg font-medium text-sm transition-all border-2 ${
                             isAvailable
-                              ? 'bg-gradient-to-r from-green-500 to-green-600 text-white border-green-400'
-                              : isUnavailable
-                              ? 'bg-gradient-to-r from-red-500 to-red-600 text-white border-red-400'
+                              ? 'bg-green-100 text-green-800 border-green-300'
                               : isPending
-                              ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white border-amber-400 cursor-not-allowed'
+                              ? 'bg-yellow-100 text-yellow-800 border-yellow-300 cursor-not-allowed'
                               : isBooked
-                              ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white border-blue-400 cursor-not-allowed'
-                              : 'bg-white/40 text-gray-600 border-gray-300'
+                              ? 'bg-red-100 text-red-800 border-red-300 cursor-not-allowed'
+                              : 'bg-gray-100 text-gray-600 border-gray-300'
                           }`}
                           title={
-                            isPending ? 'Pending approval' :
-                            isBooked ? 'Booked' :
-                            isAvailable ? 'Click to mark unavailable' :
-                            isUnavailable ? 'Click to mark available' :
-                            'Click to toggle'
+                            isPending ? 'Pending request'
+                            : isBooked ? 'Unavailable'
+                            : isAvailable ? 'Click to mark unavailable'
+                            : 'Click to mark available'
                           }
                         >
-                          {isAvailable && '✓'}
-                          {isUnavailable && '✗'}
-                          {isPending && '⏳'}
-                          {isBooked && '📅'}
-                          {!status && '○'}
+                          {isAvailable ? '•' : isPending ? '⏳' : isBooked ? '✗' : '○'}
                         </button>
 
                         {isPending && (
                           <div className="absolute top-14 left-0 right-0 z-10 bg-white/95 backdrop-blur-sm border border-white/20 rounded-lg p-2 shadow-lg">
                             <div className="flex gap-1">
                               <button
-                                onClick={() => handleAccept(day, hour)}
+                                onClick={() => handleAccept(day, h)}
                                 className="flex-1 px-2 py-1 bg-gradient-to-r from-green-500 to-green-600 text-white rounded text-xs font-medium"
                                 title="Accept & capture"
                               >
                                 ✓
                               </button>
                               <button
-                                onClick={() => handleDecline(day, hour)}
+                                onClick={() => handleDecline(day, h)}
                                 className="flex-1 px-2 py-1 bg-gradient-to-r from-red-500 to-red-600 text-white rounded text-xs font-medium"
                                 title="Decline & free"
                               >
@@ -799,15 +783,14 @@ export default function CleanerDashboard() {
             </div>
           </div>
 
-          {/* Legend */}
+          {/* Legend — mirrors Profile meanings */}
           <div className="mt-6 p-4 bg-white/40 rounded-lg">
             <h3 className="font-semibold text-gray-700 mb-3">Legend:</h3>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
-              <Legend dotClass="from-green-500 to-green-600 border-green-400" label="Available" />
-              <Legend dotClass="from-red-500 to-red-600 border-red-400" label="Unavailable" />
-              <Legend dotClass="from-amber-500 to-amber-600 border-amber-400" label="Pending" />
-              <Legend dotClass="from-blue-500 to-blue-600 border-blue-400" label="Booked" />
-              <Legend dotClass="bg-white/40 border-gray-300" label="Not set" custom />
+              <Legend swatchClass="bg-green-100 border-green-300" label="Available" />
+              <Legend swatchClass="bg-yellow-100 border-yellow-300" label="Pending" />
+              <Legend swatchClass="bg-red-100 border-red-300" label="Unavailable / Booked" />
+              <Legend swatchClass="bg-gray-100 border-gray-300" label="Not set" />
             </div>
           </div>
         </div>
@@ -878,10 +861,10 @@ function StatCard({ icon, title, value }) {
   );
 }
 
-function Legend({ dotClass, label, custom = false }) {
+function Legend({ swatchClass, label }) {
   return (
     <div className="flex items-center gap-2">
-      <div className={`w-4 h-4 rounded border-2 ${custom ? dotClass : `bg-gradient-to-r ${dotClass}`}`}></div>
+      <div className={`w-4 h-4 rounded border ${swatchClass}`}></div>
       <span className="text-gray-700">{label}</span>
     </div>
   );
