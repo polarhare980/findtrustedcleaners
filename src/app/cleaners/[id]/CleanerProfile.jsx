@@ -129,14 +129,12 @@ export default function CleanerProfilePage() {
     return (cleaner.servicesDetailed || []).find((s) => s.key === selectedServiceKey) || null;
   }, [cleaner, selectedServiceKey]);
 
-  const increment = useMemo(() => {
-    return service?.incrementMins ?? 60;
-  }, [service]);
-
+  // Keep increment/min/max for internal span calc (not shown to client)
+  const increment = useMemo(() => service?.incrementMins ?? 60, [service]);
   const minDuration = useMemo(() => service?.minDurationMins ?? 60, [service]);
   const maxDuration = useMemo(() => service?.maxDurationMins ?? 240, [service]);
 
-  // Span required for this booking config
+  // Span required for this booking config (buffers included but hidden in UI)
   const span = useMemo(
     () => requiredHourSpan({ durationMins, bufferBeforeMins, bufferAfterMins }),
     [durationMins, bufferBeforeMins, bufferAfterMins]
@@ -151,7 +149,7 @@ export default function CleanerProfilePage() {
   /* ---------------------------- Contact Unlock ---------------------------- */
 
   useEffect(() => {
-    if (!cleaner) return;
+    if (!cleaner?._id) return;
 
     (async () => {
       setUnlockLoading(true);
@@ -348,60 +346,62 @@ export default function CleanerProfilePage() {
           )}
         </section>
 
-        {/* Services Detailed (selector – READ-ONLY details) */}
+        {/* Services (buttons) – READ-ONLY for clients */}
         <section className="bg-white/25 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-xl">
           <h2 className="text-xl font-bold text-teal-800 mb-4">🧹 Services &amp; Duration</h2>
 
           {Array.isArray(cleaner.servicesDetailed) && cleaner.servicesDetailed.filter(s => s.active !== false).length > 0 ? (
             <div className="space-y-4">
+              {/* Service buttons */}
               <div className="space-y-2">
-                <label className="text-sm text-gray-700">Service</label>
-                <select
-                  className="modern-select w-full"
-                  value={selectedServiceKey}
-                  onChange={(e) => {
-                    const nextKey = e.target.value;
-                    setSelectedServiceKey(nextKey);
-                    const svc = (cleaner.servicesDetailed || []).find(s => s.key === nextKey);
-                    if (svc) {
-                      // 🔒 Read-only: always lock to service defaults
-                      setDurationMins(svc.defaultDurationMins ?? 60);
-                      setBufferBeforeMins(svc.bufferBeforeMins ?? 0);
-                      setBufferAfterMins(svc.bufferAfterMins ?? 0);
-                    }
-                  }}
-                >
+                <div className="text-sm text-gray-700">Choose a service</div>
+                <div className="flex flex-wrap gap-2">
                   {(cleaner.servicesDetailed || [])
                     .filter((s) => s.active !== false)
-                    .map((s) => (
-                      <option key={s.key} value={s.key}>
-                        {s.name || s.key} ({s.defaultDurationMins ?? 60} mins)
-                      </option>
-                    ))}
-                </select>
-                <p className="text-xs text-gray-600">
-                  Increment: {service?.incrementMins ?? 60} mins • Allowed range: {minDuration}–{maxDuration} mins
-                </p>
+                    .map((s) => {
+                      const isSelected = selectedServiceKey === s.key;
+                      return (
+                        <button
+                          key={s.key}
+                          type="button"
+                          onClick={() => {
+                            setSelectedServiceKey(s.key);
+                            // 🔒 Lock to cleaner-defined defaults
+                            setDurationMins(s.defaultDurationMins ?? 60);
+                            setBufferBeforeMins(s.bufferBeforeMins ?? 0);
+                            setBufferAfterMins(s.bufferAfterMins ?? 0);
+                          }}
+                          className={[
+                            "px-4 py-2 rounded-full border transition select-none",
+                            isSelected
+                              ? "bg-teal-700 text-white border-teal-700 shadow"
+                              : "bg-white/80 text-teal-800 border-teal-300 hover:bg-teal-50"
+                          ].join(" ")}
+                          aria-pressed={isSelected}
+                        >
+                          {s.name || s.key}
+                        </button>
+                      );
+                    })}
+                </div>
               </div>
 
-              {/* Read-only info panel */}
+              {/* Read-only duration only (hide buffers, increments, ranges) */}
               {service && (
-                <div className="grid md:grid-cols-4 gap-3 bg-white/50 rounded-xl border border-white/30 p-3 text-sm">
+                <div className="grid sm:grid-cols-3 gap-3 bg-white/50 rounded-xl border border-white/30 p-3 text-sm">
+                  <div>
+                    <div className="text-gray-600">Selected</div>
+                    <div className="font-semibold">{service.name || service.key}</div>
+                  </div>
                   <div>
                     <div className="text-gray-600">Duration</div>
                     <div className="font-semibold">{durationMins} mins</div>
                   </div>
                   <div>
-                    <div className="text-gray-600">Buffer Before</div>
-                    <div className="font-semibold">{bufferBeforeMins} mins</div>
-                  </div>
-                  <div>
-                    <div className="text-gray-600">Buffer After</div>
-                    <div className="font-semibold">{bufferAfterMins} mins</div>
-                  </div>
-                  <div>
                     <div className="text-gray-600">Required Span</div>
-                    <div className="font-semibold">{span} hour{span > 1 ? 's' : ''}</div>
+                    <div className="font-semibold">
+                      {span} hour{span > 1 ? 's' : ''}
+                    </div>
                   </div>
                 </div>
               )}
