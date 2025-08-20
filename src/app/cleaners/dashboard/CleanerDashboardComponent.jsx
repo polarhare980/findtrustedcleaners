@@ -131,13 +131,16 @@ export default function CleanerDashboard() {
   const [combined, setCombined] = useState([]);       // bookings + pending purchases
   const overlays = useMemo(() => buildOverlayMaps(combined), [combined]);
 
-  // NEW: Client-side copy of overrides we edit before saving
+  // Client-side copy of overrides we edit before saving
   const [editOverrides, setEditOverrides] = useState({});
 
   // Week selector state
   const [weekOffset, setWeekOffset] = useState(0); // 0=this week
   const mondayThisWeek = useMemo(() => getMonday(new Date()), []);
   const mondaySelected = useMemo(() => addWeeks(mondayThisWeek, weekOffset), [mondayThisWeek, weekOffset]);
+
+  // NEW: when true, even week 0 writes overrides (doesn't touch base template)
+  const [editThisWeekOnly, setEditThisWeekOnly] = useState(true);
 
   const displayAvailability = useMemo(
     () => composeWeekView(formData?.availability || {}, editOverrides || {}, mondaySelected, overlays),
@@ -213,11 +216,14 @@ export default function CleanerDashboard() {
     const slot = displayAvailability?.[day]?.[hour];
     const status = typeof slot === 'object' ? slot.status : slot;
 
-    // Pending/booked cannot be toggled
+    // Pending/booked overlays cannot be toggled
     if (status === 'pending' || status === 'booked') return;
 
-    if (weekOffset === 0) {
-      // Week 0 => modify base weekly pattern
+    // Decide if we write base weekly pattern or date-specific override
+    const useOverrides = (weekOffset !== 0) || editThisWeekOnly;
+
+    if (!useOverrides) {
+      // Modify base weekly pattern
       setFormData(prev => {
         const nextAvail = { ...(prev.availability || {}) };
         if (!nextAvail[day]) nextAvail[day] = {};
@@ -232,7 +238,7 @@ export default function CleanerDashboard() {
         return { ...prev, availability: nextAvail };
       });
     } else {
-      // Future week => write override for that ISO date
+      // Write a date-specific override for the selected week (including week 0 when toggle is on)
       const isoByDay = getWeekISODates(mondaySelected);
       const dayIdx = DAYS.indexOf(day);
       const isoDate = isoByDay[dayIdx];
@@ -323,7 +329,9 @@ export default function CleanerDashboard() {
     setSaving(true);
     setMessage('');
     try {
-      if (weekOffset === 0) {
+      const useOverrides = (weekOffset !== 0) || editThisWeekOnly;
+
+      if (!useOverrides) {
         // Save base weekly pattern using existing endpoint
         const res = await fetch(`/api/bookings/cleaner/${me._id}`, {
           method: 'PUT',
@@ -1026,7 +1034,7 @@ export default function CleanerDashboard() {
           </div>
         )}
 
-        {/* Availability grid — now honours overrides */}
+        {/* Availability grid — honours overrides; week-0 override toggle */}
         <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl mb-6 p-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-4">
             <div className="flex items-center gap-3">
@@ -1063,6 +1071,17 @@ export default function CleanerDashboard() {
                 ▶
               </button>
 
+              {formData?.isPremium && (
+                <label className="ml-3 flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={editThisWeekOnly}
+                    onChange={(e) => setEditThisWeekOnly(e.target.checked)}
+                  />
+                  Edit only this week
+                </label>
+              )}
+
               {availabilityChanged && (
                 <button onClick={handleSave} disabled={saving} className="ml-3 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg disabled:opacity-50">
                   {saving ? '⏳ Saving...' : '💾 Save Changes'}
@@ -1094,32 +1113,36 @@ export default function CleanerDashboard() {
                     const slot = displayAvailability?.[day]?.[String(h)];
                     const statusVal = typeof slot === 'object' ? slot?.status : slot;
 
-                    const isAvailable = statusVal === true || statusVal === 'available';
+                    // New: separate overlay-booked vs base-unavailable
                     const isPending = statusVal === 'pending' || statusVal === 'pending_approval';
-                    const isBooked = statusVal === 'booked' || statusVal === false || statusVal === 'unavailable';
+                    const isBookedOverlay = statusVal === 'booked';
+                    const isUnavailable = statusVal === false || statusVal === 'unavailable';
+                    const isAvailable = statusVal === true || statusVal === 'available';
 
                     return (
                       <div key={`${day}-${h}`} className="relative">
                         <button
                           onClick={() => toggleAvailability(day, h)}
-                          disabled={isPending || isBooked}
+                          disabled={isPending || isBookedOverlay}
                           className={`w-full h-12 rounded-lg font-medium text-sm transition-all border-2 ${
-                            isAvailable
-                              ? 'bg-green-100 text-green-800 border-green-300'
+                            isBookedOverlay
+                              ? 'bg-red-100 text-red-800 border-red-300 cursor-not-allowed'   // overlay booked
                               : isPending
-                              ? 'bg-yellow-100 text-yellow-800 border-yellow-300 cursor-not-allowed'
-                              : isBooked
-                              ? 'bg-red-100 text-red-800 border-red-300 cursor-not-allowed'
-                              : 'bg-gray-100 text-gray-600 border-gray-300'
+                              ? 'bg-yellow-100 text-yellow-800 border-yellow-300 cursor-not-allowed' // overlay pending
+                              : isAvailable
+                              ? 'bg-green-100 text-green-800 border-green-300'                 // editable
+                              : isUnavailable
+                              ? 'bg-gray-100 text-gray-600 border-gray-300'                    // editable
+                              : 'bg-gray-100 text-gray-600 border-gray-300'                    // not set
                           }`}
                           title={
                             isPending ? 'Pending request'
-                            : isBooked ? 'Unavailable'
+                            : isBookedOverlay ? 'Booked'
                             : isAvailable ? 'Click to mark unavailable'
                             : 'Click to mark available'
                           }
                         >
-                          {isAvailable ? '•' : isPending ? '⏳' : isBooked ? '✗' : '○'}
+                          {isAvailable ? '•' : isPending ? '⏳' : isBookedOverlay ? '✗' : '○'}
                         </button>
 
                         {isPending && (
@@ -1156,8 +1179,8 @@ export default function CleanerDashboard() {
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
               <Legend swatchClass="bg-green-100 border-green-300" label="Available" />
               <Legend swatchClass="bg-yellow-100 border-yellow-300" label="Pending" />
-              <Legend swatchClass="bg-red-100 border-red-300" label="Unavailable / Booked" />
-              <Legend swatchClass="bg-gray-100 border-gray-300" label="Not set" />
+              <Legend swatchClass="bg-red-100 border-red-300" label="Booked (locked)" />
+              <Legend swatchClass="bg-gray-100 border-gray-300" label="Unavailable / Not set" />
             </div>
           </div>
         </div>
