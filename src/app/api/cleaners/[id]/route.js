@@ -1,8 +1,11 @@
+// File: src/app/api/cleaners/[id]/route.js
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db';
 import { protectApiRoute } from '@/lib/auth';
 import Cleaner from '@/models/Cleaner';
 import Purchase from '@/models/Purchase';
+
+/* ------------------------------ Utilities ------------------------------ */
 
 // 🧼 Contact Info Scrubber (keeps bio clean for public profiles)
 function containsContactInfo(text, cleaner) {
@@ -45,6 +48,32 @@ function sanitizePhotos(photos) {
     .filter(Boolean);
 }
 
+/** Ensure YYYY-MM-DD */
+function isISODate(s) {
+  return typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s);
+}
+
+/** Only allow hour keys 7..19, values true | false | 'unavailable' */
+function sanitizeAvailabilityOverrides(input) {
+  if (!input || typeof input !== 'object') return undefined;
+  const out = {};
+  for (const [iso, dayMap] of Object.entries(input)) {
+    if (!isISODate(iso)) continue;
+    if (!dayMap || typeof dayMap !== 'object') continue;
+    const cleaned = {};
+    for (const [hour, val] of Object.entries(dayMap)) {
+      const hNum = Number(hour);
+      if (!Number.isInteger(hNum) || hNum < 7 || hNum > 19) continue;
+      if (val === true || val === false || val === 'unavailable') {
+        cleaned[String(hNum)] = val;
+      }
+    }
+    if (Object.keys(cleaned).length > 0) out[iso] = cleaned;
+  }
+  return Object.keys(out).length > 0 ? out : {};
+}
+
+/* --------------------------------- PUT ---------------------------------- */
 /**
  * PUT /api/cleaners/[id]
  * Update cleaner fields (whitelisted). Ensures booleans are saved correctly.
@@ -106,8 +135,12 @@ export async function PUT(req, { params }) {
     // ✅ DBS boolean
     if (body.dbsChecked !== undefined) updateFields.dbsChecked = !!body.dbsChecked;
 
-    // ✅ Premium toggle
+    // ✅ Premium toggle + dial
     if (body.isPremium !== undefined) updateFields.isPremium = !!body.isPremium;
+    if (body.premiumWeeksAhead !== undefined) {
+      const n = Number(body.premiumWeeksAhead);
+      if (Number.isFinite(n) && n >= 0 && n <= 12) updateFields.premiumWeeksAhead = Math.floor(n);
+    }
 
     // ✅ Structured services with durations
     if (body.servicesDetailed !== undefined) {
@@ -132,6 +165,13 @@ export async function PUT(req, { params }) {
       updateFields.photos = sanitizePhotos(body.photos);
     }
 
+    // ✅ NEW: Date-specific overrides (week independence)
+    if (body.availabilityOverrides !== undefined) {
+      const cleaned = sanitizeAvailabilityOverrides(body.availabilityOverrides);
+      // Store as plain object; Mongoose Map will accept and cast
+      updateFields.availabilityOverrides = cleaned || {};
+    }
+
     const updated = await Cleaner.findByIdAndUpdate(id, updateFields, { new: true });
     return NextResponse.json({ success: true, cleaner: updated });
   } catch (err) {
@@ -140,10 +180,12 @@ export async function PUT(req, { params }) {
   }
 }
 
+/* ---------------------------------- GET --------------------------------- */
 /**
  * GET /api/cleaners/[id]
  * Public profile fetch. Includes flags needed for badges.
  * If the viewer is a client who has purchased, reveal contact details.
+ * Also returns availabilityOverrides so the client UI can compose per-week calendars.
  */
 export async function GET(req, { params }) {
   await connectToDatabase();
@@ -155,7 +197,7 @@ export async function GET(req, { params }) {
       return NextResponse.json({ success: false, message: 'Cleaner not found' }, { status: 404 });
     }
 
-    // Public shape (include flags for badges)
+    // Public shape (include flags for badges + overrides for week composition)
     const publicData = {
       _id: cleaner._id,
       realName: cleaner.realName,
@@ -165,12 +207,14 @@ export async function GET(req, { params }) {
       services: cleaner.services,
       servicesDetailed: cleaner.servicesDetailed || [],
       availability: cleaner.availability || {},
+      availabilityOverrides: cleaner.availabilityOverrides || {}, // 👈 important
       image: cleaner.image || '/default-avatar.png',
       imageHasText: !!cleaner.imageHasText,
       bio: cleaner.bio || '',
       businessInsurance: !!cleaner.businessInsurance,
       dbsChecked: !!cleaner.dbsChecked,
       isPremium: !!cleaner.isPremium,
+      premiumWeeksAhead: typeof cleaner.premiumWeeksAhead === 'number' ? cleaner.premiumWeeksAhead : 3,
       googleReviewUrl: cleaner.googleReviewUrl || null,
       googleReviewRating: cleaner.googleReviewRating || null,
       googleReviewCount: cleaner.googleReviewCount || 0,

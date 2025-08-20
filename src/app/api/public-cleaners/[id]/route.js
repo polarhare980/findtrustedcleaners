@@ -1,3 +1,4 @@
+// File: src/app/api/public-cleaners/[id]/route.js
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/dbConnect';
 import Cleaner from '@/models/Cleaner';
@@ -23,14 +24,16 @@ export async function GET(_req, { params }) {
     imageHasText: 1,
     photos: 1,
     isPremium: 1,
+    premiumWeeksAhead: 1,     // 👈 include how far ahead premium can set
     businessInsurance: 1,
     dbsChecked: 1,
     rates: 1,
     bio: 1,
-    availability: 1,
+    availability: 1,          // base weekly pattern
+    availabilityOverrides: 1, // 👈 include date-specific overrides
     services: 1,
     servicesDetailed: 1,
-    address: 1,            // includes postcode
+    address: 1,               // includes postcode
     additionalPostcodes: 1,
     googleReviewUrl: 1,
     googleReviewRating: 1,
@@ -57,11 +60,17 @@ export async function GET(_req, { params }) {
           }))
         : [],
       isPremium: !!c.isPremium,
+      premiumWeeksAhead: typeof c.premiumWeeksAhead === 'number' ? c.premiumWeeksAhead : 3, // default 3 (= +3 weeks -> 4 total)
       businessInsurance: !!c.businessInsurance,
       dbsChecked: !!c.dbsChecked,
       rates: typeof c.rates === 'number' ? c.rates : null,
       bio: typeof c.bio === 'string' ? c.bio : '',
+
+      // Base weekly pattern (Mon..Sun -> hour "7".."19")
       availability: c.availability || {},
+
+      // Date-specific overrides (YYYY-MM-DD -> { "7": true/false/'unavailable', ... })
+      availabilityOverrides: normalizeOverrides(c.availabilityOverrides),
 
       // Simple tags (keep as-is for filters)
       services: Array.isArray(c.services) ? c.services : [],
@@ -123,4 +132,25 @@ function optNum(v) {
   if (v === '' || v === null || typeof v === 'undefined') return undefined;
   const n = Number(v);
   return Number.isFinite(n) ? n : undefined;
+}
+
+function normalizeOverrides(overrides) {
+  if (!overrides) return {};
+  // In lean() a Mongoose Map is already a plain object; just ensure it’s JSON-safe
+  const out = {};
+  for (const iso in overrides) {
+    if (!Object.prototype.hasOwnProperty.call(overrides, iso)) continue;
+    const dayMap = overrides[iso] || {};
+    if (!dayMap || typeof dayMap !== 'object') continue;
+    const cleaned = {};
+    for (const hour in dayMap) {
+      if (!Object.prototype.hasOwnProperty.call(dayMap, hour)) continue;
+      const v = dayMap[hour];
+      if (v === true || v === false || v === 'unavailable') {
+        cleaned[String(Number(hour))] = v; // coerce hour keys to "7".."19"
+      }
+    }
+    if (Object.keys(cleaned).length > 0) out[iso] = cleaned;
+  }
+  return out;
 }
