@@ -38,6 +38,82 @@ function labelForHour(h) {
   return `${hh}:00`;
 }
 
+/* -------------------------- Date / Week utilities ------------------------- */
+
+function getMonday(d = new Date()) {
+  const date = new Date(d);
+  const day = date.getDay(); // 0=Sun..6=Sat
+  const diff = (day === 0 ? -6 : 1) - day; // shift to Monday
+  date.setDate(date.getDate() + diff);
+  date.setHours(0,0,0,0);
+  return date;
+}
+function addDays(date, n) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + n);
+  return d;
+}
+function addWeeks(date, w) {
+  return addDays(date, w * 7);
+}
+function fmtShort(d) {
+  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }); // e.g., 19 Aug
+}
+function fmtRangeLabel(monday) {
+  const start = fmtShort(monday);
+  const end = fmtShort(addDays(monday, 6));
+  return `${start} – ${end}`;
+}
+function toISODate(d) {
+  const z = new Date(d);
+  z.setHours(0,0,0,0);
+  return z.toISOString().slice(0,10); // YYYY-MM-DD
+}
+function getWeekISODates(mondayDate) {
+  return Array.from({ length: 7 }, (_, i) => toISODate(addDays(mondayDate, i)));
+}
+
+/**
+ * Compose a week view from:
+ * - baseWeekly (Mon..Sun, hour->bool/'unavailable'/status objects)
+ * - overridesByISO: { "YYYY-MM-DD": { "7": true|false|'unavailable', ... } }
+ * Note: any existing "pending/booked" statuses already baked into baseWeekly will be preserved.
+ */
+function composeWeekView(baseWeekly = {}, overridesByISO = {}, mondayDate) {
+  const weekISO = getWeekISODates(mondayDate);
+  const out = {};
+
+  DAYS.forEach((dayName, idx) => {
+    const iso = weekISO[idx];
+    const baseDay = baseWeekly?.[dayName] || {};
+    const overrideDay = overridesByISO?.[iso] || {};
+    out[dayName] = {};
+
+    HOURS.forEach((h) => {
+      const hour = String(h);
+
+      // if base has an overlay object (e.g., {status:'pending'|'booked'}) keep that
+      const baseVal = baseDay?.[hour];
+      if (baseVal && typeof baseVal === 'object' && baseVal.status) {
+        out[dayName][hour] = baseVal;
+        return;
+      }
+
+      // start with base primitive value (true|false|'unavailable'|undefined)
+      let val = baseVal;
+
+      // apply override if present (only primitives stored as overrides)
+      if (Object.prototype.hasOwnProperty.call(overrideDay, hour)) {
+        val = overrideDay[hour];
+      }
+
+      out[dayName][hour] = val;
+    });
+  });
+
+  return out;
+}
+
 /* ------------------------------- Main Page ------------------------------- */
 
 export default function CleanerProfilePage() {
@@ -64,6 +140,11 @@ export default function CleanerProfilePage() {
   const [creating, setCreating] = useState(false);
   const [toast, setToast] = useState('');
 
+  // week selector
+  const [weekOffset, setWeekOffset] = useState(0); // 0 = this week
+  const mondayThisWeek = useMemo(() => getMonday(new Date()), []);
+  const mondaySelected = useMemo(() => addWeeks(mondayThisWeek, weekOffset), [mondayThisWeek, weekOffset]);
+
   useEffect(() => setMounted(true), []);
 
   /* ------------------------------ Data Fetch ------------------------------ */
@@ -85,13 +166,14 @@ export default function CleanerProfilePage() {
         }
         let c = data.cleaner;
 
-        // 2) purchases feed -> inject pending/accepted into grid
+        // 2) purchases feed -> inject pending/accepted into base weekly grid
         try {
           const pRes = await fetch(PUBLIC_PURCHASES_API(c._id), { credentials: 'include' });
           const p = await pRes.json();
           if (p?.success) {
             c = {
               ...c,
+              // pending/accepted as overlay into base weekly
               availability: injectPendingFromPurchases(c.availability || {}, p.purchases || []),
             };
           }
@@ -100,6 +182,7 @@ export default function CleanerProfilePage() {
         }
 
         c.photos = normalizePhotos(c.photos);
+
         if (!cancelled) {
           setCleaner(c);
 
@@ -140,11 +223,27 @@ export default function CleanerProfilePage() {
     [durationMins, bufferBeforeMins, bufferAfterMins]
   );
 
+  // Compose week: base weekly (possibly injected with pending/booked) + date overrides
+  const weekAvailability = useMemo(() => {
+    if (!cleaner) return {};
+    return composeWeekView(
+      cleaner.availability || {},
+      cleaner.availabilityOverrides || {},
+      mondaySelected
+    );
+  }, [cleaner, mondaySelected]);
+
   const canSelectStart = useMemo(() => {
-    if (!cleaner || !selectedDay || selectedHour == null) return false;
+    if (!selectedDay || selectedHour == null) return false;
     if (selectedHour + span > 24) return false;
-    return hasContiguousAvailability(cleaner.availability || {}, selectedDay, selectedHour, span);
-  }, [cleaner, selectedDay, selectedHour, span]);
+    // Use the composed week's availability for span checks
+    return hasContiguousAvailability(weekAvailability || {}, selectedDay, selectedHour, span);
+  }, [weekAvailability, selectedDay, selectedHour, span]);
+
+  // Limit weeks a client can browse by the cleaner's plan
+  const maxAhead = cleaner?.isPremium ? 3 : 0; // Free = this week only; Premium = +3 => total 4
+  const canGoPrev = weekOffset > 0;            // no past weeks
+  const canGoNext = weekOffset < maxAhead;
 
   /* ---------------------------- Contact Unlock ---------------------------- */
 
@@ -196,6 +295,11 @@ export default function CleanerProfilePage() {
       return;
     }
 
+    // derive isoDate for the selected column (week + day)
+    const isoDates = getWeekISODates(mondaySelected);
+    const dayIdx = DAYS.indexOf(selectedDay);
+    const isoDate = isoDates[dayIdx];
+
     setCreating(true);
     setToast('');
     try {
@@ -205,8 +309,11 @@ export default function CleanerProfilePage() {
         credentials: 'include',
         body: JSON.stringify({
           cleanerId: cleaner._id,
+          // legacy fields – keep for backward compatibility
           day: selectedDay,
           hour: selectedHour, // number
+          // new date-specific field (safe to ignore server-side if not supported yet)
+          isoDate,
           serviceKey: service.key,
           durationMins,
           bufferBeforeMins,
@@ -218,7 +325,8 @@ export default function CleanerProfilePage() {
         throw new Error(j?.message || 'Failed to create booking.');
       }
       setToast('Booking request sent! Awaiting cleaner approval.');
-      // Optionally refresh purchases overlay
+
+      // Refresh purchases overlay (this affects current week's base overlay; acceptable)
       try {
         const pRes = await fetch(PUBLIC_PURCHASES_API(cleaner._id), { credentials: 'include' });
         const p = await pRes.json();
@@ -233,7 +341,6 @@ export default function CleanerProfilePage() {
       setToast(e.message || 'Booking failed.');
     } finally {
       setCreating(false);
-      // Scroll to top toast
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }
@@ -366,7 +473,7 @@ export default function CleanerProfilePage() {
                           type="button"
                           onClick={() => {
                             setSelectedServiceKey(s.key);
-                            // 🔒 Lock to cleaner-defined defaults
+                            // lock to cleaner-defined defaults
                             setDurationMins(s.defaultDurationMins ?? 60);
                             setBufferBeforeMins(s.bufferBeforeMins ?? 0);
                             setBufferAfterMins(s.bufferAfterMins ?? 0);
@@ -413,24 +520,55 @@ export default function CleanerProfilePage() {
 
         {/* Availability + Booking */}
         <section className="bg-white/25 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-xl">
-          <h2 className="text-xl font-bold text-teal-800 mb-4">📅 Availability</h2>
+          <div className="flex items-center justify-between gap-3 mb-3">
+            <h2 className="text-xl font-bold text-teal-800">📅 Availability</h2>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setWeekOffset((w) => Math.max(0, w - 1))}
+                disabled={!canGoPrev}
+                className={`px-3 py-2 rounded-lg border ${canGoPrev ? 'bg-white hover:bg-gray-50' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+                title="Previous week (disabled)"
+              >
+                ◀
+              </button>
+              <div className="px-3 py-2 rounded-lg bg-white/70 border font-medium">
+                Week of {fmtRangeLabel(mondaySelected)}
+                {!cleaner.isPremium && <span className="ml-2 text-xs text-amber-700">(Free cleaner: this week only)</span>}
+              </div>
+              <button
+                onClick={() => setWeekOffset((w) => Math.min(maxAhead, w + 1))}
+                disabled={!canGoNext}
+                className={`px-3 py-2 rounded-lg border ${canGoNext ? 'bg-white hover:bg-gray-50' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+                title={canGoNext ? 'Next week' : 'This cleaner only opens this week'}
+              >
+                ▶
+              </button>
+            </div>
+          </div>
 
           <div className="overflow-x-auto border border-white/30 rounded-xl">
             <table className="w-full min-w-[900px] text-sm">
               <thead>
                 <tr className="bg-gray-50">
-                  <th className="p-2 text-left">Day</th>
+                  <th className="p-2 text-left">
+                    Day
+                    <div className="text-xs font-normal text-gray-500">Date</div>
+                  </th>
                   {HOURS.map((h) => (
                     <th key={`h-${h}`} className="p-2 text-center">{labelForHour(h)}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {DAYS.map((day) => {
-                  const row = cleaner.availability?.[day] || {};
+                {DAYS.map((day, idxDay) => {
+                  const row = weekAvailability?.[day] || {};
+                  const dateForDay = addDays(mondaySelected, idxDay);
                   return (
                     <tr key={day} className="border-t">
-                      <td className="p-2 font-medium">{day}</td>
+                      <td className="p-2 font-medium">
+                        <div>{day}</div>
+                        <div className="text-xs text-gray-500">{fmtShort(dateForDay)}</div>
+                      </td>
                       {HOURS.map((h) => {
                         const raw = row[String(h)];
                         const statusVal = typeof raw === 'object' ? raw?.status : raw;
@@ -440,11 +578,11 @@ export default function CleanerProfilePage() {
                         const isPending = statusVal === 'pending' || statusVal === 'pending_approval';
                         const isBooked = statusVal === 'booked' || statusVal === false || statusVal === 'unavailable';
 
-                        // for selection: ensure span fits
+                        // for selection: ensure span fits in the *composed* week grid
                         const fits =
                           isAvailable &&
                           h + span <= 24 &&
-                          hasContiguousAvailability(cleaner.availability || {}, day, h, span);
+                          hasContiguousAvailability(weekAvailability || {}, day, h, span);
 
                         const isSelected = selectedDay === day && selectedHour === h;
 
@@ -513,7 +651,7 @@ export default function CleanerProfilePage() {
         {/* Gallery */}
         {Array.isArray(cleaner.photos) && cleaner.photos.length > 0 && (
           <section className="bg-white/25 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-xl">
-            <h2 className="text-xl font-bold text-teal-800 mb-4">🖼️ Gallery</h2>
+            <h2 className="text-2xl font-bold text-teal-800 mb-4">🖼️ Gallery</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {cleaner.photos.map((ph, i) => {
                 const lock = !contactUnlocked && !!ph.hasText;

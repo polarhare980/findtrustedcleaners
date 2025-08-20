@@ -1,3 +1,4 @@
+// File: src/models/Cleaner.js
 import mongoose from 'mongoose';
 
 /* ---------- Subschemas ---------- */
@@ -51,7 +52,7 @@ const cleanerSchema = new mongoose.Schema(
     // Flat tags (keep for filters)
     services: { type: [String], default: [] },
 
-    // NEW: structured services with durations/buffers (span-aware bookings)
+    // Structured services with durations/buffers
     servicesDetailed: { type: [ServiceSchema], default: [] },
 
     bio: {
@@ -60,12 +61,39 @@ const cleanerSchema = new mongoose.Schema(
       default: '',
     },
 
-    // Availability grid (7–19 by 1h cells). Values: true | false | 'unavailable'
-    // (Pending/accepted are injected from purchases; don’t persist them here.)
+    /**
+     * Base weekly pattern (Mon–Sun, hour "7".."19") used as the fallback.
+     * Values: true | false | 'unavailable'
+     * Do NOT persist pending/accepted here.
+     *
+     * Example:
+     * { Monday: { "7": true, "8": false, ... }, Tuesday: { ... }, ... }
+     */
     availability: {
       type: mongoose.Schema.Types.Mixed,
       default: {},
     },
+
+    /**
+     * NEW: Date-specific overrides keyed by ISO date (YYYY-MM-DD).
+     * Each value is an object of hour -> true | false | 'unavailable'
+     * Only store cells that differ from the weekly pattern for that date.
+     *
+     * Example:
+     * {
+     *   "2025-08-25": { "9": true, "10": true, "11": "unavailable" },
+     *   "2025-08-26": { "14": false }
+     * }
+     */
+    availabilityOverrides: {
+      type: Map, // Map<string, Mixed>
+      of: mongoose.Schema.Types.Mixed,
+      default: undefined, // omitted if empty (keeps docs lean)
+    },
+
+    // Premium Status + dial for how far ahead premium can set (in weeks, beyond current)
+    isPremium: { type: Boolean, default: false },
+    premiumWeeksAhead: { type: Number, default: 3 }, // 0 = this week only; 3 = +3 => total 4
 
     businessInsurance: { type: Boolean, default: false },
     dbsChecked: { type: Boolean, default: false },
@@ -80,9 +108,6 @@ const cleanerSchema = new mongoose.Schema(
       postcode: { type: String, default: '' },
     },
 
-    // Premium Status
-    isPremium: { type: Boolean, default: false },
-
     // Legacy Google review fields (kept for compatibility)
     googleReviewUrl: { type: String },
     googleReviewRating: { type: Number },
@@ -96,7 +121,6 @@ const cleanerSchema = new mongoose.Schema(
 
     // Premium Media Uploads
     photos: { type: [PhotoSchema], default: [] },
-
     videoUrl: { type: String }, // Optional intro video
 
     // Additional service coverage

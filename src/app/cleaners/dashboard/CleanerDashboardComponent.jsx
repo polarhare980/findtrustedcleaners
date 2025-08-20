@@ -7,15 +7,46 @@ import { secureFetch } from '@/lib/secureFetch';
 
 // -------------------- Constants (match Profile) --------------------
 const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
-const HOURS = Array.from({ length: 13 }, (_, i) => 7 + i); // 7..19 (numbers like Profile)
+const HOURS = Array.from({ length: 13 }, (_, i) => 7 + i); // 7..19
 
 const BOOKED_STATUSES = new Set(['approved','accepted','confirmed','booked']);
 const PENDING_STATUSES = new Set(['pending','pending_approval']);
 
 const hourLabel = (h) => `${String(h).padStart(2, '0')}:00`;
 
-// Handy key generator for new services
-const generateServiceKey = () => `svc_${Math.random().toString(36).slice(2, 10)}`;
+// -------------------- Date helpers for week selector --------------------
+function getMonday(d = new Date()) {
+  const date = new Date(d);
+  const day = date.getDay(); // 0=Sun..6=Sat
+  const diff = (day === 0 ? -6 : 1) - day; // shift to Monday
+  date.setDate(date.getDate() + diff);
+  date.setHours(0,0,0,0);
+  return date;
+}
+function addDays(date, n) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + n);
+  return d;
+}
+function addWeeks(date, w) {
+  return addDays(date, w * 7);
+}
+function fmtShort(d) {
+  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }); // e.g., 19 Aug
+}
+function fmtRangeLabel(monday) {
+  const start = fmtShort(monday);
+  const end = fmtShort(addDays(monday, 6));
+  return `${start} – ${end}`;
+}
+function toISODate(d) {
+  const z = new Date(d);
+  z.setHours(0,0,0,0);
+  return z.toISOString().slice(0,10); // YYYY-MM-DD
+}
+function getWeekISODates(mondayDate) {
+  return Array.from({ length: 7 }, (_, i) => toISODate(addDays(mondayDate, i)));
+}
 
 // -------------------- Overlay Builders (from combined API) --------------------
 function buildOverlayMaps(combined = []) {
@@ -41,36 +72,45 @@ function buildOverlayMaps(combined = []) {
 }
 
 /**
- * Compose what we display in the dashboard grid by overlaying:
- * 1) Booked (blue on old UI, but we’ll style as red like Profile’s “unavailable/booked”)
- * 2) Pending (yellow)
- * on top of the base availability.
+ * Build the week view by:
+ * 1) start from base weekly pattern (Mon..Sun)
+ * 2) apply date-specific overrides for each calendar day (YYYY-MM-DD)
+ * 3) overlay pending/booked (from purchases/bookings)
  *
- * IMPORTANT: To truly “match the Profile”, treat base false/'unavailable' as red (booked/unavailable).
+ * Result shape: { [dayName]: { [hourStr]: true|false|'unavailable'|{status} } }
  */
-function composeDisplayAvailability(baseAvailability = {}, overlays) {
+function composeWeekView(baseWeekly = {}, overridesByISO = {}, mondayDate, overlays) {
   const { pendingKeyToPurchaseId, bookedKeys } = overlays;
-  const out = JSON.parse(JSON.stringify(baseAvailability || {}));
+  const weekISO = getWeekISODates(mondayDate);
+  const out = {};
 
-  for (const day of DAYS) {
-    if (!out[day]) out[day] = {};
-    for (const h of HOURS) {
+  DAYS.forEach((dayName, idx) => {
+    const iso = weekISO[idx];
+    const baseDay = baseWeekly?.[dayName] || {};
+    const overrideDay = overridesByISO?.[iso] || {};
+    out[dayName] = {};
+
+    HOURS.forEach((h) => {
       const hour = String(h);
-      const key = `${day}|${hour}`;
-
-      // Overlay precedence: booked > pending > base
-      if (bookedKeys.has(key)) {
-        out[day][hour] = { status: 'booked' };
-        continue;
-      }
-      if (pendingKeyToPurchaseId.has(key)) {
-        out[day][hour] = { status: 'pending', bookingId: pendingKeyToPurchaseId.get(key) };
-        continue;
+      // Start from base
+      let val = baseDay?.[hour];
+      // Apply override if present
+      if (Object.prototype.hasOwnProperty.call(overrideDay, hour)) {
+        val = overrideDay[hour];
       }
 
-      // Leave base as-is (true / 'available' / false / 'unavailable' / undefined)
-    }
-  }
+      // Overlay precedence: booked > pending > base/override
+      const overlayKey = `${dayName}|${hour}`;
+      if (bookedKeys.has(overlayKey)) {
+        out[dayName][hour] = { status: 'booked' };
+      } else if (pendingKeyToPurchaseId.has(overlayKey)) {
+        out[dayName][hour] = { status: 'pending', bookingId: pendingKeyToPurchaseId.get(overlayKey) };
+      } else {
+        out[dayName][hour] = val; // true | false | 'unavailable' | undefined
+      }
+    });
+  });
+
   return out;
 }
 
@@ -90,9 +130,18 @@ export default function CleanerDashboard() {
 
   const [combined, setCombined] = useState([]);       // bookings + pending purchases
   const overlays = useMemo(() => buildOverlayMaps(combined), [combined]);
+
+  // NEW: Client-side copy of overrides we edit before saving
+  const [editOverrides, setEditOverrides] = useState({});
+
+  // Week selector state
+  const [weekOffset, setWeekOffset] = useState(0); // 0=this week
+  const mondayThisWeek = useMemo(() => getMonday(new Date()), []);
+  const mondaySelected = useMemo(() => addWeeks(mondayThisWeek, weekOffset), [mondayThisWeek, weekOffset]);
+
   const displayAvailability = useMemo(
-    () => composeDisplayAvailability(formData?.availability || {}, overlays),
-    [formData?.availability, overlays]
+    () => composeWeekView(formData?.availability || {}, editOverrides || {}, mondaySelected, overlays),
+    [formData?.availability, editOverrides, mondaySelected, overlays]
   );
 
   const [availabilityChanged, setAvailabilityChanged] = useState(false);
@@ -128,25 +177,27 @@ export default function CleanerDashboard() {
         const cleanerUser = { ...dataMe.user, _id: String(dataMe.user._id || dataMe.user.id) };
         setMe(cleanerUser);
 
-        // Get merged bookings (real + pending purchases) — routes unchanged
+        // Get merged bookings (real + pending purchases)
         const resB = await fetch(`/api/bookings/cleaner/${cleanerUser._id}`, { credentials: 'include' });
         const dataB = await resB.json();
         const merged = dataB?.success ? (dataB.bookings || []) : [];
         setCombined(merged);
 
-        // Seed dashboard state
+        // Seed dashboard state (now includes availabilityOverrides)
         const seed = {
           ...cleanerUser,
           services: cleanerUser.services || [],
           servicesDetailed: cleanerUser.servicesDetailed || [],
           photos: cleanerUser.photos || [],
           availability: cleanerUser.availability || {},
+          availabilityOverrides: cleanerUser.availabilityOverrides || {},
           businessInsurance: !!cleanerUser.businessInsurance,
           dbsChecked: !!cleanerUser.dbsChecked,
           bio: cleanerUser.bio || '',
         };
         setFormData(seed);
         setEditData(seed);
+        setEditOverrides(seed.availabilityOverrides || {});
       } catch (e) {
         console.error('Dashboard init failed:', e);
         router.push('/login');
@@ -156,29 +207,62 @@ export default function CleanerDashboard() {
     })();
   }, [router]);
 
-  // Toggle base availability (cannot toggle pending or booked)
+  // Toggle availability for a specific day/hour
   const toggleAvailability = (day, hourNumber) => {
-    const hour = String(hourNumber); // store by string keys in object
+    const hour = String(hourNumber);
     const slot = displayAvailability?.[day]?.[hour];
     const status = typeof slot === 'object' ? slot.status : slot;
 
-    // Match Profile behaviour: pending or booked (or base false/'unavailable') are not togglable
-    if (status === 'pending' || status === 'booked' || status === false || status === 'unavailable') return;
+    // Pending/booked cannot be toggled
+    if (status === 'pending' || status === 'booked') return;
 
-    setFormData(prev => {
-      const nextAvail = { ...(prev.availability || {}) };
-      if (!nextAvail[day]) nextAvail[day] = {};
-      const current = nextAvail[day][hour];
-      const currentVal = typeof current === 'object' ? current?.status : current;
+    if (weekOffset === 0) {
+      // Week 0 => modify base weekly pattern
+      setFormData(prev => {
+        const nextAvail = { ...(prev.availability || {}) };
+        if (!nextAvail[day]) nextAvail[day] = {};
+        const current = nextAvail[day][hour];
+        const currentVal = typeof current === 'object' ? current?.status : current;
 
-      if (currentVal === true || currentVal === 'available') {
-        nextAvail[day][hour] = 'unavailable';
-      } else {
-        nextAvail[day][hour] = true;
-      }
+        if (currentVal === true || currentVal === 'available') {
+          nextAvail[day][hour] = 'unavailable';
+        } else {
+          nextAvail[day][hour] = true;
+        }
+        return { ...prev, availability: nextAvail };
+      });
+    } else {
+      // Future week => write override for that ISO date
+      const isoByDay = getWeekISODates(mondaySelected);
+      const dayIdx = DAYS.indexOf(day);
+      const isoDate = isoByDay[dayIdx];
 
-      return { ...prev, availability: nextAvail };
-    });
+      // What is currently visible? (true | false | 'unavailable' | undefined)
+      const visible = typeof status === 'object' ? undefined : status;
+      const nextVal = (visible === true || visible === 'available') ? 'unavailable' : true;
+
+      setEditOverrides(prev => {
+        const next = { ...(prev || {}) };
+        const dayMap = { ...(next[isoDate] || {}) };
+
+        // Compare against base weekly value to store only differences
+        const baseVal = formData?.availability?.[day]?.[hour];
+
+        if (nextVal === baseVal) {
+          // Same as base => remove override
+          delete dayMap[hour];
+        } else {
+          dayMap[hour] = nextVal;
+        }
+
+        if (Object.keys(dayMap).length === 0) {
+          delete next[isoDate];
+        } else {
+          next[isoDate] = dayMap;
+        }
+        return next;
+      });
+    }
 
     setAvailabilityChanged(true);
     setMessage('');
@@ -234,20 +318,36 @@ export default function CleanerDashboard() {
     }
   };
 
-  // Save base availability
+  // Save base or overrides depending on selected week
   const handleSave = async () => {
     setSaving(true);
     setMessage('');
     try {
-      const res = await fetch(`/api/bookings/cleaner/${me._id}`, {
-        method: 'PUT',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ availability: formData.availability }),
-      });
-      const j = await res.json();
-      if (!res.ok || !j?.success) throw new Error(j?.message || 'Update failed');
-      setFormData((prev) => ({ ...prev, availability: j.cleaner?.availability || prev.availability }));
+      if (weekOffset === 0) {
+        // Save base weekly pattern using existing endpoint
+        const res = await fetch(`/api/bookings/cleaner/${me._id}`, {
+          method: 'PUT',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ availability: formData.availability }),
+        });
+        const j = await res.json();
+        if (!res.ok || !j?.success) throw new Error(j?.message || 'Update failed');
+
+        setFormData((prev) => ({ ...prev, availability: j.cleaner?.availability || prev.availability }));
+      } else {
+        // Save date-specific overrides back to the Cleaner document
+        const res = await fetch(`/api/cleaners/${me._id}`, {
+          method: 'PUT',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ availabilityOverrides: editOverrides }),
+        });
+        if (!res.ok) throw new Error('Update overrides failed');
+
+        setFormData((prev) => ({ ...prev, availabilityOverrides: editOverrides }));
+      }
+
       setAvailabilityChanged(false);
       setMessage('✅ Availability saved.');
     } catch (err) {
@@ -415,6 +515,11 @@ export default function CleanerDashboard() {
   };
   const handleGoHome = () => router.push('/');
 
+  // Week navigation (limit by premium status)
+  const canGoPrev = weekOffset > 0; // lock to current+future; disable past weeks
+  const maxAhead = formData?.isPremium ? 3 : 0; // 0=only this week; 3=+3 weeks => total 4
+  const canGoNext = weekOffset < maxAhead;
+
   if (!mounted) return null;
   if (loading || !formData) return <LoadingSpinner />;
 
@@ -503,17 +608,18 @@ export default function CleanerDashboard() {
         {!formData?.isPremium ? (
           <div className="bg-gradient-to-r from-amber-400/20 to-amber-500/20 backdrop-blur-md border border-amber-400/30 text-amber-800 px-4 py-3 rounded-lg mb-6">
             <p className="mb-2 font-semibold">✨ You are using a Free Account</p>
+            <p className="text-sm mb-3">Upgrade to set your diary up to <strong>4 weeks ahead</strong> and get a gallery.</p>
             <button onClick={handleUpgradeClick} className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-6 py-2 rounded-lg">
               💎 Upgrade to Premium (£7.99/month)
             </button>
           </div>
         ) : (
           <div className="bg-gradient-to-r from-green-400/20 to-green-500/20 backdrop-blur-md border border-green-400/30 text-green-800 px-4 py-3 rounded-lg mb-6 font-semibold">
-            ✨ You are a Premium Cleaner!
+            ✨ You are a Premium Cleaner! You can schedule up to 4 weeks ahead.
           </div>
         )}
 
-        {/* Profile info (unchanged UI, minor plumbing stays) */}
+        {/* Profile info */}
         <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl mb-6 p-6">
           <h2 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent mb-4">
             👤 Profile Information
@@ -713,167 +819,166 @@ export default function CleanerDashboard() {
         </div>
 
         {/* Services & Duration (everyone) */}
-<div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl mb-6 p-6">
-  <h2 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent mb-4">
-    🧹 Services & Duration
-  </h2>
+        <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl mb-6 p-6">
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent mb-4">
+            🧹 Services & Duration
+          </h2>
 
-  {editMode ? (
-    <div className="space-y-4">
-      {(editData.servicesDetailed || []).map((svc, idx) => (
-        <div key={idx} className="p-4 bg-white/70 rounded-xl border border-gray-200 space-y-2">
-          {/* Service Name */}
-          <input
-            className="w-full p-2 border rounded"
-            placeholder="Service Name"
-            value={svc.name || ''}
-            onChange={(e) => {
-              const next = [...editData.servicesDetailed];
-              next[idx].name = e.target.value;
-              setEditData({ ...editData, servicesDetailed: next });
-            }}
-          />
+          {editMode ? (
+            <div className="space-y-4">
+              {(editData.servicesDetailed || []).map((svc, idx) => (
+                <div key={idx} className="p-4 bg-white/70 rounded-xl border border-gray-200 space-y-2">
+                  {/* Service Name */}
+                  <input
+                    className="w-full p-2 border rounded"
+                    placeholder="Service Name"
+                    value={svc.name || ''}
+                    onChange={(e) => {
+                      const next = [...editData.servicesDetailed];
+                      next[idx].name = e.target.value;
+                      setEditData({ ...editData, servicesDetailed: next });
+                    }}
+                  />
 
-          {/* Grid of numeric fields */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-            <input
-              type="number"
-              className="p-2 border rounded"
-              placeholder="Default Duration (mins)"
-              value={svc.defaultDurationMins ?? ''}
-              onChange={(e) => {
-                const next = [...editData.servicesDetailed];
-                next[idx].defaultDurationMins = e.target.value; // keep as string
-                setEditData({ ...editData, servicesDetailed: next });
-              }}
-            />
-            <input
-              type="number"
-              className="p-2 border rounded"
-              placeholder="Buffer Before (mins)"
-              value={svc.bufferBeforeMins ?? ''}
-              onChange={(e) => {
-                const next = [...editData.servicesDetailed];
-                next[idx].bufferBeforeMins = e.target.value;
-                setEditData({ ...editData, servicesDetailed: next });
-              }}
-            />
-            <input
-              type="number"
-              className="p-2 border rounded"
-              placeholder="Buffer After (mins)"
-              value={svc.bufferAfterMins ?? ''}
-              onChange={(e) => {
-                const next = [...editData.servicesDetailed];
-                next[idx].bufferAfterMins = e.target.value;
-                setEditData({ ...editData, servicesDetailed: next });
-              }}
-            />
-            <input
-              type="number"
-              className="p-2 border rounded"
-              placeholder="Increment (mins)"
-              value={svc.incrementMins ?? ''}
-              onChange={(e) => {
-                const next = [...editData.servicesDetailed];
-                next[idx].incrementMins = e.target.value;
-                setEditData({ ...editData, servicesDetailed: next });
-              }}
-            />
-            <input
-              type="number"
-              className="p-2 border rounded"
-              placeholder="Min Duration (mins)"
-              value={svc.minDurationMins ?? ''}
-              onChange={(e) => {
-                const next = [...editData.servicesDetailed];
-                next[idx].minDurationMins = e.target.value;
-                setEditData({ ...editData, servicesDetailed: next });
-              }}
-            />
-            <input
-              type="number"
-              className="p-2 border rounded"
-              placeholder="Max Duration (mins)"
-              value={svc.maxDurationMins ?? ''}
-              onChange={(e) => {
-                const next = [...editData.servicesDetailed];
-                next[idx].maxDurationMins = e.target.value;
-                setEditData({ ...editData, servicesDetailed: next });
-              }}
-            />
-          </div>
+                  {/* Grid of numeric fields */}
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    <input
+                      type="number"
+                      className="p-2 border rounded"
+                      placeholder="Default Duration (mins)"
+                      value={svc.defaultDurationMins ?? ''}
+                      onChange={(e) => {
+                        const next = [...editData.servicesDetailed];
+                        next[idx].defaultDurationMins = e.target.value;
+                        setEditData({ ...editData, servicesDetailed: next });
+                      }}
+                    />
+                    <input
+                      type="number"
+                      className="p-2 border rounded"
+                      placeholder="Buffer Before (mins)"
+                      value={svc.bufferBeforeMins ?? ''}
+                      onChange={(e) => {
+                        const next = [...editData.servicesDetailed];
+                        next[idx].bufferBeforeMins = e.target.value;
+                        setEditData({ ...editData, servicesDetailed: next });
+                      }}
+                    />
+                    <input
+                      type="number"
+                      className="p-2 border rounded"
+                      placeholder="Buffer After (mins)"
+                      value={svc.bufferAfterMins ?? ''}
+                      onChange={(e) => {
+                        const next = [...editData.servicesDetailed];
+                        next[idx].bufferAfterMins = e.target.value;
+                        setEditData({ ...editData, servicesDetailed: next });
+                      }}
+                    />
+                    <input
+                      type="number"
+                      className="p-2 border rounded"
+                      placeholder="Increment (mins)"
+                      value={svc.incrementMins ?? ''}
+                      onChange={(e) => {
+                        const next = [...editData.servicesDetailed];
+                        next[idx].incrementMins = e.target.value;
+                        setEditData({ ...editData, servicesDetailed: next });
+                      }}
+                    />
+                    <input
+                      type="number"
+                      className="p-2 border rounded"
+                      placeholder="Min Duration (mins)"
+                      value={svc.minDurationMins ?? ''}
+                      onChange={(e) => {
+                        const next = [...editData.servicesDetailed];
+                        next[idx].minDurationMins = e.target.value;
+                        setEditData({ ...editData, servicesDetailed: next });
+                      }}
+                    />
+                    <input
+                      type="number"
+                      className="p-2 border rounded"
+                      placeholder="Max Duration (mins)"
+                      value={svc.maxDurationMins ?? ''}
+                      onChange={(e) => {
+                        const next = [...editData.servicesDetailed];
+                        next[idx].maxDurationMins = e.target.value;
+                        setEditData({ ...editData, servicesDetailed: next });
+                      }}
+                    />
+                  </div>
 
-          {/* Active toggle */}
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={svc.active !== false}
-              onChange={(e) => {
-                const next = [...editData.servicesDetailed];
-                next[idx].active = e.target.checked;
-                setEditData({ ...editData, servicesDetailed: next });
-              }}
-            />
-            Active
-          </label>
+                  {/* Active toggle */}
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={svc.active !== false}
+                      onChange={(e) => {
+                        const next = [...editData.servicesDetailed];
+                        next[idx].active = e.target.checked;
+                        setEditData({ ...editData, servicesDetailed: next });
+                      }}
+                    />
+                    Active
+                  </label>
 
-          {/* Remove button */}
-          <button
-            className="text-red-600 text-sm"
-            onClick={() => {
-              const next = [...editData.servicesDetailed];
-              next.splice(idx, 1);
-              setEditData({ ...editData, servicesDetailed: next });
-            }}
-          >
-            Remove
-          </button>
+                  {/* Remove button */}
+                  <button
+                    className="text-red-600 text-sm"
+                    onClick={() => {
+                      const next = [...editData.servicesDetailed];
+                      next.splice(idx, 1);
+                      setEditData({ ...editData, servicesDetailed: next });
+                    }}
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+
+              {/* Add new service */}
+              <button
+                className="px-4 py-2 bg-teal-600 text-white rounded"
+                onClick={() =>
+                  setEditData({
+                    ...editData,
+                    servicesDetailed: [
+                      ...(editData.servicesDetailed || []),
+                      {
+                        name: '',
+                        defaultDurationMins: '',
+                        bufferBeforeMins: '',
+                        bufferAfterMins: '',
+                        incrementMins: '',
+                        minDurationMins: '',
+                        maxDurationMins: '',
+                        active: true,
+                      },
+                    ],
+                  })
+                }
+              >
+                ➕ Add Service
+              </button>
+            </div>
+          ) : (
+            <>
+              {(formData.servicesDetailed || []).filter((s) => s.active !== false).length > 0 ? (
+                <ul className="list-disc list-inside text-gray-800">
+                  {formData.servicesDetailed.map((svc, i) => (
+                    <li key={i}>
+                      {svc.name} ({svc.defaultDurationMins || 60} mins)
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-gray-600">No detailed services listed</p>
+              )}
+            </>
+          )}
         </div>
-      ))}
-
-      {/* Add new service */}
-      <button
-        className="px-4 py-2 bg-teal-600 text-white rounded"
-        onClick={() =>
-          setEditData({
-            ...editData,
-            servicesDetailed: [
-              ...(editData.servicesDetailed || []),
-              {
-                name: '',
-                defaultDurationMins: '',
-                bufferBeforeMins: '',
-                bufferAfterMins: '',
-                incrementMins: '',
-                minDurationMins: '',
-                maxDurationMins: '',
-                active: true,
-              },
-            ],
-          })
-        }
-      >
-        ➕ Add Service
-      </button>
-    </div>
-  ) : (
-    <>
-      {(formData.servicesDetailed || []).filter((s) => s.active !== false).length > 0 ? (
-        <ul className="list-disc list-inside text-gray-800">
-          {formData.servicesDetailed.map((svc, i) => (
-            <li key={i}>
-              {svc.name} ({svc.defaultDurationMins || 60} mins)
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="text-gray-600">No detailed services listed</p>
-      )}
-    </>
-  )}
-</div>
-
 
         {/* Gallery (Premium only) */}
         {formData.isPremium && (
@@ -921,9 +1026,9 @@ export default function CleanerDashboard() {
           </div>
         )}
 
-        {/* Availability grid — MATCH PROFILE COLOURS/LOGIC */}
+        {/* Availability grid — now honours overrides */}
         <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl mb-6 p-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-4">
             <div className="flex items-center gap-3">
               <h2 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent">
                 🗓️ Availability Management
@@ -935,22 +1040,51 @@ export default function CleanerDashboard() {
               )}
             </div>
 
-            {availabilityChanged && (
-              <button onClick={handleSave} disabled={saving} className="px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg disabled:opacity-50">
-                {saving ? '⏳ Saving...' : '💾 Save Changes'}
+            {/* Week Selector */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setWeekOffset((w) => Math.max(0, w - 1))}
+                disabled={!canGoPrev}
+                className={`px-3 py-2 rounded-lg border ${canGoPrev ? 'bg-white hover:bg-gray-50' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+                title="Previous week (disabled)"
+              >
+                ◀
               </button>
-            )}
+              <div className="px-3 py-2 rounded-lg bg-white/70 border font-medium">
+                Week of {fmtRangeLabel(mondaySelected)}
+                {!formData.isPremium && <span className="ml-2 text-xs text-amber-700">(Free: this week only)</span>}
+              </div>
+              <button
+                onClick={() => setWeekOffset((w) => Math.min(maxAhead, w + 1))}
+                disabled={!canGoNext}
+                className={`px-3 py-2 rounded-lg border ${canGoNext ? 'bg-white hover:bg-gray-50' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+                title={canGoNext ? 'Next week' : 'Upgrade to view more weeks'}
+              >
+                ▶
+              </button>
+
+              {availabilityChanged && (
+                <button onClick={handleSave} disabled={saving} className="ml-3 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg disabled:opacity-50">
+                  {saving ? '⏳ Saving...' : '💾 Save Changes'}
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="overflow-x-auto">
             <div className="min-w-full">
+              {/* Header row with dates */}
               <div className="grid grid-cols-8 gap-2 mb-4">
                 <div className="font-semibold text-gray-700 text-center py-2">Time</div>
-                {DAYS.map((d) => (
-                  <div key={d} className="font-semibold text-gray-700 text-center py-2 text-sm">
-                    {d.slice(0, 3)}
-                  </div>
-                ))}
+                {DAYS.map((d, idx) => {
+                  const dateForDay = addDays(mondaySelected, idx);
+                  return (
+                    <div key={d} className="font-semibold text-gray-700 text-center py-2 text-sm">
+                      <div>{d.slice(0, 3)}</div>
+                      <div className="text-xs text-gray-500">{fmtShort(dateForDay)}</div>
+                    </div>
+                  );
+                })}
               </div>
 
               {HOURS.map((h) => (
@@ -1016,7 +1150,7 @@ export default function CleanerDashboard() {
             </div>
           </div>
 
-          {/* Legend — mirrors Profile meanings */}
+          {/* Legend */}
           <div className="mt-6 p-4 bg-white/40 rounded-lg">
             <h3 className="font-semibold text-gray-700 mb-3">Legend:</h3>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
@@ -1037,7 +1171,7 @@ export default function CleanerDashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl p-6 mt-10">
+        <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-XL p-6 mt-10">
           <h2 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent mb-6">
             ⚡ Quick Actions
           </h2>
@@ -1084,7 +1218,7 @@ function Field({ label, children, wide, editMode }) {
 
 function StatCard({ icon, title, value }) {
   return (
-    <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl p-6 text-center hover:-translate-y-1 transition-all">
+    <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-2xl p-6 text-center hover:-translate-y-1 transition-all">
       <div className="text-3xl mb-2">{icon}</div>
       <h3 className="text-xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent">
         {title}
@@ -1101,26 +1235,4 @@ function Legend({ swatchClass, label }) {
       <span className="text-gray-700">{label}</span>
     </div>
   );
-}
-
-// Tiny numeric input helper
-function NumInput({ label, value, onChange }) {
-  return (
-    <div className="space-y-1">
-      <label className="text-xs text-gray-600">{label}</label>
-      <input
-        type="number"
-        className="w-full p-2 border rounded"
-        value={typeof value === 'number' ? value : ''}
-        onChange={(e) => onChange(Number(e.target.value))}
-        min={0}
-      />
-    </div>
-  );
-}
-
-// Mutate one service entry safely
-function bumpSvc(idx, patch) {
-  // This function is shadowed at render time via closure in the JSX block; declared here for clarity.
-  // Real mutation is done inline by calling bumpSvc wrapped with setEditData in the JSX map.
 }
