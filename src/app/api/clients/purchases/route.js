@@ -7,18 +7,39 @@ import Purchase from '@/models/Purchase';
 import Cleaner from '@/models/Cleaner';
 import { requiredHourSpan, hasContiguousAvailability } from '@/lib/availability';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 
-function json(data, status = 200) {
-  return NextResponse.json(data, { status });
+function json(data, status = 200, extraHeaders = {}) {
+  return new NextResponse(JSON.stringify(data), {
+    status,
+    headers: { 'Content-Type': 'application/json', ...extraHeaders },
+  });
+}
+
+/* -------------------------- OPTIONS (preflight) --------------------------- */
+// Prevent 405s when the browser sends CORS preflight
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      'Allow': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Allow-Credentials': 'true',
+    },
+  });
 }
 
 /* ------------------------------ GET (history) ------------------------------ */
 export async function GET(req) {
   await connectToDatabase();
 
-  const { valid, user, response } = await protectApiRoute(req);
-  if (!valid) return response;
+  // Normalize unauthenticated -> 401 (so client can redirect to login)
+  const { valid, user /*, response*/ } = await protectApiRoute(req);
+  if (!valid) return json({ success: false, message: 'Unauthenticated' }, 401);
   if (user.type !== 'client') return json({ success: false, message: 'Access denied.' }, 403);
 
   try {
@@ -55,8 +76,9 @@ export async function GET(req) {
 export async function POST(req) {
   await connectToDatabase();
 
-  const { valid, user, response } = await protectApiRoute(req);
-  if (!valid) return response;
+  // ✅ Normalize unauthenticated -> 401 (was likely 403 before)
+  const { valid, user /*, response*/ } = await protectApiRoute(req);
+  if (!valid) return json({ success: false, message: 'Unauthenticated' }, 401);
   if (user.type !== 'client') return json({ success: false, message: 'Access denied.' }, 403);
 
   let body;
@@ -155,7 +177,7 @@ export async function POST(req) {
     cleanerId,
     clientId: user._id,
     day,
-    hour: startHour,
+    hour: startHour,            // keep as number if your schema allows; otherwise String(startHour)
     span,
     serviceKey,
     serviceName: svc?.name,
@@ -164,7 +186,7 @@ export async function POST(req) {
     bufferAfterMins: effBufAfter,
     currency,
     amount: typeof amount === 'number' ? amount : undefined, // optional
-    status: 'pending_approval',
+    status: 'pending_approval', // keep your existing flow
     notes: typeof notes === 'string' ? notes : undefined,
   });
 
@@ -173,5 +195,5 @@ export async function POST(req) {
     purchaseId: String(doc._id),
     span,
     status: doc.status,
-  });
+  }, 201);
 }
