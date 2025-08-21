@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { secureFetch } from '@/lib/secureFetch';
@@ -149,7 +149,7 @@ export default function CleanerDashboard() {
 
   const [availabilityChanged, setAvailabilityChanged] = useState(false);
 
-  // Image upload
+  // Profile image upload
   const [selectedFile, setSelectedFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
   const [imageUploading, setImageUploading] = useState(false);
@@ -158,6 +158,121 @@ export default function CleanerDashboard() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [deleting, setDeleting] = useState(false);
+
+  // --- Gallery UX state / handlers ---
+  const fileInputRef = useRef(null);
+  const [galleryUploading, setGalleryUploading] = useState(false);
+  const [galleryProgress, setGalleryProgress] = useState(0);
+  const [galleryDirty, setGalleryDirty] = useState(false);
+
+  function openFilePicker() {
+    fileInputRef.current?.click();
+  }
+  function preventDefaults(e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+
+  async function uploadSingleFile(file) {
+    const fd = new FormData();
+    fd.append('file', file);
+    const res = await fetch('/api/upload', { method: 'POST', body: fd });
+    const data = await res.json();
+    if (!res.ok || !data?.success || !data?.url) {
+      throw new Error(data?.message || 'Upload failed');
+    }
+    return { url: data.url, public_id: data.public_id, hasText: false };
+  }
+
+  async function handleGalleryFiles(files) {
+    if (!files?.length) return;
+    setGalleryUploading(true);
+    setGalleryProgress(0);
+
+    const list = Array.from(files);
+    const out = [];
+    for (let i = 0; i < list.length; i++) {
+      try {
+        const uploaded = await uploadSingleFile(list[i]);
+        out.push(uploaded);
+        setGalleryProgress(Math.round(((i + 1) / list.length) * 100));
+      } catch (err) {
+        console.error('Gallery upload error:', err);
+        alert(`Failed to upload ${list[i]?.name || 'a file'}.`);
+      }
+    }
+
+    if (out.length) {
+      setEditData(prev => ({
+        ...prev,
+        photos: [...(prev.photos || []), ...out],
+      }));
+      setGalleryDirty(true);
+    }
+
+    setGalleryUploading(false);
+    setGalleryProgress(0);
+  }
+
+  async function handleSaveGallery() {
+    try {
+      const res = await fetch(`/api/cleaners/${me._id}`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ photos: editData.photos || [] }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(j?.message || 'Failed to save gallery');
+
+      // sync
+      setFormData(prev => ({ ...prev, photos: editData.photos || [] }));
+      setMessage('✅ Gallery saved.');
+      setGalleryDirty(false);
+    } catch (e) {
+      console.error(e);
+      setMessage('❌ Error saving gallery.');
+    }
+  }
+
+  // DELETE via your existing POST route that expects { public_id }
+  async function handleDeletePhoto(ph, index) {
+    // If no public_id (legacy uploads), just remove locally and Save Gallery will persist.
+    if (!ph.public_id) {
+      setEditData(prev => ({
+        ...prev,
+        photos: (prev.photos || []).filter((_, i) => i !== index),
+      }));
+      setGalleryDirty(true);
+      return;
+    }
+
+    const prevPhotos = editData.photos || [];
+    const nextPhotos = prevPhotos.filter((_, i) => i !== index);
+    setEditData(prev => ({ ...prev, photos: nextPhotos }));
+
+    try {
+      const res = await fetch('/api/delete-photo', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ public_id: ph.public_id }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok || !j?.success) {
+        throw new Error(j?.message || 'Delete failed');
+      }
+      // Keep UI in sync; server already removed from DB
+      setFormData(prev => ({ ...prev, photos: nextPhotos }));
+      setMessage('✅ Photo deleted.');
+      setGalleryDirty(false); // deletion persisted
+    } catch (err) {
+      console.error('Delete photo error:', err);
+      // rollback
+      setEditData(prev => ({ ...prev, photos: prevPhotos }));
+      setMessage('❌ Failed to delete photo. Try again.');
+    }
+  }
 
   useEffect(() => setMounted(true), []);
 
@@ -452,77 +567,6 @@ export default function CleanerDashboard() {
     }
   };
 
-  // Gallery upload (Premium)
-  const handleGalleryUpload = async (files) => {
-    for (const f of files) {
-      const fd = new FormData();
-      fd.append('file', f);
-      try {
-        const res = await fetch('/api/upload', { method: 'POST', body: fd });
-        const data = await res.json();
-        if (data?.success && data?.url) {
-          setEditData(prev => ({
-            ...prev,
-            photos: [...(prev.photos || []), { url: data.url, public_id: data.public_id, hasText: false }]
-          }));
-        }
-      } catch (e) {
-        console.error('Gallery upload failed', e);
-      }
-    }
-  };
-
-  // Delete profile
-  const handleDeleteProfile = async () => {
-    if (deleteConfirmText !== 'DELETE') {
-      alert('Please type DELETE to confirm');
-      return;
-    }
-    setDeleting(true);
-    try {
-      const res = await fetch(`/api/cleaners/${me._id}`, { method: 'DELETE', credentials: 'include' });
-      if (res.ok) {
-        await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
-        router.push('/');
-      } else {
-        alert('Failed to delete profile. Please try again.');
-      }
-    } catch (err) {
-      console.error('Delete error:', err);
-      alert('Error deleting profile.');
-    } finally {
-      setDeleting(false);
-      setShowDeleteModal(false);
-    }
-  };
-
-  // Premium upgrade
-  const handleUpgradeClick = async () => {
-    try {
-      const res = await fetch('/api/stripe/create-checkout-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cleanerId: me._id }),
-      });
-      const data = await res.json();
-      if (data?.url) window.location.href = data.url;
-    } catch (err) {
-      console.error('Upgrade failed:', err);
-      alert('Something went wrong while starting your upgrade.');
-    }
-  };
-
-  // Auth actions
-  const handleLogout = async () => {
-    try {
-      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
-      router.push('/login');
-    } catch {
-      router.push('/login');
-    }
-  };
-  const handleGoHome = () => router.push('/');
-
   // Week navigation (limit by premium status)
   const canGoPrev = weekOffset > 0; // lock to current+future; disable past weeks
   const maxAhead = formData?.isPremium ? 3 : 0; // 0=only this week; 3=+3 weeks => total 4
@@ -551,10 +595,10 @@ export default function CleanerDashboard() {
                   ✅ DBS Checked
                 </span>
               )}
-              <button onClick={handleGoHome} className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg font-medium transition-all duration-300">
+              <button onClick={() => router.push('/')} className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg font-medium transition-all duration-300">
                 🏠 Home
               </button>
-              <button onClick={handleLogout} className="px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white rounded-lg font-medium transition-all duration-300">
+              <button onClick={async () => { try { await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }); } finally { router.push('/login'); } }} className="px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white rounded-lg font-medium transition-all duration-300">
                 🔐 Logout
               </button>
               <button onClick={handleEditToggle} className="px-4 py-2 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white rounded-lg font-medium transition-all duration-300">
@@ -594,7 +638,25 @@ export default function CleanerDashboard() {
                   Cancel
                 </button>
                 <button
-                  onClick={handleDeleteProfile}
+                  onClick={async () => {
+                    if (deleteConfirmText !== 'DELETE') { alert('Please type DELETE to confirm'); return; }
+                    setDeleting(true);
+                    try {
+                      const res = await fetch(`/api/cleaners/${me._id}`, { method: 'DELETE', credentials: 'include' });
+                      if (res.ok) {
+                        await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+                        router.push('/');
+                      } else {
+                        alert('Failed to delete profile. Please try again.');
+                      }
+                    } catch (err) {
+                      console.error('Delete error:', err);
+                      alert('Error deleting profile.');
+                    } finally {
+                      setDeleting(false);
+                      setShowDeleteModal(false);
+                    }
+                  }}
                   disabled={deleteConfirmText !== 'DELETE' || deleting}
                   className="flex-1 px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg disabled:opacity-50"
                 >
@@ -617,7 +679,23 @@ export default function CleanerDashboard() {
           <div className="bg-gradient-to-r from-amber-400/20 to-amber-500/20 backdrop-blur-md border border-amber-400/30 text-amber-800 px-4 py-3 rounded-lg mb-6">
             <p className="mb-2 font-semibold">✨ You are using a Free Account</p>
             <p className="text-sm mb-3">Upgrade to set your diary up to <strong>4 weeks ahead</strong> and get a gallery.</p>
-            <button onClick={handleUpgradeClick} className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-6 py-2 rounded-lg">
+            <button
+              onClick={async () => {
+                try {
+                  const res = await fetch('/api/stripe/create-checkout-session', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cleanerId: me._id }),
+                  });
+                  const data = await res.json();
+                  if (data?.url) window.location.href = data.url;
+                } catch (err) {
+                  console.error('Upgrade failed:', err);
+                  alert('Something went wrong while starting your upgrade.');
+                }
+              }}
+              className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-6 py-2 rounded-lg"
+            >
               💎 Upgrade to Premium (£7.99/month)
             </button>
           </div>
@@ -991,46 +1069,114 @@ export default function CleanerDashboard() {
         {/* Gallery (Premium only) */}
         {formData.isPremium && (
           <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl mb-6 p-6">
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent mb-4">
-              🖼️ Gallery (Premium)
-            </h2>
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent">
+                🖼️ Gallery (Premium)
+              </h2>
 
-            {editMode ? (
-              <>
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={(e) => handleGalleryUpload(Array.from(e.target.files || []))}
-                  className="w-full p-3 bg-white/80 border rounded-lg"
-                />
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4">
-                  {(editData.photos || []).map((ph, i) => (
-                    <div key={ph.public_id || ph.url || i} className="relative">
-                      <img src={ph.url} alt={`Gallery ${i}`} className="w-full h-32 object-cover rounded" />
-                      <button
-                        className="absolute top-1 right-1 bg-red-600 text-white text-xs px-2 py-1 rounded"
-                        onClick={() => {
-                          setEditData(prev => ({
-                            ...prev,
-                            photos: (prev.photos || []).filter((_, j) => j !== i)
-                          }));
-                        }}
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ))}
+              {editMode && (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={openFilePicker}
+                    className="px-4 py-2 bg-gradient-to-r from-teal-600 to-teal-700 text-white rounded-lg font-medium"
+                  >
+                    ➕ Insert picture
+                  </button>
+                  <button
+                    onClick={handleSaveGallery}
+                    disabled={!galleryDirty || galleryUploading}
+                    className={`px-4 py-2 rounded-lg text-white font-medium ${galleryDirty && !galleryUploading ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 cursor-not-allowed'}`}
+                    title={galleryDirty ? 'Save gallery changes' : 'No changes to save'}
+                  >
+                    {galleryUploading ? '⏳ Uploading...' : '💾 Save Gallery'}
+                  </button>
                 </div>
-              </>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                {(formData.photos || []).map((ph, i) => (
-                  <img key={ph.public_id || ph.url || i} src={ph.url} alt={`Gallery ${i}`} className="w-full h-32 object-cover rounded" />
-                ))}
+              )}
+            </div>
+
+            {/* Hidden file input for button */}
+            {editMode && (
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={(e) => handleGalleryFiles(e.target.files)}
+                className="hidden"
+              />
+            )}
+
+            {/* Drop zone */}
+            {editMode && (
+              <div
+                onDragEnter={preventDefaults}
+                onDragOver={preventDefaults}
+                onDragLeave={preventDefaults}
+                onDrop={(e) => {
+                  preventDefaults(e);
+                  const files = e.dataTransfer?.files;
+                  handleGalleryFiles(files);
+                }}
+                className="border-2 border-dashed border-teal-300 rounded-xl p-6 text-center bg-white/60"
+              >
+                <p className="text-gray-700 font-medium mb-1">Drag & drop photos here</p>
+                <p className="text-sm text-gray-500">or click <span className="underline cursor-pointer" onClick={openFilePicker}>Insert picture</span></p>
+
+                {galleryUploading && (
+                  <div className="mt-4">
+                    <div className="w-full h-3 bg-gray-200 rounded">
+                      <div className="h-3 bg-teal-500 rounded" style={{ width: `${galleryProgress}%` }} />
+                    </div>
+                    <p className="text-xs text-gray-600 mt-1">{galleryProgress}%</p>
+                  </div>
+                )}
               </div>
             )}
+
+            {/* Thumbnails */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4">
+              {(editMode ? (editData.photos || []) : (formData.photos || [])).map((ph, i) => (
+                <div key={ph.public_id || ph.url || i} className="relative group rounded-xl overflow-hidden border border-gray-200 bg-white">
+                  <img
+                    src={ph.url}
+                    alt={`Gallery ${i}`}
+                    className="w-full h-36 object-cover"
+                    loading="lazy"
+                  />
+
+                  {editMode && (
+                    <button
+                      className="absolute top-2 right-2 bg-red-600/90 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition"
+                      onClick={() => handleDeletePhoto(ph, i)}
+                      title="Delete from gallery"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              ))}
+
+              {/* Empty state */}
+              {((editMode ? editData.photos : formData.photos) || []).length === 0 && (
+                <div className="col-span-full">
+                  <div className="rounded-xl border border-dashed border-gray-300 p-8 text-center bg-white/60">
+                    <p className="text-gray-700 font-medium">No photos yet</p>
+                    {editMode && (
+                      <button
+                        onClick={openFilePicker}
+                        className="mt-3 px-4 py-2 bg-gradient-to-r from-teal-600 to-teal-700 text-white rounded-lg font-medium"
+                      >
+                        ➕ Insert your first picture
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <p className="text-xs text-gray-500 mt-4">
+              Tip: Add before/after shots and a clean team photo. Keep files under 5MB for best performance.
+            </p>
           </div>
         )}
 

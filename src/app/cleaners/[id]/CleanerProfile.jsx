@@ -38,6 +38,11 @@ function labelForHour(h) {
   return `${hh}:00`;
 }
 
+// Robust ID for each service (handles data without .key)
+function svcId(s) {
+  return (s?.key ?? s?.id ?? s?.name ?? '').toString();
+}
+
 /* -------------------------- Date / Week utilities ------------------------- */
 
 function getMonday(d = new Date()) {
@@ -173,7 +178,6 @@ export default function CleanerProfilePage() {
           if (p?.success) {
             c = {
               ...c,
-              // pending/accepted as overlay into base weekly
               availability: injectPendingFromPurchases(c.availability || {}, p.purchases || []),
             };
           }
@@ -189,7 +193,8 @@ export default function CleanerProfilePage() {
           // Prime booking controls from first active serviceDetailed
           const firstActive = (c.servicesDetailed || []).find((s) => s.active !== false);
           if (firstActive) {
-            setSelectedServiceKey(firstActive.key);
+            const idForFirst = svcId(firstActive);
+            setSelectedServiceKey(idForFirst);      // ✅ stable ID
             setDurationMins(firstActive.defaultDurationMins ?? 60);
             setBufferBeforeMins(firstActive.bufferBeforeMins ?? 0);
             setBufferAfterMins(firstActive.bufferAfterMins ?? 0);
@@ -202,15 +207,21 @@ export default function CleanerProfilePage() {
       }
     })();
 
-    return () => { cancelled = true; };
+  return () => { cancelled = true; };
   }, [id]);
 
   /* ---------------------------- Derived Values ---------------------------- */
 
+  // ✅ Find service by robust ID (key || id || name)
   const service = useMemo(() => {
     if (!cleaner) return null;
-    return (cleaner.servicesDetailed || []).find((s) => s.key === selectedServiceKey) || null;
+    const list = cleaner.servicesDetailed || [];
+    const found = list.find((s) => svcId(s) === selectedServiceKey);
+    return found || null;
   }, [cleaner, selectedServiceKey]);
+
+  // Description convenience
+  const serviceDescription = useMemo(() => service?.description ?? service?.desc ?? '', [service]);
 
   // Keep increment/min/max for internal span calc (not shown to client)
   const increment = useMemo(() => service?.incrementMins ?? 60, [service]);
@@ -314,7 +325,7 @@ export default function CleanerProfilePage() {
           hour: selectedHour, // number
           // new date-specific field (safe to ignore server-side if not supported yet)
           isoDate,
-          serviceKey: service.key,
+          serviceKey: svcId(service), // use robust ID
           durationMins,
           bufferBeforeMins,
           bufferAfterMins,
@@ -466,13 +477,14 @@ export default function CleanerProfilePage() {
                   {(cleaner.servicesDetailed || [])
                     .filter((s) => s.active !== false)
                     .map((s) => {
-                      const isSelected = selectedServiceKey === s.key;
+                      const idForSvc = svcId(s);
+                      const isSelected = selectedServiceKey === idForSvc;
                       return (
                         <button
-                          key={s.key}
+                          key={idForSvc || s.name}
                           type="button"
                           onClick={() => {
-                            setSelectedServiceKey(s.key);
+                            setSelectedServiceKey(idForSvc); // ✅ robust
                             // lock to cleaner-defined defaults
                             setDurationMins(s.defaultDurationMins ?? 60);
                             setBufferBeforeMins(s.bufferBeforeMins ?? 0);
@@ -486,28 +498,38 @@ export default function CleanerProfilePage() {
                           ].join(" ")}
                           aria-pressed={isSelected}
                         >
-                          {s.name || s.key}
+                          {s.name || s.key || 'Service'}
                         </button>
                       );
                     })}
                 </div>
               </div>
 
-              {/* Read-only duration only (hide buffers, increments, ranges) */}
+              {/* Read-only details */}
               {service && (
-                <div className="grid sm:grid-cols-3 gap-3 bg-white/50 rounded-xl border border-white/30 p-3 text-sm">
-                  <div>
-                    <div className="text-gray-600">Selected</div>
-                    <div className="font-semibold">{service.name || service.key}</div>
-                  </div>
-                  <div>
-                    <div className="text-gray-600">Duration</div>
-                    <div className="font-semibold">{durationMins} mins</div>
-                  </div>
-                  <div>
-                    <div className="text-gray-600">Required Span</div>
-                    <div className="font-semibold">
-                      {span} hour{span > 1 ? 's' : ''}
+                <div className="space-y-3">
+                  {/* Description row (NEW) */}
+                  {(serviceDescription?.trim?.() || '') && (
+                    <div className="bg-white/50 rounded-xl border border-white/30 p-3 text-sm text-gray-800">
+                      <div className="text-gray-600 mb-1">Description</div>
+                      <div className="whitespace-pre-wrap">{serviceDescription}</div>
+                    </div>
+                  )}
+
+                  <div className="grid sm:grid-cols-3 gap-3 bg-white/50 rounded-xl border border-white/30 p-3 text-sm">
+                    <div>
+                      <div className="text-gray-600">Selected</div>
+                      <div className="font-semibold">{service.name || service.key}</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-600">Duration</div>
+                      <div className="font-semibold">{durationMins} mins</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-600">Required Span</div>
+                      <div className="font-semibold">
+                        {span} hour{span > 1 ? 's' : ''}
+                      </div>
                     </div>
                   </div>
                 </div>
