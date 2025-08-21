@@ -38,11 +38,6 @@ function labelForHour(h) {
   return `${hh}:00`;
 }
 
-// Robust ID for each service (handles data without .key)
-function svcId(s) {
-  return (s?.key ?? s?.id ?? s?.name ?? '').toString();
-}
-
 /* -------------------------- Date / Week utilities ------------------------- */
 
 function getMonday(d = new Date()) {
@@ -135,7 +130,7 @@ export default function CleanerProfilePage() {
   const [contactUnlocked, setContactUnlocked] = useState(false);
 
   // booking controls
-  const [selectedServiceKey, setSelectedServiceKey] = useState('');
+  const [selectedServiceIdx, setSelectedServiceIdx] = useState(0);
   const [durationMins, setDurationMins] = useState(60);
   const [bufferBeforeMins, setBufferBeforeMins] = useState(0);
   const [bufferAfterMins, setBufferAfterMins] = useState(0);
@@ -190,14 +185,13 @@ export default function CleanerProfilePage() {
         if (!cancelled) {
           setCleaner(c);
 
-          // Prime booking controls from first active serviceDetailed
-          const firstActive = (c.servicesDetailed || []).find((s) => s.active !== false);
-          if (firstActive) {
-            const idForFirst = svcId(firstActive);
-            setSelectedServiceKey(idForFirst);      // ✅ stable ID
-            setDurationMins(firstActive.defaultDurationMins ?? 60);
-            setBufferBeforeMins(firstActive.bufferBeforeMins ?? 0);
-            setBufferAfterMins(firstActive.bufferAfterMins ?? 0);
+          // Prime booking controls from first active service
+          const act = (c.servicesDetailed || []).filter((s) => s.active !== false);
+          if (act.length > 0) {
+            setSelectedServiceIdx(0);
+            setDurationMins(act[0].defaultDurationMins ?? 60);
+            setBufferBeforeMins(act[0].bufferBeforeMins ?? 0);
+            setBufferAfterMins(act[0].bufferAfterMins ?? 0);
           }
         }
       } catch (e) {
@@ -207,21 +201,25 @@ export default function CleanerProfilePage() {
       }
     })();
 
-  return () => { cancelled = true; };
+    return () => { cancelled = true; };
   }, [id]);
 
   /* ---------------------------- Derived Values ---------------------------- */
 
-  // ✅ Find service by robust ID (key || id || name)
-  const service = useMemo(() => {
-    if (!cleaner) return null;
-    const list = cleaner.servicesDetailed || [];
-    const found = list.find((s) => svcId(s) === selectedServiceKey);
-    return found || null;
-  }, [cleaner, selectedServiceKey]);
+  const activeServices = useMemo(
+    () => (cleaner?.servicesDetailed || []).filter((s) => s.active !== false),
+    [cleaner]
+  );
 
-  // Description convenience
-  const serviceDescription = useMemo(() => service?.description ?? service?.desc ?? '', [service]);
+  const service = useMemo(() => {
+    if (!activeServices.length) return null;
+    return activeServices[selectedServiceIdx] || null;
+  }, [activeServices, selectedServiceIdx]);
+
+  const serviceDescription = useMemo(
+    () => service?.description ?? service?.desc ?? service?.details ?? '',
+    [service]
+  );
 
   // Keep increment/min/max for internal span calc (not shown to client)
   const increment = useMemo(() => service?.incrementMins ?? 60, [service]);
@@ -325,7 +323,7 @@ export default function CleanerProfilePage() {
           hour: selectedHour, // number
           // new date-specific field (safe to ignore server-side if not supported yet)
           isoDate,
-          serviceKey: svcId(service), // use robust ID
+          serviceKey: service?.key ?? service?.id ?? service?.name ?? `index-${selectedServiceIdx}`,
           durationMins,
           bufferBeforeMins,
           bufferAfterMins,
@@ -468,47 +466,43 @@ export default function CleanerProfilePage() {
         <section className="bg-white/25 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-xl">
           <h2 className="text-xl font-bold text-teal-800 mb-4">🧹 Services &amp; Duration</h2>
 
-          {Array.isArray(cleaner.servicesDetailed) && cleaner.servicesDetailed.filter(s => s.active !== false).length > 0 ? (
+          {Array.isArray(activeServices) && activeServices.length > 0 ? (
             <div className="space-y-4">
               {/* Service buttons */}
               <div className="space-y-2">
                 <div className="text-sm text-gray-700">Choose a service</div>
                 <div className="flex flex-wrap gap-2">
-                  {(cleaner.servicesDetailed || [])
-                    .filter((s) => s.active !== false)
-                    .map((s) => {
-                      const idForSvc = svcId(s);
-                      const isSelected = selectedServiceKey === idForSvc;
-                      return (
-                        <button
-                          key={idForSvc || s.name}
-                          type="button"
-                          onClick={() => {
-                            setSelectedServiceKey(idForSvc); // ✅ robust
-                            // lock to cleaner-defined defaults
-                            setDurationMins(s.defaultDurationMins ?? 60);
-                            setBufferBeforeMins(s.bufferBeforeMins ?? 0);
-                            setBufferAfterMins(s.bufferAfterMins ?? 0);
-                          }}
-                          className={[
-                            "px-4 py-2 rounded-full border transition select-none",
-                            isSelected
-                              ? "bg-teal-700 text-white border-teal-700 shadow"
-                              : "bg-white/80 text-teal-800 border-teal-300 hover:bg-teal-50"
-                          ].join(" ")}
-                          aria-pressed={isSelected}
-                        >
-                          {s.name || s.key || 'Service'}
-                        </button>
-                      );
-                    })}
+                  {activeServices.map((s, idx) => {
+                    const isSelected = selectedServiceIdx === idx;
+                    return (
+                      <button
+                        key={`${s.key ?? s.id ?? s.name ?? 'svc'}-${idx}`}
+                        type="button"
+                        onClick={() => {
+                          setSelectedServiceIdx(idx);
+                          // lock to cleaner-defined defaults
+                          setDurationMins(s.defaultDurationMins ?? 60);
+                          setBufferBeforeMins(s.bufferBeforeMins ?? 0);
+                          setBufferAfterMins(s.bufferAfterMins ?? 0);
+                        }}
+                        className={[
+                          "px-4 py-2 rounded-full border transition select-none",
+                          isSelected
+                            ? "bg-teal-700 text-white border-teal-700 shadow"
+                            : "bg-white/80 text-teal-800 border-teal-300 hover:bg-teal-50"
+                        ].join(" ")}
+                        aria-pressed={isSelected}
+                      >
+                        {s.name || s.key || 'Service'}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
-              {/* Read-only details */}
+              {/* Read-only details including description */}
               {service && (
                 <div className="space-y-3">
-                  {/* Description row (NEW) */}
                   {(serviceDescription?.trim?.() || '') && (
                     <div className="bg-white/50 rounded-xl border border-white/30 p-3 text-sm text-gray-800">
                       <div className="text-gray-600 mb-1">Description</div>
@@ -519,7 +513,7 @@ export default function CleanerProfilePage() {
                   <div className="grid sm:grid-cols-3 gap-3 bg-white/50 rounded-xl border border-white/30 p-3 text-sm">
                     <div>
                       <div className="text-gray-600">Selected</div>
-                      <div className="font-semibold">{service.name || service.key}</div>
+                      <div className="font-semibold">{service.name || service.key || 'Service'}</div>
                     </div>
                     <div>
                       <div className="text-gray-600">Duration</div>
