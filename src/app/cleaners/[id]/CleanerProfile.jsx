@@ -38,6 +38,23 @@ function labelForHour(h) {
   return `${hh}:00`;
 }
 
+// Slug + robust service key
+function slugify(s = '') {
+  return String(s)
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+function makeServiceKey(service, idx) {
+  if (!service) return '';
+  if (typeof service.key === 'string' && service.key.trim()) return service.key.trim();
+  if (typeof service.id === 'string' && service.id.trim()) return `id-${slugify(service.id)}`;
+  if (typeof service.name === 'string' && service.name.trim()) return `name-${slugify(service.name)}`;
+  return `svc-${idx}`;
+}
+
 /* -------------------------- Date / Week utilities ------------------------- */
 
 function getMonday(d = new Date()) {
@@ -239,10 +256,10 @@ export default function CleanerProfilePage() {
     [service]
   );
 
-  // Keep increment/min/max for internal span calc (not shown to client)
-  const increment = useMemo(() => service?.incrementMins ?? 60, [service]); // reserved if you later add sliders
-  const minDuration = useMemo(() => service?.minDurationMins ?? 60, [service]); // reserved
-  const maxDuration = useMemo(() => service?.maxDurationMins ?? 240, [service]); // reserved
+  // (kept for future UI controls if needed)
+  const increment = useMemo(() => service?.incrementMins ?? 60, [service]);
+  const minDuration = useMemo(() => service?.minDurationMins ?? 60, [service]);
+  const maxDuration = useMemo(() => service?.maxDurationMins ?? 240, [service]);
 
   // Span required for this booking config (buffers included but hidden in UI)
   const span = useMemo(
@@ -343,25 +360,36 @@ export default function CleanerProfilePage() {
     const dayIdx = DAYS.indexOf(selectedDay);
     const isoDate = isoDates[dayIdx];
 
+    // robust service key + name
+    const svc = service;
+    const svcKey = makeServiceKey(svc, selectedServiceIdx);
+    const svcName = (svc?.name || svc?.key || `Service ${selectedServiceIdx + 1}`).toString();
+
+    if (!svcKey) {
+      setToast('Could not determine service key. Please reselect a service.');
+      return;
+    }
+
     setCreating(true);
     setToast('');
     try {
+      const payload = {
+        cleanerId: cleaner._id,
+        day: selectedDay,
+        hour: selectedHour,           // number; API casts to string
+        isoDate,                      // optional; API can ignore
+        serviceKey: svcKey,           // ✅ guaranteed non-empty
+        serviceName: svcName,         // optional (useful context)
+        durationMins,
+        bufferBeforeMins,
+        bufferAfterMins,
+      };
+
       const res = await fetch(CREATE_PURCHASE_API, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({
-          cleanerId: cleaner._id,
-          // legacy fields – keep for backward compatibility
-          day: selectedDay,
-          hour: selectedHour, // number (API stores as string)
-          // optional date-specific field (server can ignore if not supported)
-          isoDate,
-          serviceKey: service?.key ?? service?.id ?? service?.name ?? `index-${selectedServiceIdx}`,
-          durationMins,
-          bufferBeforeMins,
-          bufferAfterMins,
-        }),
+        body: JSON.stringify(payload),
       });
       const j = await res.json();
       if (!res.ok || !j?.success) {
@@ -483,7 +511,7 @@ export default function CleanerProfilePage() {
               Checking booking status…
             </div>
           ) : contactUnlocked ? (
-            <div className="grid sm-grid-cols-3 sm:grid-cols-3 gap-4 text-gray-800">
+            <div className="grid sm:grid-cols-3 gap-4 text-gray-800">
               <div><div className="text-teal-700 font-semibold">📞 Phone</div><div>{cleaner.phone || '—'}</div></div>
               <div><div className="text-teal-700 font-semibold">📧 Email</div><div>{cleaner.email || '—'}</div></div>
               <div><div className="text-teal-700 font-semibold">🏢 Company</div><div>{cleaner.companyName || cleaner.realName}</div></div>
@@ -513,11 +541,13 @@ export default function CleanerProfilePage() {
                         key={`${s.key ?? s.id ?? s.name ?? 'svc'}-${idx}`}
                         type="button"
                         onClick={() => {
-                          setSelectedServiceIdx(idx);
+                          const nextIdx = idx >= 0 ? idx : 0;
+                          setSelectedServiceIdx(nextIdx);
+                          const sel = activeServices[nextIdx];
                           // lock to cleaner-defined defaults
-                          setDurationMins(s.defaultDurationMins ?? 60);
-                          setBufferBeforeMins(s.bufferBeforeMins ?? 0);
-                          setBufferAfterMins(s.bufferAfterMins ?? 0);
+                          setDurationMins(sel?.defaultDurationMins ?? 60);
+                          setBufferBeforeMins(sel?.bufferBeforeMins ?? 0);
+                          setBufferAfterMins(sel?.bufferAfterMins ?? 0);
                         }}
                         className={[
                           "px-4 py-2 rounded-full border transition select-none",
@@ -727,7 +757,7 @@ export default function CleanerProfilePage() {
 
         {/* Reviews */}
         {(cleaner.googleReviews?.url || cleaner.facebookReviewUrl || cleaner.embedCode) && (
-          <section className="bg-white/25 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-xl">
+          <section className="bg-white/25 backdrop-blur-xl border border-white/20 rounded-3rxl rounded-3xl p-6 shadow-xl">
             <h2 className="text-xl font-bold text-teal-800 mb-4">⭐ Reviews</h2>
 
             <div className="flex flex-wrap gap-3">
