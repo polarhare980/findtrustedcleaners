@@ -166,7 +166,7 @@ export default function CleanerProfilePage() {
         }
         let c = data.cleaner;
 
-        // 2) purchases feed -> inject pending/accepted into base weekly grid
+        // 2) purchases feed -> inject pending/approved into base weekly grid
         try {
           const pRes = await fetch(PUBLIC_PURCHASES_API(c._id), { credentials: 'include' });
           const p = await pRes.json();
@@ -192,6 +192,11 @@ export default function CleanerProfilePage() {
             setDurationMins(act[0].defaultDurationMins ?? 60);
             setBufferBeforeMins(act[0].bufferBeforeMins ?? 0);
             setBufferAfterMins(act[0].bufferAfterMins ?? 0);
+          } else {
+            setSelectedServiceIdx(0);
+            setDurationMins(60);
+            setBufferBeforeMins(0);
+            setBufferAfterMins(0);
           }
         }
       } catch (e) {
@@ -211,6 +216,19 @@ export default function CleanerProfilePage() {
     [cleaner]
   );
 
+  // guard against out-of-range index if services change
+  useEffect(() => {
+    if (!activeServices.length) return;
+    if (selectedServiceIdx >= activeServices.length) {
+      setSelectedServiceIdx(0);
+      const s = activeServices[0];
+      setDurationMins(s?.defaultDurationMins ?? 60);
+      setBufferBeforeMins(s?.bufferBeforeMins ?? 0);
+      setBufferAfterMins(s?.bufferAfterMins ?? 0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeServices.length]);
+
   const service = useMemo(() => {
     if (!activeServices.length) return null;
     return activeServices[selectedServiceIdx] || null;
@@ -222,9 +240,9 @@ export default function CleanerProfilePage() {
   );
 
   // Keep increment/min/max for internal span calc (not shown to client)
-  const increment = useMemo(() => service?.incrementMins ?? 60, [service]);
-  const minDuration = useMemo(() => service?.minDurationMins ?? 60, [service]);
-  const maxDuration = useMemo(() => service?.maxDurationMins ?? 240, [service]);
+  const increment = useMemo(() => service?.incrementMins ?? 60, [service]); // reserved if you later add sliders
+  const minDuration = useMemo(() => service?.minDurationMins ?? 60, [service]); // reserved
+  const maxDuration = useMemo(() => service?.maxDurationMins ?? 240, [service]); // reserved
 
   // Span required for this booking config (buffers included but hidden in UI)
   const span = useMemo(
@@ -250,7 +268,8 @@ export default function CleanerProfilePage() {
   }, [weekAvailability, selectedDay, selectedHour, span]);
 
   // Limit weeks a client can browse by the cleaner's plan
-  const maxAhead = cleaner?.isPremium ? 3 : 0; // Free = this week only; Premium = +3 => total 4
+  const premiumWeeksAhead = typeof cleaner?.premiumWeeksAhead === 'number' ? Math.max(0, cleaner.premiumWeeksAhead) : 3;
+  const maxAhead = cleaner?.isPremium ? premiumWeeksAhead : 0; // Free = this week only; Premium = configurable
   const canGoPrev = weekOffset > 0;            // no past weeks
   const canGoNext = weekOffset < maxAhead;
 
@@ -304,6 +323,21 @@ export default function CleanerProfilePage() {
       return;
     }
 
+    // ✅ Auth-gate: ensure we have a logged-in client before posting
+    try {
+      const meRes = await fetch('/api/auth/me', { credentials: 'include' });
+      const me = await meRes.json();
+      if (!meRes.ok || !me?.success || me?.user?.type !== 'client') {
+        const next = encodeURIComponent(`/cleaners/${cleaner._id}`);
+        window.location.href = `/login?next=${next}`;
+        return;
+      }
+    } catch {
+      const next = encodeURIComponent(`/cleaners/${cleaner._id}`);
+      window.location.href = `/login?next=${next}`;
+      return;
+    }
+
     // derive isoDate for the selected column (week + day)
     const isoDates = getWeekISODates(mondaySelected);
     const dayIdx = DAYS.indexOf(selectedDay);
@@ -320,8 +354,8 @@ export default function CleanerProfilePage() {
           cleanerId: cleaner._id,
           // legacy fields – keep for backward compatibility
           day: selectedDay,
-          hour: selectedHour, // number
-          // new date-specific field (safe to ignore server-side if not supported yet)
+          hour: selectedHour, // number (API stores as string)
+          // optional date-specific field (server can ignore if not supported)
           isoDate,
           serviceKey: service?.key ?? service?.id ?? service?.name ?? `index-${selectedServiceIdx}`,
           durationMins,
@@ -335,7 +369,7 @@ export default function CleanerProfilePage() {
       }
       setToast('Booking request sent! Awaiting cleaner approval.');
 
-      // Refresh purchases overlay (this affects current week's base overlay; acceptable)
+      // Refresh purchases overlay
       try {
         const pRes = await fetch(PUBLIC_PURCHASES_API(cleaner._id), { credentials: 'include' });
         const p = await pRes.json();
@@ -449,7 +483,7 @@ export default function CleanerProfilePage() {
               Checking booking status…
             </div>
           ) : contactUnlocked ? (
-            <div className="grid sm:grid-cols-3 gap-4 text-gray-800">
+            <div className="grid sm-grid-cols-3 sm:grid-cols-3 gap-4 text-gray-800">
               <div><div className="text-teal-700 font-semibold">📞 Phone</div><div>{cleaner.phone || '—'}</div></div>
               <div><div className="text-teal-700 font-semibold">📧 Email</div><div>{cleaner.email || '—'}</div></div>
               <div><div className="text-teal-700 font-semibold">🏢 Company</div><div>{cleaner.companyName || cleaner.realName}</div></div>
