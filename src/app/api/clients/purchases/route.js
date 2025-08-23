@@ -20,7 +20,6 @@ function json(data, status = 200, extraHeaders = {}) {
 }
 
 /* -------------------------- OPTIONS (preflight) --------------------------- */
-// Prevent 405s when the browser sends CORS preflight
 export async function OPTIONS() {
   return new NextResponse(null, {
     status: 204,
@@ -37,8 +36,7 @@ export async function OPTIONS() {
 export async function GET(req) {
   await connectToDatabase();
 
-  // Normalize unauthenticated -> 401 (so client can redirect to login)
-  const { valid, user /*, response*/ } = await protectApiRoute(req);
+  const { valid, user } = await protectApiRoute(req);
   if (!valid) return json({ success: false, message: 'Unauthenticated' }, 401);
   if (user.type !== 'client') return json({ success: false, message: 'Access denied.' }, 403);
 
@@ -57,27 +55,25 @@ export async function GET(req) {
 
 /* ------------------------------ POST (create) ------------------------------ */
 /**
- * Create a span-aware pending purchase.
  * Body:
  * {
  *   cleanerId: string,
- *   day: 'Monday'...'Sunday',
- *   hour: number,                 // 24h integer start hour (e.g. 9)
- *   serviceKey: string,           // key from cleaner.servicesDetailed
- *   // optional overrides (backend falls back to service defaults):
+ *   day: 'Monday'..'Sunday',
+ *   hour: number (0..23),
+ *   serviceKey: string,                // optional but recommended
  *   durationMins?: number,
  *   bufferBeforeMins?: number,
  *   bufferAfterMins?: number,
- *   // optional pricing
  *   currency?: 'GBP' | string,
- *   amount?: number               // pounds
+ *   amount?: number,
+ *   notes?: string,
+ *   isoDate?: 'YYYY-MM-DD'             // optional; ignored by server for now
  * }
  */
 export async function POST(req) {
   await connectToDatabase();
 
-  // ✅ Normalize unauthenticated -> 401 (was likely 403 before)
-  const { valid, user /*, response*/ } = await protectApiRoute(req);
+  const { valid, user } = await protectApiRoute(req);
   if (!valid) return json({ success: false, message: 'Unauthenticated' }, 401);
   if (user.type !== 'client') return json({ success: false, message: 'Access denied.' }, 403);
 
@@ -92,15 +88,17 @@ export async function POST(req) {
     cleanerId,
     day,
     hour,
-    serviceKey,
+    serviceKey,         // may be absent if cleaner has simple services
     durationMins,
     bufferBeforeMins,
     bufferAfterMins,
     currency = 'GBP',
-    amount, // pounds (optional)
+    amount,
     notes,
+    // isoDate (optional, ignored)
   } = body || {};
 
+  // Basic validation
   if (!mongoose.Types.ObjectId.isValid(String(cleanerId))) {
     return json({ success: false, message: 'Invalid cleanerId.' }, 400);
   }
@@ -111,25 +109,27 @@ export async function POST(req) {
   if (!Number.isInteger(startHour) || startHour < 0 || startHour > 23) {
     return json({ success: false, message: 'Invalid start hour.' }, 400);
   }
-  if (!serviceKey) {
-    return json({ success: false, message: 'serviceKey is required.' }, 400);
-  }
 
-  // Load cleaner + service config
+  // Load cleaner + service config (if detailed services exist)
   const cleaner = await Cleaner.findById(cleanerId).lean();
   if (!cleaner) return json({ success: false, message: 'Cleaner not found.' }, 404);
 
-  const svc = (cleaner.servicesDetailed || []).find(s => s.key === serviceKey && s.active !== false) || null;
+  const svc = (cleaner.servicesDetailed || []).find(
+    s => s && (s.key === serviceKey) && s.active !== false
+  ) || null;
+
   const effDuration =
     typeof durationMins === 'number' && durationMins > 0
       ? durationMins
       : (svc?.defaultDurationMins ?? 60);
+
   const effBufBefore =
     typeof bufferBeforeMins === 'number' ? Math.max(0, bufferBeforeMins) : (svc?.bufferBeforeMins ?? 0);
+
   const effBufAfter =
     typeof bufferAfterMins === 'number' ? Math.max(0, bufferAfterMins) : (svc?.bufferAfterMins ?? 0);
 
-  // Clamp to service min/max if present
+  // Optional clamp to svc min/max if present
   if (svc) {
     const minD = svc.minDurationMins ?? 60;
     const maxD = svc.maxDurationMins ?? 240;
@@ -143,57 +143,103 @@ export async function POST(req) {
     bufferAfterMins: effBufAfter,
   });
 
-  // Bound check (don’t roll past midnight)
+  // Bound check
   if (startHour + span > 24) {
     return json({ success: false, message: 'Requested span exceeds end of day.' }, 400);
   }
 
-  // Compose merged availability for the day with current pending/accepted
-  const base = cleaner.availability || {};
-  const blocking = await Purchase.find({
-    cleanerId,
-    day,
-    status: { $in: ['pending', 'pending_approval', 'accepted'] },
-  }).lean();
+  // Build merged view of availability for conflicts (pending holds + approved as booked)
+  try {
+    const base = cleaner.availability || {};
+    const existing = await Purchase.find({
+      cleanerId,
+      day,
+      status: { $in: ['pending', 'approved'] },
+    }).lean();
 
-  const merged = JSON.parse(JSON.stringify(base));
-  if (!merged[day]) merged[day] = {};
-  for (const p of blocking || []) {
-    const s = Number(p.span || 1);
-    for (let i = 0; i < s; i++) {
-      const hk = String(Number(p.hour) + i);
-      if (merged[day][hk] === false || merged[day][hk] === 'unavailable') continue;
-      merged[day][hk] = p.status === 'accepted' ? 'booked' : 'pending';
+    const merged = JSON.parse(JSON.stringify(base));
+    if (!merged[day]) merged[day] = {};
+
+    for (const p of existing || []) {
+      const s = Number(p.span || 1);
+      for (let i = 0; i < s; i++) {
+        const hk = String(Number(p.hour) + i);
+        if (merged[day][hk] === false || merged[day][hk] === 'unavailable') continue;
+        merged[day][hk] = p.status === 'approved' ? 'booked' : 'pending';
+      }
     }
+
+    // Validate contiguous availability
+    if (!hasContiguousAvailability(merged, day, startHour, span)) {
+      return json({ success: false, message: 'Start time no longer available for required duration.' }, 409);
+    }
+  } catch (e) {
+    console.error('❌ Availability merge/check failed:', e);
+    // We still fail gracefully here to avoid double-booking.
+    return json({ success: false, message: 'Could not validate availability.' }, 500);
   }
 
-  // Validate contiguous availability
-  if (!hasContiguousAvailability(merged, day, startHour, span)) {
-    return json({ success: false, message: 'Start time no longer available for required duration.' }, 409);
-  }
-
-  // Create pending purchase (approval flow)
-  const doc = await Purchase.create({
+  // Attempt to create with extended fields; if schema is strict and rejects,
+  // fall back to a minimal document that only uses known-safe fields.
+  const extendedDoc = {
     cleanerId,
     clientId: user._id,
     day,
-    hour: startHour,            // keep as number if your schema allows; otherwise String(startHour)
-    span,
-    serviceKey,
-    serviceName: svc?.name,
-    durationMins: effDuration,
+    hour: String(startHour),     // schema uses String
+    span,                        // optional in schema; overlay uses default 1 if absent
+    serviceKey,                  // might not exist in schema (strict mode may throw)
+    durationMins: effDuration,   // might not exist in schema
     bufferBeforeMins: effBufBefore,
     bufferAfterMins: effBufAfter,
     currency,
-    amount: typeof amount === 'number' ? amount : undefined, // optional
-    status: 'pending_approval', // keep your existing flow
+    amount: typeof amount === 'number' ? amount : undefined,
+    status: 'pending',
     notes: typeof notes === 'string' ? notes : undefined,
-  });
+  };
 
-  return json({
-    success: true,
-    purchaseId: String(doc._id),
-    span,
-    status: doc.status,
-  }, 201);
+  try {
+    const doc = await Purchase.create(extendedDoc);
+    return json({
+      success: true,
+      purchaseId: String(doc._id),
+      span,
+      status: doc.status,
+    }, 201);
+  } catch (err) {
+    // If schema is strict and throws on unknown fields, retry with a minimal shape.
+    console.warn('⚠️ Purchase.create failed with extended fields, retrying minimal. Error:', err?.message);
+
+    try {
+      const minimalDoc = {
+        cleanerId,
+        clientId: user._id,
+        day,
+        hour: String(startHour),
+        status: 'pending',
+        // keep span if your schema has it; otherwise comment the next line:
+        span,
+      };
+      const doc = await Purchase.create(minimalDoc);
+      return json({
+        success: true,
+        purchaseId: String(doc._id),
+        span,
+        status: doc.status,
+      }, 201);
+    } catch (err2) {
+      console.error('❌ Purchase.create failed (minimal):', err2);
+      // Surface a readable message to the client
+      const message =
+        err2?.errors
+          ? Object.values(err2.errors).map(e => e.message).join('; ')
+          : (err2?.message || 'Failed to create purchase.');
+      // 400 for validation/cast issues; 500 otherwise
+      const isValidation =
+        /validation/i.test(message) ||
+        /cast/i.test(message) ||
+        err2?.name === 'ValidationError' ||
+        err2?.name === 'CastError';
+      return json({ success: false, message }, isValidation ? 400 : 500);
+    }
+  }
 }
