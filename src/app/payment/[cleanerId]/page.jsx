@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
-import PaymentForm from '@/components/PaymentForm'; // You will create this next
+import PaymentForm from '@/components/PaymentForm';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
@@ -16,17 +16,35 @@ export default function PaymentPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // You may pass slot details via query string or session/local storage
-  const slot = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('selectedSlot')) : null;
-  const price = typeof window !== 'undefined' ? localStorage.getItem('bookingPrice') : null;
-
   useEffect(() => {
-    if (!slot || !price) {
-      setError('Missing booking information.');
-      return;
-    }
+    (async () => {
+      // 1) Auth check (must be a logged-in CLIENT)
+      try {
+        const meRes = await fetch('/api/auth/me', { credentials: 'include' });
+        const me = await meRes.json();
+        if (!me?.success || me?.user?.type !== 'client') {
+          const next = `/payment/${cleanerId}`;
+          router.replace(`/login/clients?next=${encodeURIComponent(next)}`);
+          return;
+        }
+      } catch {
+        const next = `/payment/${cleanerId}`;
+        router.replace(`/login/clients?next=${encodeURIComponent(next)}`);
+        return;
+      }
 
-    const createPaymentIntent = async () => {
+      // 2) Get slot + price from storage
+      const slotRaw = typeof window !== 'undefined' ? localStorage.getItem('selectedSlot') : null;
+      const slot = slotRaw ? (() => { try { return JSON.parse(slotRaw); } catch { return null; } })() : null;
+      const price = typeof window !== 'undefined' ? localStorage.getItem('bookingPrice') : null;
+
+      if (!slot || !price) {
+        setError('Missing booking information.');
+        setLoading(false);
+        return;
+      }
+
+      // 3) Create PaymentIntent (server will re-check auth)
       try {
         const res = await fetch('/api/stripe/payment-intent', {
           method: 'POST',
@@ -40,10 +58,17 @@ export default function PaymentPage() {
           }),
         });
 
-        const data = await res.json();
+        // If session expired between steps, redirect to login
+        if (res.status === 401) {
+          const next = `/payment/${cleanerId}`;
+          router.replace(`/login/clients?next=${encodeURIComponent(next)}`);
+          return;
+        }
 
-        if (!data.success) {
-          setError('Failed to initiate payment.');
+        const data = await res.json();
+        if (!res.ok || !data?.success) {
+          setError(data?.message || 'Failed to initiate payment.');
+          setLoading(false);
           return;
         }
 
@@ -55,10 +80,8 @@ export default function PaymentPage() {
       } finally {
         setLoading(false);
       }
-    };
-
-    createPaymentIntent();
-  }, [cleanerId, slot, price]);
+    })();
+  }, [cleanerId, router]);
 
   if (error) return <div className="p-6 text-red-600 text-center">{error}</div>;
   if (loading) return <div className="p-6 text-center">Loading Payment...</div>;
