@@ -380,23 +380,29 @@ function Step({ n, title, desc }) {
 }
 
 function CleanerCard({ cleaner, handleBookingRequest, isPremium, isFavourite, onToggleFavourite }) {
-  const router = useRouter();
   const availability = cleaner.availabilityMerged || cleaner.availability || {};
   const id = encodeURIComponent(String(cleaner?._id || cleaner?.id || ''));
-  const goToProfile = () => router.push(`/cleaners/${id}`);
+
+  // If id is missing, don't try to navigate (and surface it in dev)
+  const href = id ? `/cleaners/${id}` : undefined;
+  if (process.env.NODE_ENV !== 'production' && !id) {
+    console.warn('CleanerCard: missing cleaner id for', cleaner);
+  }
 
   return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={goToProfile}
-      onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && goToProfile()}
-      className="cleaner-card cursor-pointer select-none"
-      style={{ pointerEvents: 'auto' }}
-      aria-label={`View ${cleaner.companyName || cleaner.realName || 'cleaner'} profile`}
-    >
+    <div className="cleaner-card relative">
+      {/* CLICK-THROUGH OVERLAY: guarantees navigation */}
+      {href && (
+        <Link
+          href={href}
+          prefetch={false}
+          aria-label={`View ${cleaner.companyName || cleaner.realName || 'cleaner'} profile`}
+          className="absolute inset-0 z-10"
+        />
+      )}
+
       {/* Favourite Toggle */}
-      <div className="text-right mb-2">
+      <div className="text-right mb-2 relative z-20">
         <button
           type="button"
           onClick={(e) => { e.preventDefault(); e.stopPropagation(); onToggleFavourite?.(cleaner._id); }}
@@ -409,14 +415,14 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium, isFavourite, on
       </div>
 
       {/* Badges */}
-      <div className="flex gap-2 mb-4">
+      <div className="flex gap-2 mb-4 relative z-20">
         {isPremium && <div className="premium-badge"><span className="text-xs font-semibold">Premium Cleaner</span></div>}
         {cleaner.businessInsurance && <div className="insured-badge"><span className="text-xs font-semibold">✔ Insured</span></div>}
         {cleaner.dbsChecked && <div className="dbs-badge"><span className="text-xs font-semibold">✔ DBS Checked</span></div>}
       </div>
 
       {/* Image */}
-      <div className="cleaner-image">
+      <div className="cleaner-image relative z-20">
         <img
           src={typeof cleaner.image === 'string' && cleaner.image.trim() !== '' ? cleaner.image : '/default-avatar.png'}
           alt={cleaner.companyName || cleaner.realName || 'Cleaner'}
@@ -426,7 +432,7 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium, isFavourite, on
       </div>
 
       {/* Info */}
-      <div className="cleaner-info">
+      <div className="cleaner-info relative z-20">
         <h3 className="cleaner-name">{cleaner.companyName || cleaner.realName}</h3>
 
         {/* Services */}
@@ -457,7 +463,8 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium, isFavourite, on
 
         {/* Availability mini-grid (only for premium) */}
         {isPremium && (
-          <div className="availability-grid mt-4">
+          <div className="availability-grid mt-4 relative z-20 pointer-events-none">
+            {/* pointer-events-none so the overlay receives the click */}
             <h4 className="font-semibold text-teal-700 mb-2 text-center">Availability</h4>
             <div className="grid grid-cols-[60px_repeat(13,1fr)] text-xs border border-gray-200 rounded overflow-hidden">
               <div className="bg-gray-100 p-1 font-bold text-center">Day</div>
@@ -496,22 +503,27 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium, isFavourite, on
         )}
 
         {/* Actions */}
-        <div className="cleaner-actions mt-4 flex justify-center gap-3">
-          {/* True link that always works */}
+        <div className="cleaner-actions mt-4 flex justify-center gap-3 relative z-20">
+          {/* Explicit link button (still works even with overlay) */}
           <Link
-            href={`/cleaners/${id}`}
+            href={href || '#'}
             prefetch={false}
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              if (!href) e.preventDefault();
+              e.stopPropagation();
+            }}
             className="btn-request-booking active-tap"
-            aria-label={`View ${cleaner.companyName || cleaner.realName || 'cleaner'} profile`}
           >
             View profile
           </Link>
 
-          {/* Booking button (stops card click) */}
           <button
             type="button"
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleBookingRequest?.(cleaner._id); }}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation(); // don't trigger the overlay link
+              if (cleaner?._id) handleBookingRequest?.(cleaner._id);
+            }}
             className="btn-request-booking active-tap"
           >
             Request booking
@@ -521,8 +533,17 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium, isFavourite, on
 
       {/* Card styles */}
       <style jsx>{`
-        .cleaner-card { background: rgba(255,255,255,0.95); border: 1px solid rgba(255,255,255,0.3); border-radius: 16px;
-          padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: all .3s; min-width: 300px; max-width: 350px; flex: 0 0 auto; }
+        .cleaner-card {
+          background: rgba(255,255,255,0.95);
+          border: 1px solid rgba(255,255,255,0.3);
+          border-radius: 16px;
+          padding: 20px;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+          transition: all .3s;
+          min-width: 300px;
+          max-width: 350px;
+          flex: 0 0 auto;
+        }
         .cleaner-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
         .premium-badge { background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); color: white; padding: 4px 12px; border-radius: 20px; display: inline-block; box-shadow: 0 2px 8px rgba(245,158,11,0.3); }
         .insured-badge { background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; padding: 4px 12px; border-radius: 20px; display: inline-block; box-shadow: 0 2px 8px rgba(16,185,129,0.3); }
