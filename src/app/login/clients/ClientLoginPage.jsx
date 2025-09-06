@@ -41,8 +41,9 @@ export default function ClientLoginPage() {
 
         const safeRedirect = (url) => {
           if (!url) return '/clients/dashboard';
-          const allowedPrefixes = ['/clients/', '/cleaner/'];
-          return allowedPrefixes.some(prefix => url.startsWith(prefix)) ? url : '/clients/dashboard';
+          // allow cleaner profile pages (singular/plural), client pages, and payment pages
+          const allowedPattern = /^\/(cleaners?|clients|payment)\b/;
+          return allowedPattern.test(url) ? url : '/clients/dashboard';
         };
 
         const destination = safeRedirect(nextUrl || redirectFromStorage);
