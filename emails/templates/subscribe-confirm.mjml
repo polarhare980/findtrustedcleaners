@@ -1,0 +1,15 @@
+<mjml>
+  <mj-head><mj-title>Confirm your subscription</mj-title></mj-head>
+  <mj-body background-color="{{bg_color}}">
+    <mj-section><mj-column>
+      <mj-image width="160px" src="{{site_url}}/logo.svg" alt="FindTrustedCleaners" padding="16px 0"></mj-image>
+      <mj-divider border-color="{{divider}}"></mj-divider>
+      <mj-text font-size="18px" font-weight="700" color="{{brand_color}}">Confirm your subscription</mj-text>
+      <mj-text color="{{body_text}}">Please confirm your subscription to receive tips and exclusive offers.</mj-text>
+      <mj-button href="{{verify_url}}" background-color="{{button_bg}}" border-radius="10px">Confirm subscription</mj-button>
+      <mj-text color="{{footer_text}}" font-size="12px">This link expires in 48 hours.</mj-text>
+      <mj-divider border-color="{{divider}}"></mj-divider>
+      <mj-text align="center" color="{{footer_text}}" font-size="12px"><a href="{{site_url}}/blog">Blog</a> • <a href="{{site_url}}/faq">FAQ</a> • <a href="{{site_url}}">Website</a></mj-text>
+    </mj-column></mj-section>
+  </mj-body>
+</mjml>

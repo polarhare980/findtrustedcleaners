@@ -1,0 +1,14 @@
+<mjml>
+  <mj-head><mj-title>Thanks for your review</mj-title></mj-head>
+  <mj-body background-color="{{bg_color}}">
+    <mj-section><mj-column>
+      <mj-image width="160px" src="{{site_url}}/logo.svg" alt="FindTrustedCleaners" padding="16px 0"></mj-image>
+      <mj-divider border-color="{{divider}}"></mj-divider>
+      <mj-text font-size="18px" font-weight="700" color="{{brand_color}}">Thank you!</mj-text>
+      <mj-text color="{{body_text}}">Your feedback helps others book with confidence and helps cleaners grow their business.</mj-text>
+      <mj-button href="{{site_url}}/clients/dashboard" background-color="{{button_bg}}" border-radius="10px">View your bookings</mj-button>
+      <mj-divider border-color="{{divider}}"></mj-divider>
+      <mj-text align="center" color="{{footer_text}}" font-size="12px"><a href="{{site_url}}/blog">Blog</a> • <a href="{{site_url}}/faq">FAQ</a> • <a href="{{site_url}}">Website</a></mj-text>
+    </mj-column></mj-section>
+  </mj-body>
+</mjml>

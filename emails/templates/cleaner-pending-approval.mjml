@@ -1,0 +1,14 @@
+<mjml>
+  <mj-head><mj-title>New booking awaiting your approval</mj-title></mj-head>
+  <mj-body background-color="{{bg_color}}">
+    <mj-section><mj-column>
+      <mj-image width="160px" src="{{site_url}}/logo.svg" alt="FindTrustedCleaners" padding="16px 0"></mj-image>
+      <mj-divider border-color="{{divider}}"></mj-divider>
+      <mj-text font-size="18px" font-weight="700" color="{{brand_color}}">New booking request</mj-text>
+      <mj-text color="{{body_text}}">Day: {{day}}<br/>Start: {{hour}}:00<br/>Duration: {{span_hours}} hour(s)</mj-text>
+      <mj-button href="{{dashboard_url}}" background-color="{{button_bg}}" border-radius="10px">Open dashboard</mj-button>
+      <mj-divider border-color="{{divider}}"></mj-divider>
+      <mj-text align="center" color="{{footer_text}}" font-size="12px"><a href="{{site_url}}/blog">Blog</a> • <a href="{{site_url}}/faq">FAQ</a> • <a href="{{site_url}}">Website</a></mj-text>
+    </mj-column></mj-section>
+  </mj-body>
+</mjml>

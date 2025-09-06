@@ -1,0 +1,143 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.input {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+/* 🌟 Cleaner Card Styling - Professional, Modern */
+.cleaner-card {
+  background-color: white;
+  background-opacity: 0.95;
+  border-radius: 1rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cleaner-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+.cleaner-card h2 {
+  color: #0D9488;
+}
+
+.cleaner-card p {
+  color: #4A4A4A;
+}
+
+/* 🌟 Button Styling - Modern CTA */
+.cta-button {
+  background-color: #0D9488;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.cta-button:hover {
+  background-color: #0B8279;
+  transform: scale(1.05);
+}
+
+/* 🌟 Status Badge Styling */
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.status-available {
+  background-color: #22C55E;
+  color: white;
+}
+
+.status-pending {
+  background-color: #FACC15;
+  color: white;
+}
+
+.status-booked {
+  background-color: #EF4444;
+  color: white;
+}
+
+/* 🌟 Empty State Styling */
+.empty-state {
+  background-color: white;
+  background-opacity: 0.95;
+  border-radius: 1rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  text-align: center;
+  color: #6B7280;
+  margin-top: 2rem;
+}
+
+.empty-state p {
+  margin-bottom: 1rem;
+}
+
+.empty-state a {
+  display: inline-block;
+  background-color: #0D9488;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.empty-state a:hover {
+  background-color: #0B8279;
+  transform: scale(1.05);
+}
+
+/* Add this to your existing src/app/globals.css file */
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.8s ease-out both;
+}

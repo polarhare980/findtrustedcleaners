@@ -1,0 +1,46 @@
+{
+  "name": "findtrustedcleaners",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "npm run build:emails && next build",
+    "start": "next start",
+    "lint": "next lint",
+    "build:emails": "node scripts/build-emails.mjs"
+  },
+  "dependencies": {
+    "@stripe/react-stripe-js": "^3.7.0",
+    "@stripe/stripe-js": "^7.4.0",
+    "bcryptjs": "^3.0.2",
+    "cloudinary": "^2.7.0",
+    "cookie": "^1.0.2",
+    "framer-motion": "^12.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "marked": "^16.0.0",
+    "micro": "^10.0.1",
+    "mongodb": "^6.17.0",
+    "mongoose": "^8.16.0",
+    "next": "^15.5.2",
+    "next-auth": "^4.24.11",
+    "next-rate-limit": "^0.0.3",
+    "nodemailer": "^6.10.1",
+    "react": "^19.0.0",
+    "react-confetti": "^6.4.0",
+    "react-dom": "^19.0.0",
+    "stripe": "^18.2.1",
+    "swr": "^2.3.4",
+    "tesseract.js": "^6.0.1",
+    "@next/mdx": "15.3.3",
+    "mjml": "4.15.3",
+    "mustache": "^4.2.0",
+    "resend": "4.8.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "eslint": "^9",
+    "eslint-config-next": "15.3.3",
+    "tailwindcss": "^4"
+  }
+}
