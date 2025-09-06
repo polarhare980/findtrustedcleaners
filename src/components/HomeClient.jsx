@@ -82,11 +82,12 @@ export default function HomeClient() {
   }, [data?.success]);
 
   const handleBookingRequest = (cleanerId) => {
+    const id = encodeURIComponent(String(cleanerId));
     const clientId = typeof window !== 'undefined' ? localStorage.getItem('clientId') : null;
     if (!clientId) {
-      router.push(`/login/clients?next=/cleaners/${cleanerId}`);
+      router.push(`/login/clients?next=/cleaners/${id}`);
     } else {
-      router.push(`/cleaners/${cleanerId}`);
+      router.push(`/cleaners/${id}`);
     }
   };
 
@@ -217,24 +218,24 @@ export default function HomeClient() {
             Featured Premium Cleaners
           </h2>
 
-          {isLoading ? (
-            <LoadingRow text="Loading featured cleaners..." />
-          ) : (premiumCleaners || []).length === 0 ? (
-            <p className="text-center text-white text-lg">No premium cleaners available at this time.</p>
-          ) : (
-            <div className="flex overflow-x-auto gap-6 pb-4 px-2 scrollbar-hide">
-              {premiumCleaners.map((cleaner) => (
-                <CleanerCard
-                  key={cleaner._id}
-                  cleaner={cleaner}
-                  handleBookingRequest={handleBookingRequest}
-                  isPremium
-                  isFavourite={favouriteIds.includes(String(cleaner._id))}
-                  onToggleFavourite={(id) => handleToggleFavourite(String(id))}
-                />
-              ))}
-            </div>
-          )}
+        {isLoading ? (
+          <LoadingRow text="Loading featured cleaners..." />
+        ) : (premiumCleaners || []).length === 0 ? (
+          <p className="text-center text-white text-lg">No premium cleaners available at this time.</p>
+        ) : (
+          <div className="flex overflow-x-auto gap-6 pb-4 px-2 scrollbar-hide">
+            {premiumCleaners.map((cleaner) => (
+              <CleanerCard
+                key={cleaner._id}
+                cleaner={cleaner}
+                handleBookingRequest={handleBookingRequest}
+                isPremium
+                isFavourite={favouriteIds.includes(String(cleaner._id))}
+                onToggleFavourite={(id) => handleToggleFavourite(String(id))}
+              />
+            ))}
+          </div>
+        )}
         </div>
       </section>
 
@@ -260,23 +261,23 @@ export default function HomeClient() {
         <div className="container mx-auto">
           <h2 className="text-3xl font-bold mb-8 text-center text-grey drop-shadow-lg">Free Listed Cleaners</h2>
 
-          {isLoading ? (
-            <LoadingRow text="Loading cleaners..." />
-          ) : (freeCleaners || []).length === 0 ? (
-            <p className="text-center text-white text-lg">No free listed cleaners available at this time.</p>
-          ) : (
-            <div className="flex overflow-x-auto gap-6 pb-4 px-2 scrollbar-hide">
-              {freeCleaners.map((cleaner) => (
-                <CleanerCard
-                  key={cleaner._id}
-                  cleaner={cleaner}
-                  handleBookingRequest={handleBookingRequest}
-                  isFavourite={favouriteIds.includes(String(cleaner._id))}
-                  onToggleFavourite={(id) => handleToggleFavourite(String(id))}
-                />
-              ))}
-            </div>
-          )}
+        {isLoading ? (
+          <LoadingRow text="Loading cleaners..." />
+        ) : (freeCleaners || []).length === 0 ? (
+          <p className="text-center text-white text-lg">No free listed cleaners available at this time.</p>
+        ) : (
+          <div className="flex overflow-x-auto gap-6 pb-4 px-2 scrollbar-hide">
+            {freeCleaners.map((cleaner) => (
+              <CleanerCard
+                key={cleaner._id}
+                cleaner={cleaner}
+                handleBookingRequest={handleBookingRequest}
+                isFavourite={favouriteIds.includes(String(cleaner._id))}
+                onToggleFavourite={(id) => handleToggleFavourite(String(id))}
+              />
+            ))}
+          </div>
+        )}
         </div>
       </section>
 
@@ -481,9 +482,8 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium, isFavourite, on
           </div>
         )}
 
-        {/* Actions */}
-        <div className="cleaner-actions mt-4 flex justify-center gap-2">
-          <Link href={`/cleaners/${cleaner._id}`} className="btn-request-booking">View Profile</Link>
+        {/* Actions (View Profile removed) */}
+        <div className="cleaner-actions mt-4 flex justify-center">
           <button onClick={() => handleBookingRequest?.(cleaner._id)} className="btn-request-booking active-tap">
             Request Booking
           </button>
