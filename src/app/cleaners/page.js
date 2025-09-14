@@ -271,7 +271,7 @@ export default function FindCleanerPage() {
                 <EmptyState />
               </div>
             ) : (
-              <div className="grid gap-6">
+              <div className="grid gap-6 relative z-10">
                 {filteredCleaners.map((cleaner, index) => (
                   <motion.div
                     key={cleaner._id}
@@ -400,7 +400,7 @@ export default function FindCleanerPage() {
 
       {/* Footer */}
       <footer className="relative z-10 bg-white/25 backdrop-blur-[20px] border-t border-white/20 shadow-[0_-8px_32px_rgba(0,0,0,0.1)] mt-16">
-        <div className="container mx-auto px-6 py-12">
+        <div className="container mx-auto px-6 py-12 relative z-10">
           <nav className="flex flex-wrap justify-center gap-6 mb-8 text-sm">
             <Link href="/about" className="text-teal-800 hover:text-teal-600 transition-colors duration-300">About Us</Link>
             <Link href="/terms" className="text-teal-800 hover:text-teal-600 transition-colors duration-300">Terms & Conditions</Link>
