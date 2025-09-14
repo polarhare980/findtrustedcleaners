@@ -219,24 +219,24 @@ export default function HomeClient() {
             Featured Premium Cleaners
           </h2>
 
-          {isLoading ? (
-            <LoadingRow text="Loading featured cleaners..." />
-          ) : (premiumCleaners || []).length === 0 ? (
-            <p className="text-center text-white text-lg">No premium cleaners available at this time.</p>
-          ) : (
-            <div className="flex overflow-x-auto gap-6 pb-4 px-2 scrollbar-hide">
-              {premiumCleaners.map((cleaner) => (
-                <CleanerCard
-                  key={cleaner._id}
-                  cleaner={cleaner}
-                  handleBookingRequest={handleBookingRequest}
-                  isPremium
-                  isFavourite={favouriteIds.includes(String(cleaner._id))}
-                  onToggleFavourite={(id) => handleToggleFavourite(String(id))}
-                />
-              ))}
-            </div>
-          )}
+        {isLoading ? (
+          <LoadingRow text="Loading featured cleaners..." />
+        ) : (premiumCleaners || []).length === 0 ? (
+          <p className="text-center text-white text-lg">No premium cleaners available at this time.</p>
+        ) : (
+          <div className="flex overflow-x-auto gap-6 pb-4 px-2 scrollbar-hide">
+            {premiumCleaners.map((cleaner) => (
+              <CleanerCard
+                key={cleaner._id}
+                cleaner={cleaner}
+                handleBookingRequest={handleBookingRequest}
+                isPremium
+                isFavourite={favouriteIds.includes(String(cleaner._id))}
+                onToggleFavourite={(id) => handleToggleFavourite(String(id))}
+              />
+            ))}
+          </div>
+        )}
         </div>
       </section>
 
@@ -380,6 +380,7 @@ function Step({ n, title, desc }) {
 }
 
 function CleanerCard({ cleaner, handleBookingRequest, isPremium, isFavourite, onToggleFavourite }) {
+  const { push } = useRouter(); // <-- explicit router for fallback click
   const availability = cleaner.availabilityMerged || cleaner.availability || {};
   const id = encodeURIComponent(String(cleaner?._id || cleaner?.id || ''));
 
@@ -389,8 +390,28 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium, isFavourite, on
     console.warn('CleanerCard: missing cleaner id for', cleaner);
   }
 
+  // Root card click (fallback) — still respects button clicks via stopPropagation()
+  const handleCardOpen = (e) => {
+    if (!href) return;
+    // If the click originated from an interactive element, let it handle itself
+    const tag = e.target?.tagName?.toLowerCase();
+    const interactive = ['button','a','svg','path','input','select','option','textarea','label'];
+    if (interactive.includes(tag)) return;
+    push(href);
+  };
+
+  const handleCardKey = (e) => {
+    if (e.key === 'Enter' && href) push(href);
+  };
+
   return (
-    <div className="cleaner-card relative">
+    <div
+      className="cleaner-card relative"
+      role={href ? 'link' : undefined}
+      tabIndex={href ? 0 : -1}
+      onClick={handleCardOpen}
+      onKeyDown={handleCardKey}
+    >
       {/* CLICK-THROUGH OVERLAY: guarantees navigation */}
       {href && (
         <Link
