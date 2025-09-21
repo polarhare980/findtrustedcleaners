@@ -4,7 +4,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 
-// Public APIs (unchanged)
+// Public APIs
 const PUBLIC_CLEANER_API = (id) => `/api/public-cleaners/${id}`;
 const PUBLIC_PURCHASES_API = (id) => `/api/public/purchases/cleaners/${id}`;
 
@@ -30,6 +30,9 @@ function addDays(date, n) {
   d.setHours(0,0,0,0);
   return d;
 }
+function addWeeks(date, w) {
+  return addDays(date, w * 7);
+}
 function toISODate(d) {
   const z = new Date(d);
   z.setHours(0,0,0,0);
@@ -37,6 +40,14 @@ function toISODate(d) {
 }
 function getWeekISODates(mondayDate) {
   return Array.from({ length: 7 }, (_, i) => toISODate(addDays(mondayDate, i)));
+}
+function fmtShort(d) {
+  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }); // e.g., 19 Aug
+}
+function fmtRangeLabel(monday) {
+  const start = fmtShort(monday);
+  const end = fmtShort(addDays(monday, 6));
+  return `${start} – ${end}`;
 }
 
 // ---- Overlay builders (match Dashboard) ----
@@ -63,16 +74,16 @@ function buildOverlayMaps(purchases = []) {
 }
 
 /**
- * Compose the CURRENT WEEK view:
+ * Compose a given week's view:
  * 1) Start from base weekly pattern: cleaner.availability[day][hour] => true | false | 'unavailable'
  * 2) Apply date-specific overrides: cleaner.availabilityOverrides[YYYY-MM-DD][hour]
  * 3) Overlay purchases: booked > pending > base/override
  *
  * Returns: map { [dayName]: { [hourStr]: true|false|'unavailable'|{status} } }
  */
-function composeCurrentWeekView(baseWeekly = {}, overridesByISO = {}, purchases = []) {
+function composeWeekView(baseWeekly = {}, overridesByISO = {}, mondayDate, purchases = []) {
   const overlays = buildOverlayMaps(purchases);
-  const weekISO = getWeekISODates(getMonday());
+  const weekISO = getWeekISODates(mondayDate);
   const out = {};
 
   DAYS.forEach((dayName, idx) => {
@@ -111,8 +122,19 @@ export default function CleanerProfile() {
   const [cleaner, setCleaner] = useState(null);
   const [purchases, setPurchases] = useState([]);
   const [selected, setSelected] = useState({ day: null, hour: null });
+  const [selectedISO, setSelectedISO] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  // Week selector (public view: future only; premium up to 4 weeks total)
+  const [weekOffset, setWeekOffset] = useState(0); // 0=this week
+  const mondayThisWeek = useMemo(() => getMonday(new Date()), []);
+  const mondaySelected = useMemo(() => addWeeks(mondayThisWeek, weekOffset), [mondayThisWeek, weekOffset]);
+  const weekISO = useMemo(() => getWeekISODates(mondaySelected), [mondaySelected]);
+
+  const canGoPrev = weekOffset > 0; // lock to current+future; disable past
+  const maxAhead = cleaner?.isPremium ? 3 : 0; // premium = this week + 3 more
+  const canGoNext = weekOffset < maxAhead;
 
   // Load public cleaner + purchases
   useEffect(() => {
@@ -135,7 +157,6 @@ export default function CleanerProfile() {
 
         setCleaner({
           ...cJson.cleaner,
-          // Normalise booleans just in case
           businessInsurance: !!cJson.cleaner.businessInsurance,
           dbsChecked: !!cJson.cleaner.dbsChecked,
           isPremium: !!cJson.cleaner.isPremium,
@@ -172,17 +193,16 @@ export default function CleanerProfile() {
   // ---- Google Reviews (dashboard fields first) ----
   const googleReviewRating = cleaner?.googleReviewRating ?? cleaner?.googleReviews?.rating ?? null;
   const googleReviewCount  = cleaner?.googleReviewCount  ?? cleaner?.googleReviews?.count  ?? null;
-  // IMPORTANT: keep url behind paywall – DO NOT render it publicly.
-  // const googleReviewUrl = cleaner?.googleReviewUrl ?? cleaner?.googleReviews?.url ?? null;
 
-  // ---- Availability (match Dashboard merge for CURRENT week) ----
+  // ---- Availability for the selected week (matches Dashboard precedence) ----
   const composedWeek = useMemo(() => {
-    return composeCurrentWeekView(
+    return composeWeekView(
       cleaner?.availability || {},
       cleaner?.availabilityOverrides || {},
+      mondaySelected,
       purchases || []
     );
-  }, [cleaner?.availability, cleaner?.availabilityOverrides, purchases]);
+  }, [cleaner?.availability, cleaner?.availabilityOverrides, purchases, mondaySelected]);
 
   function getCellState(day, hour) {
     const vRaw = composedWeek?.[day]?.[String(hour)];
@@ -196,6 +216,8 @@ export default function CleanerProfile() {
   function onSelect(day, hour) {
     if (getCellState(day, hour) !== 'available') return;
     setSelected({ day, hour });
+    const dayIdx = DAYS.indexOf(day);
+    if (dayIdx >= 0) setSelectedISO(weekISO[dayIdx]);
   }
 
   function gotoBooking() {
@@ -203,7 +225,12 @@ export default function CleanerProfile() {
       alert('Please select a day and hour');
       return;
     }
-    const q = new URLSearchParams({ day: selected.day, hour: String(selected.hour) }).toString();
+    // include exact ISO date so checkout knows which week/day was chosen
+    const q = new URLSearchParams({
+      day: selected.day,
+      hour: String(selected.hour),
+      date: selectedISO || '', // YYYY-MM-DD
+    }).toString();
     router.push(`/cleaners/${encodeURIComponent(String(id))}/checkout?${q}`);
   }
 
@@ -315,7 +342,7 @@ export default function CleanerProfile() {
         </div>
       </header>
 
-      {/* Public Bio (dashboard: bio) */}
+      {/* Public Bio */}
       {cleaner.bio && (
         <section className="mt-8">
           <h2 className="text-xl font-bold text-teal-900 mb-2">Public Bio</h2>
@@ -325,7 +352,7 @@ export default function CleanerProfile() {
         </section>
       )}
 
-      {/* Gallery (Premium only, like dashboard) */}
+      {/* Gallery (Premium only) */}
       {cleaner.isPremium && normalizedPhotos.length > 0 && (
         <section className="mt-8">
           <h2 className="text-xl font-bold text-teal-900 mb-3">Gallery</h2>
@@ -349,7 +376,7 @@ export default function CleanerProfile() {
         </section>
       )}
 
-      {/* Services (simple tags from dashboard `services`) */}
+      {/* Services */}
       {Array.isArray(cleaner.services) && cleaner.services.length > 0 && (
         <section className="mt-8">
           <h2 className="text-xl font-bold text-teal-900 mb-3">Services</h2>
@@ -363,7 +390,7 @@ export default function CleanerProfile() {
         </section>
       )}
 
-      {/* Services & Duration (public view of dashboard `servicesDetailed`, names + defaultDuration only) */}
+      {/* Service Durations */}
       {Array.isArray(cleaner.servicesDetailed) && cleaner.servicesDetailed.filter(s => s?.name && (s?.active !== false)).length > 0 && (
         <section className="mt-6">
           <h2 className="text-xl font-bold text-teal-900 mb-3">Service Durations</h2>
@@ -379,11 +406,42 @@ export default function CleanerProfile() {
         </section>
       )}
 
-      {/* Availability (current week, same precedence as dashboard) */}
+      {/* Availability (week navigation like dashboard) */}
       <section id="booking-section" className="mt-10">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-xl font-bold text-teal-900">Availability</h2>
-          <div className="text-xs text-slate-500">Green = available · Grey = pending/booked · Red = unavailable (default)</div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                if (!canGoPrev) return;
+                setSelected({ day: null, hour: null });
+                setSelectedISO(null);
+                setWeekOffset((w) => Math.max(0, w - 1));
+              }}
+              disabled={!canGoPrev}
+              className={`px-3 py-1 rounded border ${canGoPrev ? 'bg-white hover:bg-gray-50' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+              title="Previous week (disabled)"
+            >
+              ◀
+            </button>
+            <div className="px-3 py-1 rounded bg-white/70 border text-sm">
+              Week of {fmtRangeLabel(mondaySelected)}
+              {!cleaner?.isPremium && <span className="ml-2 text-xs text-amber-700">(Free: this week only)</span>}
+            </div>
+            <button
+              onClick={() => {
+                if (!canGoNext) return;
+                setSelected({ day: null, hour: null });
+                setSelectedISO(null);
+                setWeekOffset((w) => Math.min(maxAhead, w + 1));
+              }}
+              disabled={!canGoNext}
+              className={`px-3 py-1 rounded border ${canGoNext ? 'bg-white hover:bg-gray-50' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+              title={canGoNext ? 'Next week' : 'Upgrade to view more weeks'}
+            >
+              ▶
+            </button>
+          </div>
         </div>
 
         <div className="rounded-2xl overflow-hidden border border-slate-100 bg-white/60 shadow">
@@ -397,12 +455,15 @@ export default function CleanerProfile() {
             ))}
 
             {/* Rows */}
-            {DAYS.map((day) => (
+            {DAYS.map((day, idx) => (
               <React.Fragment key={day}>
-                <div className="p-2.5 text-slate-700 text-sm font-semibold bg-white/80 sticky left-0">{day}</div>
+                <div className="p-2.5 text-slate-700 text-sm font-semibold bg-white/80 sticky left-0">
+                  <div>{day}</div>
+                  <div className="text-[11px] text-slate-500">{fmtShort(addDays(mondaySelected, idx))}</div>
+                </div>
                 {HOURS.map((h) => {
                   const state = getCellState(day, h);
-                  const isSelected = selected.day === day && selected.hour === h;
+                  const isSelected = selected.day === day && selected.hour === h && selectedISO === weekISO[idx];
 
                   const base = 'h-9 md:h-10 border-t border-l last:border-r text-xs grid place-items-center select-none';
                   const cls =
