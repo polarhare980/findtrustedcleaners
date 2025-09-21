@@ -85,6 +85,7 @@ export default function HomeClient() {
   const handleBookingRequest = (cleanerId) => {
     const id = encodeURIComponent(String(cleanerId));
     const clientId = typeof window !== 'undefined' ? localStorage.getItem('clientId') : null;
+    // Booking should start from profile; login gate redirects back to profile
     if (!clientId) {
       router.push(`/login/clients?next=/cleaners/${id}`);
     } else {
@@ -260,7 +261,7 @@ export default function HomeClient() {
       {/* Free Cleaners */}
       <section className="px-6 py-12">
         <div className="container mx-auto">
-          <h2 className="text-3xl font-bold mb-8 text-center text-grey drop-shadow-lg">Free Listed Cleaners</h2>
+          <h2 className="text-3xl font-bold mb-8 text-center text-gray drop-shadow-lg">Free Listed Cleaners</h2>
 
           {isLoading ? (
             <LoadingRow text="Loading cleaners..." />
@@ -335,7 +336,7 @@ export default function HomeClient() {
         .btn-success { background: linear-gradient(135deg, #059669 0%, #047857 100%); box-shadow: 0 4px 15px rgba(5,150,105,0.3); }
         .btn-success:hover { transform: translateY(-2px) scale(1.05); box-shadow: 0 8px 25px rgba(5,150,105,0.4); }
         .btn-info { background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%); box-shadow: 0 4px 15px rgba(37,99,235,0.3); }
-        .btn-info:hover { transform: translateY(-2px) scale(1.05); box-shadow: 0 4px 15px rgba(37,99,235,0.4); }
+        .btn-info:hover { transform: translateY(-2px) scale(1.05); box-shadow: 0 8px 25px rgba(37,99,235,0.4); }
         .step-circle { width: 64px; height: 64px; background: linear-gradient(135deg, #0D9488 0%, #0F766E 100%);
           color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold;
           margin: 0 auto 16px; box-shadow: 0 4px 15px rgba(13,148,136,0.3); }
@@ -380,7 +381,7 @@ function Step({ n, title, desc }) {
 }
 
 function CleanerCard({ cleaner, handleBookingRequest, isPremium, isFavourite, onToggleFavourite }) {
-  const { push } = useRouter(); // <-- explicit router for fallback click
+  const { push } = useRouter(); // explicit router for fallback click
   const availability = cleaner.availabilityMerged || cleaner.availability || {};
   const id = encodeURIComponent(String(cleaner?._id || cleaner?.id || ''));
 
@@ -393,7 +394,6 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium, isFavourite, on
   // Root card click (fallback) — still respects button clicks via stopPropagation()
   const handleCardOpen = (e) => {
     if (!href) return;
-    // If the click originated from an interactive element, let it handle itself
     const tag = e.target?.tagName?.toLowerCase();
     const interactive = ['button','a','svg','path','input','select','option','textarea','label'];
     if (interactive.includes(tag)) return;
@@ -401,7 +401,10 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium, isFavourite, on
   };
 
   const handleCardKey = (e) => {
-    if (e.key === 'Enter' && href) push(href);
+    if ((e.key === 'Enter' || e.key === ' ') && href) {
+      e.preventDefault();
+      push(href);
+    }
   };
 
   return (
@@ -412,7 +415,7 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium, isFavourite, on
       onClick={handleCardOpen}
       onKeyDown={handleCardKey}
     >
-      {/* CLICK-THROUGH OVERLAY: guarantees navigation */}
+      {/* CLICK-THROUGH OVERLAY: guarantees navigation to PROFILE */}
       {href && (
         <Link
           href={href}
@@ -523,31 +526,18 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium, isFavourite, on
           </div>
         )}
 
-        {/* Actions */}
-        <div className="cleaner-actions mt-4 flex justify-center gap-3 relative">
-          {/* Explicit link button (still works even with overlay) */}
-          <Link
-            href={href || '#'}
-            prefetch={false}
-            onClick={(e) => {
-              if (!href) e.preventDefault();
-              e.stopPropagation();
-            }}
-            className="btn-request-booking active-tap relative z-50"
-          >
-            View profile
-          </Link>
-
+        {/* Actions (single CTA) */}
+        <div className="cleaner-actions mt-4 flex justify-center relative">
           <button
             type="button"
             onClick={(e) => {
               e.preventDefault();
-              e.stopPropagation(); // don't trigger the overlay link
+              e.stopPropagation(); // don't trigger the full-card overlay
               if (cleaner?._id) handleBookingRequest?.(cleaner._id);
             }}
             className="btn-request-booking active-tap relative z-50"
           >
-            Request booking
+            View profile & request
           </button>
         </div>
       </div>
