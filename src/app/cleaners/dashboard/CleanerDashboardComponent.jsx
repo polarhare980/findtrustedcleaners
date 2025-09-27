@@ -399,7 +399,7 @@ export default function CleanerDashboard() {
       return;
     }
     try {
-      const res = await fetch(`/api/purchases/${purchaseId}/accept`, { method: 'PUT', credentials: 'include' });
+      const res = await fetch(`/api/purchases/${purchaseId}/approve`, { method: 'PUT', credentials: 'include' });
       const data = await res.json();
       if (!res.ok || !data?.success) throw new Error(data?.message || 'Accept failed');
 
