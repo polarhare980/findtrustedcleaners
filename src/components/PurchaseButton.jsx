@@ -1,3 +1,4 @@
+// File: src/components/PurchaseButton.jsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -6,11 +7,12 @@ import { secureFetch } from '@/lib/secureFetch';
 
 export default function PurchaseButton({
   cleanerId,
-  selectedSlot, // { day: 'Monday', hour: '10' }
+  selectedSlot, // { day: 'Monday', hour: '10' | 10, serviceKey?, date?: 'YYYY-MM-DD' }
   onPurchaseSuccess,
   onPurchaseStart,
   onPurchaseError,
   disabled = false,
+  priceGBP = 2.99,
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -18,18 +20,23 @@ export default function PurchaseButton({
   const [success, setSuccess] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
 
+  // Re-open modal after login if user was redirected
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     if (localStorage.getItem('purchaseIntent') === 'true') {
       localStorage.removeItem('purchaseIntent');
       setShowPopup(true);
     }
   }, []);
 
+  // Lock body scroll while modal is open
   useEffect(() => {
+    if (typeof document === 'undefined') return;
     document.body.style.overflow = showPopup ? 'hidden' : 'unset';
     return () => { document.body.style.overflow = 'unset'; };
   }, [showPopup]);
 
+  // Close on Escape
   useEffect(() => {
     const handleEscape = (e) => {
       if (e.key === 'Escape' && showPopup && !loading) handleCancel();
@@ -42,9 +49,11 @@ export default function PurchaseButton({
 
   const handlePurchase = async () => {
     const day = selectedSlot?.day;
-    const hour = selectedSlot?.hour;
+    const hourNum = Number(selectedSlot?.hour);
+    const serviceKey = selectedSlot?.serviceKey || undefined;
+    const isoDate = selectedSlot?.date || undefined;
 
-    if (!day || !hour) {
+    if (!day || !Number.isInteger(hourNum)) {
       const errorMsg = 'Please select a time slot before continuing.';
       setError(errorMsg);
       onPurchaseError?.(errorMsg);
@@ -56,7 +65,7 @@ export default function PurchaseButton({
     onPurchaseStart?.();
 
     try {
-      // 1) Auth check
+      // 1) Auth check (must be a client)
       const authRes = await secureFetch('/api/auth/me');
       const authData = await authRes.json();
 
@@ -66,14 +75,14 @@ export default function PurchaseButton({
         onPurchaseError?.(errorMsg);
 
         const nextPath = `/cleaners/${cleanerId}`;
+        // Preserve intent so we can pop the modal post-login
         localStorage.setItem('purchaseIntent', 'true');
         localStorage.setItem('redirectAfterLogin', nextPath);
         router.push(`/login/clients?next=${encodeURIComponent(nextPath)}`);
         return;
       }
 
-      // 2) Create the Purchase (server sets status:'pending' and marks slot ⏳)
-      //    IMPORTANT: this calls /api/clients/purchases (Step 2 you added)
+      // 2) Create the pending Purchase (server validates availability and computes span)
       const purchaseRes = await fetch('/api/clients/purchases', {
         method: 'POST',
         credentials: 'include',
@@ -81,13 +90,24 @@ export default function PurchaseButton({
         body: JSON.stringify({
           cleanerId,
           day,
-          hour,
-          amount: 2.99, // adjust if you change price server-side
+          hour: hourNum,          // server normalises to string internally
+          amount: priceGBP,       // informational; server can override
+          serviceKey,             // optional
+          isoDate,                // optional; server may ignore
         }),
       });
 
-      const purchaseData = await purchaseRes.json();
+      const purchaseData = await purchaseRes.json().catch(() => ({}));
+
       if (!purchaseRes.ok || !purchaseData?.success) {
+        // Friendly message for race conditions on slots
+        if (purchaseRes.status === 409) {
+          const msg = purchaseData?.message || 'That time has just been taken. Please pick another slot.';
+          setError(msg);
+          onPurchaseError?.(msg);
+          setLoading(false);
+          return;
+        }
         const errorMsg = purchaseData?.message || 'Could not create purchase.';
         setError(errorMsg);
         onPurchaseError?.(errorMsg);
@@ -95,7 +115,8 @@ export default function PurchaseButton({
         return;
       }
 
-      const purchaseId = purchaseData.purchase?._id;
+      // New API returns purchaseId directly
+      const purchaseId = purchaseData.purchaseId;
       if (!purchaseId) {
         const errorMsg = 'Purchase created but no ID returned.';
         setError(errorMsg);
@@ -104,22 +125,22 @@ export default function PurchaseButton({
         return;
       }
 
-      // 3) Start Stripe checkout, pass purchaseId so webhook/return knows which purchase to attach
+      // 3) Start Stripe checkout. We only need the purchaseId; server can look up details.
       const res = await fetch('/api/stripe/create-client-checkout', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cleanerId, day, hour, purchaseId }),
+        body: JSON.stringify({ purchaseId }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
       if (res.ok && data.url) {
         setSuccess(true);
         onPurchaseSuccess?.(purchaseId);
         window.location.href = data.url;
       } else {
-        const errorMsg = data.error || 'Checkout failed.';
+        const errorMsg = data?.error || 'Checkout failed.';
         setError(errorMsg);
         onPurchaseError?.(errorMsg);
       }
@@ -145,15 +166,15 @@ export default function PurchaseButton({
 
   const buttonLabel = loading
     ? 'Processing...'
-    : !selectedSlot?.day || !selectedSlot?.hour
+    : !selectedSlot?.day || !Number.isInteger(Number(selectedSlot?.hour))
       ? 'Select a Time Slot'
-      : 'Unlock Contact Details (£2.99)';
+      : `Unlock Contact Details (£${priceGBP.toFixed(2)})`;
 
   return (
     <>
       <button
         onClick={() => { setError(''); setShowPopup(true); }}
-        disabled={disabled || loading || !selectedSlot?.day || !selectedSlot?.hour}
+        disabled={disabled || loading || !selectedSlot?.day || !Number.isInteger(Number(selectedSlot?.hour))}
         className={`px-6 py-3 rounded-full font-medium transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-lg ${
           disabled || loading
             ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
@@ -178,7 +199,7 @@ export default function PurchaseButton({
                   <div className="text-4xl mb-4">🔓</div>
                   <h2 className="text-2xl font-bold text-gray-800 mb-2">Unlock Contact Details</h2>
                   <p className="text-gray-600">
-                    Get instant access to this cleaner's contact information and booking details.
+                    Get instant access to this cleaner&apos;s contact information and booking details.
                   </p>
                 </div>
                 <button
@@ -213,7 +234,7 @@ export default function PurchaseButton({
                 <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-blue-500">💳</span>
-                    <p className="text-blue-700 font-semibold">What you'll get:</p>
+                    <p className="text-blue-700 font-semibold">What you&apos;ll get:</p>
                   </div>
                   <ul className="text-blue-700 text-sm space-y-1 ml-6">
                     <li>• Phone number</li>
@@ -245,7 +266,7 @@ export default function PurchaseButton({
                   ) : success ? (
                     'Redirecting...'
                   ) : (
-                    'Pay £2.99'
+                    `Pay £${priceGBP.toFixed(2)}`
                   )}
                 </button>
               </div>

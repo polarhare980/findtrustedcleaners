@@ -2,8 +2,9 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db';
 import Cleaner from '@/models/Cleaner';
-import Booking from '@/models/booking';
+import Booking from '@/models/booking'; // ⚠️ Ensure correct casing
 import Purchase from '@/models/Purchase';
+import { requiredHourSpan, hasContiguousAvailability } from '@/lib/availability';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -12,8 +13,16 @@ function json(data, status = 200) {
   return NextResponse.json(data, { status });
 }
 
-const BOOKED_STATUSES = new Set(['approved', 'accepted', 'confirmed', 'booked']);
-const PENDING_STATUSES = new Set(['pending', 'pending_approval']);
+const BOOKED_BOOKING_STATUSES = new Set(['accepted', 'confirmed', 'booked']);
+const BOOKED_OR_HOLD_PURCHASE_STATUSES = new Set(['approved']); // approved == held/blocked
+const PENDING_PURCHASE_STATUSES = new Set(['pending', 'pending_approval']);
+
+const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+function toHourString(h) {
+  const n = Number(h);
+  return Number.isFinite(n) ? String(parseInt(n, 10)) : '';
+}
 
 /* --------------------------------------
    GET: return bookings + purchases combined
@@ -24,8 +33,19 @@ export async function GET(_req, { params }) {
   if (!cleanerId) return json({ success: false, message: 'Cleaner id required.' }, 400);
 
   try {
-    const bookings = await Booking.find({ cleanerId }).lean();
-    const purchases = await Purchase.find({ cleanerId }).lean();
+    // Only pull statuses the UI actually uses for overlays
+    const bookings = await Booking.find({
+      cleanerId,
+      status: { $in: Array.from(BOOKED_BOOKING_STATUSES) },
+    }).lean();
+
+    const purchases = await Purchase.find({
+      cleanerId,
+      status: { $in: Array.from(new Set([
+        ...PENDING_PURCHASE_STATUSES,
+        ...BOOKED_OR_HOLD_PURCHASE_STATUSES,
+      ])) },
+    }).lean();
 
     const combined = [];
 
@@ -34,20 +54,26 @@ export async function GET(_req, { params }) {
         _id: String(b._id),
         type: 'booking',
         day: b?.day || '',
-        hour: String(b?.hour ?? ''),
-        status: String(b?.status || 'pending').toLowerCase(),
+        hour: toHourString(b?.hour),
+        span: Number(b?.span || 1), // ✅ include span
+        status: String(b?.status || 'booked').toLowerCase(),
       });
     }
 
     for (const p of purchases || []) {
       const status = String(p?.status || 'pending').toLowerCase();
-      if (!(PENDING_STATUSES.has(status) || BOOKED_STATUSES.has(status))) continue;
+      // Sanity gate (defensive)
+      if (
+        !PENDING_PURCHASE_STATUSES.has(status) &&
+        !BOOKED_OR_HOLD_PURCHASE_STATUSES.has(status)
+      ) continue;
 
       combined.push({
         _id: String(p._id),
         type: 'purchase',
         day: p?.day || '',
-        hour: String(p?.hour ?? ''),
+        hour: toHourString(p?.hour),
+        span: Number(p?.span || 1), // ✅ include span
         status,
       });
     }
@@ -83,7 +109,6 @@ export async function PUT(req, { params }) {
 
   if (!availability) return json({ success: false, message: 'availability object required.' }, 400);
 
-  const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   const HOURS = Array.from({ length: 13 }, (_, i) => String(7 + i));
 
   const cleaned = {};
@@ -114,7 +139,8 @@ export async function PUT(req, { params }) {
 }
 
 /* --------------------------------------
-   POST: create a booking (service + duration)
+   POST: create a PENDING purchase (service + duration)
+   (kept here for backwards compatibility; prefers the dedicated purchases route)
 -------------------------------------- */
 export async function POST(req, { params }) {
   await connectToDatabase();
@@ -123,54 +149,97 @@ export async function POST(req, { params }) {
 
   try {
     const body = await req.json();
-    const { day, hour, serviceKey, clientId } = body;
+    const { day, hour, serviceKey, clientId } = body || {};
 
-    if (!day || !hour || !serviceKey || !clientId) {
-      return json({ success: false, message: 'day, hour, serviceKey, clientId required' }, 400);
+    if (!DAYS.includes(day || '')) {
+      return json({ success: false, message: 'Valid day required.' }, 400);
+    }
+    const startNum = Number(hour);
+    if (!Number.isInteger(startNum) || startNum < 0 || startNum > 23) {
+      return json({ success: false, message: 'Valid hour (0..23) required.' }, 400);
+    }
+    if (!serviceKey || !clientId) {
+      return json({ success: false, message: 'serviceKey and clientId required.' }, 400);
     }
 
     const cleaner = await Cleaner.findById(cleanerId).lean();
     if (!cleaner) return json({ success: false, message: 'Cleaner not found' }, 404);
 
-    // 1. Find service
+    // 1) Find service
     const service = (cleaner.servicesDetailed || []).find(
-      (s) => s.key === serviceKey && s.active
+      (s) => s && s.key === serviceKey && s.active !== false
     );
     if (!service) return json({ success: false, message: 'Service not available' }, 400);
 
-    // 2. Expand duration + buffers
-    const totalMins =
-      (service.bufferBeforeMins || 0) +
-      (service.defaultDurationMins || 60) +
-      (service.bufferAfterMins || 0);
-
-    const increment = service.incrementMins || 60;
-    const slotsNeeded = Math.ceil(totalMins / increment);
-
-    const start = parseInt(hour, 10);
-    const requiredSlots = [];
-    for (let i = 0; i < slotsNeeded; i++) {
-      requiredSlots.push(String(start + i));
+    // 2) Compute span using your shared helper
+    const span = requiredHourSpan({
+      durationMins: service?.defaultDurationMins ?? 60,
+      bufferBeforeMins: service?.bufferBeforeMins ?? 0,
+      bufferAfterMins: service?.bufferAfterMins ?? 0,
+    });
+    if (startNum + span > 24) {
+      return json({ success: false, message: 'Requested span exceeds end of day.' }, 400);
     }
 
-    // 3. Check availability
-    const grid = cleaner.availability?.[day] || {};
-    for (const h of requiredSlots) {
-      if (grid[h] !== true) {
-        return json({ success: false, message: 'Not enough time available' }, 400);
+    // 3) Build a merged availability view: base + pending/approved purchases + existing booked bookings
+    const base = cleaner.availability || {};
+    const merged = JSON.parse(JSON.stringify(base));
+    if (!merged[day]) merged[day] = {};
+
+    // Existing purchases that hold/occupy slots
+    const purchases = await Purchase.find({
+      cleanerId,
+      day,
+      status: { $in: ['pending', 'pending_approval', 'approved'] },
+    }).lean();
+
+    for (const p of purchases || []) {
+      const s = Number(p?.span || 1);
+      const start = Number(p?.hour);
+      if (!Number.isInteger(start)) continue;
+      for (let i = 0; i < Math.max(1, s); i++) {
+        const hk = String(start + i);
+        if (merged[day][hk] === false || merged[day][hk] === 'unavailable') continue;
+        merged[day][hk] = (String(p.status).toLowerCase() === 'approved') ? 'booked' : 'pending';
       }
     }
 
-    // 4. Create pending purchase
+    // Existing bookings that are booked
+    const bookings = await Booking.find({
+      cleanerId,
+      day,
+      status: { $in: Array.from(BOOKED_BOOKING_STATUSES) },
+    }).lean();
+
+    for (const b of bookings || []) {
+      const s = Number(b?.span || 1);
+      const start = Number(b?.hour);
+      if (!Number.isInteger(start)) continue;
+      for (let i = 0; i < Math.max(1, s); i++) {
+        const hk = String(start + i);
+        merged[day][hk] = 'booked';
+      }
+    }
+
+    // 4) Validate contiguity for the requested span
+    if (!hasContiguousAvailability(merged, day, startNum, span)) {
+      return json({ success: false, message: 'Not enough time available' }, 409);
+    }
+
+    // 5) Create pending purchase (normalised fields)
     const purchase = await Purchase.create({
       clientId,
       cleanerId,
       day,
-      hour, // store the chosen start hour
+      hour: toHourString(startNum),
+      span,
       status: 'pending',
+      serviceKey,
     });
 
-    return json({ success: true, purchase, blockedSlots: requiredSlots });
+    // 6) Respond
+    const blockedSlots = Array.from({ length: span }, (_, i) => toHourString(startNum + i));
+    return json({ success: true, purchase, blockedSlots });
   } catch (err) {
     console.error('❌ POST /api/bookings/cleaner/:id failed:', err);
     return json({ success: false, message: 'Server error' }, 500);

@@ -55,16 +55,17 @@ function buildOverlayMaps(combined = []) {
 
   for (const row of combined) {
     const day = row?.day;
-    const hour = String(row?.hour ?? '');
-    if (!day || !hour) continue;
+    const start = Number(row?.hour);
+    const span = Number(row?.span || 1);
+    if (!day || !Number.isInteger(start)) continue;
 
-    const key = `${day}|${hour}`;
     const status = String(row?.status || '').toLowerCase();
+    const hours = Array.from({ length: Math.max(1, span) }, (_, i) => String(start + i));
 
     if (PENDING_STATUSES.has(status)) {
-      pendingKeyToPurchaseId.set(key, String(row?._id || ''));
+      for (const h of hours) pendingKeyToPurchaseId.set(`${day}|${h}`, String(row?._id || ''));
     } else if (BOOKED_STATUSES.has(status)) {
-      bookedKeys.add(key);
+      for (const h of hours) bookedKeys.add(`${day}|${h}`);
     }
   }
 
@@ -298,7 +299,8 @@ export default function CleanerDashboard() {
         // Get merged bookings (real + pending purchases)
         const resB = await fetch(`/api/bookings/cleaner/${cleanerUser._id}`, { credentials: 'include' });
         const dataB = await resB.json();
-        const merged = dataB?.success ? (dataB.bookings || []) : [];
+        // ✅ consume { success, combined }
+        const merged = dataB?.success ? (dataB.combined || []) : [];
         setCombined(merged);
 
         // Seed dashboard state (now includes availabilityOverrides)
@@ -407,7 +409,7 @@ export default function CleanerDashboard() {
       // Refresh combined overlay
       const resB = await fetch(`/api/bookings/cleaner/${me._id}`, { credentials: 'include' });
       const dataB = await resB.json();
-      setCombined(dataB?.success ? (dataB.bookings || []) : []);
+      setCombined(dataB?.success ? (dataB.combined || []) : []);
     } catch (e) {
       console.error('Accept error', e);
       alert(e.message || 'Server error.');
@@ -432,7 +434,7 @@ export default function CleanerDashboard() {
       // Refresh combined overlay
       const resB = await fetch(`/api/bookings/cleaner/${me._id}`, { credentials: 'include' });
       const dataB = await resB.json();
-      setCombined(dataB?.success ? (dataB.bookings || []) : []);
+      setCombined(dataB?.success ? (dataB.combined || []) : []);
     } catch (e) {
       console.error('Decline error', e);
       alert(e.message || 'Server error.');
@@ -457,7 +459,10 @@ export default function CleanerDashboard() {
         const j = await res.json();
         if (!res.ok || !j?.success) throw new Error(j?.message || 'Update failed');
 
-        setFormData((prev) => ({ ...prev, availability: j.cleaner?.availability || prev.availability }));
+        // Some routes don't return the cleaner; keep local state if absent
+        if (j.cleaner?.availability) {
+          setFormData((prev) => ({ ...prev, availability: j.cleaner.availability }));
+        }
       } else {
         // Save date-specific overrides back to the Cleaner document
         const res = await fetch(`/api/cleaners/${me._id}`, {

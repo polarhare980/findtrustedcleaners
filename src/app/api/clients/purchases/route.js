@@ -5,18 +5,26 @@ import { connectToDatabase } from '@/lib/db';
 import { protectApiRoute } from '@/lib/auth';
 import Purchase from '@/models/Purchase';
 import Cleaner from '@/models/Cleaner';
+import Booking from '@/models/booking';
 import { requiredHourSpan, hasContiguousAvailability } from '@/lib/availability';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+const BOOKED_STATUSES = new Set(['accepted','confirmed','booked']);
+const PENDING_PURCHASE_STATUSES = new Set(['pending','approved']); // approved holds the slot like booked
 
 function json(data, status = 200, extraHeaders = {}) {
   return new NextResponse(JSON.stringify(data), {
     status,
     headers: { 'Content-Type': 'application/json', ...extraHeaders },
   });
+}
+
+function toHourString(h) {
+  const n = Number(h);
+  return Number.isFinite(n) ? String(parseInt(n, 10)) : '';
 }
 
 /* -------------------------- OPTIONS (preflight) --------------------------- */
@@ -59,15 +67,15 @@ export async function GET(req) {
  * {
  *   cleanerId: string,
  *   day: 'Monday'..'Sunday',
- *   hour: number (0..23),
- *   serviceKey: string,                // optional but recommended
+ *   hour: number (0..23) | string ('0'..'23'),
+ *   serviceKey?: string,
  *   durationMins?: number,
  *   bufferBeforeMins?: number,
  *   bufferAfterMins?: number,
- *   currency?: 'GBP' | string,
+ *   currency?: string,   // default 'GBP'
  *   amount?: number,
  *   notes?: string,
- *   isoDate?: 'YYYY-MM-DD'             // optional; ignored by server for now
+ *   // isoDate?: 'YYYY-MM-DD'   // currently ignored server-side
  * }
  */
 export async function POST(req) {
@@ -88,14 +96,13 @@ export async function POST(req) {
     cleanerId,
     day,
     hour,
-    serviceKey,         // may be absent if cleaner has simple services
+    serviceKey,
     durationMins,
     bufferBeforeMins,
     bufferAfterMins,
     currency = 'GBP',
     amount,
     notes,
-    // isoDate (optional, ignored)
   } = body || {};
 
   // Basic validation
@@ -105,18 +112,20 @@ export async function POST(req) {
   if (!DAYS.includes(day)) {
     return json({ success: false, message: 'Invalid day.' }, 400);
   }
-  const startHour = Number(hour);
-  if (!Number.isInteger(startHour) || startHour < 0 || startHour > 23) {
+  const startHourNum = Number(hour);
+  if (!Number.isInteger(startHourNum) || startHourNum < 0 || startHourNum > 23) {
     return json({ success: false, message: 'Invalid start hour.' }, 400);
   }
+  const startHourStr = toHourString(startHourNum);
 
-  // Load cleaner + service config (if detailed services exist)
+  // Load cleaner & (optional) service
   const cleaner = await Cleaner.findById(cleanerId).lean();
   if (!cleaner) return json({ success: false, message: 'Cleaner not found.' }, 404);
 
-  const svc = (cleaner.servicesDetailed || []).find(
-    s => s && (s.key === serviceKey) && s.active !== false
-  ) || null;
+  const svc =
+    (cleaner.servicesDetailed || []).find(
+      s => s && (s.key === serviceKey) && s.active !== false
+    ) || null;
 
   const effDuration =
     typeof durationMins === 'number' && durationMins > 0
@@ -143,52 +152,69 @@ export async function POST(req) {
     bufferAfterMins: effBufAfter,
   });
 
-  // Bound check
-  if (startHour + span > 24) {
+  if (startHourNum + span > 24) {
     return json({ success: false, message: 'Requested span exceeds end of day.' }, 400);
   }
 
-  // Build merged view of availability for conflicts (pending holds + approved as booked)
+  // Build merged view = base availability + pending/approved purchases + accepted/confirmed/booked bookings
   try {
     const base = cleaner.availability || {};
-    const existing = await Purchase.find({
-      cleanerId,
-      day,
-      status: { $in: ['pending', 'approved'] },
-    }).lean();
-
     const merged = JSON.parse(JSON.stringify(base));
     if (!merged[day]) merged[day] = {};
 
-    for (const p of existing || []) {
-      const s = Number(p.span || 1);
-      for (let i = 0; i < s; i++) {
-        const hk = String(Number(p.hour) + i);
+    // 1) Pending & approved purchases (hold slots)
+    const purchases = await Purchase.find({
+      cleanerId,
+      day,
+      status: { $in: Array.from(PENDING_PURCHASE_STATUSES) },
+    }).lean();
+
+    for (const p of purchases || []) {
+      const s = Number(p?.span || 1);
+      const start = Number(p?.hour);
+      if (!Number.isInteger(start)) continue;
+      for (let i = 0; i < Math.max(1, s); i++) {
+        const hk = String(start + i);
         if (merged[day][hk] === false || merged[day][hk] === 'unavailable') continue;
-        merged[day][hk] = p.status === 'approved' ? 'booked' : 'pending';
+        merged[day][hk] = (String(p.status).toLowerCase() === 'approved') ? 'booked' : 'pending';
       }
     }
 
-    // Validate contiguous availability
-    if (!hasContiguousAvailability(merged, day, startHour, span)) {
+    // 2) Existing bookings (block slots)
+    const bookings = await Booking.find({
+      cleanerId,
+      day,
+      status: { $in: Array.from(BOOKED_STATUSES) },
+    }).lean();
+
+    for (const b of bookings || []) {
+      const s = Number(b?.span || 1);
+      const start = Number(b?.hour);
+      if (!Number.isInteger(start)) continue;
+      for (let i = 0; i < Math.max(1, s); i++) {
+        const hk = String(start + i);
+        merged[day][hk] = 'booked';
+      }
+    }
+
+    // Validate contiguous availability for requested span
+    if (!hasContiguousAvailability(merged, day, startHourNum, span)) {
       return json({ success: false, message: 'Start time no longer available for required duration.' }, 409);
     }
   } catch (e) {
     console.error('❌ Availability merge/check failed:', e);
-    // We still fail gracefully here to avoid double-booking.
     return json({ success: false, message: 'Could not validate availability.' }, 500);
   }
 
-  // Attempt to create with extended fields; if schema is strict and rejects,
-  // fall back to a minimal document that only uses known-safe fields.
+  // Prepare document (be resilient to strict schemas)
   const extendedDoc = {
     cleanerId,
     clientId: user._id,
     day,
-    hour: String(startHour),     // schema uses String
-    span,                        // optional in schema; overlay uses default 1 if absent
-    serviceKey,                  // might not exist in schema (strict mode may throw)
-    durationMins: effDuration,   // might not exist in schema
+    hour: startHourStr,          // store as simple integer string
+    span,                        // used by overlays
+    serviceKey,
+    durationMins: effDuration,
     bufferBeforeMins: effBufBefore,
     bufferAfterMins: effBufAfter,
     currency,
@@ -204,9 +230,10 @@ export async function POST(req) {
       purchaseId: String(doc._id),
       span,
       status: doc.status,
+      hour: startHourStr,
+      day,
     }, 201);
   } catch (err) {
-    // If schema is strict and throws on unknown fields, retry with a minimal shape.
     console.warn('⚠️ Purchase.create failed with extended fields, retrying minimal. Error:', err?.message);
 
     try {
@@ -214,10 +241,9 @@ export async function POST(req) {
         cleanerId,
         clientId: user._id,
         day,
-        hour: String(startHour),
+        hour: startHourStr,
         status: 'pending',
-        // keep span if your schema has it; otherwise comment the next line:
-        span,
+        span, // keep if schema allows; comment out if not in schema
       };
       const doc = await Purchase.create(minimalDoc);
       return json({
@@ -225,15 +251,15 @@ export async function POST(req) {
         purchaseId: String(doc._id),
         span,
         status: doc.status,
+        hour: startHourStr,
+        day,
       }, 201);
     } catch (err2) {
       console.error('❌ Purchase.create failed (minimal):', err2);
-      // Surface a readable message to the client
       const message =
         err2?.errors
           ? Object.values(err2.errors).map(e => e.message).join('; ')
           : (err2?.message || 'Failed to create purchase.');
-      // 400 for validation/cast issues; 500 otherwise
       const isValidation =
         /validation/i.test(message) ||
         /cast/i.test(message) ||

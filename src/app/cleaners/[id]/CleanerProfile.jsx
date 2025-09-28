@@ -30,9 +30,7 @@ function addDays(date, n) {
   d.setHours(0,0,0,0);
   return d;
 }
-function addWeeks(date, w) {
-  return addDays(date, w * 7);
-}
+function addWeeks(date, w) { return addDays(date, w * 7); }
 function toISODate(d) {
   const z = new Date(d);
   z.setHours(0,0,0,0);
@@ -50,23 +48,24 @@ function fmtRangeLabel(monday) {
   return `${start} – ${end}`;
 }
 
-// ---- Overlay builders (match Dashboard) ----
+// ---- Overlay builders (SPAN-AWARE like Dashboard) ----
 function buildOverlayMaps(purchases = []) {
   const pendingKeyToId = new Map(); // `${day}|${hour}` -> id
   const bookedKeys = new Set();     // `${day}|${hour}`
 
-  for (const row of purchases) {
+  for (const row of purchases || []) {
     const day = row?.day;
-    const hour = String(row?.hour ?? '');
-    if (!day || !hour) continue;
+    const start = Number(row?.hour);
+    const span = Number(row?.span || 1);
+    if (!day || !Number.isInteger(start)) continue;
 
-    const key = `${day}|${hour}`;
     const status = String(row?.status || '').toLowerCase();
+    const hours = Array.from({ length: Math.max(1, span) }, (_, i) => String(start + i));
 
     if (PENDING_STATUSES.has(status)) {
-      pendingKeyToId.set(key, String(row?._id || ''));
+      for (const h of hours) pendingKeyToId.set(`${day}|${h}`, String(row?._id || ''));
     } else if (BOOKED_STATUSES.has(status)) {
-      bookedKeys.add(key);
+      for (const h of hours) bookedKeys.add(`${day}|${h}`);
     }
   }
 
