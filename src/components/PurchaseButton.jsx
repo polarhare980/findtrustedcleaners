@@ -1,9 +1,9 @@
 // File: src/components/PurchaseButton.jsx
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { secureFetch } from '@/lib/secureFetch';
+import { secureFetch as _secureFetch } from '@/lib/secureFetch';
 
 export default function PurchaseButton({
   cleanerId,
@@ -19,21 +19,43 @@ export default function PurchaseButton({
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
+  const clickedRef = useRef(false);
 
-  // Re-open modal after login if user was redirected
+  // Helper: safe secureFetch (fallback to fetch)
+  const secureFetch = async (url, init) => {
+    try {
+      if (typeof _secureFetch === 'function') {
+        return await _secureFetch(url, init);
+      }
+    } catch (_) {
+      // fall through to plain fetch
+    }
+    return fetch(url, { credentials: 'include', ...(init || {}) });
+  };
+
+  // Re-open modal after login if user was redirected + restore slot
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (localStorage.getItem('purchaseIntent') === 'true') {
+
+    const hadIntent = localStorage.getItem('purchaseIntent') === 'true';
+    if (hadIntent) {
       localStorage.removeItem('purchaseIntent');
       setShowPopup(true);
     }
-  }, []);
+
+    // if we stored a previous slot, only restore if no slot currently provided
+    if (!selectedSlot?.day && localStorage.getItem('pendingSelectedSlot')) {
+      // noop here; the parent page should control selectedSlot
+      // we keep this in case you later wire it to read from storage
+    }
+  }, [selectedSlot?.day]);
 
   // Lock body scroll while modal is open
   useEffect(() => {
     if (typeof document === 'undefined') return;
+    const prev = document.body.style.overflow;
     document.body.style.overflow = showPopup ? 'hidden' : 'unset';
-    return () => { document.body.style.overflow = 'unset'; };
+    return () => { document.body.style.overflow = prev || 'unset'; };
   }, [showPopup]);
 
   // Close on Escape
@@ -47,38 +69,62 @@ export default function PurchaseButton({
     }
   }, [showPopup, loading]);
 
-  const handlePurchase = async () => {
+  const validateSlot = () => {
     const day = selectedSlot?.day;
     const hourNum = Number(selectedSlot?.hour);
-    const serviceKey = selectedSlot?.serviceKey || undefined;
-    const isoDate = selectedSlot?.date || undefined;
-
     if (!day || !Number.isInteger(hourNum)) {
       const errorMsg = 'Please select a time slot before continuing.';
       setError(errorMsg);
       onPurchaseError?.(errorMsg);
-      return;
+      return null;
     }
+    return { day, hourNum };
+  };
+
+  const persistIntent = () => {
+    if (typeof window === 'undefined') return;
+    const nextPath = `/cleaners/${cleanerId}`;
+    localStorage.setItem('purchaseIntent', 'true');
+    localStorage.setItem('redirectAfterLogin', nextPath);
+    // store selected slot so the UI can restore it after login if needed
+    try {
+      localStorage.setItem(
+        'pendingSelectedSlot',
+        JSON.stringify({
+          day: selectedSlot?.day ?? null,
+          hour: selectedSlot?.hour ?? null,
+          date: selectedSlot?.date ?? null,
+          serviceKey: selectedSlot?.serviceKey ?? null,
+        })
+      );
+    } catch (_) {}
+    router.push(`/login/clients?next=${encodeURIComponent(nextPath)}`);
+  };
+
+  const handlePurchase = async () => {
+    if (clickedRef.current) return; // guard against double-clicks
+    const slot = validateSlot();
+    if (!slot) return;
+
+    const { day, hourNum } = slot;
+    const serviceKey = selectedSlot?.serviceKey || undefined;
+    const isoDate = selectedSlot?.date || undefined;
 
     setLoading(true);
     setError('');
+    clickedRef.current = true;
     onPurchaseStart?.();
 
     try {
       // 1) Auth check (must be a client)
       const authRes = await secureFetch('/api/auth/me');
-      const authData = await authRes.json();
+      const authData = await authRes.json().catch(() => ({}));
 
-      if (!authData.success || authData.user?.type !== 'client') {
+      if (!authRes.ok || !authData?.success || authData?.user?.type !== 'client') {
         const errorMsg = 'You must be logged in as a client to purchase.';
         setError(errorMsg);
         onPurchaseError?.(errorMsg);
-
-        const nextPath = `/cleaners/${cleanerId}`;
-        // Preserve intent so we can pop the modal post-login
-        localStorage.setItem('purchaseIntent', 'true');
-        localStorage.setItem('redirectAfterLogin', nextPath);
-        router.push(`/login/clients?next=${encodeURIComponent(nextPath)}`);
+        persistIntent();
         return;
       }
 
@@ -90,42 +136,46 @@ export default function PurchaseButton({
         body: JSON.stringify({
           cleanerId,
           day,
-          hour: hourNum,          // server normalises to string internally
-          amount: priceGBP,       // informational; server can override
-          serviceKey,             // optional
-          isoDate,                // optional; server may ignore
+          hour: hourNum,      // server normalises internally
+          amount: priceGBP,   // informational; server can override
+          serviceKey,         // optional
+          isoDate,            // optional; server may ignore or enforce
         }),
       });
+
+      // Handle common auth errors clearly
+      if (purchaseRes.status === 401 || purchaseRes.status === 403) {
+        const msg = 'Please log in as a client to continue.';
+        setError(msg);
+        onPurchaseError?.(msg);
+        persistIntent();
+        return;
+      }
 
       const purchaseData = await purchaseRes.json().catch(() => ({}));
 
       if (!purchaseRes.ok || !purchaseData?.success) {
-        // Friendly message for race conditions on slots
         if (purchaseRes.status === 409) {
           const msg = purchaseData?.message || 'That time has just been taken. Please pick another slot.';
           setError(msg);
           onPurchaseError?.(msg);
-          setLoading(false);
           return;
         }
         const errorMsg = purchaseData?.message || 'Could not create purchase.';
         setError(errorMsg);
         onPurchaseError?.(errorMsg);
-        setLoading(false);
         return;
       }
 
-      // New API returns purchaseId directly
-      const purchaseId = purchaseData.purchaseId;
+      const purchaseId = purchaseData.purchaseId || purchaseData.id || purchaseData._id;
       if (!purchaseId) {
         const errorMsg = 'Purchase created but no ID returned.';
         setError(errorMsg);
         onPurchaseError?.(errorMsg);
-        setLoading(false);
         return;
       }
 
-      // 3) Start Stripe checkout. We only need the purchaseId; server can look up details.
+      // 3) Start Stripe checkout
       const res = await fetch('/api/stripe/create-client-checkout', {
         method: 'POST',
         credentials: 'include',
@@ -135,15 +185,21 @@ export default function PurchaseButton({
 
       const data = await res.json().catch(() => ({}));
 
-      if (res.ok && data.url) {
+      if (res.ok && data?.url) {
         setSuccess(true);
         onPurchaseSuccess?.(purchaseId);
+        // Defensive: clear persisted slot (we're leaving page)
+        try {
+          localStorage.removeItem('pendingSelectedSlot');
+        } catch (_) {}
         window.location.href = data.url;
-      } else {
-        const errorMsg = data?.error || 'Checkout failed.';
-        setError(errorMsg);
-        onPurchaseError?.(errorMsg);
+        return;
       }
+
+      // If server returned a known error string
+      const errorMsg = data?.error || data?.message || 'Checkout failed.';
+      setError(errorMsg);
+      onPurchaseError?.(errorMsg);
     } catch (err) {
       console.error('❌ Purchase flow error:', err);
       const errorMsg = 'Server error. Please try again.';
@@ -151,6 +207,7 @@ export default function PurchaseButton({
       onPurchaseError?.(errorMsg);
     } finally {
       setLoading(false);
+      clickedRef.current = false;
     }
   };
 
@@ -164,9 +221,10 @@ export default function PurchaseButton({
     if (e.target === e.currentTarget && !loading) handleCancel();
   };
 
+  const slotReady = !!selectedSlot?.day && Number.isInteger(Number(selectedSlot?.hour));
   const buttonLabel = loading
     ? 'Processing...'
-    : !selectedSlot?.day || !Number.isInteger(Number(selectedSlot?.hour))
+    : !slotReady
       ? 'Select a Time Slot'
       : `Unlock Contact Details (£${priceGBP.toFixed(2)})`;
 
@@ -174,9 +232,9 @@ export default function PurchaseButton({
     <>
       <button
         onClick={() => { setError(''); setShowPopup(true); }}
-        disabled={disabled || loading || !selectedSlot?.day || !Number.isInteger(Number(selectedSlot?.hour))}
+        disabled={disabled || loading || !slotReady}
         className={`px-6 py-3 rounded-full font-medium transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-lg ${
-          disabled || loading
+          disabled || loading || !slotReady
             ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
             : 'bg-gradient-to-r from-teal-600 to-teal-700 text-white hover:from-teal-700 hover:to-teal-800'
         }`}
@@ -231,18 +289,31 @@ export default function PurchaseButton({
                   </div>
                 </div>
               ) : (
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-blue-500">💳</span>
-                    <p className="text-blue-700 font-semibold">What you&apos;ll get:</p>
+                <>
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-blue-500">💳</span>
+                      <p className="text-blue-700 font-semibold">What you&apos;ll get:</p>
+                    </div>
+                    <ul className="text-blue-700 text-sm space-y-1 ml-6">
+                      <li>• Phone number</li>
+                      <li>• Email address</li>
+                      <li>• Company information</li>
+                      <li>• Ability to book time slots</li>
+                    </ul>
                   </div>
-                  <ul className="text-blue-700 text-sm space-y-1 ml-6">
-                    <li>• Phone number</li>
-                    <li>• Email address</li>
-                    <li>• Company information</li>
-                    <li>• Ability to book time slots</li>
-                  </ul>
-                </div>
+
+                  {/* Mini slot summary (defensive) */}
+                  {slotReady && (
+                    <div className="text-sm text-slate-600 mb-4">
+                      Selected: <span className="font-semibold">{selectedSlot.day}</span>{' '}
+                      <span className="font-mono">
+                        {String(selectedSlot.hour).padStart(2, '0')}:00
+                      </span>
+                      {selectedSlot?.date ? <> — {selectedSlot.date}</> : null}
+                    </div>
+                  )}
+                </>
               )}
 
               <div className="flex gap-3">

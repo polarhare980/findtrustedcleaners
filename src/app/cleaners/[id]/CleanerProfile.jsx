@@ -2,7 +2,8 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import PurchaseButton from '@/components/PurchaseButton';
 
 // Public APIs
 const PUBLIC_CLEANER_API = (id) => `/api/public-cleaners/${id}`;
@@ -21,19 +22,21 @@ function getMonday(d = new Date()) {
   const day = date.getDay(); // 0=Sun..6=Sat
   const diff = (day === 0 ? -6 : 1) - day;
   date.setDate(date.getDate() + diff);
-  date.setHours(0,0,0,0);
+  date.setHours(0, 0, 0, 0);
   return date;
 }
 function addDays(date, n) {
   const d = new Date(date);
   d.setDate(d.getDate() + n);
-  d.setHours(0,0,0,0);
+  d.setHours(0, 0, 0, 0);
   return d;
 }
-function addWeeks(date, w) { return addDays(date, w * 7); }
+function addWeeks(date, w) {
+  return addDays(date, w * 7);
+}
 function toISODate(d) {
   const z = new Date(d);
-  z.setHours(0,0,0,0);
+  z.setHours(0, 0, 0, 0);
   return z.toISOString().slice(0, 10); // YYYY-MM-DD
 }
 function getWeekISODates(mondayDate) {
@@ -116,7 +119,6 @@ function composeWeekView(baseWeekly = {}, overridesByISO = {}, mondayDate, purch
 
 export default function CleanerProfile() {
   const { id } = useParams();
-  const router = useRouter();
 
   const [cleaner, setCleaner] = useState(null);
   const [purchases, setPurchases] = useState([]);
@@ -170,7 +172,9 @@ export default function CleanerProfile() {
       }
     })();
 
-    return () => { alive = false; };
+    return () => {
+      alive = false;
+    };
   }, [id]);
 
   // ---- Normalised photos (respect hasText blur) ----
@@ -191,7 +195,7 @@ export default function CleanerProfile() {
 
   // ---- Google Reviews (dashboard fields first) ----
   const googleReviewRating = cleaner?.googleReviewRating ?? cleaner?.googleReviews?.rating ?? null;
-  const googleReviewCount  = cleaner?.googleReviewCount  ?? cleaner?.googleReviews?.count  ?? null;
+  const googleReviewCount = cleaner?.googleReviewCount ?? cleaner?.googleReviews?.count ?? null;
 
   // ---- Availability for the selected week (matches Dashboard precedence) ----
   const composedWeek = useMemo(() => {
@@ -217,20 +221,9 @@ export default function CleanerProfile() {
     setSelected({ day, hour });
     const dayIdx = DAYS.indexOf(day);
     if (dayIdx >= 0) setSelectedISO(weekISO[dayIdx]);
-  }
-
-  function gotoBooking() {
-    if (!selected.day || selected.hour == null) {
-      alert('Please select a day and hour');
-      return;
-    }
-    // include exact ISO date so checkout knows which week/day was chosen
-    const q = new URLSearchParams({
-      day: selected.day,
-      hour: String(selected.hour),
-      date: selectedISO || '', // YYYY-MM-DD
-    }).toString();
-    router.push(`/cleaners/${encodeURIComponent(String(id))}/checkout?${q}`);
+    // scroll to the purchase panel
+    const el = document.getElementById('purchase-panel');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   if (loading) {
@@ -251,19 +244,22 @@ export default function CleanerProfile() {
   }
 
   // Rate can be number or object (dashboard commonly stores a number)
-  const hourlyRate = typeof cleaner.rates === 'number'
-    ? cleaner.rates
-    : (cleaner.rates && (cleaner.rates.hourly || cleaner.rates.regular)) || null;
+  const hourlyRate =
+    typeof cleaner.rates === 'number'
+      ? cleaner.rates
+      : (cleaner.rates && (cleaner.rates.hourly || cleaner.rates.regular)) || null;
 
   const coverPhoto =
-    normalizedPhotos.find((p) => !p.hasText)?.url ||
-    (normalizedPhotos[0]?.url || null);
+    normalizedPhotos.find((p) => !p.hasText)?.url || (normalizedPhotos[0]?.url || null);
 
   // ----- Badges (match dashboard flags) -----
   const badges = [];
-  if (cleaner.isPremium) badges.push({ key: 'premium', label: 'Premium', tone: 'from-amber-400 to-yellow-500' });
-  if (cleaner.businessInsurance) badges.push({ key: 'insured', label: 'Insured', tone: 'from-emerald-400 to-teal-500' });
-  if (cleaner.dbsChecked) badges.push({ key: 'dbs', label: 'DBS Checked', tone: 'from-blue-400 to-indigo-500' });
+  if (cleaner.isPremium)
+    badges.push({ key: 'premium', label: 'Premium', tone: 'from-amber-400 to-yellow-500' });
+  if (cleaner.businessInsurance)
+    badges.push({ key: 'insured', label: 'Insured', tone: 'from-emerald-400 to-teal-500' });
+  if (cleaner.dbsChecked)
+    badges.push({ key: 'dbs', label: 'DBS Checked', tone: 'from-blue-400 to-indigo-500' });
 
   return (
     <main className="max-w-6xl mx-auto p-4">
@@ -297,7 +293,10 @@ export default function CleanerProfile() {
             </h1>
             <div className="flex flex-wrap gap-2">
               {badges.map((b) => (
-                <span key={b.key} className={`text-xs font-semibold px-2.5 py-1 rounded-full text-white bg-gradient-to-r ${b.tone} shadow`}>
+                <span
+                  key={b.key}
+                  className={`text-xs font-semibold px-2.5 py-1 rounded-full text-white bg-gradient-to-r ${b.tone} shadow`}
+                >
                   {b.label}
                 </span>
               ))}
@@ -312,7 +311,8 @@ export default function CleanerProfile() {
             <div className="flex items-center gap-3 text-sm text-slate-700 mt-2">
               {googleReviewRating != null && (
                 <span className="font-semibold">
-                  ⭐ {Number.isFinite(Number(googleReviewRating))
+                  ⭐{' '}
+                  {Number.isFinite(Number(googleReviewRating))
                     ? Number(googleReviewRating).toFixed(1)
                     : googleReviewRating}
                 </span>
@@ -321,21 +321,27 @@ export default function CleanerProfile() {
             </div>
           )}
 
-          {hourlyRate && <div className="text-slate-800 text-lg font-semibold mt-3">£{hourlyRate}/hour</div>}
+          {hourlyRate && (
+            <div className="text-slate-800 text-lg font-semibold mt-3">£{hourlyRate}/hour</div>
+          )}
         </div>
 
-        {/* CTA (keeps contact gated) */}
+        {/* CTA (scrolls to availability; keeps contact gated) */}
         <div className="w-full md:w-60">
           <div className="rounded-2xl p-5 bg-white/70 border border-slate-100 shadow flex flex-col gap-3">
             <div className="text-sm text-slate-600">Interested?</div>
             <button
-              onClick={gotoBooking}
+              onClick={() => {
+                const el = document.getElementById('booking-section');
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }}
               className="w-full rounded-xl py-2.5 font-semibold bg-teal-600 text-white hover:bg-teal-700 transition"
             >
-              Request a Booking
+              Check Availability
             </button>
             <div className="text-xs text-slate-500">
-              Contact details are shared <span className="font-semibold">after</span> a booking request is placed and approved.
+              Contact details are shared <span className="font-semibold">after</span> a booking
+              request is placed and approved.
             </div>
           </div>
         </div>
@@ -357,7 +363,10 @@ export default function CleanerProfile() {
           <h2 className="text-xl font-bold text-teal-900 mb-3">Gallery</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {normalizedPhotos.map((p, i) => (
-              <div key={p.public_id || `${p.url}-${i}`} className="relative rounded-xl overflow-hidden bg-slate-100 border border-slate-100 shadow">
+              <div
+                key={p.public_id || `${p.url}-${i}`}
+                className="relative rounded-xl overflow-hidden bg-slate-100 border border-slate-100 shadow"
+              >
                 <img
                   src={p.url}
                   alt={`Cleaner photo ${i + 1}`}
@@ -381,7 +390,10 @@ export default function CleanerProfile() {
           <h2 className="text-xl font-bold text-teal-900 mb-3">Services</h2>
           <ul className="flex flex-wrap gap-2">
             {cleaner.services.map((s, i) => (
-              <li key={i} className="px-3 py-1.5 rounded-full bg-white/70 border border-slate-100 text-sm text-slate-700 shadow">
+              <li
+                key={i}
+                className="px-3 py-1.5 rounded-full bg-white/70 border border-slate-100 text-sm text-slate-700 shadow"
+              >
                 {typeof s === 'string' ? s : s?.name || 'Service'}
               </li>
             ))}
@@ -390,20 +402,19 @@ export default function CleanerProfile() {
       )}
 
       {/* Service Durations */}
-      {Array.isArray(cleaner.servicesDetailed) && cleaner.servicesDetailed.filter(s => s?.name && (s?.active !== false)).length > 0 && (
-        <section className="mt-6">
-          <h2 className="text-xl font-bold text-teal-900 mb-3">Service Durations</h2>
-          <ul className="list-disc list-inside text-slate-700">
-            {cleaner.servicesDetailed
-              .filter((svc) => svc?.name && (svc?.active !== false))
-              .map((svc, i) => (
-                <li key={`${svc.name}-${i}`}>
-                  {svc.name} ({svc.defaultDurationMins ?? 60} mins)
-                </li>
-              ))}
-          </ul>
-        </section>
-      )}
+      {Array.isArray(cleaner.servicesDetailed) &&
+        cleaner.servicesDetailed.filter((s) => s?.name && s?.active !== false).length > 0 && (
+          <section className="mt-6">
+            <h2 className="text-xl font-bold text-teal-900 mb-3">Service Durations</h2>
+            <ul className="list-disc list-inside text-slate-700">
+              {cleaner.servicesDetailed
+                .filter((svc) => svc?.name && svc?.active !== false)
+                .map((svc, i) => (
+                  <li key={`${svc.name}-${i}`}>{svc.name} ({svc.defaultDurationMins ?? 60} mins)</li>
+                ))}
+            </ul>
+          </section>
+        )}
 
       {/* Availability (week navigation like dashboard) */}
       <section id="booking-section" className="mt-10">
@@ -418,14 +429,18 @@ export default function CleanerProfile() {
                 setWeekOffset((w) => Math.max(0, w - 1));
               }}
               disabled={!canGoPrev}
-              className={`px-3 py-1 rounded border ${canGoPrev ? 'bg-white hover:bg-gray-50' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+              className={`px-3 py-1 rounded border ${
+                canGoPrev ? 'bg-white hover:bg-gray-50' : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              }`}
               title="Previous week (disabled)"
             >
               ◀
             </button>
             <div className="px-3 py-1 rounded bg-white/70 border text-sm">
               Week of {fmtRangeLabel(mondaySelected)}
-              {!cleaner?.isPremium && <span className="ml-2 text-xs text-amber-700">(Free: this week only)</span>}
+              {!cleaner?.isPremium && (
+                <span className="ml-2 text-xs text-amber-700">(Free: this week only)</span>
+              )}
             </div>
             <button
               onClick={() => {
@@ -435,7 +450,9 @@ export default function CleanerProfile() {
                 setWeekOffset((w) => Math.min(maxAhead, w + 1));
               }}
               disabled={!canGoNext}
-              className={`px-3 py-1 rounded border ${canGoNext ? 'bg-white hover:bg-gray-50' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+              className={`px-3 py-1 rounded border ${
+                canGoNext ? 'bg-white hover:bg-gray-50' : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              }`}
               title={canGoNext ? 'Next week' : 'Upgrade to view more weeks'}
             >
               ▶
@@ -446,7 +463,9 @@ export default function CleanerProfile() {
         <div className="rounded-2xl overflow-hidden border border-slate-100 bg-white/60 shadow">
           <div className="grid" style={{ gridTemplateColumns: `120px repeat(${HOURS.length}, minmax(44px,1fr))` }}>
             {/* Header row */}
-            <div className="p-2.5 bg-slate-50 text-slate-500 text-xs font-semibold uppercase tracking-wide">Day</div>
+            <div className="p-2.5 bg-slate-50 text-slate-500 text-xs font-semibold uppercase tracking-wide">
+              Day
+            </div>
             {HOURS.map((h) => (
               <div key={`h-${h}`} className="p-2.5 bg-slate-50 text-slate-500 text-xs text-center">
                 {hourLabel(h)}
@@ -464,13 +483,14 @@ export default function CleanerProfile() {
                   const state = getCellState(day, h);
                   const isSelected = selected.day === day && selected.hour === h && selectedISO === weekISO[idx];
 
-                  const base = 'h-9 md:h-10 border-t border-l last:border-r text-xs grid place-items-center select-none';
+                  const base =
+                    'h-9 md:h-10 border-t border-l last:border-r text-xs grid place-items-center select-none';
                   const cls =
                     state === 'pending'
                       ? `${base} bg-slate-200 text-slate-500`
                       : state === 'available'
-                        ? `${base} bg-emerald-100/70 hover:bg-emerald-200/70 cursor-pointer`
-                        : `${base} bg-rose-100/60 text-rose-600`;
+                      ? `${base} bg-emerald-100/70 hover:bg-emerald-200/70 cursor-pointer`
+                      : `${base} bg-rose-100/60 text-rose-600`;
 
                   return (
                     <button
@@ -490,16 +510,40 @@ export default function CleanerProfile() {
           </div>
         </div>
 
-        {/* Booking CTA */}
-        <div className="mt-5 flex flex-col sm:flex-row items-stretch gap-3">
-          <button
-            onClick={gotoBooking}
-            className="px-5 py-3 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700 transition shadow"
-          >
-            Continue to Booking
-          </button>
-          <div className="text-xs text-slate-500 self-center">
-            You’ll confirm details and share contact info after submitting a booking request.
+        {/* Purchase Panel (Stripe) */}
+        <div id="purchase-panel" className="mt-5">
+          <div className="rounded-2xl p-5 bg-white/70 border border-slate-100 shadow flex flex-col md:flex-row gap-4 md:items-center">
+            <div className="flex-1 text-sm text-slate-700">
+              {selected.day && selected.hour != null && selectedISO ? (
+                <div>
+                  <div className="font-semibold text-slate-900">Selected slot</div>
+                  <div>
+                    {selected.day} {hourLabel(selected.hour)} — {selectedISO}
+                  </div>
+                </div>
+              ) : (
+                <div>Select an available slot above to continue.</div>
+              )}
+            </div>
+
+            <div className="w-full md:w-auto">
+              <PurchaseButton
+                cleanerId={String(id)}
+                selectedSlot={{
+                  day: selected.day,
+                  hour: selected.hour, // number okay; button can String() it
+                  date: selectedISO,   // YYYY-MM-DD exact date of the slot
+                }}
+                priceGBP={2.99}
+                onPurchaseStart={() => {}}
+                onPurchaseError={() => {}}
+                onPurchaseSuccess={() => {}}
+                disabled={!selected.day || selected.hour == null || !selectedISO}
+              />
+              <div className="text-[11px] text-slate-500 mt-1">
+                You’ll only be charged if the cleaner accepts the job.
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -507,7 +551,8 @@ export default function CleanerProfile() {
       {/* Safety note (no direct contact) */}
       <section className="mt-10">
         <div className="rounded-xl p-4 bg-amber-50 border border-amber-200 text-amber-800 text-sm">
-          For safety and fairness, cleaner phone and email are hidden until a booking is requested and approved.
+          For safety and fairness, cleaner phone and email are hidden until a booking is requested and
+          approved.
         </div>
       </section>
     </main>
