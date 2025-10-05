@@ -1351,12 +1351,12 @@ export default function CleanerDashboard() {
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <button
-              onClick={() => window.open('/api/cleaners/export-data', '_blank')}
-              className="flex items-center justify-center gap-3 px-5 py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl font-semibold transition-all"
-            >
-              <span className="text-xl">📄</span>
-              <span>Export My Data</span>
-            </button>
+  onClick={() => router.push('/coming-soon?feature=Export%20My%20Data')}
+  className="flex items-center justify-center gap-3 px-5 py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl font-semibold transition-all"
+>
+  <span className="text-xl">📄</span>
+  <span>Export My Data</span>
+</button>
             <button
               onClick={() => router.push('/cleaners/bookings')}
               className="flex items-center justify-center gap-3 px-5 py-4 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-xl font-semibold transition-all"
