@@ -1,3 +1,4 @@
+// src/app/register/cleaners/page.jsx
 'use client';
 
 import { useState } from 'react';
@@ -160,6 +161,7 @@ export default function CleanerRegister() {
     const availability = buildDenseBaseAvailability();
 
     try {
+      // NOTE: send FLAT address fields to match API expectations
       const payload = {
         realName: form.realName.trim(),
         companyName: form.companyName.trim(),
@@ -168,12 +170,10 @@ export default function CleanerRegister() {
         phone: form.phone.trim(),
         rates: parsedRates,
         services: form.services,
-        address: {
-          houseNameNumber: form.houseNameNumber.trim(),
-          street: form.street.trim(),
-          county: form.county.trim(),
-          postcode: form.postcode.trim(),
-        },
+        houseNameNumber: form.houseNameNumber.trim(),
+        street: form.street.trim(),
+        county: form.county.trim(),
+        postcode: form.postcode.trim(),
         availability, // dense base availability
         businessInsurance: !!form.businessInsurance,
         dbsChecked: !!form.dbsChecked,
