@@ -450,11 +450,11 @@ export default function ClientDashboardComponent() {
                   ❤️ My Favorite Cleaners
                 </Link>
                 <Link
-                  href="/contact-us"
-                  className="block w-full bg-gradient-to-r from-amber-400 to-amber-500 text-white text-center px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 hover:scale-105"
-                >
-                  💬 Get Support
-                </Link>
+  href="/contact"
+  className="block w-full bg-gradient-to-r from-amber-400 to-amber-500 text-white text-center px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 hover:scale-105"
+>
+  💬 Get Support
+</Link>
               </div>
             </div>
 
