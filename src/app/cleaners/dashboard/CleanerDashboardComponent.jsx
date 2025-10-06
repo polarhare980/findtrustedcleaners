@@ -574,7 +574,9 @@ export default function CleanerDashboard() {
 
   // Week navigation (limit by premium status)
   const canGoPrev = weekOffset > 0; // lock to current+future; disable past weeks
-  const maxAhead = formData?.isPremium ? 3 : 0; // 0=only this week; 3=+3 weeks => total 4
+  // Use the value from the DB (defaults to 3 if missing)
+const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) : 0;
+
   const canGoNext = weekOffset < maxAhead;
 
   if (!mounted) return null;
@@ -680,35 +682,67 @@ export default function CleanerDashboard() {
         )}
 
         {/* Premium upsell/status */}
-        {!formData?.isPremium ? (
-          <div className="bg-gradient-to-r from-amber-400/20 to-amber-500/20 backdrop-blur-md border border-amber-400/30 text-amber-800 px-4 py-3 rounded-lg mb-6">
-            <p className="mb-2 font-semibold">✨ You are using a Free Account</p>
-            <p className="text-sm mb-3">Upgrade to set your diary up to <strong>4 weeks ahead</strong> and get a gallery.</p>
-            <button
-              onClick={async () => {
-                try {
-                  const res = await fetch('/api/stripe/create-checkout-session', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ cleanerId: me._id }),
-                  });
-                  const data = await res.json();
-                  if (data?.url) window.location.href = data.url;
-                } catch (err) {
-                  console.error('Upgrade failed:', err);
-                  alert('Something went wrong while starting your upgrade.');
-                }
-              }}
-              className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-6 py-2 rounded-lg"
-            >
-              💎 Upgrade to Premium (£7.99/month)
-            </button>
-          </div>
-        ) : (
-          <div className="bg-gradient-to-r from-green-400/20 to-green-500/20 backdrop-blur-md border border-green-400/30 text-green-800 px-4 py-3 rounded-lg mb-6 font-semibold">
-            ✨ You are a Premium Cleaner! You can schedule up to 4 weeks ahead.
-          </div>
-        )}
+{!formData?.isPremium ? (
+  <div className="bg-gradient-to-r from-amber-400/20 to-amber-500/20 backdrop-blur-md border border-amber-400/30 text-amber-800 px-4 py-3 rounded-lg mb-6">
+    <p className="mb-2 font-semibold">✨ You are using a Free Account</p>
+    <p className="text-sm mb-3">
+      Upgrade to set your diary up to <strong>{(Number(formData?.premiumWeeksAhead ?? 3) + 1)}</strong> weeks ahead and get a gallery.
+    </p>
+    <button
+      onClick={async () => {
+        try {
+          const res = await fetch('/api/stripe/create-checkout-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ cleanerId: me._id }),
+          });
+          const data = await res.json();
+          if (data?.url) window.location.href = data.url;
+          else alert(data?.error || 'Could not start upgrade.');
+        } catch (err) {
+          console.error('Upgrade failed:', err);
+          alert('Something went wrong while starting your upgrade.');
+        }
+      }}
+      className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-6 py-2 rounded-lg"
+    >
+      💎 Upgrade to Premium (£7.99/month)
+    </button>
+  </div>
+) : (
+  <div className="bg-gradient-to-r from-green-400/20 to-green-500/20 backdrop-blur-md border border-green-400/30 text-green-800 px-4 py-3 rounded-lg mb-6">
+    <div className="font-semibold mb-3">
+      ✨ You are a Premium Cleaner! You can schedule up to{' '}
+      <strong>{(Number(formData?.premiumWeeksAhead ?? 3) + 1)}</strong> weeks ahead.
+    </div>
+
+    {/* New: Manage / Cancel via Stripe Billing Portal */}
+    <button
+      onClick={async () => {
+        try {
+          const res = await fetch('/api/stripe/portal', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ cleanerId: me._id }),
+          });
+          const data = await res.json();
+          if (data?.url) {
+            window.location.href = data.url; // open Stripe Billing Portal
+          } else {
+            alert(data?.error || 'Could not open billing portal.');
+          }
+        } catch (err) {
+          console.error('Portal open failed:', err);
+          alert('Something went wrong while opening the billing portal.');
+        }
+      }}
+      className="inline-flex items-center gap-2 bg-white/70 text-teal-800 border border-teal-300 px-4 py-2 rounded-lg hover:bg-white transition"
+    >
+      🧾 Manage / Cancel Premium
+    </button>
+  </div>
+)}
+
 
         {/* Profile info */}
         <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl mb-6 p-6">

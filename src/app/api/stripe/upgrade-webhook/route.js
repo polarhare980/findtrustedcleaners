@@ -1,75 +1,154 @@
-import Stripe from 'stripe';
-import { NextResponse } from 'next/server';
-import { connectToDatabase } from '@/lib/db';
-import Cleaner from '@/models/Cleaner';
+// File: src/models/Cleaner.js
+import mongoose from 'mongoose';
 
-export const config = {
-  api: {
-    bodyParser: false,
+/* ---------- Subschemas ---------- */
+
+const ServiceSchema = new mongoose.Schema(
+  {
+    key: { type: String, required: true },          // e.g. 'domestic_cleaning', 'car_detailing'
+    name: { type: String, required: true },         // human label
+    active: { type: Boolean, default: true },
+
+    // Duration config (minutes)
+    defaultDurationMins: { type: Number, default: 60, min: 15 },
+    minDurationMins: { type: Number, default: 60, min: 15 },
+    maxDurationMins: { type: Number, default: 240, min: 15 },
+
+    // Granularity (keep 60 for 1h grid; 15/30 optional later)
+    incrementMins: { type: Number, default: 60, enum: [15, 30, 60] },
+
+    // Turnover/setup buffers (minutes)
+    bufferBeforeMins: { type: Number, default: 0, min: 0 },
+    bufferAfterMins: { type: Number, default: 0, min: 0 },
+
+    // Optional pricing
+    basePrice: { type: Number, min: 0 },
+    pricePerHour: { type: Number, min: 0 },
   },
-};
+  { _id: false }
+);
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const PhotoSchema = new mongoose.Schema(
+  {
+    url: { type: String, required: true },
+    public_id: { type: String },
+    hasText: { type: Boolean, default: false },
+  },
+  { _id: false }
+);
 
-// ✅ Convert ReadableStream to Buffer manually (App Router compatible)
-async function getRawBody(readable) {
-  const reader = readable.getReader();
-  let result = new Uint8Array();
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    const combined = new Uint8Array(result.length + value.length);
-    combined.set(result);
-    combined.set(value, result.length);
-    result = combined;
+/* ---------- Main schema ---------- */
+
+const cleanerSchema = new mongoose.Schema(
+  {
+    realName: { type: String, required: true },
+    companyName: { type: String, required: true },
+    email: { type: String, required: true, unique: true, index: true },
+    password: { type: String, required: true },
+    phone: { type: String, required: true },
+
+    rates: { type: Number, required: true },
+
+    // Flat tags (keep for filters)
+    services: { type: [String], default: [] },
+
+    // Structured services with durations/buffers
+    servicesDetailed: { type: [ServiceSchema], default: [] },
+
+    bio: {
+      type: String,
+      maxlength: 1000,
+      default: '',
+    },
+
+    /**
+     * Base weekly pattern (Mon–Sun, hour "7".."19") used as the fallback.
+     * Values: true | false | 'unavailable'
+     * Do NOT persist pending/accepted here.
+     *
+     * Example:
+     * { Monday: { "7": true, "8": false, ... }, Tuesday: { ... }, ... }
+     */
+    availability: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
+    },
+
+    /**
+     * Date-specific overrides keyed by ISO date (YYYY-MM-DD).
+     * Each value is an object of hour -> true | false | 'unavailable'
+     * Only store cells that differ from the weekly pattern for that date.
+     *
+     * Example:
+     * {
+     *   "2025-08-25": { "9": true, "10": true, "11": "unavailable" },
+     *   "2025-08-26": { "14": false }
+     * }
+     */
+    availabilityOverrides: {
+      type: Map, // Map<string, Mixed>
+      of: mongoose.Schema.Types.Mixed,
+      default: undefined, // omitted if empty (keeps docs lean)
+    },
+
+    // Premium Status + dial for how far ahead premium can set (in weeks, beyond current)
+    isPremium: { type: Boolean, default: false },
+    premiumWeeksAhead: { type: Number, default: 3 }, // 0 = this week only; 3 = +3 => total 4
+
+    // ✅ Stripe subscription linkage (for manage/cancel + auto-downgrade)
+    stripeCustomerId: { type: String, index: true },
+    stripeSubscriptionId: { type: String, index: true },
+
+    businessInsurance: { type: Boolean, default: false },
+    dbsChecked: { type: Boolean, default: false },
+
+    image: { type: String },
+    imageHasText: { type: Boolean, default: false },
+
+    address: {
+      houseNameNumber: { type: String, default: '' },
+      street: { type: String, default: '' },
+      county: { type: String, default: '' },
+      postcode: { type: String, default: '' },
+    },
+
+    // Legacy Google review fields (kept for compatibility)
+    googleReviewUrl: { type: String },
+    googleReviewRating: { type: Number },
+    googleReviewCount: { type: Number },
+
+    // Analytics
+    views: { type: Number, default: 0 },
+    profileUnlocks: { type: Number, default: 0 },
+    completedJobs: { type: Number, default: 0 },
+    rating: { type: Number },
+
+    // Premium Media Uploads
+    photos: { type: [PhotoSchema], default: [] },
+    videoUrl: { type: String }, // Optional intro video
+
+    // Additional service coverage
+    additionalPostcodes: { type: [String], default: [] },
+  },
+  {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
-  return result;
-}
+);
 
-export async function POST(req) {
-  const sig = req.headers.get('stripe-signature');
-  const rawBody = await getRawBody(req.body);
+/* ---------- Virtuals / Indexes ---------- */
 
-  let event;
-  try {
-    event = stripe.webhooks.constructEvent(
-      rawBody,
-      sig,
-      process.env.STRIPE_WEBHOOK_UPGRADE_SECRET
-    );
-  } catch (err) {
-    console.error('❌ Webhook signature validation failed:', err.message);
-    return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
-  }
+// Public-friendly virtual to keep API stable: { rating, count, url }
+cleanerSchema.virtual('googleReviews').get(function () {
+  return {
+    rating: typeof this.googleReviewRating === 'number' ? this.googleReviewRating : null,
+    count: typeof this.googleReviewCount === 'number' ? this.googleReviewCount : null,
+    url: this.googleReviewUrl || '',
+  };
+});
 
-  if (event.type === 'checkout.session.completed') {
-    const session = event.data.object;
+// Helpful text index for search
+cleanerSchema.index({ companyName: 'text', realName: 'text', 'address.postcode': 1 });
 
-    if (session.metadata?.cleanerId) {
-      const cleanerId = session.metadata.cleanerId;
-
-      try {
-        await connectToDatabase();
-
-        const updatedCleaner = await Cleaner.findByIdAndUpdate(
-          cleanerId,
-          { isPremium: true },
-          { new: true }
-        );
-
-        if (updatedCleaner) {
-          console.log('✅ Cleaner upgraded to premium:', updatedCleaner.email);
-        } else {
-          console.error('❌ Cleaner not found in DB');
-        }
-      } catch (err) {
-        console.error('❌ DB error while upgrading cleaner:', err);
-        return NextResponse.json({ error: 'Database update failed' }, { status: 500 });
-      }
-    } else {
-      console.error('❌ No cleanerId found in metadata');
-    }
-  }
-
-  return NextResponse.json({ received: true });
-}
+export default mongoose.models.Cleaner || mongoose.model('Cleaner', cleanerSchema);
