@@ -1,8 +1,14 @@
 // src/app/coming-soon/page.jsx
 export const dynamic = 'force-static';
 
+// This file is a Server Component (no "use client").
+// Avoid passing any event handlers to client elements.
+
 export default function ComingSoonPage({ searchParams }) {
-  const feature = decodeURIComponent(searchParams?.feature || 'This feature');
+  const feature =
+    typeof searchParams?.feature === 'string' && searchParams.feature.trim()
+      ? searchParams.feature
+      : 'This feature';
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-teal-50">
@@ -29,8 +35,10 @@ export default function ComingSoonPage({ searchParams }) {
           <div className="mt-8">
             <p className="text-sm text-gray-600 mb-2">Mop-mentum meter</p>
             <div className="relative w-full h-3 bg-gray-200 rounded-full overflow-hidden">
-              <div className="absolute inset-y-0 left-0 h-full rounded-full animate-[sweep_2.5s_ease-in-out_infinite]"
-                   style={{ width: '68%', background: 'linear-gradient(90deg,#0D9488,#14B8A6)' }} />
+              <div
+                className="absolute inset-y-0 left-0 h-full rounded-full animate-[sweep_2.5s_ease-in-out_infinite]"
+                style={{ width: '68%', background: 'linear-gradient(90deg,#0D9488,#14B8A6)' }}
+              />
             </div>
             <p className="mt-2 text-xs text-gray-500">
               We’re polishing edges and testing CSV/JSON formats with real cleaner data.
@@ -60,25 +68,35 @@ export default function ComingSoonPage({ searchParams }) {
           <Card>
             <Badge>📦</Badge>
             <Title>One-click CSV & JSON</Title>
-            <Body>Bookings, availability (including overrides), earnings, and gallery meta. Ready for spreadsheets or your accountant.</Body>
-            <Checklist items={[
-              'Bookings & statuses (approved/pending/declined)',
-              'Availability + week overrides',
-              'Earnings & fees summary',
-              'Customer details (privacy-safe)',
-            ]}/>
+            <Body>
+              Bookings, availability (including overrides), earnings, and gallery meta. Ready for spreadsheets or your
+              accountant.
+            </Body>
+            <Checklist
+              items={[
+                'Bookings & statuses (approved/pending/declined)',
+                'Availability + week overrides',
+                'Earnings & fees summary',
+                'Customer details (privacy-safe)',
+              ]}
+            />
           </Card>
 
           <Card>
             <Badge>🛡️</Badge>
             <Title>Privacy & GDPR Ready</Title>
-            <Body>Your data belongs to you. We only export what you can already see, in a portable format. No surprises, no hidden columns.</Body>
-            <Checklist items={[
-              'Download only on your account',
-              'Human-readable fields',
-              'Timestamped exports',
-              'Easy to delete from your device',
-            ]}/>
+            <Body>
+              Your data belongs to you. We only export what you can already see, in a portable format. No surprises, no
+              hidden columns.
+            </Body>
+            <Checklist
+              items={[
+                'Download only on your account',
+                'Human-readable fields',
+                'Timestamped exports',
+                'Easy to delete from your device',
+              ]}
+            />
           </Card>
         </section>
 
@@ -107,29 +125,17 @@ export default function ComingSoonPage({ searchParams }) {
               status="Queued"
             />
           </div>
-          <p className="mt-4 text-xs text-gray-500">
-            Bonus: Gallery export (filenames + alt text) for portfolio backups.
-          </p>
+          <p className="mt-4 text-xs text-gray-500">Bonus: Gallery export (filenames + alt text) for portfolio backups.</p>
         </section>
 
         {/* Notify form */}
         <section className="mt-12">
           <div className="bg-gradient-to-r from-amber-50 to-white border border-amber-200 rounded-3xl p-6 md:p-8 shadow">
-            <h3 className="text-lg md:text-xl font-semibold text-amber-900">
-              Want first dibs when it goes live?
-            </h3>
-            <p className="text-amber-800/90 mt-1">
-              Pop your email in and we’ll message you the second exports are ready.
-            </p>
+            <h3 className="text-lg md:text-xl font-semibold text-amber-900">Want first dibs when it goes live?</h3>
+            <p className="text-amber-800/90 mt-1">Pop your email in and we’ll message you the second exports are ready.</p>
 
-            <form
-              action="/contact"
-              method="GET"
-              className="mt-4 flex flex-col sm:flex-row gap-3"
-              onSubmit={(e) => {
-                // purely decorative progressive enhancement
-              }}
-            >
+            {/* No client handlers here: server-safe */}
+            <form action="/contact" method="GET" className="mt-4 flex flex-col sm:flex-row gap-3">
               <input
                 type="email"
                 name="email"
@@ -162,10 +168,7 @@ export default function ComingSoonPage({ searchParams }) {
             q="Does it include personal phone/email fields?"
             a="We export what you’re allowed to see in your account. Private details are kept safe—privacy first."
           />
-          <Faq
-            q="What formats do you support?"
-            a="CSV for spreadsheets and JSON for developers/automations. PDFs for invoices are planned."
-          />
+          <Faq q="What formats do you support?" a="CSV for spreadsheets and JSON for developers/automations. PDFs for invoices are planned." />
         </section>
 
         {/* Footer */}
@@ -189,29 +192,23 @@ export default function ComingSoonPage({ searchParams }) {
 /* ---------- Little UI helpers (inline for single-file drop-in) ---------- */
 
 function Card({ children }) {
-  return (
-    <div className="bg-white/70 backdrop-blur-md border border-white/40 rounded-3xl shadow-xl p-6">
-      {children}
-    </div>
-  );
+  return <div className="bg-white/70 backdrop-blur-md border border-white/40 rounded-3xl shadow-xl p-6">{children}</div>;
 }
 function Badge({ children }) {
   return (
-    <span className="inline-block mb-3 text-xs font-semibold text-white px-3 py-1 rounded-full"
-          style={{ background: 'linear-gradient(135deg,#0D9488,#0F766E)' }}>
+    <span
+      className="inline-block mb-3 text-xs font-semibold text-white px-3 py-1 rounded-full"
+      style={{ background: 'linear-gradient(135deg,#0D9488,#0F766E)' }}
+    >
       {children}
     </span>
   );
 }
 function Title({ children }) {
-  return (
-    <h3 className="text-lg md:text-xl font-bold text-teal-900">{children}</h3>
-  );
+  return <h3 className="text-lg md:text-xl font-bold text-teal-900">{children}</h3>;
 }
 function Body({ children }) {
-  return (
-    <p className="mt-2 text-gray-700 leading-relaxed">{children}</p>
-  );
+  return <p className="mt-2 text-gray-700 leading-relaxed">{children}</p>;
 }
 function Checklist({ items = [] }) {
   return (
@@ -229,8 +226,7 @@ function RoadmapStep({ icon, title, desc, status }) {
   return (
     <div className="p-4 rounded-2xl border border-gray-200 bg-white/70">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl grid place-items-center text-xl"
-             style={{ background: 'linear-gradient(135deg,#F59E0B,#D97706)', color: 'white' }}>
+        <div className="w-10 h-10 rounded-xl grid place-items-center text-xl" style={{ background: 'linear-gradient(135deg,#F59E0B,#D97706)', color: 'white' }}>
           {icon}
         </div>
         <div>
