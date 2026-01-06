@@ -1,2 +1,7 @@
-// 🔄 Temporarily REMOVE every thing 'use client'
+'use client';
 
+import ClientDashboardComponent from '@/components/ClientDashboardComponent'; // adjust path if needed
+
+export default function ClientDashboardPage() {
+  return <ClientDashboardComponent />;
+}
