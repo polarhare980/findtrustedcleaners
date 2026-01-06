@@ -1,6 +1,9 @@
 'use client';
 
-import ClientDashboardComponent from '@/components/ClientDashboardComponent'; // adjust path if needed
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+import ClientDashboardComponent from '@/components/ClientDashboardComponent';
 
 export default function ClientDashboardPage() {
   return <ClientDashboardComponent />;
