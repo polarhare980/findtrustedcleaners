@@ -7,6 +7,10 @@ export async function POST(req) {
   try {
     const { cleanerId } = await req.json();
 
+    if (!cleanerId) {
+      return NextResponse.json({ error: 'Missing cleanerId' }, { status: 400 });
+    }
+
     const successUrl = `${process.env.SITE_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}`;
     const cancelUrl = `${process.env.SITE_URL}/payment-cancelled`;
 
@@ -19,7 +23,10 @@ export async function POST(req) {
           quantity: 1,
         },
       ],
-      metadata: { cleanerId },
+      // ✅ Add a robust breadcrumb for your webhook
+      metadata: { cleanerId, subscription: 'true' },
+      // Optional: also set client_reference_id for redundancy/debugging
+      client_reference_id: cleanerId,
       success_url: successUrl,
       cancel_url: cancelUrl,
     });

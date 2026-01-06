@@ -1,82 +1,58 @@
-import { notFound } from 'next/navigation';
-import { connectToDatabase } from '@/lib/db';
-import BlogPost from '@/models/BlogPost';
+import { notFound } from "next/navigation";
 
 export async function generateMetadata({ params }) {
-  const { slug } = params;
-
-  await connectToDatabase();
-  const post = await BlogPost.findOne({ slug }).lean();
-
-  if (!post) {
-    return {
-      title: 'Article not found | FindTrustedCleaners',
-      robots: { index: false, follow: false },
-    };
-  }
+  const slug = params?.slug || "";
+  const title = slug
+    .replace(/-/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
 
   return {
-    title: `${post.title} | FindTrustedCleaners`,
-    description: post.excerpt || post.title,
-    alternates: {
-      canonical: `https://www.findtrustedcleaners.com/blog/${slug}`,
-    },
-    openGraph: {
-      title: post.title,
-      description: post.excerpt || post.title,
-      url: `https://www.findtrustedcleaners.com/blog/${slug}`,
-      siteName: 'FindTrustedCleaners',
-      type: 'article',
-    },
-    robots: {
-      index: true,
-      follow: true,
-    },
+    title: `${title} | FindTrustedCleaners`,
+    description: `Cleaning guide: ${title}. Practical steps from FindTrustedCleaners.`,
   };
 }
 
-// Server Component — read from MongoDB directly
 async function fetchPost(slug) {
   try {
-    await connectToDatabase();
-    const post = await BlogPost.findOne({ slug }).lean();
-    return post || null;
-  } catch (e) {
-    console.error('❌ BlogPost failed to load:', e?.message || e);
+    const res = await fetch(`/api/blogs?slug=${encodeURIComponent(slug)}`, {
+      cache: "no-store",
+    });
+    const json = await res.json();
+    return json?.post || null;
+  } catch {
     return null;
   }
 }
 
 export default async function BlogPostPage({ params }) {
-  const post = await fetchPost(params.slug);
+  const slug = params?.slug;
+  const post = await fetchPost(slug);
 
   if (!post) return notFound();
 
   return (
     <main className="max-w-3xl mx-auto px-4 py-10">
-      <article>
-        <h1 className="text-3xl font-bold mb-4">{post.title}</h1>
-
-        {post.coverImage && (
-          <img
-            src={post.coverImage}
-            alt={post.title}
-            className="w-full rounded-lg mb-6"
-          />
-        )}
-
-        <div
-          className="prose prose-slate max-w-none"
-          dangerouslySetInnerHTML={{ __html: post.content }}
-        />
-
-        <div className="mt-8 text-sm text-slate-500">
-          Published{' '}
-          {post.createdAt
-            ? new Date(post.createdAt).toLocaleDateString('en-GB')
-            : ''}
-        </div>
+      <article className="prose max-w-none">
+        <h1>{post.title}</h1>
+        <div dangerouslySetInnerHTML={{ __html: post.content }} />
       </article>
+
+      {/* Optional AdSense block */}
+      <div className="my-10">
+        <ins
+          className="adsbygoogle"
+          style={{ display: "block" }}
+          data-ad-client={process.env.NEXT_PUBLIC_ADSENSE_ID || ""}
+          data-ad-slot="auto"
+          data-ad-format="auto"
+          data-full-width-responsive="true"
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: "(adsbygoogle = window.adsbygoogle || []).push({});",
+          }}
+        />
+      </div>
     </main>
   );
 }
