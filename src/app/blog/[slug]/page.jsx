@@ -1,44 +1,14 @@
-// app/blog/[slug]/page.jsx
-
 import { notFound } from "next/navigation";
-import BlogPostClient from "./BlogPostClient";
 
-// TEMP DATA (replace later with MDX / DB)
-const POSTS = {
-  "end-of-tenancy-cleaning-checklist": {
-    title: "End of Tenancy Cleaning Checklist",
-    content: "Checklist content here...",
-  },
-  "how-to-hire-a-cleaner": {
-    title: "How to Hire a Cleaner",
-    content: "Hiring guide content here...",
-  },
-};
-
-export async function generateStaticParams() {
-  return Object.keys(POSTS).map((slug) => ({ slug }));
-}
-
-export async function generateMetadata({ params }) {
-  const post = POSTS[params.slug];
-
-  if (!post) return {};
-
-  return {
-    title: post.title,
-    robots: {
-      index: true,
-      follow: true,
-    },
-  };
-}
-
-export default function BlogPostPage({ params }) {
-  const post = POSTS[params.slug];
-
-  if (!post) {
+export default async function BlogPostPage({ params }) {
+  try {
+    const Post = (await import(`./${params.slug}.mdx`)).default;
+    return (
+      <main className="max-w-3xl mx-auto px-6 py-12">
+        <Post />
+      </main>
+    );
+  } catch (e) {
     notFound();
   }
-
-  return <BlogPostClient post={post} />;
 }
