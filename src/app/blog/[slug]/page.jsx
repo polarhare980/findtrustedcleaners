@@ -1,58 +1,51 @@
-import { notFound } from "next/navigation";
+import { NextResponse } from "next/server";
+import { verifyToken } from "./auth";
 
-export async function generateMetadata({ params }) {
-  const slug = params?.slug || "";
-  const title = slug
-    .replace(/-/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
+export function middleware(req) {
+  const { pathname } = req.nextUrl;
 
-  return {
-    title: `${title} | FindTrustedCleaners`,
-    description: `Cleaning guide: ${title}. Practical steps from FindTrustedCleaners.`,
-  };
-}
+  // Only run auth checks on protected areas
+  const isProtected =
+    pathname.startsWith("/cleaner") ||
+    pathname.startsWith("/client") ||
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/api/secure"); // optional pattern you control
 
-async function fetchPost(slug) {
-  try {
-    const res = await fetch(`/api/blogs?slug=${encodeURIComponent(slug)}`, {
-      cache: "no-store",
-    });
-    const json = await res.json();
-    return json?.post || null;
-  } catch {
-    return null;
+  if (!isProtected) {
+    return NextResponse.next();
   }
+
+  const token = req.cookies.get("token")?.value;
+
+  if (!token) {
+    const url = req.nextUrl.clone();
+    url.pathname = "/login";
+    url.searchParams.set("next", pathname);
+    return NextResponse.redirect(url);
+  }
+
+  const user = verifyToken(token);
+
+  if (!user) {
+    const url = req.nextUrl.clone();
+    url.pathname = "/login";
+    url.searchParams.set("next", pathname);
+    return NextResponse.redirect(url);
+  }
+
+  // If you ever need user info downstream, pass via headers (optional)
+  const res = NextResponse.next();
+  res.headers.set("x-user-id", user.id || "");
+  res.headers.set("x-user-type", user.type || "");
+  return res;
 }
 
-export default async function BlogPostPage({ params }) {
-  const slug = params?.slug;
-  const post = await fetchPost(slug);
-
-  if (!post) return notFound();
-
-  return (
-    <main className="max-w-3xl mx-auto px-4 py-10">
-      <article className="prose max-w-none">
-        <h1>{post.title}</h1>
-        <div dangerouslySetInnerHTML={{ __html: post.content }} />
-      </article>
-
-      {/* Optional AdSense block */}
-      <div className="my-10">
-        <ins
-          className="adsbygoogle"
-          style={{ display: "block" }}
-          data-ad-client={process.env.NEXT_PUBLIC_ADSENSE_ID || ""}
-          data-ad-slot="auto"
-          data-ad-format="auto"
-          data-full-width-responsive="true"
-        />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: "(adsbygoogle = window.adsbygoogle || []).push({});",
-          }}
-        />
-      </div>
-    </main>
-  );
-}
+// IMPORTANT: matcher stops middleware running everywhere
+export const config = {
+  matcher: [
+    "/cleaner/:path*",
+    "/client/:path*",
+    "/admin/:path*",
+    "/api/secure/:path*",
+  ],
+};
