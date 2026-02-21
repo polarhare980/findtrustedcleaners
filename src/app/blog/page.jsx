@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { connectToDatabase } from "@/lib/db";
+import BlogPost from "@/models/BlogPost";
 
 export const metadata = {
   title: "Cleaning Tips & Guides | FindTrustedCleaners Blog",
@@ -15,7 +17,7 @@ export const metadata = {
   robots: { index: true, follow: true },
 };
 
-// Any MDX “static” posts you’ve created as folders under /blog/<slug>/page.mdx
+// Static posts (React components under /blog/posts)
 const STATIC_POSTS = [
   {
     slug: "end-of-tenancy-cleaning-checklist",
@@ -33,11 +35,20 @@ const STATIC_POSTS = [
 
 async function fetchDbPosts() {
   try {
-    // Server component fetch – relative URL is fine
-    const res = await fetch("/api/blogs", { cache: "no-store" });
-    const json = await res.json();
-    return Array.isArray(json?.posts) ? json.posts : [];
-  } catch {
+    await connectToDatabase();
+
+    const posts = await BlogPost.find({})
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // Ensure serialisable data
+    return posts.map((p) => ({
+      ...p,
+      _id: p._id?.toString?.() || "",
+      createdAt: p.createdAt ? new Date(p.createdAt).toISOString() : "",
+    }));
+  } catch (err) {
+    console.error("❌ BlogIndexPage failed to load DB posts:", err?.message);
     return [];
   }
 }
