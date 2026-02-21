@@ -1,82 +1,135 @@
-import { notFound } from "next/navigation";
-import { connectToDatabase } from "@/lib/db";
-import BlogPost from "@/models/BlogPost";
+"use client";
 
-export const dynamicParams = true;
-export const dynamic = "force-dynamic";
+import { useEffect, useMemo, useState } from "react";
+import { useParams, usePathname } from "next/navigation";
+import dynamic from "next/dynamic";
 
-const POSTS = {
-  "end-of-tenancy-cleaning-checklist": () =>
-    import("../posts/end-of-tenancy-cleaning-checklist"),
-  "how-to-hire-a-cleaner": () => import("../posts/how-to-hire-a-cleaner"),
+const STATIC_COMPONENTS = {
+  "end-of-tenancy-cleaning-checklist": dynamic(
+    () => import("../posts/end-of-tenancy-cleaning-checklist"),
+    { ssr: false }
+  ),
+  "how-to-hire-a-cleaner": dynamic(() => import("../posts/how-to-hire-a-cleaner"), {
+    ssr: false,
+  }),
 };
 
-function getSlug(params) {
-  // params.slug for [...slug] is ALWAYS an array
-  const arr = Array.isArray(params?.slug) ? params.slug : [];
-  const joined = arr.join("/");
+function normaliseSlugFromClient(params, pathname) {
+  // useParams() for [...slug] usually gives { slug: ['a','b'] } but we guard hard
+  const raw = params?.slug;
 
-  // Handle /blog/blog/<slug>
-  const cleaned = joined.startsWith("blog/") ? joined.slice(5) : joined;
+  let slug = "";
+  if (Array.isArray(raw)) slug = raw.join("/");
+  else if (typeof raw === "string") slug = raw;
 
-  return cleaned
+  // Fallback: parse from URL path if params are missing
+  if (!slug && typeof pathname === "string") {
+    slug = pathname.replace(/^\/blog\/?/, "");
+  }
+
+  slug = String(slug || "")
     .trim()
     .replace(/^\/+/, "")
+    .replace(/^blog\/+/i, "") // handle /blog/blog/<slug>
     .replace(/\/+$/, "");
+
+  return slug;
 }
 
-async function findDbPostBySlug(slug) {
-  const candidates = [slug, `blog/${slug}`, `/blog/${slug}`];
-  return BlogPost.findOne({ slug: { $in: candidates } }).lean();
-}
+export default function BlogPostPage() {
+  const params = useParams();
+  const pathname = usePathname();
 
-export default async function BlogPostPage({ params }) {
-  const slug = getSlug(params);
+  const slug = useMemo(
+    () => normaliseSlugFromClient(params, pathname),
+    [params, pathname]
+  );
 
-  // ✅ TEMP DEBUG: if slug is empty, show it instead of 404
-  if (!slug) {
-    return (
-      <main className="max-w-3xl mx-auto px-6 py-12">
-        <h1 className="text-2xl font-bold">DEBUG: slug empty</h1>
-        <pre>{JSON.stringify(params, null, 2)}</pre>
-      </main>
-    );
-  }
+  const StaticPost = slug ? STATIC_COMPONENTS[slug] : null;
 
-  // 1) Static post
-  if (POSTS[slug]) {
-    const mod = await POSTS[slug]();
-    const Post = mod.default;
+  const [dbPost, setDbPost] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [notFound, setNotFound] = useState(false);
 
-    return (
-      <main className="max-w-3xl mx-auto px-6 py-12">
-        <Post />
-      </main>
-    );
-  }
+  useEffect(() => {
+    let cancelled = false;
 
-  // 2) DB post
-  await connectToDatabase();
-  const post = await findDbPostBySlug(slug);
+    async function run() {
+      setDbPost(null);
+      setNotFound(false);
 
-  // ✅ TEMP DEBUG: show slug if DB lookup fails
-  if (!post) {
-    return (
-      <main className="max-w-3xl mx-auto px-6 py-12">
-        <h1 className="text-2xl font-bold">DEBUG: post not found</h1>
-        <p>Slug resolved to:</p>
-        <pre>{slug}</pre>
-        <p>Params:</p>
-        <pre>{JSON.stringify(params, null, 2)}</pre>
-      </main>
-    );
-  }
+      if (!slug) return;
+
+      // If it's a static post, don't hit DB
+      if (STATIC_COMPONENTS[slug]) return;
+
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/blogs?slug=${encodeURIComponent(slug)}`, {
+          cache: "no-store",
+        });
+
+        if (!res.ok) {
+          if (!cancelled) setNotFound(true);
+          return;
+        }
+
+        const json = await res.json();
+        if (!cancelled) {
+          if (json?.post) setDbPost(json.post);
+          else setNotFound(true);
+        }
+      } catch {
+        if (!cancelled) setNotFound(true);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [slug]);
 
   return (
     <main className="max-w-3xl mx-auto px-6 py-12">
-      <h1 className="text-3xl font-bold mb-4">{post.title}</h1>
-      {post.excerpt ? <p className="text-gray-600 mb-6">{post.excerpt}</p> : null}
-      <div className="prose max-w-none whitespace-pre-wrap">{post.content}</div>
+      {/* Debug line (remove once confirmed working) */}
+      <p className="text-xs text-gray-500 mb-4">
+        Debug slug: <span className="font-mono">{slug || "(empty)"}</span>
+      </p>
+
+      {!slug ? (
+        <div>
+          <h1 className="text-2xl font-bold">Loading…</h1>
+        </div>
+      ) : StaticPost ? (
+        <StaticPost />
+      ) : loading ? (
+        <div>
+          <h1 className="text-2xl font-bold">Loading post…</h1>
+        </div>
+      ) : notFound ? (
+        <div>
+          <h1 className="text-2xl font-bold">Post not found</h1>
+          <p className="text-gray-600 mt-2">
+            If this is a DB post, check the saved slug matches:
+            <span className="font-mono"> {slug}</span>
+          </p>
+        </div>
+      ) : dbPost ? (
+        <div>
+          <h1 className="text-3xl font-bold mb-4">{dbPost.title}</h1>
+          {dbPost.excerpt ? (
+            <p className="text-gray-600 mb-6">{dbPost.excerpt}</p>
+          ) : null}
+          <div className="prose max-w-none whitespace-pre-wrap">{dbPost.content}</div>
+        </div>
+      ) : (
+        <div>
+          <h1 className="text-2xl font-bold">Post not found</h1>
+        </div>
+      )}
     </main>
   );
 }
