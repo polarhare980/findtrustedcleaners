@@ -2,6 +2,12 @@ import { notFound } from "next/navigation";
 import { connectToDatabase } from "@/lib/db";
 import BlogPost from "@/models/BlogPost";
 
+// ✅ Allow params not in generateStaticParams (explicit)
+export const dynamicParams = true;
+
+// ✅ Force runtime rendering (avoids “pre-render only” behaviour)
+export const dynamic = "force-dynamic";
+
 const POSTS = {
   "end-of-tenancy-cleaning-checklist": () =>
     import("../posts/end-of-tenancy-cleaning-checklist"),
@@ -11,21 +17,19 @@ const POSTS = {
 function normaliseSlug(slug) {
   return String(slug || "")
     .trim()
-    .replace(/^\/+/, "") // remove leading /
-    .replace(/^blog\/+/i, "") // remove leading "blog/"
-    .replace(/^\/?blog\/+/i, "") // extra safety
-    .replace(/\/+$/, ""); // remove trailing /
+    .replace(/^\/+/, "")
+    .replace(/^blog\/+/i, "")
+    .replace(/^\/?blog\/+/i, "")
+    .replace(/\/+$/, "");
 }
 
 async function findDbPostBySlug(rawSlug) {
   const slug = normaliseSlug(rawSlug);
-
   const candidates = [slug, `blog/${slug}`, `/blog/${slug}`];
-
   return BlogPost.findOne({ slug: { $in: candidates } }).lean();
 }
 
-// Pre-render static posts only
+// Optional: keeps your two static slugs pre-known (fine to keep)
 export async function generateStaticParams() {
   return Object.keys(POSTS).map((slug) => ({ slug }));
 }
@@ -33,7 +37,6 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }) {
   const slug = normaliseSlug(params.slug);
 
-  // Static post metadata
   if (POSTS[slug]) {
     const mod = await POSTS[slug]();
     return {
@@ -43,7 +46,6 @@ export async function generateMetadata({ params }) {
     };
   }
 
-  // DB post metadata
   await connectToDatabase();
   const post = await findDbPostBySlug(slug);
   if (!post) return {};
@@ -62,7 +64,6 @@ export default async function BlogPostPage({ params }) {
   if (POSTS[slug]) {
     const mod = await POSTS[slug]();
     const Post = mod.default;
-
     return (
       <main className="max-w-3xl mx-auto px-6 py-12">
         <Post />
@@ -73,15 +74,12 @@ export default async function BlogPostPage({ params }) {
   // 2) DB post
   await connectToDatabase();
   const post = await findDbPostBySlug(slug);
-
   if (!post) notFound();
 
   return (
     <main className="max-w-3xl mx-auto px-6 py-12">
       <h1 className="text-3xl font-bold mb-4">{post.title}</h1>
-
       {post.excerpt ? <p className="text-gray-600 mb-6">{post.excerpt}</p> : null}
-
       <div className="prose max-w-none whitespace-pre-wrap">{post.content}</div>
     </main>
   );
