@@ -1,3 +1,12 @@
+export default async function BlogPostPage({ params }) {
+  return (
+    <main className="max-w-3xl mx-auto px-6 py-12">
+      <h1 className="text-2xl font-bold">DEBUG SLUG</h1>
+      <pre>{JSON.stringify(params, null, 2)}</pre>
+    </main>
+  );
+}
+
 import { notFound } from "next/navigation";
 import { connectToDatabase } from "@/lib/db";
 import BlogPost from "@/models/BlogPost";
