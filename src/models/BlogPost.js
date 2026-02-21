@@ -1,11 +1,15 @@
 import mongoose from "mongoose";
 
-const BlogPostSchema = new mongoose.Schema({
-  title: { type: String, required: true },
-  slug: { type: String, required: true, unique: true },
-  excerpt: { type: String, default: "" }, // ✅ add this
-  content: { type: String, required: true },
-  createdAt: { type: Date, default: Date.now },
-});
+const BlogPostSchema = new mongoose.Schema(
+  {
+    title: String,
+    slug: String,
+    excerpt: String,
+    content: String,
+  },
+  { timestamps: true }
+);
 
-export default mongoose.models.BlogPost || mongoose.model("BlogPost", BlogPostSchema);
+// 🟢 THIS prevents Vercel model overwrite crash
+export default mongoose.models.BlogPost ||
+  mongoose.model("BlogPost", BlogPostSchema);
