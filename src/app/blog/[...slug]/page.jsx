@@ -2,10 +2,7 @@ import { notFound } from "next/navigation";
 import { connectToDatabase } from "@/lib/db";
 import BlogPost from "@/models/BlogPost";
 
-// ✅ Allow params not in generateStaticParams (explicit)
 export const dynamicParams = true;
-
-// ✅ Force runtime rendering (avoids “pre-render only” behaviour)
 export const dynamic = "force-dynamic";
 
 const POSTS = {
@@ -14,8 +11,15 @@ const POSTS = {
   "how-to-hire-a-cleaner": () => import("../posts/how-to-hire-a-cleaner"),
 };
 
-function normaliseSlug(slug) {
-  return String(slug || "")
+// params.slug will be an array, e.g. ["end-of-tenancy-cleaning-checklist"]
+function slugFromParams(slugParam) {
+  const parts = Array.isArray(slugParam) ? slugParam : [slugParam];
+
+  // If someone hits /blog/blog/<slug>, drop the extra "blog"
+  const cleaned = parts[0] === "blog" ? parts.slice(1) : parts;
+
+  return cleaned
+    .join("/")
     .trim()
     .replace(/^\/+/, "")
     .replace(/^blog\/+/i, "")
@@ -23,19 +27,18 @@ function normaliseSlug(slug) {
     .replace(/\/+$/, "");
 }
 
-async function findDbPostBySlug(rawSlug) {
-  const slug = normaliseSlug(rawSlug);
+async function findDbPostBySlug(slug) {
   const candidates = [slug, `blog/${slug}`, `/blog/${slug}`];
   return BlogPost.findOne({ slug: { $in: candidates } }).lean();
 }
 
-// Optional: keeps your two static slugs pre-known (fine to keep)
+// Only pre-render static slugs (optional)
 export async function generateStaticParams() {
-  return Object.keys(POSTS).map((slug) => ({ slug }));
+  return Object.keys(POSTS).map((s) => ({ slug: [s] }));
 }
 
 export async function generateMetadata({ params }) {
-  const slug = normaliseSlug(params.slug);
+  const slug = slugFromParams(params.slug);
 
   if (POSTS[slug]) {
     const mod = await POSTS[slug]();
@@ -58,12 +61,13 @@ export async function generateMetadata({ params }) {
 }
 
 export default async function BlogPostPage({ params }) {
-  const slug = normaliseSlug(params.slug);
+  const slug = slugFromParams(params.slug);
 
-  // 1) Static post
+  // Static post
   if (POSTS[slug]) {
     const mod = await POSTS[slug]();
     const Post = mod.default;
+
     return (
       <main className="max-w-3xl mx-auto px-6 py-12">
         <Post />
@@ -71,9 +75,10 @@ export default async function BlogPostPage({ params }) {
     );
   }
 
-  // 2) DB post
+  // DB post
   await connectToDatabase();
   const post = await findDbPostBySlug(slug);
+
   if (!post) notFound();
 
   return (
