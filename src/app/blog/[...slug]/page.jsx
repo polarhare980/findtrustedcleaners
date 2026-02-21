@@ -11,19 +11,17 @@ const POSTS = {
   "how-to-hire-a-cleaner": () => import("../posts/how-to-hire-a-cleaner"),
 };
 
-// params.slug will be an array, e.g. ["end-of-tenancy-cleaning-checklist"]
-function slugFromParams(slugParam) {
-  const parts = Array.isArray(slugParam) ? slugParam : [slugParam];
+function getSlug(params) {
+  // params.slug for [...slug] is ALWAYS an array
+  const arr = Array.isArray(params?.slug) ? params.slug : [];
+  const joined = arr.join("/");
 
-  // If someone hits /blog/blog/<slug>, drop the extra "blog"
-  const cleaned = parts[0] === "blog" ? parts.slice(1) : parts;
+  // Handle /blog/blog/<slug>
+  const cleaned = joined.startsWith("blog/") ? joined.slice(5) : joined;
 
   return cleaned
-    .join("/")
     .trim()
     .replace(/^\/+/, "")
-    .replace(/^blog\/+/i, "")
-    .replace(/^\/?blog\/+/i, "")
     .replace(/\/+$/, "");
 }
 
@@ -32,38 +30,20 @@ async function findDbPostBySlug(slug) {
   return BlogPost.findOne({ slug: { $in: candidates } }).lean();
 }
 
-// Only pre-render static slugs (optional)
-export async function generateStaticParams() {
-  return Object.keys(POSTS).map((s) => ({ slug: [s] }));
-}
+export default async function BlogPostPage({ params }) {
+  const slug = getSlug(params);
 
-export async function generateMetadata({ params }) {
-  const slug = slugFromParams(params.slug);
-
-  if (POSTS[slug]) {
-    const mod = await POSTS[slug]();
-    return {
-      title: mod.meta?.title || "Blog post",
-      description: mod.meta?.description,
-      robots: { index: true, follow: true },
-    };
+  // ✅ TEMP DEBUG: if slug is empty, show it instead of 404
+  if (!slug) {
+    return (
+      <main className="max-w-3xl mx-auto px-6 py-12">
+        <h1 className="text-2xl font-bold">DEBUG: slug empty</h1>
+        <pre>{JSON.stringify(params, null, 2)}</pre>
+      </main>
+    );
   }
 
-  await connectToDatabase();
-  const post = await findDbPostBySlug(slug);
-  if (!post) return {};
-
-  return {
-    title: post.title || "Blog post",
-    description: post.excerpt || "",
-    robots: { index: true, follow: true },
-  };
-}
-
-export default async function BlogPostPage({ params }) {
-  const slug = slugFromParams(params.slug);
-
-  // Static post
+  // 1) Static post
   if (POSTS[slug]) {
     const mod = await POSTS[slug]();
     const Post = mod.default;
@@ -75,11 +55,22 @@ export default async function BlogPostPage({ params }) {
     );
   }
 
-  // DB post
+  // 2) DB post
   await connectToDatabase();
   const post = await findDbPostBySlug(slug);
 
-  if (!post) notFound();
+  // ✅ TEMP DEBUG: show slug if DB lookup fails
+  if (!post) {
+    return (
+      <main className="max-w-3xl mx-auto px-6 py-12">
+        <h1 className="text-2xl font-bold">DEBUG: post not found</h1>
+        <p>Slug resolved to:</p>
+        <pre>{slug}</pre>
+        <p>Params:</p>
+        <pre>{JSON.stringify(params, null, 2)}</pre>
+      </main>
+    );
+  }
 
   return (
     <main className="max-w-3xl mx-auto px-6 py-12">
