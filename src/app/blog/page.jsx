@@ -33,13 +33,22 @@ const STATIC_POSTS = [
   },
 ];
 
+// Normalise DB slugs so we never generate /blog/blog/...
+function normaliseDbSlug(slug) {
+  return String(slug || "")
+    .trim()
+    .replace(/^https?:\/\/[^/]+\/+/i, "") // strip full URLs if someone pasted them
+    .replace(/^\/+/, "")                 // strip leading slashes
+    .replace(/^blog\/+/i, "")            // strip leading "blog/"
+    .replace(/^\/?blog\/+/i, "")         // extra safety
+    .replace(/\/+$/, "");                // strip trailing slash
+}
+
 async function fetchDbPosts() {
   try {
     await connectToDatabase();
 
-    const posts = await BlogPost.find({})
-      .sort({ createdAt: -1 })
-      .lean();
+    const posts = await BlogPost.find({}).sort({ createdAt: -1 }).lean();
 
     // Ensure serialisable data
     return posts.map((p) => ({
@@ -62,15 +71,20 @@ export default async function BlogIndexPage() {
       href: `/blog/${p.slug}`,
       key: `static-${p.slug}`,
     })),
-    ...dbPosts.map((p) => ({
-      slug: p.slug,
-      title: p.title,
-      blurb: p.excerpt || "",
-      href: `/blog/${p.slug}`,
-      key: p._id || `db-${p.slug}`,
-      type: "db",
-      createdAt: p.createdAt,
-    })),
+
+    ...dbPosts.map((p) => {
+      const cleanSlug = normaliseDbSlug(p.slug);
+
+      return {
+        slug: cleanSlug,
+        title: p.title,
+        blurb: p.excerpt || "",
+        href: `/blog/${cleanSlug}`,
+        key: p._id || `db-${cleanSlug}`,
+        type: "db",
+        createdAt: p.createdAt,
+      };
+    }),
   ];
 
   return (
