@@ -1,12 +1,3 @@
-export default async function BlogPostPage({ params }) {
-  return (
-    <main className="max-w-3xl mx-auto px-6 py-12">
-      <h1 className="text-2xl font-bold">DEBUG SLUG</h1>
-      <pre>{JSON.stringify(params, null, 2)}</pre>
-    </main>
-  );
-}
-
 import { notFound } from "next/navigation";
 import { connectToDatabase } from "@/lib/db";
 import BlogPost from "@/models/BlogPost";
@@ -20,23 +11,17 @@ const POSTS = {
 function normaliseSlug(slug) {
   return String(slug || "")
     .trim()
-    .replace(/^\/+/, "")      // remove leading /
+    .replace(/^\/+/, "") // remove leading /
     .replace(/^blog\/+/i, "") // remove leading "blog/"
-    .replace(/^\/?blog\/+/i, "")
-    .replace(/\/+$/, "");     // remove trailing /
+    .replace(/^\/?blog\/+/i, "") // extra safety
+    .replace(/\/+$/, ""); // remove trailing /
 }
 
 async function findDbPostBySlug(rawSlug) {
   const slug = normaliseSlug(rawSlug);
 
-  // Try multiple legacy formats (because some posts were saved wrong)
-  const candidates = [
-    slug,
-    `blog/${slug}`,
-    `/blog/${slug}`,
-  ];
+  const candidates = [slug, `blog/${slug}`, `/blog/${slug}`];
 
-  // Use $in so it's one DB call
   return BlogPost.findOne({ slug: { $in: candidates } }).lean();
 }
 
@@ -95,9 +80,7 @@ export default async function BlogPostPage({ params }) {
     <main className="max-w-3xl mx-auto px-6 py-12">
       <h1 className="text-3xl font-bold mb-4">{post.title}</h1>
 
-      {post.excerpt ? (
-        <p className="text-gray-600 mb-6">{post.excerpt}</p>
-      ) : null}
+      {post.excerpt ? <p className="text-gray-600 mb-6">{post.excerpt}</p> : null}
 
       <div className="prose max-w-none whitespace-pre-wrap">{post.content}</div>
     </main>
