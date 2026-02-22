@@ -2,19 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
-import {
-  Elements,
-  PaymentElement,
-  useStripe,
-  useElements,
-} from '@stripe/react-stripe-js';
+import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useRouter } from 'next/navigation';
 import { getCleanerId } from '@/lib/utils';
 
-// ✅ Load Stripe
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
-// ✅ Wrapper Component
 export default function BookingPaymentWrapper({ cleaner, day, time, price }) {
   const [clientSecret, setClientSecret] = useState(null);
   const [paymentIntentId, setPaymentIntentId] = useState(null);
@@ -39,7 +32,7 @@ export default function BookingPaymentWrapper({ cleaner, day, time, price }) {
           setClientSecret(data.clientSecret);
           setPaymentIntentId(data.paymentIntentId);
         } else {
-          alert('Failed to create payment intent.');
+          alert(data?.message || 'Failed to create payment intent.');
         }
       } catch (err) {
         console.error('Payment intent error:', err);
@@ -58,6 +51,7 @@ export default function BookingPaymentWrapper({ cleaner, day, time, price }) {
         cleaner={cleaner}
         day={day}
         time={time}
+        price={price}
         stripePaymentIntentId={paymentIntentId}
         selectedService={selectedService}
         setSelectedService={setSelectedService}
@@ -66,11 +60,11 @@ export default function BookingPaymentWrapper({ cleaner, day, time, price }) {
   );
 }
 
-// ✅ Stripe Elements Payment Form
 function BookingPaymentForm({
   cleaner,
   day,
   time,
+  price,
   stripePaymentIntentId,
   selectedService,
   setSelectedService,
@@ -106,18 +100,17 @@ function BookingPaymentForm({
       return;
     }
 
-    // ✅ Create booking in DB via our duration-aware endpoint
     try {
       const res = await fetch(`/api/bookings/cleaner/${getCleanerId(cleaner)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          cleanerId: getCleanerId(cleaner),
           day,
           hour: time,
           serviceKey: selectedService,
           stripePaymentIntentId,
+          amount: typeof price === 'number' ? price : Number(price),
         }),
       });
 
@@ -131,7 +124,7 @@ function BookingPaymentForm({
         );
       } else {
         console.error('Booking error:', data.message);
-        setMessage('Payment succeeded but booking failed: ' + data.message);
+        setMessage('Payment succeeded but booking failed: ' + (data.message || 'Unknown error'));
       }
     } catch (err) {
       console.error('Booking creation error:', err);
@@ -143,11 +136,8 @@ function BookingPaymentForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {/* ✅ Service selection */}
       <div>
-        <label className="block text-gray-700 font-medium mb-2">
-          Select Service
-        </label>
+        <label className="block text-gray-700 font-medium mb-2">Select Service</label>
         <select
           value={selectedService}
           onChange={(e) => setSelectedService(e.target.value)}
@@ -164,6 +154,7 @@ function BookingPaymentForm({
       </div>
 
       <PaymentElement />
+
       <button
         type="submit"
         disabled={!stripe || loading}
@@ -171,9 +162,8 @@ function BookingPaymentForm({
       >
         {loading ? 'Processing...' : 'Pay Now to Hold Booking'}
       </button>
-      {message && (
-        <div className="text-center mt-4 text-red-600">{message}</div>
-      )}
+
+      {message && <div className="text-center mt-4 text-red-600">{message}</div>}
     </form>
   );
 }

@@ -1,5 +1,4 @@
 import { connectToDatabase } from '@/lib/db';
-import Booking from '@/models/booking';
 import Stripe from 'stripe';
 import { NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
@@ -24,38 +23,47 @@ export async function POST(req) {
 
     const { cleanerId, day, time, price } = await req.json();
 
-    // ✅ Create booking in database with 'pending' status
-    const newBooking = await Booking.create({
-      cleanerId,
-      clientId: user.id,
-      day,
-      time,
-      status: 'pending',
-    });
+    // NOTE: We do NOT create a Booking record here.
+    // Creating DB records before payment confirmation caused orphaned rows
+    // and model mismatches. The DB record is created AFTER payment confirms.
 
-    // ✅ Create Stripe Payment Intent with delayed capture
+    const amountPence = Math.round(Number(price) * 100);
+    if (
+      !cleanerId ||
+      !day ||
+      (time === undefined || time === null) ||
+      !Number.isFinite(amountPence) ||
+      amountPence <= 0
+    ) {
+      return NextResponse.json(
+        { success: false, message: 'Missing/invalid payment fields.' },
+        { status: 400 }
+      );
+    }
+
+    // ✅ Create Stripe PaymentIntent with delayed capture
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: price * 100,
+      amount: amountPence,
       currency: 'gbp',
-      capture_method: 'manual', // Hold payment
+      capture_method: 'manual',
       metadata: {
-        bookingId: newBooking._id.toString(),
-        cleanerId: cleanerId,
-        clientId: user.id,
+        cleanerId: String(cleanerId),
+        clientId: String(user.id),
+        day: String(day),
+        hour: String(time),
       },
     });
-
-    // ✅ Save Payment Intent ID to booking
-    newBooking.stripePaymentIntentId = paymentIntent.id;
-    await newBooking.save();
 
     return NextResponse.json({
       success: true,
       clientSecret: paymentIntent.client_secret,
-      bookingId: newBooking._id.toString(),
+      paymentIntentId: paymentIntent.id,
     });
   } catch (err) {
     console.error('❌ Stripe Payment Intent Error:', err.message);
-    return NextResponse.json({ success: false, message: 'Stripe Payment Intent error' }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: 'Stripe Payment Intent error' },
+      { status: 500 }
+    );
   }
 }

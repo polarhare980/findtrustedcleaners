@@ -2,9 +2,10 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db';
 import Cleaner from '@/models/Cleaner';
-import Booking from '@/models/booking'; // ⚠️ Ensure correct casing
+import Booking from '@/models/booking'; // legacy support (still read-only here)
 import Purchase from '@/models/Purchase';
 import { requiredHourSpan, hasContiguousAvailability } from '@/lib/availability';
+import { protectApiRoute } from '@/lib/auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -14,7 +15,8 @@ function json(data, status = 200) {
 }
 
 const BOOKED_BOOKING_STATUSES = new Set(['accepted', 'confirmed', 'booked']);
-const BOOKED_OR_HOLD_PURCHASE_STATUSES = new Set(['approved']); // approved == held/blocked
+// Purchases that should paint as "booked/blocked" on grids
+const BOOKED_OR_HOLD_PURCHASE_STATUSES = new Set(['approved', 'accepted', 'confirmed', 'booked']);
 const PENDING_PURCHASE_STATUSES = new Set(['pending', 'pending_approval']);
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -33,7 +35,6 @@ export async function GET(_req, { params }) {
   if (!cleanerId) return json({ success: false, message: 'Cleaner id required.' }, 400);
 
   try {
-    // Only pull statuses the UI actually uses for overlays
     const bookings = await Booking.find({
       cleanerId,
       status: { $in: Array.from(BOOKED_BOOKING_STATUSES) },
@@ -41,10 +42,11 @@ export async function GET(_req, { params }) {
 
     const purchases = await Purchase.find({
       cleanerId,
-      status: { $in: Array.from(new Set([
-        ...PENDING_PURCHASE_STATUSES,
-        ...BOOKED_OR_HOLD_PURCHASE_STATUSES,
-      ])) },
+      status: {
+        $in: Array.from(
+          new Set([...PENDING_PURCHASE_STATUSES, ...BOOKED_OR_HOLD_PURCHASE_STATUSES])
+        ),
+      },
     }).lean();
 
     const combined = [];
@@ -55,25 +57,22 @@ export async function GET(_req, { params }) {
         type: 'booking',
         day: b?.day || '',
         hour: toHourString(b?.hour),
-        span: Number(b?.span || 1), // ✅ include span
+        span: Number(b?.span || 1),
         status: String(b?.status || 'booked').toLowerCase(),
       });
     }
 
     for (const p of purchases || []) {
       const status = String(p?.status || 'pending').toLowerCase();
-      // Sanity gate (defensive)
-      if (
-        !PENDING_PURCHASE_STATUSES.has(status) &&
-        !BOOKED_OR_HOLD_PURCHASE_STATUSES.has(status)
-      ) continue;
+      if (!PENDING_PURCHASE_STATUSES.has(status) && !BOOKED_OR_HOLD_PURCHASE_STATUSES.has(status))
+        continue;
 
       combined.push({
         _id: String(p._id),
         type: 'purchase',
         day: p?.day || '',
         hour: toHourString(p?.hour),
-        span: Number(p?.span || 1), // ✅ include span
+        span: Number(p?.span || 1),
         status,
       });
     }
@@ -139,8 +138,7 @@ export async function PUT(req, { params }) {
 }
 
 /* --------------------------------------
-   POST: create a PENDING purchase (service + duration)
-   (kept here for backwards compatibility; prefers the dedicated purchases route)
+   POST: create a Purchase hold AFTER payment confirmation
 -------------------------------------- */
 export async function POST(req, { params }) {
   await connectToDatabase();
@@ -148,18 +146,27 @@ export async function POST(req, { params }) {
   if (!cleanerId) return json({ success: false, message: 'Cleaner id required.' }, 400);
 
   try {
+    // ---- Auth: must be a logged-in CLIENT ----
+    const { valid, user, response } = await protectApiRoute(req);
+    if (!valid) return response;
+    if (user.type !== 'client') return json({ success: false, message: 'Access denied.' }, 403);
+
     const body = await req.json();
-    const { day, hour, serviceKey, clientId } = body || {};
+    const { day, hour, serviceKey } = body || {};
+    const paymentIntentId = body?.paymentIntentId || body?.stripePaymentIntentId || null;
+    const amount = body?.amount;
 
     if (!DAYS.includes(day || '')) {
       return json({ success: false, message: 'Valid day required.' }, 400);
     }
+
     const startNum = Number(hour);
     if (!Number.isInteger(startNum) || startNum < 0 || startNum > 23) {
       return json({ success: false, message: 'Valid hour (0..23) required.' }, 400);
     }
-    if (!serviceKey || !clientId) {
-      return json({ success: false, message: 'serviceKey and clientId required.' }, 400);
+
+    if (!serviceKey) {
+      return json({ success: false, message: 'serviceKey required.' }, 400);
     }
 
     const cleaner = await Cleaner.findById(cleanerId).lean();
@@ -171,40 +178,45 @@ export async function POST(req, { params }) {
     );
     if (!service) return json({ success: false, message: 'Service not available' }, 400);
 
-    // 2) Compute span using your shared helper
+    // 2) Compute span
     const span = requiredHourSpan({
       durationMins: service?.defaultDurationMins ?? 60,
       bufferBeforeMins: service?.bufferBeforeMins ?? 0,
       bufferAfterMins: service?.bufferAfterMins ?? 0,
     });
+
     if (startNum + span > 24) {
       return json({ success: false, message: 'Requested span exceeds end of day.' }, 400);
     }
 
-    // 3) Build a merged availability view: base + pending/approved purchases + existing booked bookings
+    // 3) Merge availability: base + purchases + booked bookings
     const base = cleaner.availability || {};
     const merged = JSON.parse(JSON.stringify(base));
     if (!merged[day]) merged[day] = {};
 
-    // Existing purchases that hold/occupy slots
     const purchases = await Purchase.find({
       cleanerId,
       day,
-      status: { $in: ['pending', 'pending_approval', 'approved'] },
+      status: { $in: ['pending', 'pending_approval', 'approved', 'accepted', 'confirmed', 'booked'] },
     }).lean();
 
     for (const p of purchases || []) {
       const s = Number(p?.span || 1);
       const start = Number(p?.hour);
       if (!Number.isInteger(start)) continue;
+
       for (let i = 0; i < Math.max(1, s); i++) {
         const hk = String(start + i);
         if (merged[day][hk] === false || merged[day][hk] === 'unavailable') continue;
-        merged[day][hk] = (String(p.status).toLowerCase() === 'approved') ? 'booked' : 'pending';
+
+        const st = String(p.status).toLowerCase();
+        merged[day][hk] =
+          st === 'approved' || st === 'accepted' || st === 'confirmed' || st === 'booked'
+            ? 'booked'
+            : 'pending';
       }
     }
 
-    // Existing bookings that are booked
     const bookings = await Booking.find({
       cleanerId,
       day,
@@ -215,29 +227,37 @@ export async function POST(req, { params }) {
       const s = Number(b?.span || 1);
       const start = Number(b?.hour);
       if (!Number.isInteger(start)) continue;
+
       for (let i = 0; i < Math.max(1, s); i++) {
-        const hk = String(start + i);
-        merged[day][hk] = 'booked';
+        merged[day][String(start + i)] = 'booked';
       }
     }
 
-    // 4) Validate contiguity for the requested span
+    // 4) Validate contiguity
     if (!hasContiguousAvailability(merged, day, startNum, span)) {
       return json({ success: false, message: 'Not enough time available' }, 409);
     }
 
-    // 5) Create pending purchase (normalised fields)
+    // 5) Create purchase (this is the booking hold)
     const purchase = await Purchase.create({
-      clientId,
+      clientId: user._id || user.id,
       cleanerId,
       day,
       hour: toHourString(startNum),
       span,
-      status: 'pending',
+
       serviceKey,
+      serviceName: service?.name || '',
+      durationMins: service?.defaultDurationMins ?? 60,
+      bufferBeforeMins: service?.bufferBeforeMins ?? 0,
+      bufferAfterMins: service?.bufferAfterMins ?? 0,
+
+      paymentIntentId: paymentIntentId ? String(paymentIntentId) : null,
+      amount: typeof amount === 'number' ? amount : undefined,
+
+      status: paymentIntentId ? 'pending_approval' : 'pending',
     });
 
-    // 6) Respond
     const blockedSlots = Array.from({ length: span }, (_, i) => toHourString(startNum + i));
     return json({ success: true, purchase, blockedSlots });
   } catch (err) {
