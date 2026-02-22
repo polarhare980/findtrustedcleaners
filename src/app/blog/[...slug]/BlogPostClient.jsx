@@ -11,6 +11,16 @@ const formatDate = (iso) =>
     day: 'numeric',
   });
 
+// ✅ Decode HTML entities (&lt;h1&gt; etc) into real HTML
+// This is the missing step when DB content is stored as escaped text.
+const decodeHtmlEntities = (str = '') => {
+  if (typeof window === 'undefined') return str;
+  // Fast + reliable decode
+  const textarea = document.createElement('textarea');
+  textarea.innerHTML = str;
+  return textarea.value;
+};
+
 // Very light HTML clean: remove <script> and obvious inline handlers.
 // (Server-side sanitising is still recommended.)
 const cleanHtml = (html = '') =>
@@ -27,6 +37,7 @@ const cleanHtml = (html = '') =>
 // Build a TOC from h2/h3, and ensure headings have IDs
 const buildTocAndIds = (rawHtml = '') => {
   if (typeof window === 'undefined') return { html: rawHtml, toc: [] };
+
   const parser = new DOMParser();
   const doc = parser.parseFromString(rawHtml, 'text/html');
 
@@ -39,14 +50,13 @@ const buildTocAndIds = (rawHtml = '') => {
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/(^-|-$)/g, '');
-      // ensure uniqueness
+
       let id = base || `section-${i}`;
       let n = 2;
-      while (doc.getElementById(id)) {
-        id = `${base}-${n++}`;
-      }
+      while (doc.getElementById(id)) id = `${base}-${n++}`;
       h.id = id;
     }
+
     toc.push({
       id: h.id,
       text: h.textContent || '',
@@ -58,21 +68,27 @@ const buildTocAndIds = (rawHtml = '') => {
 };
 
 export default function BlogPostClient({ post, readingTime, wordCount }) {
-  const [html, setHtml] = useState(() => cleanHtml(post?.content || ''));
-  const [toc, setToc] = useState([]);
-  const [copied, setCopied] = useState(false);
   const progressRef = useRef(null);
   const articleRef = useRef(null);
 
+  // ✅ initialise from decoded content
+  const [html, setHtml] = useState(() => {
+    const decoded = decodeHtmlEntities(post?.content || '');
+    return cleanHtml(decoded);
+  });
+
+  const [toc, setToc] = useState([]);
+  const [copied, setCopied] = useState(false);
+
   const canonicalUrl = useMemo(() => {
     if (typeof window !== 'undefined') return window.location.href.split('#')[0];
-    // Fallback if rendering on server
     return `https://www.findtrustedcleaners.com/blog/${post?.slug || ''}`;
   }, [post?.slug]);
 
-  // Prepare cleaned HTML + TOC with headings IDs
+  // ✅ Prepare decoded + cleaned HTML + TOC
   useEffect(() => {
-    const cleaned = cleanHtml(post?.content || '');
+    const decoded = decodeHtmlEntities(post?.content || '');
+    const cleaned = cleanHtml(decoded);
     const { html: withIds, toc } = buildTocAndIds(cleaned);
     setHtml(withIds);
     setToc(toc);
@@ -83,7 +99,6 @@ export default function BlogPostClient({ post, readingTime, wordCount }) {
     const onScroll = () => {
       if (!articleRef.current || !progressRef.current) return;
       const el = articleRef.current;
-      const rect = el.getBoundingClientRect();
       const total = el.scrollHeight - window.innerHeight;
       const scrolled = Math.min(
         Math.max(window.scrollY - (el.offsetTop || 0), 0),
@@ -92,6 +107,7 @@ export default function BlogPostClient({ post, readingTime, wordCount }) {
       const pct = Math.round((scrolled / (total || 1)) * 100);
       progressRef.current.style.width = `${pct}%`;
     };
+
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onScroll);
@@ -100,13 +116,6 @@ export default function BlogPostClient({ post, readingTime, wordCount }) {
       window.removeEventListener('resize', onScroll);
     };
   }, []);
-
-  // AdSense bootstrapping (only if you add slots below + have client configured)
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    // If you use manual ads, uncomment push calls after adding your client/id.
-    // try { (window.adsbygoogle = window.adsbygoogle || []).push({}); } catch {}
-  }, [html]);
 
   const Meta = ({ icon, text }) => (
     <div className="flex items-center gap-2 bg-white/60 backdrop-blur-sm rounded-full px-4 py-2 border border-white/30">
@@ -166,24 +175,9 @@ export default function BlogPostClient({ post, readingTime, wordCount }) {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      {
-        '@type': 'ListItem',
-        position: 1,
-        name: 'Home',
-        item: 'https://www.findtrustedcleaners.com/',
-      },
-      {
-        '@type': 'ListItem',
-        position: 2,
-        name: 'Blog',
-        item: 'https://www.findtrustedcleaners.com/blog',
-      },
-      {
-        '@type': 'ListItem',
-        position: 3,
-        name: post?.title || 'Post',
-        item: canonicalUrl,
-      },
+      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.findtrustedcleaners.com/' },
+      { '@type': 'ListItem', position: 2, name: 'Blog', item: 'https://www.findtrustedcleaners.com/blog' },
+      { '@type': 'ListItem', position: 3, name: post?.title || 'Post', item: canonicalUrl },
     ],
   };
 
@@ -210,8 +204,8 @@ export default function BlogPostClient({ post, readingTime, wordCount }) {
                 fetchPriority="high"
               />
             </Link>
+
             <nav className="hidden md:flex items-center gap-4 text-sm font-medium">
-              {/* breadcrumbs visible on desktop */}
               <div className="text-gray-700/80">
                 <Link href="/" className="hover:text-teal-700">Home</Link>
                 <span className="mx-2">/</span>
@@ -221,6 +215,7 @@ export default function BlogPostClient({ post, readingTime, wordCount }) {
                   {post?.title}
                 </span>
               </div>
+
               <Link
                 href="/blog"
                 className="ml-4 text-teal-800 hover:text-teal-600 font-semibold transition-all duration-300 hover:scale-105"
@@ -232,62 +227,32 @@ export default function BlogPostClient({ post, readingTime, wordCount }) {
         </header>
 
         <main className="max-w-6xl mx-auto p-6 py-10">
-          {/* Title + meta */}
           <div className="bg-white/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] shadow-md p-8 mb-8 animate-fadeIn">
             <div className="text-center mb-6">
               <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent mb-4 leading-tight">
                 {post?.title}
               </h1>
+
               <div className="flex flex-wrap items-center justify-center gap-4 text-sm">
                 <Meta icon="📅" text={formatDate(post?.createdAt)} />
                 <Meta icon="⏱️" text={`${Math.max(1, Math.round(readingTime || 1))} min read`} />
                 <Meta icon="📝" text={`${(wordCount || 0).toLocaleString()} words`} />
               </div>
             </div>
-
-            {/* Optional: lead-in ad (after intro) */}
-            {/* 
-              Enable when your AdSense is ready:
-              <ins className="adsbygoogle block text-center"
-                   style={{display:'block'}}
-                   data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-                   data-ad-slot="YYYYYYYYYY"
-                   data-ad-format="auto"
-                   data-full-width-responsive="true"></ins>
-            */}
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_290px] gap-8 items-start">
-            {/* Article */}
             <article
               ref={articleRef}
               className="bg-white/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] shadow-md p-8 animate-slideUp"
             >
-              {/* In-article ad slot (optional) */}
-              {/* <ins className="adsbygoogle"
-                   style={{display:'block', textAlign:'center', marginBottom:'1.5rem'}}
-                   data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-                   data-ad-slot="ZZZZZZZZZZ"
-                   data-ad-format="fluid"
-                   data-ad-layout="in-article"></ins> */}
-
               <div
                 className="prose prose-lg max-w-none prose-headings:scroll-mt-24"
                 dangerouslySetInnerHTML={{ __html: html }}
               />
-
-              {/* Bottom ad slot (optional) */}
-              {/* <ins className="adsbygoogle block"
-                   style={{display:'block', marginTop:'1.5rem'}}
-                   data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-                   data-ad-slot="AAAAAAAAAA"
-                   data-ad-format="auto"
-                   data-full-width-responsive="true"></ins> */}
             </article>
 
-            {/* Sidebar */}
             <aside className="space-y-6">
-              {/* TOC */}
               {toc?.length > 0 && (
                 <div className="bg-white/25 backdrop-blur-[20px] border border-white/20 rounded-[16px] shadow p-5 sticky top-20">
                   <h3 className="text-lg font-semibold text-teal-800 mb-3">On this page</h3>
@@ -308,7 +273,6 @@ export default function BlogPostClient({ post, readingTime, wordCount }) {
                 </div>
               )}
 
-              {/* Share */}
               <div className="bg-white/25 backdrop-blur-[20px] border border-white/20 rounded-[16px] shadow p-5">
                 <h3 className="text-lg font-semibold text-teal-800 mb-4">Share this article</h3>
                 <div className="grid grid-cols-2 gap-3">
@@ -338,7 +302,6 @@ export default function BlogPostClient({ post, readingTime, wordCount }) {
                 </div>
               </div>
 
-              {/* CTA to services */}
               <div className="bg-white/25 backdrop-blur-[20px] border border-white/20 rounded-[16px] shadow p-5">
                 <h3 className="text-lg font-semibold text-teal-800 mb-3">Need a trusted cleaner?</h3>
                 <p className="text-sm text-gray-800 mb-4">
@@ -354,7 +317,6 @@ export default function BlogPostClient({ post, readingTime, wordCount }) {
             </aside>
           </div>
 
-          {/* Footer card */}
           <div className="bg-white/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] shadow-md p-8 mt-10 text-center">
             <Link
               href="/blog"
@@ -370,12 +332,10 @@ export default function BlogPostClient({ post, readingTime, wordCount }) {
       {/* JSON-LD for SEO */}
       <script
         type="application/ld+json"
-        // eslint-disable-next-line react/no-danger
         dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
       />
       <script
         type="application/ld+json"
-        // eslint-disable-next-line react/no-danger
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
 
