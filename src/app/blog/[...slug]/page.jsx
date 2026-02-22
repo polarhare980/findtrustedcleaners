@@ -1,135 +1,96 @@
-"use client";
+import { notFound } from "next/navigation";
+import { connectToDatabase } from "@/lib/db";
+import BlogPost from "@/models/BlogPost";
 
-import { useEffect, useMemo, useState } from "react";
-import { useParams, usePathname } from "next/navigation";
-import dynamic from "next/dynamic";
+export const dynamicParams = true;
 
-const STATIC_COMPONENTS = {
-  "end-of-tenancy-cleaning-checklist": dynamic(
-    () => import("../posts/end-of-tenancy-cleaning-checklist"),
-    { ssr: false }
-  ),
-  "how-to-hire-a-cleaner": dynamic(() => import("../posts/how-to-hire-a-cleaner"), {
-    ssr: false,
-  }),
+const POSTS = {
+  "end-of-tenancy-cleaning-checklist": () =>
+    import("../posts/end-of-tenancy-cleaning-checklist"),
+  "how-to-hire-a-cleaner": () =>
+    import("../posts/how-to-hire-a-cleaner"),
 };
 
-function normaliseSlugFromClient(params, pathname) {
-  // useParams() for [...slug] usually gives { slug: ['a','b'] } but we guard hard
-  const raw = params?.slug;
-
-  let slug = "";
-  if (Array.isArray(raw)) slug = raw.join("/");
-  else if (typeof raw === "string") slug = raw;
-
-  // Fallback: parse from URL path if params are missing
-  if (!slug && typeof pathname === "string") {
-    slug = pathname.replace(/^\/blog\/?/, "");
-  }
-
-  slug = String(slug || "")
+function normaliseSlug(slug) {
+  return String(slug || "")
     .trim()
     .replace(/^\/+/, "")
-    .replace(/^blog\/+/i, "") // handle /blog/blog/<slug>
+    .replace(/^blog\/+/i, "")
     .replace(/\/+$/, "");
-
-  return slug;
 }
 
-export default function BlogPostPage() {
-  const params = useParams();
-  const pathname = usePathname();
+async function findDbPostBySlug(rawSlug) {
+  const slug = normaliseSlug(rawSlug);
 
-  const slug = useMemo(
-    () => normaliseSlugFromClient(params, pathname),
-    [params, pathname]
-  );
+  return BlogPost.findOne({
+    slug: { $in: [slug, `blog/${slug}`, `/blog/${slug}`] },
+  }).lean();
+}
 
-  const StaticPost = slug ? STATIC_COMPONENTS[slug] : null;
+export async function generateStaticParams() {
+  return Object.keys(POSTS).map((slug) => ({ slug }));
+}
 
-  const [dbPost, setDbPost] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [notFound, setNotFound] = useState(false);
+export async function generateMetadata({ params }) {
+  const { slug: rawSlug } = await params;   // ✅ MUST await in Next 15+
+  const slug = normaliseSlug(rawSlug);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function run() {
-      setDbPost(null);
-      setNotFound(false);
-
-      if (!slug) return;
-
-      // If it's a static post, don't hit DB
-      if (STATIC_COMPONENTS[slug]) return;
-
-      setLoading(true);
-      try {
-        const res = await fetch(`/api/blogs?slug=${encodeURIComponent(slug)}`, {
-          cache: "no-store",
-        });
-
-        if (!res.ok) {
-          if (!cancelled) setNotFound(true);
-          return;
-        }
-
-        const json = await res.json();
-        if (!cancelled) {
-          if (json?.post) setDbPost(json.post);
-          else setNotFound(true);
-        }
-      } catch {
-        if (!cancelled) setNotFound(true);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-
-    run();
-    return () => {
-      cancelled = true;
+  if (POSTS[slug]) {
+    const mod = await POSTS[slug]();
+    return {
+      title: mod.meta?.title || "Blog post",
+      description: mod.meta?.description,
+      robots: { index: true, follow: true },
     };
-  }, [slug]);
+  }
+
+  await connectToDatabase();
+  const post = await findDbPostBySlug(slug);
+
+  if (!post) return {};
+
+  return {
+    title: post.title,
+    description: post.excerpt || "",
+    robots: { index: true, follow: true },
+  };
+}
+
+export default async function BlogPostPage({ params }) {
+  const { slug: rawSlug } = await params;   // ✅ MUST await in Next 15+
+  const slug = normaliseSlug(rawSlug);
+
+  console.log("Resolved slug:", slug);
+
+  // Static
+  if (POSTS[slug]) {
+    const mod = await POSTS[slug]();
+    const Post = mod.default;
+
+    return (
+      <main className="max-w-3xl mx-auto px-6 py-12">
+        <Post />
+      </main>
+    );
+  }
+
+  // DB
+  await connectToDatabase();
+  const post = await findDbPostBySlug(slug);
+
+  if (!post) notFound();
 
   return (
     <main className="max-w-3xl mx-auto px-6 py-12">
-      {/* Debug line (remove once confirmed working) */}
-      <p className="text-xs text-gray-500 mb-4">
-        Debug slug: <span className="font-mono">{slug || "(empty)"}</span>
-      </p>
+      <h1 className="text-3xl font-bold mb-4">{post.title}</h1>
 
-      {!slug ? (
-        <div>
-          <h1 className="text-2xl font-bold">Loading…</h1>
-        </div>
-      ) : StaticPost ? (
-        <StaticPost />
-      ) : loading ? (
-        <div>
-          <h1 className="text-2xl font-bold">Loading post…</h1>
-        </div>
-      ) : notFound ? (
-        <div>
-          <h1 className="text-2xl font-bold">Post not found</h1>
-          <p className="text-gray-600 mt-2">
-            If this is a DB post, check the saved slug matches:
-            <span className="font-mono"> {slug}</span>
-          </p>
-        </div>
-      ) : dbPost ? (
-        <div>
-          <h1 className="text-3xl font-bold mb-4">{dbPost.title}</h1>
-          {dbPost.excerpt ? (
-            <p className="text-gray-600 mb-6">{dbPost.excerpt}</p>
-          ) : null}
-          <div className="prose max-w-none whitespace-pre-wrap">{dbPost.content}</div>
-        </div>
-      ) : (
-        <div>
-          <h1 className="text-2xl font-bold">Post not found</h1>
-        </div>
+      {post.excerpt && (
+        <p className="text-gray-600 mb-6">{post.excerpt}</p>
       )}
+
+      <div className="prose max-w-none whitespace-pre-wrap">
+        {post.content}
+      </div>
     </main>
   );
 }
