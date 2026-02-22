@@ -13,7 +13,10 @@ export async function GET(req) {
     if (slug) {
       const post = await BlogPost.findOne({ slug });
       if (!post) {
-        return Response.json({ success: false, message: "Post not found" }, { status: 404 });
+        return Response.json(
+          { success: false, message: "Post not found" },
+          { status: 404 }
+        );
       }
       return Response.json({ success: true, post }, { status: 200 });
     }
@@ -22,7 +25,10 @@ export async function GET(req) {
     return Response.json({ success: true, posts }, { status: 200 });
   } catch (err) {
     console.error("❌ Error fetching post(s):", err?.message);
-    return Response.json({ success: false, message: "Server error" }, { status: 500 });
+    return Response.json(
+      { success: false, message: "Server error" },
+      { status: 500 }
+    );
   }
 }
 
@@ -32,29 +38,52 @@ export async function POST(req) {
   if (!valid) return response;
 
   await connectToDatabase();
-  const { title, slug, content, excerpt } = await req.json();
+  const { title, slug, content, excerpt, coverImage, tags } = await req.json();
 
   if (!title || !slug || !content) {
-    return Response.json({ success: false, message: "Missing fields" }, { status: 400 });
+    return Response.json(
+      { success: false, message: "Missing required fields: title, slug, content" },
+      { status: 400 }
+    );
   }
 
   try {
-    const newPost = new BlogPost({ title, slug, content, excerpt: excerpt || "" });
+    const newPost = new BlogPost({
+      title,
+      slug,
+      content,
+      excerpt: excerpt || "",
+      coverImage: coverImage || "",
+      tags: Array.isArray(tags) ? tags : [],
+    });
     await newPost.save();
     return Response.json({ success: true, post: newPost }, { status: 201 });
   } catch (err) {
     console.error("❌ Error creating post:", err?.message);
-    return Response.json({ success: false, message: "Error creating post" }, { status: 500 });
+    if (err.code === 11000) {
+      return Response.json(
+        {
+          success: false,
+          message:
+            "A post with this slug already exists. Please use a different slug.",
+        },
+        { status: 409 }
+      );
+    }
+    return Response.json(
+      { success: false, message: "Error creating post" },
+      { status: 500 }
+    );
   }
 }
 
-// PUT - Update a post (ADMIN ONLY) expects { id, title, slug, content, excerpt }
+// PUT - Update a post (ADMIN ONLY)
 export async function PUT(req) {
   const { valid, response } = await protectApiRoute(req, "admin");
   if (!valid) return response;
 
   await connectToDatabase();
-  const { id, title, slug, content, excerpt } = await req.json();
+  const { id, title, slug, content, excerpt, coverImage, tags } = await req.json();
 
   if (!id) {
     return Response.json({ success: false, message: "Missing id" }, { status: 400 });
@@ -63,7 +92,14 @@ export async function PUT(req) {
   try {
     const updated = await BlogPost.findByIdAndUpdate(
       id,
-      { ...(title ? { title } : {}), ...(slug ? { slug } : {}), ...(content ? { content } : {}), ...(excerpt !== undefined ? { excerpt } : {}) },
+      {
+        ...(title !== undefined && { title }),
+        ...(slug !== undefined && { slug }),
+        ...(content !== undefined && { content }),
+        ...(excerpt !== undefined && { excerpt }),
+        ...(coverImage !== undefined && { coverImage }),
+        ...(tags !== undefined && { tags: Array.isArray(tags) ? tags : [] }),
+      },
       { new: true }
     );
 
@@ -74,11 +110,14 @@ export async function PUT(req) {
     return Response.json({ success: true, post: updated }, { status: 200 });
   } catch (err) {
     console.error("❌ Error updating post:", err?.message);
-    return Response.json({ success: false, message: "Error updating post" }, { status: 500 });
+    return Response.json(
+      { success: false, message: "Error updating post" },
+      { status: 500 }
+    );
   }
 }
 
-// DELETE - Delete a post (ADMIN ONLY) expects ?id=<mongoId>
+// DELETE - Delete a post (ADMIN ONLY)
 export async function DELETE(req) {
   const { valid, response } = await protectApiRoute(req, "admin");
   if (!valid) return response;
@@ -99,6 +138,9 @@ export async function DELETE(req) {
     return Response.json({ success: true }, { status: 200 });
   } catch (err) {
     console.error("❌ Error deleting post:", err?.message);
-    return Response.json({ success: false, message: "Error deleting post" }, { status: 500 });
+    return Response.json(
+      { success: false, message: "Error deleting post" },
+      { status: 500 }
+    );
   }
 }

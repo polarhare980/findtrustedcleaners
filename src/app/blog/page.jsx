@@ -1,143 +1,127 @@
-import Link from "next/link";
 import { connectToDatabase } from "@/lib/db";
 import BlogPost from "@/models/BlogPost";
+import Image from "next/image";
+import Link from "next/link";
+
+export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Cleaning Tips & Guides | FindTrustedCleaners Blog",
+  title: "Blog | Find Trusted Cleaners",
   description:
-    "Expert cleaning tips, checklists, and practical guides from FindTrustedCleaners.",
-  alternates: { canonical: "https://www.findtrustedcleaners.com/blog" },
-  openGraph: {
-    title: "FindTrustedCleaners Blog",
-    description: "Cleaning tips, checklists, and practical guides.",
-    url: "https://www.findtrustedcleaners.com/blog",
-    siteName: "FindTrustedCleaners",
-    type: "website",
-  },
-  robots: { index: true, follow: true },
+    "Cleaning tips, guides and advice from the Find Trusted Cleaners team.",
 };
 
-// Static posts (React components under /blog/posts)
-const STATIC_POSTS = [
+// Static posts that live as code files
+const STATIC_META = [
   {
     slug: "end-of-tenancy-cleaning-checklist",
     title: "End of Tenancy Cleaning Checklist",
-    blurb: "A practical checklist you can use room-by-room.",
-    type: "static",
+    excerpt: "Everything you need to know to get your deposit back.",
+    tags: ["end of tenancy", "checklist"],
+    coverImage: null,
+    createdAt: new Date("2024-01-15"),
+    isStatic: true,
   },
   {
     slug: "how-to-hire-a-cleaner",
     title: "How to Hire a Cleaner",
-    blurb: "What to ask, what to avoid, and how to pick the right fit.",
-    type: "static",
+    excerpt:
+      "A step-by-step guide to finding and hiring the right cleaner for your home.",
+    tags: ["guides", "hiring"],
+    coverImage: null,
+    createdAt: new Date("2024-02-01"),
+    isStatic: true,
   },
 ];
 
-// Normalise DB slugs so we never generate /blog/blog/...
-function normaliseDbSlug(slug) {
-  return String(slug || "")
-    .trim()
-    .replace(/^https?:\/\/[^/]+\/+/i, "") // strip full URLs if someone pasted them
-    .replace(/^\/+/, "")                 // strip leading slashes
-    .replace(/^blog\/+/i, "")            // strip leading "blog/"
-    .replace(/^\/?blog\/+/i, "")         // extra safety
-    .replace(/\/+$/, "");                // strip trailing slash
-}
-
-async function fetchDbPosts() {
+async function getDbPosts() {
   try {
     await connectToDatabase();
-
-    const posts = await BlogPost.find({}).sort({ createdAt: -1 }).lean();
-
-    // Ensure serialisable data
-    return posts.map((p) => ({
-      ...p,
-      _id: p._id?.toString?.() || "",
-      createdAt: p.createdAt ? new Date(p.createdAt).toISOString() : "",
-    }));
-  } catch (err) {
-    console.error("❌ BlogIndexPage failed to load DB posts:", err?.message);
+    const posts = await BlogPost.find({ published: { $ne: false } })
+      .sort({ createdAt: -1 })
+      .lean();
+    return posts;
+  } catch {
     return [];
   }
 }
 
-export default async function BlogIndexPage() {
-  const dbPosts = await fetchDbPosts();
-
-  const combined = [
-    ...STATIC_POSTS.map((p) => ({
-      ...p,
-      href: `/blog/${p.slug}`,
-      key: `static-${p.slug}`,
-    })),
-
-    ...dbPosts.map((p) => {
-      const cleanSlug = normaliseDbSlug(p.slug);
-
-      return {
-        slug: cleanSlug,
-        title: p.title,
-        blurb: p.excerpt || "",
-        href: `/blog/${cleanSlug}`,
-        key: p._id || `db-${cleanSlug}`,
-        type: "db",
-        createdAt: p.createdAt,
-      };
-    }),
-  ];
+export default async function BlogPage() {
+  const dbPosts = await getDbPosts();
+  const allPosts = [...dbPosts, ...STATIC_META].sort(
+    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+  );
 
   return (
-    <main className="max-w-4xl mx-auto px-4 py-10">
-      <h1 className="text-3xl font-bold mb-2">Cleaning Tips &amp; Guides</h1>
-      <p className="text-gray-600 mb-8">
-        Short, useful cleaning guides designed to rank and help customers.
-      </p>
-
-      {/* Optional AdSense block (safe if you don’t have ID yet) */}
-      <div className="mb-8">
-        <ins
-          className="adsbygoogle"
-          style={{ display: "block" }}
-          data-ad-client={process.env.NEXT_PUBLIC_ADSENSE_ID || ""}
-          data-ad-slot="auto"
-          data-ad-format="auto"
-          data-full-width-responsive="true"
-        />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: "(adsbygoogle = window.adsbygoogle || []).push({});",
-          }}
-        />
+    <main className="max-w-5xl mx-auto px-6 py-12">
+      <div className="mb-10">
+        <h1 className="text-4xl font-bold mb-3">Cleaning Tips & Guides</h1>
+        <p className="text-lg text-gray-600">
+          Practical advice to help you find, hire, and get the most from
+          professional cleaners.
+        </p>
       </div>
 
-      {combined.length === 0 ? (
-        <div className="p-6 rounded-2xl bg-white/40 backdrop-blur border border-white/40">
-          <p className="text-gray-700 font-medium mb-2">
-            No posts yet (but the page is working).
-          </p>
-          <p className="text-gray-600">
-            Once you add your first post in <span className="font-mono">/admin</span>,
-            it’ll show up here.
-          </p>
-        </div>
+      {allPosts.length === 0 ? (
+        <p className="text-gray-500">No posts yet — check back soon!</p>
       ) : (
-        <ul className="space-y-3">
-          {combined.map((p) => (
-            <li
-              key={p.key}
-              className="p-4 rounded-2xl bg-white/40 backdrop-blur border border-white/40 hover:bg-white/55 transition"
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+          {allPosts.map((post) => (
+            <Link
+              key={post.slug}
+              href={`/blog/${post.slug}`}
+              className="group flex flex-col rounded-2xl overflow-hidden border bg-white hover:shadow-lg transition-shadow"
             >
-              <Link href={p.href} className="text-teal-700 hover:underline font-semibold">
-                {p.title}
-              </Link>
-              {p.blurb ? <p className="text-gray-600 mt-1">{p.blurb}</p> : null}
-              <div className="text-xs text-gray-500 mt-2">
-                {p.type === "static" ? "Static guide" : "Blog post"}
+              {post.coverImage ? (
+                <div className="relative h-48 bg-gray-100">
+                  <Image
+                    src={post.coverImage}
+                    alt={post.title}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+              ) : (
+                <div className="h-48 bg-gradient-to-br from-teal-50 to-teal-100 flex items-center justify-center">
+                  <span className="text-5xl">🧹</span>
+                </div>
+              )}
+
+              <div className="p-5 flex flex-col flex-1">
+                {post.tags?.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mb-2">
+                    {post.tags.slice(0, 2).map((tag) => (
+                      <span
+                        key={tag}
+                        className="text-xs px-2 py-0.5 bg-teal-100 text-teal-700 rounded-full"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                <h2 className="font-bold text-lg mb-2 group-hover:text-teal-600 transition-colors line-clamp-2">
+                  {post.title}
+                </h2>
+
+                {post.excerpt && (
+                  <p className="text-sm text-gray-600 line-clamp-3 flex-1">
+                    {post.excerpt}
+                  </p>
+                )}
+
+                <div className="text-xs text-gray-400 mt-3">
+                  {new Date(post.createdAt).toLocaleDateString("en-GB", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </div>
               </div>
-            </li>
+            </Link>
           ))}
-        </ul>
+        </div>
       )}
     </main>
   );

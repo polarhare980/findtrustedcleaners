@@ -48,10 +48,13 @@ export function getTokenFromRequest(req) {
   return c[COOKIE_NAME];
 }
 
-/** SERVER CONTEXT: set cookie using next/headers (Server Component, Server Action, Route Handler). */
-export function setAuthCookie(token) {
-  // Must be called on server (route handler, server action, or server component)
-  cookies().set(COOKIE_NAME, token, {
+/**
+ * SERVER CONTEXT: set cookie using next/headers (Server Component, Server Action, Route Handler).
+ * Next.js 15+/16: cookies() is async.
+ */
+export async function setAuthCookie(token) {
+  const cookieStore = await cookies();
+  cookieStore.set(COOKIE_NAME, token, {
     httpOnly: true,
     secure: true,
     sameSite: 'lax',
@@ -60,10 +63,13 @@ export function setAuthCookie(token) {
   });
 }
 
-/** SERVER CONTEXT: clear cookie using next/headers (✅ this fixes your missing export) */
-export function clearAuthCookie() {
-  // Must be called on server (route handler, server action, or server component)
-  cookies().set(COOKIE_NAME, '', {
+/**
+ * SERVER CONTEXT: clear cookie using next/headers.
+ * Next.js 15+/16: cookies() is async.
+ */
+export async function clearAuthCookie() {
+  const cookieStore = await cookies();
+  cookieStore.set(COOKIE_NAME, '', {
     httpOnly: true,
     secure: true,
     sameSite: 'lax',
@@ -96,9 +102,13 @@ export function clearAuthCookieOnResponse(res) {
   return res;
 }
 
-/** SERVER CONTEXT: read current user from cookies() (e.g., in layouts/server actions). */
-export function getUserFromServerCookies() {
-  const token = cookies().get(COOKIE_NAME)?.value;
+/**
+ * SERVER CONTEXT: read current user from cookies() (e.g., in layouts/server actions).
+ * Next.js 15+/16: cookies() is async.
+ */
+export async function getUserFromServerCookies() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(COOKIE_NAME)?.value;
   return token ? verifyToken(token) : null;
 }
 
@@ -161,7 +171,9 @@ export async function protectRoute(req, expectedRole = null) {
   if (!token) {
     return {
       valid: false,
-      response: NextResponse.redirect(`/login?next=${encodeURIComponent(nextPath)}`),
+      response: NextResponse.redirect(
+        `/login?next=${encodeURIComponent(nextPath)}`
+      ),
     };
   }
 
@@ -170,7 +182,9 @@ export async function protectRoute(req, expectedRole = null) {
   if (!user) {
     return {
       valid: false,
-      response: NextResponse.redirect(`/login?next=${encodeURIComponent(nextPath)}`),
+      response: NextResponse.redirect(
+        `/login?next=${encodeURIComponent(nextPath)}`
+      ),
     };
   }
 

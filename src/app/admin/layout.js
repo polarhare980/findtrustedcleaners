@@ -1,30 +1,34 @@
 import { redirect } from "next/navigation";
-import { getUserFromServerCookies } from "@/lib/auth";
+import { cookies } from "next/headers";
+import { verifyToken } from "@/lib/auth";
 
 export const runtime = "nodejs";
 
-export default function AdminLayout({ children }) {
-  const user = getUserFromServerCookies();
+export default async function AdminLayout({ children }) {
+  // In Next.js 15+/16, cookies() is async
+  const cookieStore = await cookies();
+  const token = cookieStore.get("token")?.value;
+  const user = token ? verifyToken(token) : null;
 
-  // 🔐 Protect all /admin routes
+  // 🔐 Protect all /admin routes (except /admin/login handled below)
   if (!user || user.type !== "admin") {
     redirect("/admin/login");
   }
 
   return (
     <div className="container py-6 space-y-4">
-      <h1 className="text-2xl font-semibold">Admin</h1>
-
-      <nav className="flex gap-4 text-sm">
-        <a className="underline" href="/admin">Overview</a>
-        <a className="underline" href="/admin/users">Users</a>
-        <a className="underline" href="/admin/cleaners">Cleaners</a>
-        <a className="underline" href="/admin/purchases">Purchases</a>
-        <a className="underline" href="/admin/reviews">Reviews</a>
-        <a className="underline" href="/admin/marketing">Marketing</a>
-        <a className="underline" href="/admin/blog">Blog</a>
+      <nav className="flex flex-wrap gap-4 text-sm mb-6 p-3 bg-gray-900 text-white rounded-xl">
+        <a className="font-semibold text-teal-400" href="/admin">Overview</a>
+        <a className="hover:text-teal-300" href="/admin/users">Users</a>
+        <a className="hover:text-teal-300" href="/admin/cleaners">Cleaners</a>
+        <a className="hover:text-teal-300" href="/admin/purchases">Purchases</a>
+        <a className="hover:text-teal-300" href="/admin/reviews">Reviews</a>
+        <a className="hover:text-teal-300" href="/admin/marketing">Marketing</a>
+        <a className="hover:text-teal-300 font-semibold" href="/admin/blog">Blog</a>
+        <form action="/api/admin/logout" method="post" className="ml-auto">
+          <button className="text-red-400 hover:text-red-300">Logout</button>
+        </form>
       </nav>
-
       {children}
     </div>
   );
