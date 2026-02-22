@@ -2,24 +2,33 @@ import { notFound } from "next/navigation";
 import { connectToDatabase } from "@/lib/db";
 import BlogPost from "@/models/BlogPost";
 
+// ✅ Static imports (no dynamic import weirdness on Vercel)
+import EndOfTenancy from "../posts/end-of-tenancy-cleaning-checklist";
+import HireCleaner from "../posts/how-to-hire-a-cleaner";
+
 export const dynamicParams = true;
 
-const POSTS = {
-  "end-of-tenancy-cleaning-checklist": () =>
-    import("../posts/end-of-tenancy-cleaning-checklist"),
-  "how-to-hire-a-cleaner": () =>
-    import("../posts/how-to-hire-a-cleaner"),
+const STATIC_POSTS = {
+  "end-of-tenancy-cleaning-checklist": {
+    Component: EndOfTenancy,
+    meta: EndOfTenancy?.meta,
+  },
+  "how-to-hire-a-cleaner": {
+    Component: HireCleaner,
+    meta: HireCleaner?.meta,
+  },
 };
 
 function normaliseSlug(slug) {
-  // ✅ Catch-all routes provide slug as an array: ["a", "b"]
+  // Catch-all provides array: ["something"]
   const raw = Array.isArray(slug) ? slug.join("/") : String(slug || "");
 
-  return raw
+  return decodeURIComponent(raw)
     .trim()
     .replace(/^\/+/, "")
     .replace(/^blog\/+/i, "")
-    .replace(/\/+$/, "");
+    .replace(/\/+$/, "")
+    .toLowerCase();
 }
 
 async function findDbPostBySlug(rawSlug) {
@@ -30,20 +39,19 @@ async function findDbPostBySlug(rawSlug) {
   }).lean();
 }
 
-// ✅ IMPORTANT: catch-all param MUST be an array
+// ✅ Catch-all param MUST be an array
 export async function generateStaticParams() {
-  return Object.keys(POSTS).map((slug) => ({ slug: [slug] }));
+  return Object.keys(STATIC_POSTS).map((slug) => ({ slug: [slug] }));
 }
 
 export async function generateMetadata({ params }) {
-  const rawSlug = params?.slug; // ✅ no await
-  const slug = normaliseSlug(rawSlug);
+  const slug = normaliseSlug(params?.slug);
 
-  if (POSTS[slug]) {
-    const mod = await POSTS[slug]();
+  if (STATIC_POSTS[slug]) {
+    const meta = STATIC_POSTS[slug].meta;
     return {
-      title: mod.meta?.title || "Blog post",
-      description: mod.meta?.description,
+      title: meta?.title || "Blog post",
+      description: meta?.description || "",
       robots: { index: true, follow: true },
     };
   }
@@ -61,14 +69,11 @@ export async function generateMetadata({ params }) {
 }
 
 export default async function BlogPostPage({ params }) {
-  const rawSlug = params?.slug; // ✅ no await
-  const slug = normaliseSlug(rawSlug);
+  const slug = normaliseSlug(params?.slug);
 
-  // Static
-  if (POSTS[slug]) {
-    const mod = await POSTS[slug]();
-    const Post = mod.default;
-
+  // ✅ Static post render
+  if (STATIC_POSTS[slug]) {
+    const Post = STATIC_POSTS[slug].Component;
     return (
       <main className="max-w-3xl mx-auto px-6 py-12">
         <Post />
@@ -76,7 +81,7 @@ export default async function BlogPostPage({ params }) {
     );
   }
 
-  // DB
+  // ✅ DB post render
   await connectToDatabase();
   const post = await findDbPostBySlug(slug);
 
@@ -85,9 +90,7 @@ export default async function BlogPostPage({ params }) {
   return (
     <main className="max-w-3xl mx-auto px-6 py-12">
       <h1 className="text-3xl font-bold mb-4">{post.title}</h1>
-
-      {post.excerpt && <p className="text-gray-600 mb-6">{post.excerpt}</p>}
-
+      {post.excerpt ? <p className="text-gray-600 mb-6">{post.excerpt}</p> : null}
       <div className="prose max-w-none whitespace-pre-wrap">{post.content}</div>
     </main>
   );
