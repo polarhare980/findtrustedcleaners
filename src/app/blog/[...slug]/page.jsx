@@ -10,6 +10,8 @@ import HireCleaner from "../posts/how-to-hire-a-cleaner";
 
 export const dynamicParams = true;
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 const STATIC_POSTS = {
   "end-of-tenancy-cleaning-checklist": {
