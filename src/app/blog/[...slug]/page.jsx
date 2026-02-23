@@ -1,3 +1,4 @@
+// src/app/blog/[...slug]/page.jsx
 import { notFound } from "next/navigation";
 import { connectToDatabase } from "@/lib/db";
 import BlogPost from "@/models/BlogPost";
@@ -8,6 +9,7 @@ import EndOfTenancy from "../posts/end-of-tenancy-cleaning-checklist";
 import HireCleaner from "../posts/how-to-hire-a-cleaner";
 
 export const dynamicParams = true;
+export const runtime = "nodejs";
 
 const STATIC_POSTS = {
   "end-of-tenancy-cleaning-checklist": {
@@ -30,10 +32,24 @@ function normaliseSlug(slug) {
     .toLowerCase();
 }
 
+// ✅ broaden lookup to tolerate legacy formats AND raw slug variants
 async function findDbPostBySlug(rawSlug) {
   const slug = normaliseSlug(rawSlug);
+
+  // Build a few plausible variants, then de-dupe.
+  const candidates = [
+    slug,
+    `blog/${slug}`,
+    `/blog/${slug}`,
+    String(rawSlug || ""),
+  ]
+    .map((s) => String(s || "").trim())
+    .filter(Boolean);
+
+  const unique = Array.from(new Set(candidates));
+
   return BlogPost.findOne({
-    slug: { $in: [slug, `blog/${slug}`, `/blog/${slug}`] },
+    slug: { $in: unique },
   }).lean();
 }
 
@@ -44,6 +60,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }) {
   const slug = normaliseSlug(params?.slug);
 
+  // Static post metadata
   if (STATIC_POSTS[slug]) {
     const meta = STATIC_POSTS[slug].meta;
     return {
@@ -53,12 +70,15 @@ export async function generateMetadata({ params }) {
     };
   }
 
+  // DB post metadata
   await connectToDatabase();
-  const post = await findDbPostBySlug(slug);
+
+  // IMPORTANT: pass the original params slug to allow raw fallback matching
+  const post = await findDbPostBySlug(params?.slug);
   if (!post) return {};
 
   return {
-    title: post.title,
+    title: post.title || "Blog post",
     description: post.excerpt || "",
     openGraph: post.coverImage ? { images: [post.coverImage] } : undefined,
     robots: { index: true, follow: true },
@@ -80,8 +100,13 @@ export default async function BlogPostPage({ params }) {
 
   // DB post render
   await connectToDatabase();
-  const post = await findDbPostBySlug(slug);
+
+  // IMPORTANT: pass the original params slug to allow raw fallback matching
+  const post = await findDbPostBySlug(params?.slug);
   if (!post) notFound();
+
+  // Optional safety: if createdAt missing, avoid "Invalid Date"
+  const createdAt = post.createdAt ? new Date(post.createdAt) : null;
 
   return (
     <article className="max-w-3xl mx-auto px-6 py-12">
@@ -90,10 +115,11 @@ export default async function BlogPostPage({ params }) {
         <div className="relative w-full h-64 md:h-96 mb-8 rounded-2xl overflow-hidden">
           <Image
             src={post.coverImage}
-            alt={post.title}
+            alt={post.title || "Blog cover"}
             fill
             className="object-cover"
             priority
+            sizes="(max-width: 768px) 100vw, 768px"
           />
         </div>
       )}
@@ -113,7 +139,9 @@ export default async function BlogPostPage({ params }) {
         </div>
       )}
 
-      <h1 className="text-4xl font-bold mb-3 leading-tight">{post.title}</h1>
+      <h1 className="text-4xl font-bold mb-3 leading-tight">
+        {post.title || "Blog post"}
+      </h1>
 
       {post.excerpt && (
         <p className="text-lg text-gray-600 mb-4 leading-relaxed">
@@ -121,13 +149,15 @@ export default async function BlogPostPage({ params }) {
         </p>
       )}
 
-      <div className="text-sm text-gray-400 mb-8">
-        {new Date(post.createdAt).toLocaleDateString("en-GB", {
-          day: "numeric",
-          month: "long",
-          year: "numeric",
-        })}
-      </div>
+      {createdAt && !Number.isNaN(createdAt.getTime()) && (
+        <div className="text-sm text-gray-400 mb-8">
+          {createdAt.toLocaleDateString("en-GB", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          })}
+        </div>
+      )}
 
       <hr className="mb-8 border-gray-200" />
 
@@ -147,7 +177,7 @@ export default async function BlogPostPage({ params }) {
           prose-blockquote:border-l-4 prose-blockquote:border-teal-500
           prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-gray-600
           prose-code:bg-gray-100 prose-code:px-1 prose-code:rounded prose-code:text-sm"
-        dangerouslySetInnerHTML={{ __html: post.content }}
+        dangerouslySetInnerHTML={{ __html: post.content || "" }}
       />
     </article>
   );

@@ -1,9 +1,11 @@
+// src/app/blog/page.jsx
 import { connectToDatabase } from "@/lib/db";
 import BlogPost from "@/models/BlogPost";
 import Image from "next/image";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 export const metadata = {
   title: "Blog | Find Trusted Cleaners",
@@ -34,13 +36,40 @@ const STATIC_META = [
   },
 ];
 
+function normaliseSlug(slug) {
+  const raw = String(slug || "");
+  try {
+    return decodeURIComponent(raw)
+      .trim()
+      .replace(/^\/+/, "")
+      .replace(/^blog\/+/i, "")
+      .replace(/^\/?blog\/+/i, "")
+      .replace(/\/+$/, "")
+      .toLowerCase();
+  } catch {
+    // If decodeURIComponent blows up on malformed percent encoding
+    return raw
+      .trim()
+      .replace(/^\/+/, "")
+      .replace(/^blog\/+/i, "")
+      .replace(/^\/?blog\/+/i, "")
+      .replace(/\/+$/, "")
+      .toLowerCase();
+  }
+}
+
+function safeDate(value) {
+  const d = value ? new Date(value) : null;
+  return d && !Number.isNaN(d.getTime()) ? d : null;
+}
+
 async function getDbPosts() {
   try {
     await connectToDatabase();
     const posts = await BlogPost.find({ published: { $ne: false } })
       .sort({ createdAt: -1 })
       .lean();
-    return posts;
+    return posts || [];
   } catch {
     return [];
   }
@@ -48,8 +77,28 @@ async function getDbPosts() {
 
 export default async function BlogPage() {
   const dbPosts = await getDbPosts();
-  const allPosts = [...dbPosts, ...STATIC_META].sort(
-    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+
+  // ✅ normalise db slugs ONLY for linking (don’t mutate your DB)
+  const dbPostsForList = dbPosts.map((p) => {
+    const date = safeDate(p.createdAt) || safeDate(p.updatedAt) || null;
+    return {
+      ...p,
+      _listSlug: normaliseSlug(p.slug),
+      _listDate: date || new Date(0),
+    };
+  });
+
+  const staticForList = STATIC_META.map((p) => {
+    const date = safeDate(p.createdAt) || new Date(0);
+    return {
+      ...p,
+      _listSlug: normaliseSlug(p.slug),
+      _listDate: date,
+    };
+  });
+
+  const allPosts = [...dbPostsForList, ...staticForList].sort(
+    (a, b) => new Date(b._listDate) - new Date(a._listDate)
   );
 
   return (
@@ -66,61 +115,69 @@ export default async function BlogPage() {
         <p className="text-gray-500">No posts yet — check back soon!</p>
       ) : (
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-          {allPosts.map((post) => (
-            <Link
-              key={post.slug}
-              href={`/blog/${post.slug}`}
-              className="group flex flex-col rounded-2xl overflow-hidden border bg-white hover:shadow-lg transition-shadow"
-            >
-              {post.coverImage ? (
-                <div className="relative h-48 bg-gray-100">
-                  <Image
-                    src={post.coverImage}
-                    alt={post.title}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
-              ) : (
-                <div className="h-48 bg-gradient-to-br from-teal-50 to-teal-100 flex items-center justify-center">
-                  <span className="text-5xl">🧹</span>
-                </div>
-              )}
+          {allPosts.map((post) => {
+            const hrefSlug = post._listSlug || normaliseSlug(post.slug);
+            const displayDate = safeDate(post.createdAt) || safeDate(post.updatedAt);
 
-              <div className="p-5 flex flex-col flex-1">
-                {post.tags?.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mb-2">
-                    {post.tags.slice(0, 2).map((tag) => (
-                      <span
-                        key={tag}
-                        className="text-xs px-2 py-0.5 bg-teal-100 text-teal-700 rounded-full"
-                      >
-                        {tag}
-                      </span>
-                    ))}
+            return (
+              <Link
+                key={`${post._id || post.slug}-${hrefSlug}`}
+                href={`/blog/${hrefSlug}`}
+                className="group flex flex-col rounded-2xl overflow-hidden border bg-white hover:shadow-lg transition-shadow"
+              >
+                {post.coverImage ? (
+                  <div className="relative h-48 bg-gray-100">
+                    <Image
+                      src={post.coverImage}
+                      alt={post.title || "Blog post"}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                    />
+                  </div>
+                ) : (
+                  <div className="h-48 bg-gradient-to-br from-teal-50 to-teal-100 flex items-center justify-center">
+                    <span className="text-5xl">🧹</span>
                   </div>
                 )}
 
-                <h2 className="font-bold text-lg mb-2 group-hover:text-teal-600 transition-colors line-clamp-2">
-                  {post.title}
-                </h2>
+                <div className="p-5 flex flex-col flex-1">
+                  {post.tags?.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      {post.tags.slice(0, 2).map((tag) => (
+                        <span
+                          key={tag}
+                          className="text-xs px-2 py-0.5 bg-teal-100 text-teal-700 rounded-full"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
 
-                {post.excerpt && (
-                  <p className="text-sm text-gray-600 line-clamp-3 flex-1">
-                    {post.excerpt}
-                  </p>
-                )}
+                  <h2 className="font-bold text-lg mb-2 group-hover:text-teal-600 transition-colors line-clamp-2">
+                    {post.title}
+                  </h2>
 
-                <div className="text-xs text-gray-400 mt-3">
-                  {new Date(post.createdAt).toLocaleDateString("en-GB", {
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
-                  })}
+                  {post.excerpt && (
+                    <p className="text-sm text-gray-600 line-clamp-3 flex-1">
+                      {post.excerpt}
+                    </p>
+                  )}
+
+                  {displayDate && (
+                    <div className="text-xs text-gray-400 mt-3">
+                      {displayDate.toLocaleDateString("en-GB", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </div>
+                  )}
                 </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
         </div>
       )}
     </main>
