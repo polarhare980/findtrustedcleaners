@@ -10,25 +10,36 @@ export async function GET() {
     await connectToDatabase();
 
     // Expose only safe, public fields
-    const cleaners = await Cleaner.find({})
-      .select([
-        'realName',
-        'companyName',
-        'rates',
-        'services',
-        'image',
-        'isPremium',
-        'businessInsurance',
-        'dbsChecked',
-        'googleReviewRating',
-        'googleReviewCount',
-        'availability',
-      ].join(' '))
+    const raw = await Cleaner.find({})
+      .select(
+        [
+          'realName',
+          'companyName',
+          'rates',
+          'services',
+          'image',
+          'isPremium',
+          'businessInsurance',
+          'dbsChecked',
+          'googleReviewRating',
+          'googleReviewCount',
+          'availability',
+        ].join(' ')
+      )
       .lean();
+
+    // Ensure _id is always a plain string for routing/links
+    const cleaners = raw.map((c) => ({
+      ...c,
+      _id: c?._id ? String(c._id) : undefined,
+    }));
 
     return NextResponse.json({ success: true, cleaners });
   } catch (err) {
     console.error('GET /api/public-cleaners error:', err);
-    return NextResponse.json({ success: false, cleaners: [], message: 'Server error' }, { status: 500 });
+    return NextResponse.json(
+      { success: false, cleaners: [], message: 'Server error' },
+      { status: 500 }
+    );
   }
 }
