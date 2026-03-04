@@ -15,6 +15,10 @@ const PurchaseSchema = new mongoose.Schema(
     // Stripe refs (manual-capture flow)
     paymentIntentId: { type: String, index: true },
     stripeSessionId: { type: String },
+    // Checkout Session created for the client (used for idempotence / debugging)
+    checkoutSessionId: { type: String },
+    // Amount charged in pence (optional, but useful for audits)
+    amountPence: { type: Number },
 
     // Price in pounds (optional)
     amount: { type: Number },
@@ -24,6 +28,9 @@ const PurchaseSchema = new mongoose.Schema(
     day: { type: String, required: true, index: true },
     hour: { type: String, required: true, index: true }, // "7".."19" etc.
 
+    // Optional: explicit ISO date (YYYY-MM-DD) if/when you move to date-based booking
+    isoDate: { type: String },
+
     // Span-aware support
     span: { type: Number, default: 1 },
     serviceKey: { type: String },
@@ -31,6 +38,9 @@ const PurchaseSchema = new mongoose.Schema(
     durationMins: { type: Number },
     bufferBeforeMins: { type: Number, default: 0 },
     bufferAfterMins: { type: Number, default: 0 },
+
+    // Optional client notes
+    notes: { type: String },
 
     // Lifecycle
     // pending: client started flow but not completed payment (legacy)

@@ -38,7 +38,7 @@ export async function POST(req) {
   if (!valid) return response;
 
   await connectToDatabase();
-  const { title, slug, content, excerpt, coverImage, tags } = await req.json();
+  const { title, slug, content, excerpt, coverImage, tags, published } = await req.json();
 
   if (!title || !slug || !content) {
     return Response.json(
@@ -55,6 +55,7 @@ export async function POST(req) {
       excerpt: excerpt || "",
       coverImage: coverImage || "",
       tags: Array.isArray(tags) ? tags : [],
+      published: published !== false,
     });
     await newPost.save();
     return Response.json({ success: true, post: newPost }, { status: 201 });
@@ -83,7 +84,7 @@ export async function PUT(req) {
   if (!valid) return response;
 
   await connectToDatabase();
-  const { id, title, slug, content, excerpt, coverImage, tags } = await req.json();
+  const { id, title, slug, content, excerpt, coverImage, tags, published } = await req.json();
 
   if (!id) {
     return Response.json({ success: false, message: "Missing id" }, { status: 400 });
@@ -99,6 +100,7 @@ export async function PUT(req) {
         ...(excerpt !== undefined && { excerpt }),
         ...(coverImage !== undefined && { coverImage }),
         ...(tags !== undefined && { tags: Array.isArray(tags) ? tags : [] }),
+        ...(published !== undefined && { published: published !== false }),
       },
       { new: true }
     );

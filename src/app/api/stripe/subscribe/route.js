@@ -22,6 +22,10 @@ export async function POST(req) {
       return NextResponse.json({ success: false, message: 'Access denied.' }, { status: 403 });
     }
 
+    // Depending on which auth route minted the JWT, the id may be on
+    // user._id (preferred) or user.id (legacy). Prefer _id.
+    const cleanerId = user?._id || user?.id;
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'subscription',
@@ -43,7 +47,7 @@ export async function POST(req) {
       success_url: `https://www.findtrustedcleaners.com/cleaner/upgrade-success`,
       cancel_url: `https://www.findtrustedcleaners.com/cleaner/upgrade-cancelled`,
       metadata: {
-        cleanerId: user.id,
+        cleanerId: cleanerId ? String(cleanerId) : '',
       },
     });
 

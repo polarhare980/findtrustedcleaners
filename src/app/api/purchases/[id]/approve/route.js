@@ -56,6 +56,7 @@ export async function PUT(req, { params }) {
         if (!paymentIntentId) {
           const csId =
             purchase?.stripe?.checkoutSessionId ||
+            purchase?.checkoutSessionId ||
             purchase?.stripeSessionId ||
             null;
           if (csId) {

@@ -3,6 +3,7 @@ import { connectToDatabase } from "@/lib/db";
 import BlogPost from "@/models/BlogPost";
 import Image from "next/image";
 import Link from "next/link";
+import AdSlot from "@/components/ads/AdSlot";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -101,6 +102,11 @@ export default async function BlogPage() {
     (a, b) => new Date(b._listDate) - new Date(a._listDate)
   );
 
+  const slots = {
+    top: process.env.NEXT_PUBLIC_ADSENSE_SLOT_BLOG_LIST_TOP || "",
+    infeed: process.env.NEXT_PUBLIC_ADSENSE_SLOT_BLOG_LIST_INFEED || "",
+  };
+
   return (
     <main className="max-w-5xl mx-auto px-6 py-12">
       <div className="mb-10">
@@ -111,13 +117,39 @@ export default async function BlogPage() {
         </p>
       </div>
 
+      {slots.top ? (
+        <div className="mb-10">
+          <AdSlot
+            slot={slots.top}
+            className="rounded-2xl bg-white border shadow-sm overflow-hidden"
+            style={{ minHeight: 90 }}
+          />
+        </div>
+      ) : null}
+
       {allPosts.length === 0 ? (
         <p className="text-gray-500">No posts yet — check back soon!</p>
       ) : (
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-          {allPosts.map((post) => {
+          {allPosts.map((post, idx) => {
             const hrefSlug = post._listSlug || normaliseSlug(post.slug);
             const displayDate = safeDate(post.createdAt) || safeDate(post.updatedAt);
+
+            // Optional in-feed ad card after a few posts
+            if (slots.infeed && idx === 5) {
+              return (
+                <div
+                  key="infeed-ad"
+                  className="rounded-2xl overflow-hidden border bg-white flex items-center justify-center"
+                >
+                  <AdSlot
+                    slot={slots.infeed}
+                    className="w-full"
+                    style={{ minHeight: 250 }}
+                  />
+                </div>
+              );
+            }
 
             return (
               <Link

@@ -13,7 +13,11 @@ export const dynamic = 'force-dynamic';
 
 const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 const BOOKED_STATUSES = new Set(['accepted','confirmed','booked']);
-const PENDING_PURCHASE_STATUSES = new Set(['pending','approved']); // approved holds the slot like booked
+// Treat these statuses as "slot-holding" so we don't double-book.
+// - pending: created locally (pre-payment)
+// - pending_approval: payment authorised, waiting for cleaner acceptance
+// - approved: legacy synonym that should also hold the slot
+const PENDING_PURCHASE_STATUSES = new Set(['pending','pending_approval','approved']);
 
 function json(data, status = 200, extraHeaders = {}) {
   return new NextResponse(JSON.stringify(data), {
@@ -176,7 +180,8 @@ export async function POST(req) {
       for (let i = 0; i < Math.max(1, s); i++) {
         const hk = String(start + i);
         if (merged[day][hk] === false || merged[day][hk] === 'unavailable') continue;
-        merged[day][hk] = (String(p.status).toLowerCase() === 'approved') ? 'booked' : 'pending';
+        const st = String(p.status).toLowerCase();
+        merged[day][hk] = st === 'approved' ? 'booked' : 'pending';
       }
     }
 

@@ -59,27 +59,45 @@ export async function POST(req) {
           console.log(`✅ Cleaner ${metadata.cleanerId} marked as premium (mode=${mode})`);
         }
 
-        // ---------- CLIENT BOOKING CHECKOUT ----------
-        // Your previous logic keyed on metadata flags.
-        if (
-          metadata.clientBooking === 'true' &&
-          metadata.cleanerId &&
-          metadata.clientId
-        ) {
-          const newPurchase = await Purchase.create({
-            cleanerId: metadata.cleanerId,
-            clientId: metadata.clientId,
-            paymentIntentId: session.payment_intent || null,
-            stripeSessionId: session.id,
-            amount,
-            day: metadata.day || null,
-            hour: metadata.hour || null,
-            status: 'pending_approval',
-          });
+        // ---------- CLIENT BOOKING CHECKOUT (MANUAL CAPTURE) ----------
+        // Current client flow:
+        // 1) Client creates a Purchase in DB (status=pending)
+        // 2) We create a Stripe Checkout Session (mode=payment, capture_method=manual)
+        // 3) On checkout.session.completed, we mark that *existing* Purchase as pending_approval
+        //    and store Stripe identifiers.
+        const isClientBooking =
+          metadata.type === 'clientBooking' || metadata.clientBooking === 'true';
 
-          console.log(
-            `📅 Booking stored ${newPurchase._id} for cleaner ${metadata.cleanerId} on ${metadata.day} @ ${metadata.hour}:00`
-          );
+        if (isClientBooking) {
+          const purchaseId = metadata.purchaseId || session.client_reference_id;
+          const paymentIntentId = session.payment_intent || null;
+          const stripeSessionId = session.id;
+
+          if (purchaseId) {
+            const existing = await Purchase.findById(purchaseId);
+            if (existing) {
+              // Idempotent: if already advanced, don't roll back
+              const st = String(existing.status || '').toLowerCase();
+              if (st === 'pending' || st === 'initiated' || st === 'holding') {
+                existing.status = 'pending_approval';
+              }
+
+              // Persist Stripe refs (used later when cleaner accepts)
+              if (paymentIntentId) existing.paymentIntentId = paymentIntentId;
+              existing.stripeSessionId = stripeSessionId;
+              existing.checkoutSessionId = stripeSessionId;
+              if (typeof amount === 'number') existing.amount = amount;
+              await existing.save();
+
+              console.log(
+                `✅ Purchase ${existing._id} updated -> pending_approval (cleaner=${existing.cleanerId}, client=${existing.clientId})`
+              );
+            } else {
+              console.warn(`⚠️ Webhook: purchaseId not found: ${purchaseId}`);
+            }
+          } else {
+            console.warn('⚠️ Webhook: client booking session missing purchaseId/client_reference_id');
+          }
         }
 
         break;

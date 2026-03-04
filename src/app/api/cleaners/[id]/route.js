@@ -230,9 +230,11 @@ export async function GET(req, { params }) {
     // If a logged-in client has a purchase, reveal contact details
     const { valid, user } = await protectApiRoute(req);
     if (valid && user?.type === 'client') {
+      // Only grant access after payment has completed (pending_approval) or later.
       const purchase = await Purchase.findOne({
         clientId: user._id?.toString(),
         cleanerId: id,
+        status: { $in: ['pending_approval', 'approved', 'accepted', 'confirmed', 'booked'] },
       }).lean();
 
       if (purchase) {
