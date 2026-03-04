@@ -36,16 +36,45 @@ function normaliseSlug(slug) {
     .toLowerCase();
 }
 
+function escapeRegex(s = "") {
+  return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * Finds a DB post by slug, tolerant of:
+ * - case differences
+ * - optional "blog/" prefix
+ * - optional leading "/"
+ * - optional trailing "/"
+ *
+ * Note: caller should ensure DB is connected.
+ */
 async function findDbPostBySlug(rawSlug) {
   const slug = normaliseSlug(rawSlug);
 
-  const candidates = [slug, `blog/${slug}`, `/blog/${slug}`, String(rawSlug || "")]
+  const candidates = [
+    slug,
+    `blog/${slug}`,
+    `/blog/${slug}`,
+    `${slug}/`,
+    `blog/${slug}/`,
+    `/blog/${slug}/`,
+    String(rawSlug || ""),
+  ]
     .map((s) => String(s || "").trim())
     .filter(Boolean);
 
-  const unique = Array.from(new Set(candidates));
+  const unique = Array.from(new Set(candidates.map((s) => s.toLowerCase())));
 
-  return BlogPost.findOne({ slug: { $in: unique } }).lean();
+  // Build tolerant regexes that match the logical slug regardless of prefix/suffix
+  const base = escapeRegex(slug);
+  const tolerantRegex = new RegExp(`^(?:/)?(?:blog/)?${base}(?:/)?$`, "i");
+
+  // Query: exact-ish matches OR tolerant regex match
+  // (Exact-ish helps index usage when your DB slugs are normalised)
+  return BlogPost.findOne({
+    $or: [{ slug: { $in: unique } }, { slug: { $regex: tolerantRegex } }],
+  }).lean();
 }
 
 export async function generateStaticParams() {
@@ -67,7 +96,7 @@ export async function generateMetadata({ params }) {
   await connectToDatabase();
 
   const post = await findDbPostBySlug(params?.slug);
-  if (!post) return {};
+  if (!post || post.published === false) return {};
 
   return {
     title: post.title || "Blog post",
@@ -182,7 +211,9 @@ export default async function BlogPostPage({ params }) {
   await connectToDatabase();
 
   const post = await findDbPostBySlug(params?.slug);
-  if (!post) notFound();
+
+  // ✅ Prevent drafts/unpublished from being accessible publicly
+  if (!post || post.published === false) notFound();
 
   const createdAt = safeDate(post.createdAt) || safeDate(post.updatedAt);
 
@@ -317,7 +348,8 @@ export default async function BlogPostPage({ params }) {
             <div className="rounded-2xl border bg-white p-5 shadow-sm">
               <div className="font-semibold">Want to book a cleaner?</div>
               <p className="text-sm text-gray-600 mt-1">
-                Browse vetted cleaner profiles, see availability, and request a slot.
+                Browse vetted cleaner profiles, see availability, and request a
+                slot.
               </p>
               <Link
                 href="/find-cleaner"
