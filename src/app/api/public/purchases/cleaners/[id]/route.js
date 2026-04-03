@@ -20,7 +20,8 @@ function json(data, status = 200) {
  *  - since: ISO date string to filter by createdAt >= since (optional)
  *  - limit: max rows (default 200, max 500)
  */
-export async function GET(req, { params }) {
+export async function GET(req, context) {
+  const params = await context?.params;
   const cleanerId = params?.id;
   if (!cleanerId) return json({ success: false, purchases: [], message: 'Missing cleaner id' }, 400);
   if (!mongoose.Types.ObjectId.isValid(String(cleanerId))) {

@@ -82,7 +82,8 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }) {
-  const slug = normaliseSlug(params?.slug);
+  const resolvedParams = await params;
+  const slug = normaliseSlug(resolvedParams?.slug);
 
   if (STATIC_POSTS[slug]) {
     const meta = STATIC_POSTS[slug].meta;
@@ -95,7 +96,7 @@ export async function generateMetadata({ params }) {
 
   await connectToDatabase();
 
-  const post = await findDbPostBySlug(params?.slug);
+  const post = await findDbPostBySlug(resolvedParams?.slug);
   if (!post || post.published === false) return {};
 
   return {
@@ -195,7 +196,8 @@ function renderHtmlWithAdMarkers(html = "", slots) {
 }
 
 export default async function BlogPostPage({ params }) {
-  const slug = normaliseSlug(params?.slug);
+  const resolvedParams = await params;
+  const slug = normaliseSlug(resolvedParams?.slug);
 
   // Static post render
   if (STATIC_POSTS[slug]) {
@@ -210,7 +212,7 @@ export default async function BlogPostPage({ params }) {
   // DB post render
   await connectToDatabase();
 
-  const post = await findDbPostBySlug(params?.slug);
+  const post = await findDbPostBySlug(resolvedParams?.slug);
 
   // ✅ Prevent drafts/unpublished from being accessible publicly
   if (!post || post.published === false) notFound();

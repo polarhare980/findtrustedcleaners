@@ -29,9 +29,10 @@ function normalizePhotos(arr) {
     .filter(Boolean);
 }
 
-export async function GET(_req, { params }) {
+export async function GET(_req, context) {
   await dbConnect();
 
+  const params = await context?.params;
   const id = params?.id;
   if (!id) return json({ success: false, message: 'Cleaner id required.' }, 400);
 

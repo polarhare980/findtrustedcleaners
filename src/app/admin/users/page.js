@@ -5,9 +5,10 @@ import User from '@/models/User';
 import { redirect } from 'next/navigation';
 export const runtime = 'nodejs';
 export default async function AdminUsers() {
-  const token = cookies().get('ftc_token')?.value; let u = null;
+  const cookieStore = await cookies();
+  const token = cookieStore.get('token')?.value; let u = null;
   try { u = jwt.verify(token || '', process.env.JWT_SECRET || 'change_me'); } catch {}
-  if (!u || u.type !== 'admin') redirect('/login?next=/admin/users');
+  if (!u || u.type !== 'admin') redirect('/admin/login');
   await dbConnect();
   const users = await User.find({}, 'email type emailVerified createdAt').sort({ createdAt: -1 }).lean();
   return (<div className="rounded-2xl p-4 border bg-white/70"><h3 className="font-medium mb-3">Users</h3>

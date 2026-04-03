@@ -6,7 +6,8 @@ import Cleaner from '@/models/Cleaner';
 import { redirect } from 'next/navigation';
 export const runtime = 'nodejs';
 export default async function AdminReviews() {
-  const token = cookies().get('ftc_token')?.value; let u=null; try{u=jwt.verify(token||'',process.env.JWT_SECRET||'change_me');}catch{} if(!u||u.type!=='admin') redirect('/login?next=/admin/reviews');
+  const cookieStore = await cookies();
+  const token = cookieStore.get('token')?.value; let u=null; try{u=jwt.verify(token||'',process.env.JWT_SECRET||'change_me');}catch{} if(!u||u.type!=='admin') redirect('/admin/login');
   await dbConnect();
   const rows = await Review.find({}, 'cleanerId rating text createdAt').sort({ createdAt: -1 }).limit(50).lean();
   const ids = Array.from(new Set(rows.map(r => String(r.cleanerId))));

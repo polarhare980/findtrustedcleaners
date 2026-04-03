@@ -2,7 +2,8 @@
 import BlogListClient from '../../BlogListClient';
 
 export async function generateMetadata({ params }) {
-  const tag = decodeURIComponent(params.tag || '').trim();
+  const resolvedParams = await params;
+  const tag = decodeURIComponent(resolvedParams?.tag || '').trim();
   const safe = tag.replace(/\s+/g, ' ').slice(0, 60);
   const title = `${safe} Articles | FindTrustedCleaners Blog`;
   const desc = `Posts tagged “${safe}” — cleaning tips, guides, and insights from FindTrustedCleaners.`;
@@ -24,7 +25,8 @@ export async function generateMetadata({ params }) {
   };
 }
 
-export default function TagPage({ params }) {
-  const tag = decodeURIComponent(params.tag || '').trim();
+export default async function TagPage({ params }) {
+  const resolvedParams = await params;
+  const tag = decodeURIComponent(resolvedParams?.tag || '').trim();
   return <BlogListClient initialTag={tag} />;
 }
