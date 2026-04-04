@@ -7,9 +7,10 @@ import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-export async function PUT(req, { params }) {
+export async function PUT(req, context) {
   await connectToDatabase();
-  const { id } = params;
+  const params = await context?.params;
+  const { id } = params || {};
 
   const { valid, user, response } = await protectApiRoute(req);
   if (!valid) return response;

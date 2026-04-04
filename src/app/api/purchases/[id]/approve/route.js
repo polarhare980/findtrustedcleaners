@@ -13,8 +13,9 @@ function json(data, status = 200) {
   return NextResponse.json(data, { status });
 }
 
-export async function PUT(req, { params }) {
+export async function PUT(req, context) {
   await connectToDatabase();
+  const params = await context?.params;
   const purchaseId = params?.id;
 
   // Auth

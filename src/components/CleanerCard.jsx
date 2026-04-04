@@ -69,7 +69,7 @@ export default function CleanerCard({
       dbs: p?.dbsChecked ?? cleaner?.dbsChecked ?? false,
       insured: p?.businessInsurance ?? cleaner?.businessInsurance ?? false,
       availability:
-        p?.availability || cleaner?.availability || {}, // may be empty
+        cleaner?.availabilityMerged || p?.availabilityMerged || p?.availability || cleaner?.availability || {}, // may be empty
       galleryCount: Array.isArray(p?.photos) ? p.photos.length : Array.isArray(cleaner?.photos) ? cleaner.photos.length : 0,
       years: p?.yearsExperience ?? cleaner?.yearsExperience ?? null,
     };

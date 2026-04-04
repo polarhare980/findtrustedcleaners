@@ -130,6 +130,8 @@ export default function CleanerDashboard() {
   const [message, setMessage] = useState('');
 
   const [combined, setCombined] = useState([]);       // bookings + pending purchases
+  const [pendingRequests, setPendingRequests] = useState([]);
+  const [actionBusyId, setActionBusyId] = useState(null);
   const overlays = useMemo(() => buildOverlayMaps(combined), [combined]);
 
   // Client-side copy of overrides we edit before saving
@@ -303,6 +305,14 @@ export default function CleanerDashboard() {
         const merged = dataB?.success ? (dataB.combined || []) : [];
         setCombined(merged);
 
+        const resPending = await fetch('/api/cleaners/bookings', { credentials: 'include' });
+        const pendingJson = await resPending.json().catch(() => ({}));
+        setPendingRequests(
+          Array.isArray(pendingJson?.bookings)
+            ? pendingJson.bookings.filter((row) => row?.status === 'pending')
+            : []
+        );
+
         // Seed dashboard state (now includes availabilityOverrides)
         const seed = {
           ...cleanerUser,
@@ -326,6 +336,46 @@ export default function CleanerDashboard() {
       }
     })();
   }, [router]);
+
+
+  const refreshBookingState = async (cleanerId = me?._id) => {
+    if (!cleanerId) return;
+
+    const [combinedRes, pendingRes] = await Promise.all([
+      fetch(`/api/bookings/cleaner/${cleanerId}`, { credentials: 'include' }),
+      fetch('/api/cleaners/bookings', { credentials: 'include' }),
+    ]);
+
+    const combinedJson = await combinedRes.json().catch(() => ({}));
+    const pendingJson = await pendingRes.json().catch(() => ({}));
+
+    setCombined(combinedJson?.success ? (combinedJson.combined || []) : []);
+    setPendingRequests(
+      Array.isArray(pendingJson?.bookings)
+        ? pendingJson.bookings.filter((row) => row?.status === 'pending')
+        : []
+    );
+  };
+
+  const processPendingRequest = async (purchaseId, action) => {
+    if (!purchaseId) throw new Error('Missing pending request id.');
+
+    const endpoint =
+      action === 'accept'
+        ? `/api/purchases/${purchaseId}/approve`
+        : `/api/purchases/${purchaseId}/decline`;
+
+    setActionBusyId(`${purchaseId}:${action}`);
+    const res = await fetch(endpoint, { method: 'PUT', credentials: 'include' });
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok || !data?.success) {
+      throw new Error(data?.message || (action === 'accept' ? 'Accept failed' : 'Decline failed'));
+    }
+
+    await refreshBookingState();
+    setMessage(action === 'accept' ? '✅ Booking accepted and payment captured!' : '✅ Booking declined and slot freed.');
+  };
 
   // Toggle availability for a specific day/hour
   const toggleAvailability = (day, hourNumber) => {
@@ -401,18 +451,12 @@ export default function CleanerDashboard() {
       return;
     }
     try {
-      const res = await fetch(`/api/purchases/${purchaseId}/approve`, { method: 'PUT', credentials: 'include' });
-      const data = await res.json();
-      if (!res.ok || !data?.success) throw new Error(data?.message || 'Accept failed');
-
-      setMessage('✅ Booking accepted and payment captured!');
-      // Refresh combined overlay
-      const resB = await fetch(`/api/bookings/cleaner/${me._id}`, { credentials: 'include' });
-      const dataB = await resB.json();
-      setCombined(dataB?.success ? (dataB.combined || []) : []);
+      await processPendingRequest(purchaseId, 'accept');
     } catch (e) {
       console.error('Accept error', e);
       alert(e.message || 'Server error.');
+    } finally {
+      setActionBusyId(null);
     }
   };
 
@@ -426,18 +470,12 @@ export default function CleanerDashboard() {
       return;
     }
     try {
-      const res = await fetch(`/api/purchases/${purchaseId}/decline`, { method: 'PUT', credentials: 'include' });
-      const data = await res.json();
-      if (!res.ok || !data?.success) throw new Error(data?.message || 'Decline failed');
-
-      setMessage('✅ Booking declined and slot freed.');
-      // Refresh combined overlay
-      const resB = await fetch(`/api/bookings/cleaner/${me._id}`, { credentials: 'include' });
-      const dataB = await resB.json();
-      setCombined(dataB?.success ? (dataB.combined || []) : []);
+      await processPendingRequest(purchaseId, 'decline');
     } catch (e) {
       console.error('Decline error', e);
       alert(e.message || 'Server error.');
+    } finally {
+      setActionBusyId(null);
     }
   };
 
@@ -1219,6 +1257,90 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
           </div>
         )}
 
+
+        {/* Pending requests */}
+        <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl mb-6 p-6">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mb-4">
+            <div>
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-amber-600 to-orange-700 bg-clip-text text-transparent">
+                ⏳ Pending booking requests
+              </h2>
+              <p className="text-gray-600 mt-1">
+                Client pays first, request stays pending, then you accept to capture payment or decline to release it.
+              </p>
+            </div>
+            <button
+              onClick={() => router.push('/cleaners/bookings')}
+              className="px-4 py-2 rounded-lg bg-white/70 border font-medium hover:bg-white"
+            >
+              View full booking inbox
+            </button>
+          </div>
+
+          {pendingRequests.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-amber-300 bg-amber-50/70 p-5 text-amber-900">
+              No pending requests right now.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {pendingRequests.map((req) => (
+                <div key={req._id} className="rounded-xl bg-white/70 border border-white/60 p-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                  <div>
+                    <div className="font-semibold text-gray-900">
+                      {req.day} • {req.time || `${String(req.hour || '').padStart(2, '0')}:00`}
+                    </div>
+                    <div className="text-sm text-gray-600 mt-1">
+                      {req.serviceName || req.serviceKey || 'Cleaning request'}
+                      {typeof req.amount === 'number' ? ` • £${Number(req.amount).toFixed(2)}` : ''}
+                      {req.span ? ` • ${req.span} hr block` : ''}
+                    </div>
+                    {req.clientId && (
+                      <div className="text-sm text-gray-600 mt-1">
+                        Client: {req.clientId.fullName || 'Unknown'}
+                        {req.clientId.phone ? ` • ${req.clientId.phone}` : ''}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={async () => {
+                        try {
+                          await processPendingRequest(req._id, 'accept');
+                        } catch (e) {
+                          console.error('Accept error', e);
+                          alert(e.message || 'Server error.');
+                        } finally {
+                          setActionBusyId(null);
+                        }
+                      }}
+                      disabled={actionBusyId === `${req._id}:accept` || actionBusyId === `${req._id}:decline`}
+                      className="px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg disabled:opacity-50"
+                    >
+                      {actionBusyId === `${req._id}:accept` ? 'Accepting…' : 'Accept & capture'}
+                    </button>
+                    <button
+                      onClick={async () => {
+                        try {
+                          await processPendingRequest(req._id, 'decline');
+                        } catch (e) {
+                          console.error('Decline error', e);
+                          alert(e.message || 'Server error.');
+                        } finally {
+                          setActionBusyId(null);
+                        }
+                      }}
+                      disabled={actionBusyId === `${req._id}:accept` || actionBusyId === `${req._id}:decline`}
+                      className="px-4 py-2 border border-red-300 text-red-700 rounded-lg bg-white disabled:opacity-50"
+                    >
+                      {actionBusyId === `${req._id}:decline` ? 'Declining…' : 'Decline'}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* Availability grid — honours overrides; week-0 override toggle */}
         <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl mb-6 p-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-4">
@@ -1335,14 +1457,16 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
                             <div className="flex gap-1">
                               <button
                                 onClick={() => handleAccept(day, h)}
-                                className="flex-1 px-2 py-1 bg-gradient-to-r from-green-500 to-green-600 text-white rounded text-xs font-medium"
+                                disabled={actionBusyId === `${slot?.bookingId}:accept` || actionBusyId === `${slot?.bookingId}:decline`}
+                                className="flex-1 px-2 py-1 bg-gradient-to-r from-green-500 to-green-600 text-white rounded text-xs font-medium disabled:opacity-50"
                                 title="Accept & capture"
                               >
                                 ✓
                               </button>
                               <button
                                 onClick={() => handleDecline(day, h)}
-                                className="flex-1 px-2 py-1 bg-gradient-to-r from-red-500 to-red-600 text-white rounded text-xs font-medium"
+                                disabled={actionBusyId === `${slot?.bookingId}:accept` || actionBusyId === `${slot?.bookingId}:decline`}
+                                className="flex-1 px-2 py-1 bg-gradient-to-r from-red-500 to-red-600 text-white rounded text-xs font-medium disabled:opacity-50"
                                 title="Decline & free"
                               >
                                 ✗

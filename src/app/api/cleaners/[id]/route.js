@@ -78,9 +78,10 @@ function sanitizeAvailabilityOverrides(input) {
  * PUT /api/cleaners/[id]
  * Update cleaner fields (whitelisted). Ensures booleans are saved correctly.
  */
-export async function PUT(req, { params }) {
+export async function PUT(req, context) {
   await connectToDatabase();
-  const { id } = params;
+  const params = await context?.params;
+  const { id } = params || {};
 
   // Auth (must be the same cleaner or an admin)
   const { valid, user, response } = await protectApiRoute(req);
@@ -187,9 +188,10 @@ export async function PUT(req, { params }) {
  * If the viewer is a client who has purchased, reveal contact details.
  * Also returns availabilityOverrides so the client UI can compose per-week calendars.
  */
-export async function GET(req, { params }) {
+export async function GET(req, context) {
   await connectToDatabase();
-  const { id } = params;
+  const params = await context?.params;
+  const { id } = params || {};
 
   try {
     const cleaner = await Cleaner.findById(id).lean();

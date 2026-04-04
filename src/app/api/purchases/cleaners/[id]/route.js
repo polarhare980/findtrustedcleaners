@@ -7,10 +7,11 @@ import Purchase from '@/models/Purchase';
  * about pending bookings for a given cleaner.
  * Response: { success: true, purchases: [{ _id, status, day, hour }] }
  */
-export async function GET(req, { params }) {
+export async function GET(req, context) {
   try {
     await connectToDatabase();
-    const cleanerId = params.id;
+    const params = await context?.params;
+    const cleanerId = params?.id;
 
     // Only expose pending-like statuses
     const purchases = await Purchase.find({

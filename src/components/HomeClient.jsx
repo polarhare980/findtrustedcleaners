@@ -17,6 +17,51 @@ const PURCHASES_API = (id) => `/api/public/purchases/cleaners/${id}`;
 const HOURS = Array.from({ length: 13 }, (_, i) => String(7 + i));
 const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 
+
+function getMonday(d = new Date()) {
+  const date = new Date(d);
+  const day = date.getDay();
+  const diff = (day === 0 ? -6 : 1) - day;
+  date.setDate(date.getDate() + diff);
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+function addDays(date, n) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + n);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function toISODate(d) {
+  const z = new Date(d);
+  z.setHours(0, 0, 0, 0);
+  return z.toISOString().slice(0, 10);
+}
+
+function composeCurrentWeekAvailability(baseWeekly = {}, overridesByISO = {}) {
+  const monday = getMonday(new Date());
+  const out = {};
+
+  DAYS.forEach((dayName, idx) => {
+    const iso = toISODate(addDays(monday, idx));
+    const baseDay = baseWeekly?.[dayName] || {};
+    const overrideDay = overridesByISO?.[iso] || {};
+    out[dayName] = {};
+
+    HOURS.forEach((hour) => {
+      if (Object.prototype.hasOwnProperty.call(overrideDay, hour)) {
+        out[dayName][hour] = overrideDay[hour];
+      } else {
+        out[dayName][hour] = baseDay?.[hour];
+      }
+    });
+  });
+
+  return out;
+}
+
 /** Safely hydrate a cleaner’s availability with pending/booked spans from purchases. */
 async function hydrateCleanersWithPurchases(cleaners) {
   return Promise.all(
@@ -29,7 +74,10 @@ async function hydrateCleanersWithPurchases(cleaners) {
         return {
           ...c,
           availabilityMerged:
-            injectPendingFromPurchases?.(c.availability || {}, purchases) ?? (c.availability || {}),
+            injectPendingFromPurchases?.(
+              composeCurrentWeekAvailability(c.availability || {}, c.availabilityOverrides || {}),
+              purchases
+            ) ?? composeCurrentWeekAvailability(c.availability || {}, c.availabilityOverrides || {}),
         };
       } catch {
         return { ...c, availabilityMerged: c.availability || {} };

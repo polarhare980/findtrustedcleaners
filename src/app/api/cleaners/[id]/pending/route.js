@@ -8,7 +8,8 @@ export const dynamic = 'force-dynamic';
 
 function json(data, status=200){ return NextResponse.json(data, { status }); }
 
-export async function GET(_req, { params }){
+export async function GET(_req, context){
+  const params = await context?.params;
   const { id } = params || {};
   if (!id) return json({ success:false, message:'Cleaner id required' }, 400);
   try {

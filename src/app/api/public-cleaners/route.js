@@ -24,6 +24,7 @@ export async function GET() {
           'googleReviewRating',
           'googleReviewCount',
           'availability',
+          'availabilityOverrides',
         ].join(' ')
       )
       .lean();
@@ -32,6 +33,8 @@ export async function GET() {
     const cleaners = raw.map((c) => ({
       ...c,
       _id: c?._id ? String(c._id) : undefined,
+      availability: c?.availability || {},
+      availabilityOverrides: c?.availabilityOverrides || {},
     }));
 
     return NextResponse.json({ success: true, cleaners });

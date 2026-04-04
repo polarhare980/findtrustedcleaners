@@ -16,7 +16,6 @@ const formatMoney = (n) => (typeof n === 'number' ? `£${n.toFixed(2)}` : '');
 const formatCreated = (d) =>
   d ? new Date(d).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
 
-const STATUS_TABS = ['pending', 'accepted', 'rejected'];
 
 export default function CleanerBookingsPage() {
   const [bookings, setBookings] = useState([]);
@@ -55,8 +54,8 @@ export default function CleanerBookingsPage() {
       // ✅ Reuse your existing accept/decline routes
       const endpoint =
         action === 'accept'
-          ? `/api/bookings/accept-order/${bookingId}`
-          : `/api/bookings/accept-order/decline-order/${bookingId}`;
+          ? `/api/purchases/${bookingId}/approve`
+          : `/api/purchases/${bookingId}/decline`;
 
       const res = await fetch(endpoint, { method: 'PUT', credentials: 'include' });
       const isJson = (res.headers.get('content-type') || '').includes('application/json');
@@ -127,7 +126,7 @@ export default function CleanerBookingsPage() {
                 <div className="backdrop-blur-xl bg-white/25 border border-white/20 rounded-3xl p-12 text-center shadow-xl">
                   <div className="text-6xl mb-4">📋</div>
                   <p className="text-xl text-teal-800 font-medium">No bookings in this category</p>
-                  <p className="text-teal-600 mt-2">Check back later for new requests!</p>
+                  <p className="text-teal-600 mt-2">New client requests will appear here for you to accept or decline.</p>
                 </div>
               ) : (
                 grouped[activeTab].map((b, index) => (
@@ -199,7 +198,7 @@ export default function CleanerBookingsPage() {
                                 </span>
                               ) : (
                                 <span className="flex items-center gap-2">
-                                  ✅ Accept Booking
+                                  ✅ Accept & Capture Payment
                                 </span>
                               )}
                             </button>

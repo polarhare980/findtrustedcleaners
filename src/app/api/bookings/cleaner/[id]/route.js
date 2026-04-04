@@ -29,8 +29,9 @@ function toHourString(h) {
 /* --------------------------------------
    GET: return bookings + purchases combined
 -------------------------------------- */
-export async function GET(_req, { params }) {
+export async function GET(_req, context) {
   await connectToDatabase();
+  const params = await context?.params;
   const cleanerId = params?.id;
   if (!cleanerId) return json({ success: false, message: 'Cleaner id required.' }, 400);
 
@@ -87,8 +88,9 @@ export async function GET(_req, { params }) {
 /* --------------------------------------
    PUT: update base availability only
 -------------------------------------- */
-export async function PUT(req, { params }) {
+export async function PUT(req, context) {
   await connectToDatabase();
+  const params = await context?.params;
   const cleanerId = params?.id;
   if (!cleanerId) return json({ success: false, message: 'Cleaner id required.' }, 400);
 
@@ -140,8 +142,9 @@ export async function PUT(req, { params }) {
 /* --------------------------------------
    POST: create a Purchase hold AFTER payment confirmation
 -------------------------------------- */
-export async function POST(req, { params }) {
+export async function POST(req, context) {
   await connectToDatabase();
+  const params = await context?.params;
   const cleanerId = params?.id;
   if (!cleanerId) return json({ success: false, message: 'Cleaner id required.' }, 400);
 
