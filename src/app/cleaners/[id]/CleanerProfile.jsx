@@ -84,6 +84,22 @@ function buildOverlayMaps(purchases = []) {
  *
  * Returns: map { [dayName]: { [hourStr]: true|false|'unavailable'|{status} } }
  */
+function getServiceSpan(service, chosenDurationMins) {
+  if (!service) return 1;
+  const duration = Number(chosenDurationMins || service.defaultDurationMins || 60);
+  const before = Number(service.bufferBeforeMins || 0);
+  const after = Number(service.bufferAfterMins || 0);
+  return Math.max(1, Math.ceil((duration + before + after) / 60));
+}
+
+function canFitSpan(composedWeek, day, startHour, span) {
+  for (let i = 0; i < span; i++) {
+    const cell = composedWeek?.[day]?.[String(Number(startHour) + i)];
+    if (cell !== true) return false;
+  }
+  return true;
+}
+
 function composeWeekView(baseWeekly = {}, overridesByISO = {}, mondayDate, purchases = []) {
   const overlays = buildOverlayMaps(purchases);
   const weekISO = getWeekISODates(mondayDate);
@@ -125,6 +141,8 @@ export default function CleanerProfile() {
   const [purchases, setPurchases] = useState([]);
   const [selected, setSelected] = useState({ day: null, hour: null });
   const [selectedISO, setSelectedISO] = useState(null);
+  const [selectedServiceKey, setSelectedServiceKey] = useState('');
+  const [selectedDurationMins, setSelectedDurationMins] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -194,6 +212,42 @@ export default function CleanerProfile() {
       .filter(Boolean);
   }, [cleaner]);
 
+  const activeServices = useMemo(
+    () => (Array.isArray(cleaner?.servicesDetailed) ? cleaner.servicesDetailed.filter((s) => s?.name && s?.active !== false) : []),
+    [cleaner?.servicesDetailed]
+  );
+
+  const selectedService = useMemo(
+    () => activeServices.find((svc) => svc.key === selectedServiceKey) || activeServices[0] || null,
+    [activeServices, selectedServiceKey]
+  );
+
+  useEffect(() => {
+    if (!activeServices.length) return;
+    if (!selectedServiceKey || !activeServices.some((svc) => svc.key === selectedServiceKey)) {
+      setSelectedServiceKey(activeServices[0].key);
+      setSelectedDurationMins(String(activeServices[0].defaultDurationMins || 60));
+      return;
+    }
+    const svc = activeServices.find((row) => row.key === selectedServiceKey);
+    if (svc && !selectedDurationMins) setSelectedDurationMins(String(svc.defaultDurationMins || 60));
+  }, [activeServices, selectedServiceKey, selectedDurationMins]);
+
+  const selectedSpan = useMemo(
+    () => getServiceSpan(selectedService, Number(selectedDurationMins || selectedService?.defaultDurationMins || 60)),
+    [selectedService, selectedDurationMins]
+  );
+
+  const durationOptions = useMemo(() => {
+    if (!selectedService) return [];
+    const min = Number(selectedService.minDurationMins || selectedService.defaultDurationMins || 60);
+    const max = Number(selectedService.maxDurationMins || min);
+    const inc = Number(selectedService.incrementMins || 60) || 60;
+    const opts = [];
+    for (let mins = min; mins <= max; mins += inc) opts.push(mins);
+    return opts;
+  }, [selectedService]);
+
   // ---- Google Reviews (dashboard fields first) ----
   const googleReviewRating = cleaner?.googleReviewRating ?? cleaner?.googleReviews?.rating ?? null;
   const googleReviewCount = cleaner?.googleReviewCount ?? cleaner?.googleReviews?.count ?? null;
@@ -213,7 +267,9 @@ export default function CleanerProfile() {
     const v = typeof vRaw === 'object' ? vRaw?.status : vRaw;
 
     if (v === 'pending' || v === 'pending_approval' || v === 'booked') return 'pending';
-    if (v === true || v === 'available') return 'available';
+    if (v === true || v === 'available') {
+      return canFitSpan(composedWeek, day, Number(hour), selectedSpan) ? 'available' : 'unavailable';
+    }
     return 'unavailable';
   }
 
@@ -543,18 +599,68 @@ export default function CleanerProfile() {
 
         {/* Booking request panel */}
         <div id="purchase-panel" className="mt-5">
-          <div className="rounded-2xl p-5 bg-white/70 border border-slate-100 shadow flex flex-col md:flex-row gap-4 md:items-center">
-            <div className="flex-1 text-sm text-slate-700">
-              {selected.day && selected.hour != null && selectedISO ? (
-                <div>
-                  <div className="font-semibold text-slate-900">Selected slot</div>
+          <div className="rounded-2xl p-5 bg-white/70 border border-slate-100 shadow flex flex-col gap-4">
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="md:col-span-2 text-sm text-slate-700">
+                {selected.day && selected.hour != null && selectedISO ? (
                   <div>
-                    {selected.day} {hourLabel(selected.hour)} — {selectedISO}
+                    <div className="font-semibold text-slate-900">Selected slot</div>
+                    <div>
+                      {selected.day} {hourLabel(selected.hour)} — {selectedISO}
+                    </div>
+                    {selectedService ? (
+                      <div className="mt-1 text-slate-600">
+                        {selectedService.name} • {Number(selectedDurationMins || selectedService.defaultDurationMins || 60)} mins
+                        {selectedSpan > 1 ? ` • blocks ${selectedSpan} hours on the calendar` : ''}
+                      </div>
+                    ) : null}
                   </div>
+                ) : (
+                  <div>Select an available slot above to continue.</div>
+                )}
+              </div>
+
+              {activeServices.length > 0 ? (
+                <div className="grid gap-3">
+                  <div>
+                    <label className="block text-xs uppercase tracking-wide text-slate-500 mb-1">Service</label>
+                    <select
+                      value={selectedServiceKey}
+                      onChange={(e) => {
+                        const svc = activeServices.find((row) => row.key === e.target.value);
+                        setSelectedServiceKey(e.target.value);
+                        setSelectedDurationMins(String(svc?.defaultDurationMins || 60));
+                        setSelected({ day: null, hour: null });
+                        setSelectedISO(null);
+                      }}
+                      className="w-full rounded-xl border px-3 py-2 bg-white"
+                    >
+                      {activeServices.map((svc) => (
+                        <option key={svc.key} value={svc.key}>{svc.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {selectedService ? (
+                    <div>
+                      <label className="block text-xs uppercase tracking-wide text-slate-500 mb-1">Duration</label>
+                      <select
+                        value={selectedDurationMins || String(selectedService.defaultDurationMins || 60)}
+                        onChange={(e) => {
+                          setSelectedDurationMins(e.target.value);
+                          setSelected({ day: null, hour: null });
+                          setSelectedISO(null);
+                        }}
+                        className="w-full rounded-xl border px-3 py-2 bg-white"
+                      >
+                        {durationOptions.map((mins) => (
+                          <option key={mins} value={mins}>{mins} mins</option>
+                        ))}
+                      </select>
+                    </div>
+                  ) : null}
                 </div>
-              ) : (
-                <div>Select an available slot above to continue.</div>
-              )}
+              ) : null}
             </div>
 
             <div className="w-full md:w-auto">
@@ -564,6 +670,11 @@ export default function CleanerProfile() {
                   day: selected.day,
                   hour: selected.hour,
                   date: selectedISO,
+                  serviceKey: selectedService?.key,
+                  serviceName: selectedService?.name,
+                  durationMins: Number(selectedDurationMins || selectedService?.defaultDurationMins || 60),
+                  bufferBeforeMins: Number(selectedService?.bufferBeforeMins || 0),
+                  bufferAfterMins: Number(selectedService?.bufferAfterMins || 0),
                 }}
                 onPurchaseStart={() => {}}
                 onPurchaseError={() => {}}
@@ -571,7 +682,7 @@ export default function CleanerProfile() {
                 disabled={!selected.day || selected.hour == null || !selectedISO}
               />
               <div className="text-[11px] text-slate-500 mt-1">
-                Booking through the platform is free for clients. You can also contact the cleaner directly above.
+                Anyone can send a request. Premium cleaners can offer custom service durations, and the grid already accounts for the time block needed.
               </div>
             </div>
           </div>
@@ -581,7 +692,7 @@ export default function CleanerProfile() {
       {/* Booking note */}
       <section className="mt-10">
         <div className="rounded-xl p-4 bg-amber-50 border border-amber-200 text-amber-800 text-sm">
-          You can contact this cleaner directly at any time. To book through Find Trusted Cleaners, clients still need an account so requests and availability stay organised.
+          You can contact this cleaner directly at any time. You can also send a booking request through the platform without creating an account. Your contact details will be passed to the cleaner.
         </div>
       </section>
     </main>

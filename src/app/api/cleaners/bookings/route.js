@@ -47,6 +47,13 @@ export async function GET(req) {
         span: Number(p.span || 1),
         createdAt: p.createdAt,
         clientId: p.clientId || null,
+        customer: {
+          name: p?.clientId?.fullName || p?.guestName || '',
+          email: p?.clientId?.email || p?.guestEmail || '',
+          phone: p?.clientId?.phone || p?.guestPhone || '',
+        },
+        notes: p?.notes || '',
+        durationMins: Number(p?.durationMins || 0) || null,
       };
     });
 

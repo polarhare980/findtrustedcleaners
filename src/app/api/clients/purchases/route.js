@@ -85,9 +85,10 @@ export async function GET(req) {
 export async function POST(req) {
   await connectToDatabase();
 
-  const { valid, user } = await protectApiRoute(req);
-  if (!valid) return json({ success: false, message: 'Unauthenticated' }, 401);
-  if (user.type !== 'client') return json({ success: false, message: 'Access denied.' }, 403);
+  const auth = await protectApiRoute(req);
+  const valid = !!auth?.valid;
+  const user = auth?.user || null;
+  const isClientUser = valid && user?.type === 'client';
 
   let body;
   try {
@@ -107,47 +108,70 @@ export async function POST(req) {
     currency = 'GBP',
     amount,
     notes,
+    customerName,
+    customerEmail,
+    customerPhone,
+    isoDate,
   } = body || {};
 
-  // Basic validation
   if (!mongoose.Types.ObjectId.isValid(String(cleanerId))) {
     return json({ success: false, message: 'Invalid cleanerId.' }, 400);
   }
   if (!DAYS.includes(day)) {
     return json({ success: false, message: 'Invalid day.' }, 400);
   }
+
+  const guestName = String(customerName || '').trim();
+  const guestEmail = String(customerEmail || '').trim().toLowerCase();
+  const guestPhone = String(customerPhone || '').trim();
+
+  if (!isClientUser) {
+    if (!guestName) return json({ success: false, message: 'Please enter your name.' }, 400);
+    if (!guestEmail && !guestPhone) {
+      return json({ success: false, message: 'Please enter an email address or phone number.' }, 400);
+    }
+  }
+
   const startHourNum = Number(hour);
   if (!Number.isInteger(startHourNum) || startHourNum < 0 || startHourNum > 23) {
     return json({ success: false, message: 'Invalid start hour.' }, 400);
   }
   const startHourStr = toHourString(startHourNum);
 
-  // Load cleaner & (optional) service
   const cleaner = await Cleaner.findById(cleanerId).lean();
   if (!cleaner) return json({ success: false, message: 'Cleaner not found.' }, 404);
 
   const svc =
     (cleaner.servicesDetailed || []).find(
-      s => s && (s.key === serviceKey) && s.active !== false
+      (s) => s && s.key === serviceKey && s.active !== false
     ) || null;
 
-  const effDuration =
-    typeof durationMins === 'number' && durationMins > 0
-      ? durationMins
-      : (svc?.defaultDurationMins ?? 60);
+  const requestedDuration = Number(durationMins);
+  const requestedBufferBefore = Number(bufferBeforeMins);
+  const requestedBufferAfter = Number(bufferAfterMins);
 
-  const effBufBefore =
-    typeof bufferBeforeMins === 'number' ? Math.max(0, bufferBeforeMins) : (svc?.bufferBeforeMins ?? 0);
+  const effDuration = Number.isFinite(requestedDuration) && requestedDuration > 0
+    ? requestedDuration
+    : (svc?.defaultDurationMins ?? 60);
 
-  const effBufAfter =
-    typeof bufferAfterMins === 'number' ? Math.max(0, bufferAfterMins) : (svc?.bufferAfterMins ?? 0);
+  const effBufBefore = Number.isFinite(requestedBufferBefore)
+    ? Math.max(0, requestedBufferBefore)
+    : (svc?.bufferBeforeMins ?? 0);
 
-  // Optional clamp to svc min/max if present
+  const effBufAfter = Number.isFinite(requestedBufferAfter)
+    ? Math.max(0, requestedBufferAfter)
+    : (svc?.bufferAfterMins ?? 0);
+
   if (svc) {
-    const minD = svc.minDurationMins ?? 60;
-    const maxD = svc.maxDurationMins ?? 240;
+    const minD = Number(svc.minDurationMins ?? 60);
+    const maxD = Number(svc.maxDurationMins ?? 240);
+    const inc = Number(svc.incrementMins ?? 60) || 60;
+
     if (effDuration < minD) return json({ success: false, message: `Duration below minimum (${minD} mins).` }, 400);
     if (effDuration > maxD) return json({ success: false, message: `Duration above maximum (${maxD} mins).` }, 400);
+    if (((effDuration - minD) % inc) !== 0) {
+      return json({ success: false, message: `Duration must follow ${inc}-minute steps.` }, 400);
+    }
   }
 
   const span = requiredHourSpan({
@@ -160,13 +184,11 @@ export async function POST(req) {
     return json({ success: false, message: 'Requested span exceeds end of day.' }, 400);
   }
 
-  // Build merged view = base availability + pending/approved purchases + accepted/confirmed/booked bookings
   try {
     const base = cleaner.availability || {};
     const merged = JSON.parse(JSON.stringify(base));
     if (!merged[day]) merged[day] = {};
 
-    // 1) Pending & approved purchases (hold slots)
     const purchases = await Purchase.find({
       cleanerId,
       day,
@@ -185,7 +207,6 @@ export async function POST(req) {
       }
     }
 
-    // 2) Existing bookings (block slots)
     const bookings = await Booking.find({
       cleanerId,
       day,
@@ -197,12 +218,10 @@ export async function POST(req) {
       const start = Number(b?.hour);
       if (!Number.isInteger(start)) continue;
       for (let i = 0; i < Math.max(1, s); i++) {
-        const hk = String(start + i);
-        merged[day][hk] = 'booked';
+        merged[day][String(start + i)] = 'booked';
       }
     }
 
-    // Validate contiguous availability for requested span
     if (!hasContiguousAvailability(merged, day, startHourNum, span)) {
       return json({ success: false, message: 'Start time no longer available for required duration.' }, 409);
     }
@@ -211,21 +230,25 @@ export async function POST(req) {
     return json({ success: false, message: 'Could not validate availability.' }, 500);
   }
 
-  // Prepare document (be resilient to strict schemas)
   const extendedDoc = {
     cleanerId,
-    clientId: user._id,
+    clientId: isClientUser ? user._id : undefined,
+    guestName: isClientUser ? (user.fullName || user.name || guestName || undefined) : guestName,
+    guestEmail: isClientUser ? (user.email || guestEmail || undefined) : guestEmail,
+    guestPhone: isClientUser ? (user.phone || guestPhone || undefined) : guestPhone,
     day,
-    hour: startHourStr,          // store as simple integer string
-    span,                        // used by overlays
+    hour: startHourStr,
+    isoDate: typeof isoDate === 'string' ? isoDate : undefined,
+    span,
     serviceKey,
+    serviceName: svc?.name || undefined,
     durationMins: effDuration,
     bufferBeforeMins: effBufBefore,
     bufferAfterMins: effBufAfter,
     currency,
     amount: typeof amount === 'number' ? amount : undefined,
     status: 'pending_approval',
-    notes: typeof notes === 'string' ? notes : undefined,
+    notes: typeof notes === 'string' ? notes.trim() : undefined,
   };
 
   try {
@@ -244,11 +267,14 @@ export async function POST(req) {
     try {
       const minimalDoc = {
         cleanerId,
-        clientId: user._id,
+        clientId: isClientUser ? user._id : undefined,
+        guestName: guestName || undefined,
+        guestEmail: guestEmail || undefined,
+        guestPhone: guestPhone || undefined,
         day,
         hour: startHourStr,
         status: 'pending_approval',
-        span, // keep if schema allows; comment out if not in schema
+        span,
       };
       const doc = await Purchase.create(minimalDoc);
       return json({

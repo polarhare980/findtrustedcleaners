@@ -9,7 +9,10 @@ import mongoose from 'mongoose';
 
 const PurchaseSchema = new mongoose.Schema(
   {
-    clientId: { type: mongoose.Schema.Types.ObjectId, ref: 'Client', required: true, index: true },
+    clientId: { type: mongoose.Schema.Types.ObjectId, ref: 'Client', index: true },
+    guestName: { type: String, trim: true },
+    guestEmail: { type: String, trim: true, lowercase: true },
+    guestPhone: { type: String, trim: true },
     cleanerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Cleaner', required: true, index: true },
 
     // Stripe refs (manual-capture flow)

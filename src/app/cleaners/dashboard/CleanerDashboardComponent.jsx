@@ -1294,10 +1294,17 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
                       {typeof req.amount === 'number' ? ` • £${Number(req.amount).toFixed(2)}` : ''}
                       {req.span ? ` • ${req.span} hr block` : ''}
                     </div>
-                    {req.clientId && (
-                      <div className="text-sm text-gray-600 mt-1">
-                        Client: {req.clientId.fullName || 'Unknown'}
-                        {req.clientId.phone ? ` • ${req.clientId.phone}` : ''}
+                    {(req.customer?.name || req.customer?.phone || req.customer?.email) && (
+                      <div className="text-sm text-gray-600 mt-1 space-y-1">
+                        <div>Customer: {req.customer?.name || 'Unknown'}</div>
+                        {(req.customer?.phone || req.customer?.email) && (
+                          <div>
+                            {req.customer?.phone ? `Phone: ${req.customer.phone}` : ''}
+                            {req.customer?.phone && req.customer?.email ? ' • ' : ''}
+                            {req.customer?.email ? `Email: ${req.customer.email}` : ''}
+                          </div>
+                        )}
+                        {req.notes ? <div>Notes: {req.notes}</div> : null}
                       </div>
                     )}
                   </div>
