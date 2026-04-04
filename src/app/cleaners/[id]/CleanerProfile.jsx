@@ -4,6 +4,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import PurchaseButton from '@/components/PurchaseButton';
+import Link from 'next/link';
 
 // Public APIs
 const PUBLIC_CLEANER_API = (id) => `/api/public-cleaners/${id}`;
@@ -340,8 +341,7 @@ export default function CleanerProfile() {
               Check Availability
             </button>
             <div className="text-xs text-slate-500">
-              Contact details are shared <span className="font-semibold">after</span> a booking
-              request is placed and approved.
+              Profiles are now fully visible. Clients can book through the platform or contact the cleaner directly.
             </div>
           </div>
         </div>
@@ -383,6 +383,37 @@ export default function CleanerProfile() {
           </div>
         </section>
       )}
+
+
+      {/* Contact details */}
+      <section className="mt-8">
+        <h2 className="text-xl font-bold text-teal-900 mb-3">Contact details</h2>
+        <div className="rounded-2xl p-5 bg-white/70 border border-slate-100 shadow grid gap-3 md:grid-cols-2">
+          <div>
+            <div className="text-xs uppercase tracking-wide text-slate-500">Phone</div>
+            {cleaner.phone ? (
+              <a href={`tel:${cleaner.phone}`} className="text-teal-700 font-semibold hover:underline">{cleaner.phone}</a>
+            ) : (
+              <div className="text-slate-500">Not provided</div>
+            )}
+          </div>
+          <div>
+            <div className="text-xs uppercase tracking-wide text-slate-500">Email</div>
+            {cleaner.email ? (
+              <a href={`mailto:${cleaner.email}`} className="text-teal-700 font-semibold hover:underline break-all">{cleaner.email}</a>
+            ) : (
+              <div className="text-slate-500">Not provided</div>
+            )}
+          </div>
+          {cleaner?.googleReviews?.url ? (
+            <div className="md:col-span-2">
+              <Link href={cleaner.googleReviews.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm text-teal-700 font-medium hover:underline">
+                View Google reviews
+              </Link>
+            </div>
+          ) : null}
+        </div>
+      </section>
 
       {/* Services */}
       {Array.isArray(cleaner.services) && cleaner.services.length > 0 && (
@@ -510,7 +541,7 @@ export default function CleanerProfile() {
           </div>
         </div>
 
-        {/* Purchase Panel (Stripe) */}
+        {/* Booking request panel */}
         <div id="purchase-panel" className="mt-5">
           <div className="rounded-2xl p-5 bg-white/70 border border-slate-100 shadow flex flex-col md:flex-row gap-4 md:items-center">
             <div className="flex-1 text-sm text-slate-700">
@@ -531,28 +562,26 @@ export default function CleanerProfile() {
                 cleanerId={String(id)}
                 selectedSlot={{
                   day: selected.day,
-                  hour: selected.hour, // number okay; button can String() it
-                  date: selectedISO,   // YYYY-MM-DD exact date of the slot
+                  hour: selected.hour,
+                  date: selectedISO,
                 }}
-                priceGBP={2.99}
                 onPurchaseStart={() => {}}
                 onPurchaseError={() => {}}
                 onPurchaseSuccess={() => {}}
                 disabled={!selected.day || selected.hour == null || !selectedISO}
               />
               <div className="text-[11px] text-slate-500 mt-1">
-                You’ll only be charged if the cleaner accepts the job.
+                Booking through the platform is free for clients. You can also contact the cleaner directly above.
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Safety note (no direct contact) */}
+      {/* Booking note */}
       <section className="mt-10">
         <div className="rounded-xl p-4 bg-amber-50 border border-amber-200 text-amber-800 text-sm">
-          For safety and fairness, cleaner phone and email are hidden until a booking is requested and
-          approved.
+          You can contact this cleaner directly at any time. To book through Find Trusted Cleaners, clients still need an account so requests and availability stay organised.
         </div>
       </section>
     </main>

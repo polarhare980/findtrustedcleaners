@@ -12,7 +12,7 @@ export default function PurchaseButton({
   onPurchaseStart,
   onPurchaseError,
   disabled = false,
-  priceGBP = 2.99,
+  priceGBP = 0,
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -121,14 +121,14 @@ export default function PurchaseButton({
       const authData = await authRes.json().catch(() => ({}));
 
       if (!authRes.ok || !authData?.success || authData?.user?.type !== 'client') {
-        const errorMsg = 'You must be logged in as a client to purchase.';
+        const errorMsg = 'You must be logged in as a client to book through the platform.';
         setError(errorMsg);
         onPurchaseError?.(errorMsg);
         persistIntent();
         return;
       }
 
-      // 2) Create the pending Purchase (server validates availability and computes span)
+      // 2) Create the booking request (server validates availability and computes span)
       const purchaseRes = await fetch('/api/clients/purchases', {
         method: 'POST',
         credentials: 'include',
@@ -136,14 +136,13 @@ export default function PurchaseButton({
         body: JSON.stringify({
           cleanerId,
           day,
-          hour: hourNum,      // server normalises internally
-          amount: priceGBP,   // informational; server can override
-          serviceKey,         // optional
-          isoDate,            // optional; server may ignore or enforce
+          hour: hourNum,
+          amount: priceGBP,
+          serviceKey,
+          isoDate,
         }),
       });
 
-      // Handle common auth errors clearly
       if (purchaseRes.status === 401 || purchaseRes.status === 403) {
         const msg = 'Please log in as a client to continue.';
         setError(msg);
@@ -161,7 +160,7 @@ export default function PurchaseButton({
           onPurchaseError?.(msg);
           return;
         }
-        const errorMsg = purchaseData?.message || 'Could not create purchase.';
+        const errorMsg = purchaseData?.message || 'Could not send booking request.';
         setError(errorMsg);
         onPurchaseError?.(errorMsg);
         return;
@@ -169,37 +168,18 @@ export default function PurchaseButton({
 
       const purchaseId = purchaseData.purchaseId || purchaseData.id || purchaseData._id;
       if (!purchaseId) {
-        const errorMsg = 'Purchase created but no ID returned.';
+        const errorMsg = 'Booking request created but no ID returned.';
         setError(errorMsg);
         onPurchaseError?.(errorMsg);
         return;
       }
 
-      // 3) Start Stripe checkout
-      const res = await fetch('/api/stripe/create-client-checkout', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ purchaseId }),
-      });
-
-      const data = await res.json().catch(() => ({}));
-
-      if (res.ok && data?.url) {
-        setSuccess(true);
-        onPurchaseSuccess?.(purchaseId);
-        // Defensive: clear persisted slot (we're leaving page)
-        try {
-          localStorage.removeItem('pendingSelectedSlot');
-        } catch (_) {}
-        window.location.href = data.url;
-        return;
-      }
-
-      // If server returned a known error string
-      const errorMsg = data?.error || data?.message || 'Checkout failed.';
-      setError(errorMsg);
-      onPurchaseError?.(errorMsg);
+      setSuccess(true);
+      onPurchaseSuccess?.(purchaseId);
+      try {
+        localStorage.removeItem('pendingSelectedSlot');
+      } catch (_) {}
+      return;
     } catch (err) {
       console.error('❌ Purchase flow error:', err);
       const errorMsg = 'Server error. Please try again.';
@@ -223,10 +203,10 @@ export default function PurchaseButton({
 
   const slotReady = !!selectedSlot?.day && Number.isInteger(Number(selectedSlot?.hour));
   const buttonLabel = loading
-    ? 'Processing...'
+    ? 'Sending request...'
     : !slotReady
       ? 'Select a Time Slot'
-      : `Unlock Contact Details (£${priceGBP.toFixed(2)})`;
+      : 'Request Booking';
 
   return (
     <>
@@ -254,10 +234,10 @@ export default function PurchaseButton({
             <div className="p-6">
               <div className="flex justify-between items-start mb-6">
                 <div className="text-center flex-1">
-                  <div className="text-4xl mb-4">🔓</div>
-                  <h2 className="text-2xl font-bold text-gray-800 mb-2">Unlock Contact Details</h2>
+                  <div className="text-4xl mb-4">📅</div>
+                  <h2 className="text-2xl font-bold text-gray-800 mb-2">Send booking request</h2>
                   <p className="text-gray-600">
-                    Get instant access to this cleaner&apos;s contact information and booking details.
+                    We&apos;ll send your chosen slot to the cleaner for approval. There is no client fee.
                   </p>
                 </div>
                 <button
@@ -285,21 +265,21 @@ export default function PurchaseButton({
                 <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-4">
                   <div className="flex items-center gap-2">
                     <span className="text-green-500">✅</span>
-                    <p className="text-green-700 font-semibold">Redirecting to payment...</p>
+                    <p className="text-green-700 font-semibold">Booking request sent successfully.</p>
                   </div>
                 </div>
               ) : (
                 <>
                   <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="text-blue-500">💳</span>
-                      <p className="text-blue-700 font-semibold">What you&apos;ll get:</p>
+                      <span className="text-blue-500">✅</span>
+                      <p className="text-blue-700 font-semibold">What happens next:</p>
                     </div>
                     <ul className="text-blue-700 text-sm space-y-1 ml-6">
-                      <li>• Phone number</li>
-                      <li>• Email address</li>
-                      <li>• Company information</li>
-                      <li>• Ability to book time slots</li>
+                      <li>• Your request is sent instantly</li>
+                      <li>• The cleaner can accept or decline it</li>
+                      <li>• You can still contact the cleaner directly from their profile</li>
+                      <li>• Booking through the platform requires a client account</li>
                     </ul>
                   </div>
 
@@ -332,12 +312,12 @@ export default function PurchaseButton({
                   {loading ? (
                     <div className="flex items-center justify-center gap-2">
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      Processing...
+                      Sending...
                     </div>
                   ) : success ? (
-                    'Redirecting...'
+                    'Request sent'
                   ) : (
-                    `Pay £${priceGBP.toFixed(2)}`
+                    'Send request'
                   )}
                 </button>
               </div>

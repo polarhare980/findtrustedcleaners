@@ -724,7 +724,7 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
   <div className="bg-gradient-to-r from-amber-400/20 to-amber-500/20 backdrop-blur-md border border-amber-400/30 text-amber-800 px-4 py-3 rounded-lg mb-6">
     <p className="mb-2 font-semibold">✨ You are using a Free Account</p>
     <p className="text-sm mb-3">
-      Upgrade to set your diary up to <strong>{(Number(formData?.premiumWeeksAhead ?? 3) + 1)}</strong> weeks ahead and get a gallery.
+      Upgrade to set your diary up to <strong>{(Number(formData?.premiumWeeksAhead ?? 3) + 1)}</strong> weeks ahead, show a gallery, and support the platform.
     </p>
     <button
       onClick={async () => {
@@ -744,7 +744,7 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
       }}
       className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-6 py-2 rounded-lg"
     >
-      💎 Upgrade to Premium (£7.99/month)
+      💎 Upgrade to Premium (50p/year)
     </button>
   </div>
 ) : (

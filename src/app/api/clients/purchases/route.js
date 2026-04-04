@@ -224,7 +224,7 @@ export async function POST(req) {
     bufferAfterMins: effBufAfter,
     currency,
     amount: typeof amount === 'number' ? amount : undefined,
-    status: 'pending',
+    status: 'pending_approval',
     notes: typeof notes === 'string' ? notes : undefined,
   };
 
@@ -247,7 +247,7 @@ export async function POST(req) {
         clientId: user._id,
         day,
         hour: startHourStr,
-        status: 'pending',
+        status: 'pending_approval',
         span, // keep if schema allows; comment out if not in schema
       };
       const doc = await Purchase.create(minimalDoc);

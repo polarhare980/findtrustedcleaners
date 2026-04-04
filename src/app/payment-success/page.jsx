@@ -11,7 +11,7 @@ export default function PaymentSuccessPage() {
 
   useEffect(() => {
     if (sessionId) {
-      setMessage('✅ Payment successful! Your cleaner profile has been unlocked.');
+      setMessage('✅ Premium upgrade successful.');
     } else {
       setMessage('❌ No session ID found. Something went wrong.');
     }

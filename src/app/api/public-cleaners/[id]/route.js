@@ -46,6 +46,8 @@ export async function GET(_req, context) {
     realName: 1,
     companyName: 1,
     image: 1,
+    email: 1,
+    phone: 1,
     imageHasText: 1,
     photos: 1,
     isPremium: 1,
@@ -76,6 +78,8 @@ export async function GET(_req, context) {
       realName: c.realName || '',
       companyName: c.companyName || '',
       image: c.image || '',
+      email: c.email || '',
+      phone: c.phone || '',
       imageHasText: !!c.imageHasText,
       // ✅ normalised photos so gallery renders even with legacy keys
       photos: normalizePhotos(c.photos),

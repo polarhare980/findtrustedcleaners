@@ -8,7 +8,7 @@ export default function FAQComponent() {
     {
       question: 'How do I book a cleaner?',
       answer:
-        'Browse local profiles, check their availability, and click "Request Booking." You\'ll be prompted to create a client account and pay a small one-time fee to unlock contact details.',
+        'Browse local profiles, check their availability, and click "Request Booking." You\'ll be prompted to create a client account so we can send the request to the cleaner.',
     },
     {
       question: 'How do I list myself as a cleaner?',
@@ -18,7 +18,7 @@ export default function FAQComponent() {
     {
       question: 'Do I need to pay for a subscription?',
       answer:
-        "Nope. Clients pay a one-time fee to unlock cleaner contact info. Cleaners don't pay anything to appear in search results.",
+        "Nope. Cleaner profiles are public. Clients only need an account if they want to send booking requests through the platform.",
     },
     {
       question: 'What does "Pending" mean on the cleaner\'s availability?',
@@ -48,7 +48,7 @@ export default function FAQComponent() {
     {
       question: 'Can I book the same cleaner regularly?',
       answer:
-        'Yes, once you have their contact info you can discuss recurring bookings directly with them.',
+        'Yes. You can contact cleaners directly from their public profile and arrange recurring bookings with them.',
     },
     {
       question: 'Are cleaners verified?',

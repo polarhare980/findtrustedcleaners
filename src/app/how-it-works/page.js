@@ -83,7 +83,7 @@ export default function HowItWorks() {
                   { step: 2, icon: "⭐", text: "See available hours, ratings, and pricing", color: "from-purple-500 to-purple-600" },
                   { step: 3, icon: "📅", text: "Request a time slot with your chosen cleaner", color: "from-green-500 to-green-600" },
                   { step: 4, icon: "💳", text: "No payment is taken until the cleaner approves your request", color: "from-amber-500 to-amber-600" },
-                  { step: 5, icon: "🔓", text: "Once approved, you complete the payment and unlock the cleaner's verified contact information", color: "from-teal-500 to-teal-600" },
+                  { step: 5, icon: "🔓", text: "The cleaner accepts your request and you both move forward directly", color: "from-teal-500 to-teal-600" },
                   { step: 6, icon: "🛡️", text: "Requested slots are marked to prevent double booking", color: "from-red-500 to-red-600" }
                 ].map((item, index) => (
                   <div key={index} className="flex items-start gap-4 p-4 bg-white/40 backdrop-blur-sm rounded-2xl border border-white/30 hover:bg-white/50 transition-all duration-300">

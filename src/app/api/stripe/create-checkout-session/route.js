@@ -3,6 +3,9 @@ import { NextResponse } from 'next/server';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
+const SITE_URL = process.env.SITE_URL || 'https://www.findtrustedcleaners.com';
+const YEARLY_PREMIUM_FALLBACK_PENCE = 50;
+
 export async function POST(req) {
   try {
     const { cleanerId } = await req.json();
@@ -11,21 +14,31 @@ export async function POST(req) {
       return NextResponse.json({ error: 'Missing cleanerId' }, { status: 400 });
     }
 
-    const successUrl = `${process.env.SITE_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}`;
-    const cancelUrl = `${process.env.SITE_URL}/payment-cancelled`;
+    const successUrl = `${SITE_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}`;
+    const cancelUrl = `${SITE_URL}/payment-cancelled`;
+
+    const premiumPriceId = process.env.STRIPE_PREMIUM_PRICE_ID_YEARLY || process.env.STRIPE_PREMIUM_PRICE_ID;
+    const useRecurringPrice = Boolean(process.env.STRIPE_PREMIUM_PRICE_ID_YEARLY);
+
+    const lineItem = premiumPriceId
+      ? { price: premiumPriceId, quantity: 1 }
+      : {
+          price_data: {
+            currency: 'gbp',
+            unit_amount: YEARLY_PREMIUM_FALLBACK_PENCE,
+            product_data: {
+              name: 'Find Trusted Cleaners Premium',
+              description: 'Premium cleaner listing upgrade',
+            },
+          },
+          quantity: 1,
+        };
 
     const session = await stripe.checkout.sessions.create({
-      mode: 'subscription',
+      mode: useRecurringPrice ? 'subscription' : 'payment',
       payment_method_types: ['card'],
-      line_items: [
-        {
-          price: process.env.STRIPE_PREMIUM_PRICE_ID,
-          quantity: 1,
-        },
-      ],
-      // ✅ Add a robust breadcrumb for your webhook
-      metadata: { cleanerId, subscription: 'true' },
-      // Optional: also set client_reference_id for redundancy/debugging
+      line_items: [lineItem],
+      metadata: { cleanerId, premiumUpgrade: 'true', premiumPlan: useRecurringPrice ? 'yearly_recurring' : 'yearly_manual' },
       client_reference_id: cleanerId,
       success_url: successUrl,
       cancel_url: cancelUrl,

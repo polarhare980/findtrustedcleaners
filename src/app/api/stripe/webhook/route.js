@@ -44,14 +44,13 @@ export async function POST(req) {
         // Trigger if:
         // - session.mode === 'subscription' AND we have a cleanerId
         //   (robust even if metadata.subscription is missing)
-        if (metadata.cleanerId && mode === 'subscription') {
+        if (metadata.cleanerId && (mode === 'subscription' || metadata.premiumUpgrade === 'true' || metadata.subscription === 'true')) {
           await Cleaner.findByIdAndUpdate(
             metadata.cleanerId,
             {
               isPremium: true,
               stripeCustomerId: session.customer || null,
               stripeSubscriptionId: session.subscription || null,
-              // Optional: track when premium started
               premiumSince: new Date(),
             },
             { new: true }
