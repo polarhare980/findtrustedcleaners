@@ -389,7 +389,6 @@ export default function CleanerProfile() {
               Profiles are now fully visible. Clients can book through the platform or contact the cleaner directly.
             </div>
           </div>
-          </div>
         </div>
       </header>
 
