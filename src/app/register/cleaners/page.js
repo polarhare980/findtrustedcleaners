@@ -15,6 +15,7 @@ export default function CleanerRegister() {
     companyName: '',
     houseNameNumber: '',
     street: '',
+    town: '',
     county: '',
     postcode: '',
     email: '',
@@ -119,8 +120,11 @@ export default function CleanerRegister() {
     if (form.password !== form.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
     if (form.services.length === 0) newErrors.services = 'Please select at least one service';
 
-    const parsedRates = parseFloat((form.rates || '').toString().replace(/[^0-9.]/g, '')) || 0;
-    if (parsedRates <= 0) newErrors.rates = 'Please enter a valid hourly rate greater than 0';
+    const rawRate = String(form.rates || '').trim();
+    if (rawRate) {
+      const parsedRates = parseFloat(rawRate.replace(/[^0-9.]/g, '')) || 0;
+      if (parsedRates < 0) newErrors.rates = 'Please enter a valid hourly rate';
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -157,7 +161,8 @@ export default function CleanerRegister() {
     setIsSubmitting(true);
     setErrors({});
 
-    const parsedRates = parseFloat((form.rates || '').toString().replace(/[^0-9.]/g, '')) || 0;
+    const rawRate = String(form.rates || '').trim();
+    const parsedRates = rawRate ? parseFloat(rawRate.replace(/[^0-9.]/g, '')) || undefined : undefined;
     const availability = buildDenseBaseAvailability();
 
     try {
@@ -172,6 +177,7 @@ export default function CleanerRegister() {
         services: form.services,
         houseNameNumber: form.houseNameNumber.trim(),
         street: form.street.trim(),
+        town: form.town.trim(),
         county: form.county.trim(),
         postcode: form.postcode.trim(),
         availability, // dense base availability
@@ -254,6 +260,9 @@ export default function CleanerRegister() {
               <div>
                 <input name="street" onChange={handleChange} value={form.street} placeholder="Street" className={`w-full p-2 border rounded text-[#0D9488] bg-white ${errors.street ? 'border-red-500' : ''}`} required />
                 {errors.street && <p className="text-red-500 text-sm mt-1">{errors.street}</p>}
+              </div>
+              <div>
+                <input name="town" onChange={handleChange} value={form.town} placeholder="Town / City (optional but recommended)" className="w-full p-2 border rounded text-[#0D9488] bg-white" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">

@@ -1,52 +1,48 @@
 import Stripe from 'stripe';
 import { NextResponse } from 'next/server';
+import { connectToDatabase } from '@/lib/db';
+import Cleaner from '@/models/Cleaner';
+import { protectApiRoute } from '@/lib/auth';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const SITE_URL = process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://www.findtrustedcleaners.com';
 
-const SITE_URL = process.env.SITE_URL || 'https://www.findtrustedcleaners.com';
-const YEARLY_PREMIUM_FALLBACK_PENCE = 50;
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function POST(req) {
   try {
-    const { cleanerId } = await req.json();
+    await connectToDatabase();
+    const { valid, user, response } = await protectApiRoute(req);
+    if (!valid) return response;
+    if (user?.type !== 'cleaner') return NextResponse.json({ error: 'Access denied.' }, { status: 403 });
 
-    if (!cleanerId) {
-      return NextResponse.json({ error: 'Missing cleanerId' }, { status: 400 });
-    }
+    const body = await req.json().catch(() => ({}));
+    const cleanerId = String(body?.cleanerId || user?._id || user?.id || '');
+    if (!cleanerId) return NextResponse.json({ error: 'Missing cleanerId' }, { status: 400 });
 
-    const successUrl = `${SITE_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}`;
-    const cancelUrl = `${SITE_URL}/payment-cancelled`;
+    const cleaner = await Cleaner.findById(cleanerId);
+    if (!cleaner) return NextResponse.json({ error: 'Cleaner not found' }, { status: 404 });
 
-    const premiumPriceId = process.env.STRIPE_PREMIUM_PRICE_ID_YEARLY || process.env.STRIPE_PREMIUM_PRICE_ID;
-    const useRecurringPrice = Boolean(process.env.STRIPE_PREMIUM_PRICE_ID_YEARLY);
-
-    const lineItem = premiumPriceId
-      ? { price: premiumPriceId, quantity: 1 }
-      : {
-          price_data: {
-            currency: 'gbp',
-            unit_amount: YEARLY_PREMIUM_FALLBACK_PENCE,
-            product_data: {
-              name: 'Find Trusted Cleaners Premium',
-              description: 'Premium cleaner listing upgrade',
-            },
-          },
-          quantity: 1,
-        };
+    const successUrl = `${SITE_URL}/cleaners/success?session_id={CHECKOUT_SESSION_ID}`;
+    const cancelUrl = `${SITE_URL}/cleaners/dashboard?upgrade=cancelled`;
+    const priceId = process.env.STRIPE_PREMIUM_PRICE_ID;
 
     const session = await stripe.checkout.sessions.create({
-      mode: useRecurringPrice ? 'subscription' : 'payment',
-      payment_method_types: ['card'],
-      line_items: [lineItem],
-      metadata: { cleanerId, premiumUpgrade: 'true', premiumPlan: useRecurringPrice ? 'yearly_recurring' : 'yearly_manual' },
-      client_reference_id: cleanerId,
+      mode: 'subscription',
+      customer_email: cleaner.email,
+      line_items: priceId
+        ? [{ price: priceId, quantity: 1 }]
+        : [{ price_data: { currency: 'gbp', unit_amount: 799, recurring: { interval: 'month' }, product_data: { name: 'Find Trusted Cleaners Premium', description: 'Premium cleaner profile upgrade' } }, quantity: 1 }],
+      metadata: { cleanerId: String(cleaner._id), premiumUpgrade: 'true', subscription: 'true' },
+      client_reference_id: String(cleaner._id),
       success_url: successUrl,
       cancel_url: cancelUrl,
     });
 
-    return NextResponse.json({ url: session.url });
+    return NextResponse.json({ success: true, url: session.url });
   } catch (err) {
     console.error('❌ Stripe session error:', err);
-    return NextResponse.json({ error: 'Failed to create Stripe session' }, { status: 500 });
+    return NextResponse.json({ error: err?.message || 'Failed to create Stripe session' }, { status: 500 });
   }
 }

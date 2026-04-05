@@ -54,8 +54,8 @@ function fmtRangeLabel(monday) {
 
 // ---- Overlay builders (SPAN-AWARE like Dashboard) ----
 function buildOverlayMaps(purchases = []) {
-  const pendingKeyToId = new Map(); // `${day}|${hour}` -> id
-  const bookedKeys = new Set();     // `${day}|${hour}`
+  const pendingKeyToId = new Map(); // `${isoDate}|${day}|${hour}` -> id
+  const bookedKeys = new Set();     // `${isoDate}|${day}|${hour}`
 
   for (const row of purchases || []) {
     const day = row?.day;
@@ -67,9 +67,11 @@ function buildOverlayMaps(purchases = []) {
     const hours = Array.from({ length: Math.max(1, span) }, (_, i) => String(start + i));
 
     if (PENDING_STATUSES.has(status)) {
-      for (const h of hours) pendingKeyToId.set(`${day}|${h}`, String(row?._id || ''));
+      const isoDate = String(row?.isoDate || '');
+      for (const h of hours) pendingKeyToId.set(`${isoDate}|${day}|${h}`, String(row?._id || ''));
     } else if (BOOKED_STATUSES.has(status)) {
-      for (const h of hours) bookedKeys.add(`${day}|${h}`);
+      const isoDate = String(row?.isoDate || '');
+      for (const h of hours) bookedKeys.add(`${isoDate}|${day}|${h}`);
     }
   }
 
@@ -120,7 +122,7 @@ function composeWeekView(baseWeekly = {}, overridesByISO = {}, mondayDate, purch
         val = overrideDay[hour];
       }
       // overlay precedence
-      const overlayKey = `${dayName}|${hour}`;
+      const overlayKey = `${iso}|${dayName}|${hour}`;
       if (overlays.bookedKeys.has(overlayKey)) {
         out[dayName][hour] = { status: 'booked' };
       } else if (overlays.pendingKeyToId.has(overlayKey)) {
@@ -142,7 +144,6 @@ export default function CleanerProfile() {
   const [selected, setSelected] = useState({ day: null, hour: null });
   const [selectedISO, setSelectedISO] = useState(null);
   const [selectedServiceKey, setSelectedServiceKey] = useState('');
-  const [selectedDurationMins, setSelectedDurationMins] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -226,27 +227,15 @@ export default function CleanerProfile() {
     if (!activeServices.length) return;
     if (!selectedServiceKey || !activeServices.some((svc) => svc.key === selectedServiceKey)) {
       setSelectedServiceKey(activeServices[0].key);
-      setSelectedDurationMins(String(activeServices[0].defaultDurationMins || 60));
       return;
     }
-    const svc = activeServices.find((row) => row.key === selectedServiceKey);
-    if (svc && !selectedDurationMins) setSelectedDurationMins(String(svc.defaultDurationMins || 60));
-  }, [activeServices, selectedServiceKey, selectedDurationMins]);
+  }, [activeServices, selectedServiceKey]);
 
+  const selectedDurationMins = Number(selectedService?.defaultDurationMins || 60);
   const selectedSpan = useMemo(
-    () => getServiceSpan(selectedService, Number(selectedDurationMins || selectedService?.defaultDurationMins || 60)),
+    () => getServiceSpan(selectedService, selectedDurationMins),
     [selectedService, selectedDurationMins]
   );
-
-  const durationOptions = useMemo(() => {
-    if (!selectedService) return [];
-    const min = Number(selectedService.minDurationMins || selectedService.defaultDurationMins || 60);
-    const max = Number(selectedService.maxDurationMins || min);
-    const inc = Number(selectedService.incrementMins || 60) || 60;
-    const opts = [];
-    for (let mins = min; mins <= max; mins += inc) opts.push(mins);
-    return opts;
-  }, [selectedService]);
 
   // ---- Google Reviews (dashboard fields first) ----
   const googleReviewRating = cleaner?.googleReviewRating ?? cleaner?.googleReviews?.rating ?? null;
@@ -400,6 +389,7 @@ export default function CleanerProfile() {
               Profiles are now fully visible. Clients can book through the platform or contact the cleaner directly.
             </div>
           </div>
+          </div>
         </div>
       </header>
 
@@ -497,7 +487,7 @@ export default function CleanerProfile() {
               {cleaner.servicesDetailed
                 .filter((svc) => svc?.name && svc?.active !== false)
                 .map((svc, i) => (
-                  <li key={`${svc.name}-${i}`}>{svc.name} ({svc.defaultDurationMins ?? 60} mins)</li>
+                  <li key={`${svc.name}-${i}`}>{svc.name} ({svc.defaultDurationMins ?? 60} mins{svc.price != null ? ` • £${svc.price}` : ''})</li>
                 ))}
             </ul>
           </section>
@@ -548,6 +538,8 @@ export default function CleanerProfile() {
         </div>
 
         <div className="rounded-2xl overflow-hidden border border-slate-100 bg-white/60 shadow">
+          <div className="overflow-x-auto touch-pan-x">
+          <div className="min-w-[760px]">
           <div className="grid" style={{ gridTemplateColumns: `120px repeat(${HOURS.length}, minmax(44px,1fr))` }}>
             {/* Header row */}
             <div className="p-2.5 bg-slate-50 text-slate-500 text-xs font-semibold uppercase tracking-wide">
@@ -595,6 +587,7 @@ export default function CleanerProfile() {
               </React.Fragment>
             ))}
           </div>
+          </div>
         </div>
 
         {/* Booking request panel */}
@@ -610,7 +603,7 @@ export default function CleanerProfile() {
                     </div>
                     {selectedService ? (
                       <div className="mt-1 text-slate-600">
-                        {selectedService.name} • {Number(selectedDurationMins || selectedService.defaultDurationMins || 60)} mins
+                        {selectedService.name} • {selectedDurationMins} mins
                         {selectedSpan > 1 ? ` • blocks ${selectedSpan} hours on the calendar` : ''}
                       </div>
                     ) : null}
@@ -627,9 +620,7 @@ export default function CleanerProfile() {
                     <select
                       value={selectedServiceKey}
                       onChange={(e) => {
-                        const svc = activeServices.find((row) => row.key === e.target.value);
                         setSelectedServiceKey(e.target.value);
-                        setSelectedDurationMins(String(svc?.defaultDurationMins || 60));
                         setSelected({ day: null, hour: null });
                         setSelectedISO(null);
                       }}
@@ -641,24 +632,6 @@ export default function CleanerProfile() {
                     </select>
                   </div>
 
-                  {selectedService ? (
-                    <div>
-                      <label className="block text-xs uppercase tracking-wide text-slate-500 mb-1">Duration</label>
-                      <select
-                        value={selectedDurationMins || String(selectedService.defaultDurationMins || 60)}
-                        onChange={(e) => {
-                          setSelectedDurationMins(e.target.value);
-                          setSelected({ day: null, hour: null });
-                          setSelectedISO(null);
-                        }}
-                        className="w-full rounded-xl border px-3 py-2 bg-white"
-                      >
-                        {durationOptions.map((mins) => (
-                          <option key={mins} value={mins}>{mins} mins</option>
-                        ))}
-                      </select>
-                    </div>
-                  ) : null}
                 </div>
               ) : null}
             </div>
@@ -672,9 +645,9 @@ export default function CleanerProfile() {
                   date: selectedISO,
                   serviceKey: selectedService?.key,
                   serviceName: selectedService?.name,
-                  durationMins: Number(selectedDurationMins || selectedService?.defaultDurationMins || 60),
-                  bufferBeforeMins: Number(selectedService?.bufferBeforeMins || 0),
-                  bufferAfterMins: Number(selectedService?.bufferAfterMins || 0),
+                  durationMins: selectedDurationMins,
+                  bufferBeforeMins: 0,
+                  bufferAfterMins: 0,
                 }}
                 onPurchaseStart={() => {}}
                 onPurchaseError={() => {}}
@@ -682,7 +655,7 @@ export default function CleanerProfile() {
                 disabled={!selected.day || selected.hour == null || !selectedISO}
               />
               <div className="text-[11px] text-slate-500 mt-1">
-                Anyone can send a request. Premium cleaners can offer custom service durations, and the grid already accounts for the time block needed.
+                Choose a service and the saved service duration is used automatically for slot validation.
               </div>
             </div>
           </div>

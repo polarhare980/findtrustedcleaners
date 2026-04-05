@@ -649,6 +649,9 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
               <button onClick={handleEditToggle} className="px-4 py-2 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white rounded-lg font-medium transition-all duration-300">
                 {editMode ? '✕ Cancel Edit' : '✏️ Edit Profile'}
               </button>
+              <button onClick={() => document.getElementById('services-editor')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} className="px-4 py-2 bg-white border border-teal-300 text-teal-800 rounded-lg font-medium transition-all duration-300">
+                🧹 Edit Services
+              </button>
               {editMode && (
                 <button onClick={handleEditSave} disabled={saving} className="px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-lg font-medium disabled:opacity-50 transition-all duration-300">
                   {saving ? '⏳ Saving...' : '💾 Save Profile'}
@@ -688,11 +691,12 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
                     setDeleting(true);
                     try {
                       const res = await fetch(`/api/cleaners/${me._id}`, { method: 'DELETE', credentials: 'include' });
+                      const data = await res.json().catch(() => ({}));
                       if (res.ok) {
                         await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
                         router.push('/');
                       } else {
-                        alert('Failed to delete profile. Please try again.');
+                        alert(data?.message || 'Failed to delete profile. Please try again.');
                       }
                     } catch (err) {
                       console.error('Delete error:', err);
@@ -982,16 +986,16 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
         </div>
 
         {/* Services & Duration (everyone) */}
-        <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl mb-6 p-6">
+        <div id="services-editor" className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl mb-6 p-6">
           <h2 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent mb-4">
-            🧹 Services & Duration
+            🧹 Services
           </h2>
 
           {editMode ? (
             <div className="space-y-4">
+              <p className="text-sm text-gray-600">Keep this simple: service name, fixed price if you have one, and duration.</p>
               {(editData.servicesDetailed || []).map((svc, idx) => (
-                <div key={idx} className="p-4 bg-white/70 rounded-xl border border-gray-200 space-y-2">
-                  {/* Service Name */}
+                <div key={idx} className="p-4 bg-white/70 rounded-xl border border-gray-200 space-y-3">
                   <input
                     className="w-full p-2 border rounded"
                     placeholder="Service Name"
@@ -1003,12 +1007,23 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
                     }}
                   />
 
-                  {/* Grid of numeric fields */}
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     <input
                       type="number"
                       className="p-2 border rounded"
-                      placeholder="Default Duration (mins)"
+                      placeholder="Price (optional)"
+                      value={svc.price ?? svc.basePrice ?? ''}
+                      onChange={(e) => {
+                        const next = [...editData.servicesDetailed];
+                        next[idx].price = e.target.value;
+                        next[idx].basePrice = e.target.value;
+                        setEditData({ ...editData, servicesDetailed: next });
+                      }}
+                    />
+                    <input
+                      type="number"
+                      className="p-2 border rounded"
+                      placeholder="Duration (mins)"
                       value={svc.defaultDurationMins ?? ''}
                       onChange={(e) => {
                         const next = [...editData.servicesDetailed];
@@ -1016,64 +1031,8 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
                         setEditData({ ...editData, servicesDetailed: next });
                       }}
                     />
-                    <input
-                      type="number"
-                      className="p-2 border rounded"
-                      placeholder="Buffer Before (mins)"
-                      value={svc.bufferBeforeMins ?? ''}
-                      onChange={(e) => {
-                        const next = [...editData.servicesDetailed];
-                        next[idx].bufferBeforeMins = e.target.value;
-                        setEditData({ ...editData, servicesDetailed: next });
-                      }}
-                    />
-                    <input
-                      type="number"
-                      className="p-2 border rounded"
-                      placeholder="Buffer After (mins)"
-                      value={svc.bufferAfterMins ?? ''}
-                      onChange={(e) => {
-                        const next = [...editData.servicesDetailed];
-                        next[idx].bufferAfterMins = e.target.value;
-                        setEditData({ ...editData, servicesDetailed: next });
-                      }}
-                    />
-                    <input
-                      type="number"
-                      className="p-2 border rounded"
-                      placeholder="Increment (mins)"
-                      value={svc.incrementMins ?? ''}
-                      onChange={(e) => {
-                        const next = [...editData.servicesDetailed];
-                        next[idx].incrementMins = e.target.value;
-                        setEditData({ ...editData, servicesDetailed: next });
-                      }}
-                    />
-                    <input
-                      type="number"
-                      className="p-2 border rounded"
-                      placeholder="Min Duration (mins)"
-                      value={svc.minDurationMins ?? ''}
-                      onChange={(e) => {
-                        const next = [...editData.servicesDetailed];
-                        next[idx].minDurationMins = e.target.value;
-                        setEditData({ ...editData, servicesDetailed: next });
-                      }}
-                    />
-                    <input
-                      type="number"
-                      className="p-2 border rounded"
-                      placeholder="Max Duration (mins)"
-                      value={svc.maxDurationMins ?? ''}
-                      onChange={(e) => {
-                        const next = [...editData.servicesDetailed];
-                        next[idx].maxDurationMins = e.target.value;
-                        setEditData({ ...editData, servicesDetailed: next });
-                      }}
-                    />
                   </div>
 
-                  {/* Active toggle */}
                   <label className="flex items-center gap-2">
                     <input
                       type="checkbox"
@@ -1087,7 +1046,6 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
                     Active
                   </label>
 
-                  {/* Remove button */}
                   <button
                     className="text-red-600 text-sm"
                     onClick={() => {
@@ -1109,16 +1067,7 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
                     ...editData,
                     servicesDetailed: [
                       ...(editData.servicesDetailed || []),
-                      {
-                        name: '',
-                        defaultDurationMins: '',
-                        bufferBeforeMins: '',
-                        bufferAfterMins: '',
-                        incrementMins: '',
-                        minDurationMins: '',
-                        maxDurationMins: '',
-                        active: true,
-                      },
+                      { name: '', price: '', defaultDurationMins: '', active: true },
                     ],
                   })
                 }
@@ -1132,7 +1081,7 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
                 <ul className="list-disc list-inside text-gray-800">
                   {formData.servicesDetailed.map((svc, i) => (
                     <li key={i}>
-                      {svc.name} ({svc.defaultDurationMins || 60} mins)
+                      {svc.name} ({svc.defaultDurationMins || 60} mins{svc.price != null || svc.basePrice != null ? ` • £${svc.price ?? svc.basePrice}` : ''})
                     </li>
                   ))}
                 </ul>
@@ -1404,8 +1353,8 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <div className="min-w-full">
+          <div className="overflow-x-auto touch-pan-x">
+            <div className="min-w-[820px]">
               {/* Header row with dates */}
               <div className="grid grid-cols-8 gap-2 mb-4">
                 <div className="font-semibold text-gray-700 text-center py-2">Time</div>

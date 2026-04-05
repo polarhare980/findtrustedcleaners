@@ -1,4 +1,3 @@
-import mongoose from 'mongoose';
 import { connectToDatabase } from '@/lib/db';
 import Cleaner from '@/models/Cleaner.js';
 import Client from '@/models/Client.js';
@@ -8,10 +7,9 @@ import { serialize } from 'cookie';
 import { NextResponse } from 'next/server';
 
 const FULL_DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
-const HOURS = Array.from({ length: 13 }, (_, i) => String(7 + i)); // "7".."19"
+const HOURS = Array.from({ length: 13 }, (_, i) => String(7 + i));
 
 function sanitizeAvailability(input = {}) {
-  // Build a dense base: default 'unavailable', keep only true where explicitly available
   const out = {};
   for (const day of FULL_DAYS) {
     out[day] = {};
@@ -23,6 +21,27 @@ function sanitizeAvailability(input = {}) {
   return out;
 }
 
+function slugifyServiceKey(name = '') {
+  return String(name)
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 80);
+}
+
+function buildSimpleServicesDetailed(services = []) {
+  return (services || [])
+    .filter(Boolean)
+    .map((name) => ({
+      key: slugifyServiceKey(name),
+      name: String(name).trim(),
+      active: true,
+      defaultDurationMins: 60,
+    }));
+}
+
 function sendCookie(userId, userType) {
   const token = createToken({ _id: userId, type: userType });
   const cookie = serialize('token', token, {
@@ -30,8 +49,9 @@ function sendCookie(userId, userType) {
     secure: process.env.NODE_ENV === 'production',
     path: '/',
     sameSite: 'lax',
-    maxAge: 60 * 60 * 24 * 7, // 7 days
+    maxAge: 60 * 60 * 24 * 7,
   });
+
   return new NextResponse(JSON.stringify({ success: true, id: userId, type: userType }), {
     status: 201,
     headers: { 'Set-Cookie': cookie, 'Content-Type': 'application/json' },
@@ -40,22 +60,17 @@ function sendCookie(userId, userType) {
 
 export async function POST(req) {
   await connectToDatabase();
-  console.log('✅ Unified Register route hit');
 
   try {
     const body = await req.json();
-    console.log('📨 Incoming registration payload:', body);
-
     const { userType, email, password } = body || {};
+
     if (!userType || !email || !password) {
       return NextResponse.json({ success: false, message: 'Missing required fields.' }, { status: 400 });
     }
 
     const trimmedEmail = String(email).trim().toLowerCase();
 
-    // =========================
-    // CLEANER REGISTRATION
-    // =========================
     if (userType === 'cleaner') {
       const {
         realName,
@@ -63,22 +78,18 @@ export async function POST(req) {
         phone,
         rates,
         services,
-        // address fields sent flat from form:
         houseNameNumber,
         street,
+        town,
         county,
         postcode,
-        availability,                 // from UI (may already be dense)
+        availability,
         businessInsurance = false,
         dbsChecked = false,
       } = body || {};
 
-      // Basic validation
-      if (
-        !realName || !companyName || !phone || rates == null ||
-        !houseNameNumber || !street || !county || !postcode
-      ) {
-        return NextResponse.json({ success: false, message: 'All cleaner fields are required.' }, { status: 400 });
+      if (!realName || !companyName || !phone || !houseNameNumber || !street || !county || !postcode) {
+        return NextResponse.json({ success: false, message: 'All required cleaner fields must be completed.' }, { status: 400 });
       }
       if (!Array.isArray(services) || services.length === 0) {
         return NextResponse.json({ success: false, message: 'Please select at least one service.' }, { status: 400 });
@@ -86,20 +97,18 @@ export async function POST(req) {
 
       const existingCleaner = await Cleaner.findOne({ email: trimmedEmail }).lean();
       if (existingCleaner) {
-        console.log('❌ Cleaner already exists:', trimmedEmail);
         return NextResponse.json({ success: false, message: 'Cleaner already exists.' }, { status: 409 });
       }
 
-      // Ensure numeric rate
-      const numericRate = Number(rates);
-      if (!Number.isFinite(numericRate) || numericRate <= 0) {
-        return NextResponse.json({ success: false, message: 'Hourly rate must be a positive number.' }, { status: 400 });
+      const numericRate =
+        rates === '' || rates == null
+          ? undefined
+          : Number(String(rates).replace(/[^0-9.]/g, ''));
+
+      if (numericRate !== undefined && (!Number.isFinite(numericRate) || numericRate < 0)) {
+        return NextResponse.json({ success: false, message: 'Hourly rate must be a valid number.' }, { status: 400 });
       }
 
-      // Normalize availability to dense base
-      const cleanAvailability = sanitizeAvailability(availability);
-
-      // Hash password (Cleaner model typically doesn’t have pre-save hashing)
       const hashedPassword = await bcrypt.hash(String(password).trim(), 10);
 
       const newCleaner = await Cleaner.create({
@@ -109,35 +118,25 @@ export async function POST(req) {
         password: hashedPassword,
         phone: String(phone).trim(),
         rates: numericRate,
-        services,
-        // Map into nested address object expected by the model
+        services: services.map((s) => String(s).trim()).filter(Boolean),
+        servicesDetailed: buildSimpleServicesDetailed(services),
         address: {
           houseNameNumber: String(houseNameNumber).trim(),
           street: String(street).trim(),
+          town: String(town || '').trim(),
           county: String(county).trim(),
           postcode: String(postcode).trim(),
         },
-        availability: cleanAvailability,
+        availability: sanitizeAvailability(availability),
         businessInsurance: !!businessInsurance,
         dbsChecked: !!dbsChecked,
       });
 
-      console.log('✅ Cleaner saved:', newCleaner._id.toString());
       return sendCookie(newCleaner._id.toString(), 'cleaner');
     }
 
-    // =========================
-    // CLIENT REGISTRATION
-    // =========================
     if (userType === 'client') {
-      const {
-        fullName,
-        phone,
-        houseNameNumber,
-        street,
-        county,
-        postcode,
-      } = body || {};
+      const { fullName, phone, houseNameNumber, street, county, postcode } = body || {};
 
       if (!fullName || !phone || !houseNameNumber || !street || !county || !postcode) {
         return NextResponse.json({ success: false, message: 'All client fields are required.' }, { status: 400 });
@@ -145,11 +144,9 @@ export async function POST(req) {
 
       const existingClient = await Client.findOne({ email: trimmedEmail }).lean();
       if (existingClient) {
-        console.log('❌ Client already exists:', trimmedEmail);
         return NextResponse.json({ success: false, message: 'Client already exists.' }, { status: 409 });
       }
 
-      // Note: assuming Client model has pre('save') hashing
       const newClient = await Client.create({
         fullName: String(fullName).trim(),
         email: trimmedEmail,
@@ -163,7 +160,6 @@ export async function POST(req) {
         },
       });
 
-      console.log('✅ Client saved:', newClient._id.toString());
       return sendCookie(newClient._id.toString(), 'client');
     }
 
