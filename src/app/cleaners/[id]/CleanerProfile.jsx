@@ -659,6 +659,7 @@ export default function CleanerProfile() {
             </div>
           </div>
         </div>
+        </div>
       </section>
 
       {/* Booking note */}
