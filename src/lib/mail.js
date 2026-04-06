@@ -3,20 +3,29 @@ import nodemailer from 'nodemailer';
 let cachedTransporter = null;
 
 function readSmtpConfig() {
-  return {
-    host: process.env.SMTP_HOST || '',
-    port: Number(process.env.SMTP_PORT || 587),
-    user: process.env.SMTP_USER || '',
-    pass: process.env.SMTP_PASS || process.env.EMAIL_APP_PASSWORD || '',
-    from: process.env.EMAIL_FROM || process.env.SMTP_USER || '',
-  };
+  const host = process.env.SMTP_HOST?.trim() || '';
+  const port = Number(process.env.SMTP_PORT || 587);
+  const user = process.env.SMTP_USER?.trim() || '';
+  const pass = process.env.SMTP_PASS?.trim() || process.env.EMAIL_APP_PASSWORD?.trim() || '';
+  const from = process.env.EMAIL_FROM?.trim() || user;
+
+  return { host, port, user, pass, from };
 }
 
 export function getMailTransporter() {
   if (cachedTransporter) return cachedTransporter;
 
   const config = readSmtpConfig();
-  if (!config.host || !config.user || !config.pass || !config.from) {
+
+  const missing = [];
+  if (!config.host) missing.push('SMTP_HOST');
+  if (!config.port) missing.push('SMTP_PORT');
+  if (!config.user) missing.push('SMTP_USER');
+  if (!config.pass) missing.push('SMTP_PASS');
+  if (!config.from) missing.push('EMAIL_FROM');
+
+  if (missing.length) {
+    console.error('[mail] missing config vars:', missing);
     return null;
   }
 
@@ -36,13 +45,15 @@ export function getMailTransporter() {
 export async function sendEmail({ to, subject, html, text, replyTo }) {
   const transporter = getMailTransporter();
   if (!transporter) {
-    throw new Error('Mail transport is not configured. Set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, and EMAIL_FROM.');
+    throw new Error(
+      'Mail transport is not configured. Set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, and EMAIL_FROM.'
+    );
   }
 
   const { from } = readSmtpConfig();
 
   return transporter.sendMail({
-    from: `"FindTrustedCleaners" <${from}>`,
+    from,
     to,
     subject,
     html,
