@@ -6,6 +6,8 @@ import Purchase from '@/models/Purchase';
 import Cleaner from '@/models/Cleaner';
 import Booking from '@/models/booking';
 import { requiredHourSpan, hasContiguousAvailability } from '@/lib/availability';
+import { buildCleanerBookingNotificationEmail, sendEmail } from '@/lib/mail';
+import { getPurchaseExpiryDate } from '@/lib/purchaseExpiry';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -51,6 +53,18 @@ function findActiveService(services = [], serviceKey = '') {
     if (!s || s.active === false) return false;
     return normalizeServiceKey(s.key || s.name) === wanted;
   }) || null;
+}
+
+
+function formatHourLabel(hour) {
+  const n = Number(hour);
+  if (!Number.isFinite(n)) return '';
+  return `${String(parseInt(n, 10)).padStart(2, '0')}:00`;
+}
+
+function formatArea(cleaner = {}) {
+  const address = cleaner?.address || {};
+  return [address.town, address.county, address.postcode].filter(Boolean).join(', ');
 }
 
 function buildEffectiveDayGrid(cleaner, day, isoDate) {
@@ -206,7 +220,27 @@ export async function POST(req) {
     amount: typeof amount === 'number' ? amount : undefined,
     status: 'pending_approval',
     notes: typeof notes === 'string' ? notes.trim() : undefined,
+    expiresAt: getPurchaseExpiryDate('pending_approval'),
   });
+
+  if (cleaner?.email) {
+    const emailPayload = buildCleanerBookingNotificationEmail({
+      cleanerName: cleaner.realName || cleaner.companyName || '',
+      clientName: isClientUser ? (user.fullName || user.name || '') : guestName,
+      serviceName: svc?.name || '',
+      day,
+      time: formatHourLabel(startHourStr),
+      isoDate: typeof isoDate === 'string' ? isoDate : '',
+      area: formatArea(cleaner),
+      dashboardUrl: `${process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'https://www.findtrustedcleaners.com'}/cleaners/bookings`,
+    });
+
+    sendEmail({ to: cleaner.email, ...emailPayload })
+      .then(() => console.info('[booking-email] cleaner notified', { purchaseId: String(doc._id), cleanerId: String(cleaner._id) }))
+      .catch((error) => console.error('[booking-email] failed', { purchaseId: String(doc._id), cleanerId: String(cleaner._id), message: error?.message || 'Unknown error' }));
+  } else {
+    console.warn('[booking-email] cleaner has no email', { purchaseId: String(doc._id), cleanerId: String(cleaner?._id || cleanerId) });
+  }
 
   return json({
     success: true,

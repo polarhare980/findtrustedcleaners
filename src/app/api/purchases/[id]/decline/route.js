@@ -4,6 +4,7 @@ import { connectToDatabase } from '@/lib/db';
 import { protectApiRoute } from '@/lib/auth';
 import Purchase from '@/models/Purchase';
 import Stripe from 'stripe';
+import { getPurchaseExpiryDate } from '@/lib/purchaseExpiry';
 
 const stripeSecret = process.env.STRIPE_SECRET_KEY || '';
 const stripe = stripeSecret ? new Stripe(stripeSecret) : null;
@@ -87,6 +88,7 @@ export async function PUT(req, context) {
 
     // Update status -> declined
     purchase.status = 'declined';
+    purchase.expiresAt = getPurchaseExpiryDate('declined');
     await purchase.save();
 
     return json({

@@ -5,6 +5,7 @@ import { protectApiRoute } from '@/lib/auth';
 import Purchase from '@/models/Purchase';
 import Cleaner from '@/models/Cleaner';
 import Stripe from 'stripe';
+import { getPurchaseExpiryDate } from '@/lib/purchaseExpiry';
 
 const stripeSecret = process.env.STRIPE_SECRET_KEY || '';
 const stripe = stripeSecret ? new Stripe(stripeSecret) : null;
@@ -86,6 +87,7 @@ export async function PUT(req, context) {
 
     // Mark purchase accepted (do NOT mutate cleaner.availability; UI reads from purchases feed)
     purchase.status = 'accepted';
+    purchase.expiresAt = getPurchaseExpiryDate('accepted');
     await purchase.save();
 
     return json({

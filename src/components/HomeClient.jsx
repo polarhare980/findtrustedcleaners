@@ -497,7 +497,7 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium, isFavourite, on
       {/* Image */}
       <div className="cleaner-image relative z-10">
         <img
-          src={typeof cleaner.image === 'string' && cleaner.image.trim() !== '' ? cleaner.image : '/default-avatar.png'}
+          src={typeof (cleaner.image || cleaner.profileImage) === 'string' && String(cleaner.image || cleaner.profileImage).trim() !== '' ? String(cleaner.image || cleaner.profileImage).trim() : '/default-avatar.png'}
           alt={cleaner.companyName || cleaner.realName || 'Cleaner'}
           loading="lazy"
           className="w-full h-full object-cover"

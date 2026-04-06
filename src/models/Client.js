@@ -22,6 +22,9 @@ const clientSchema = new mongoose.Schema(
     address:  { type: addressSchema, required: true },
 
     // Store as "favorites" in Mongo, but allow UK spelling "favourites" in code.
+    resetPasswordToken: { type: String, default: '' },
+    resetPasswordExpires: { type: Date, default: null },
+
     favorites: [{
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Cleaner',

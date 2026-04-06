@@ -11,6 +11,7 @@ export default function ResetPassword() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [message, setMessage] = useState('');
   const [token, setToken] = useState('');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const urlToken = searchParams.get('token');
@@ -23,9 +24,15 @@ export default function ResetPassword() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setMessage('');
 
     if (password !== confirmPassword) {
       setMessage('Passwords do not match.');
+      return;
+    }
+
+    if (password.length < 8) {
+      setMessage('Password must be at least 8 characters.');
       return;
     }
 
@@ -35,23 +42,26 @@ export default function ResetPassword() {
     }
 
     try {
-      const res = await fetch('/api/reset-password', {
-        method: 'PUT',
+      setLoading(true);
+      const res = await fetch('/api/auth/reset', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, password })
+        body: JSON.stringify({ token, password }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
       if (res.ok && data.success) {
         setMessage('Password successfully reset. Redirecting to login...');
-        setTimeout(() => router.push('/login'), 2000);
+        setTimeout(() => router.push('/login'), 1500);
       } else {
         setMessage(data.message || 'Failed to reset password. Please try again.');
       }
     } catch (err) {
       console.error('Error resetting password:', err);
       setMessage('An unexpected error occurred. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -78,31 +88,17 @@ export default function ResetPassword() {
           />
           <button
             type="submit"
-            className="bg-[#0D9488] text-white w-full py-3 rounded shadow hover:bg-teal-700"
+            disabled={loading}
+            className="bg-[#0D9488] text-white w-full py-3 rounded shadow hover:bg-teal-700 disabled:opacity-60"
           >
-            Set New Password
+            {loading ? 'Updating password...' : 'Set New Password'}
           </button>
           {message && <p className="text-center text-sm text-green-600 mt-2">{message}</p>}
+          <p className="text-center text-sm text-gray-500">
+            Need a new link? <Link href="/forgot-password" className="text-[#0D9488] underline">Request another reset email</Link>
+          </p>
         </form>
       </section>
-
-      <footer className="bg-[#0D9488] text-white border-t py-6 px-6 text-center text-sm">
-        <nav className="flex flex-wrap justify-center gap-4 mb-2">
-          <Link href="/about">About Us</Link>
-          <Link href="/terms">Terms & Conditions</Link>
-          <Link href="/privacy-policy">Privacy Policy</Link>
-          <Link href="/cookie-policy">Cookie Policy</Link>
-          <Link href="/contact">Contact</Link>
-          <Link href="/faq">FAQs</Link>
-          <Link href="/sitemap">Site Map</Link>
-        </nav>
-
-        <p className="mb-2">&copy; {new Date().getFullYear()} FindTrustedCleaners. All rights reserved.</p>
-
-        <p className="text-xs">
-          FindTrustedCleaners is committed to GDPR compliance. Read our <Link href="/privacy-policy" className="underline">Privacy Policy</Link> and <Link href="/cookie-policy" className="underline">Cookie Policy</Link> for details on how we protect your data. You may <Link href="/contact" className="underline">contact us</Link> at any time to manage your personal information.
-        </p>
-      </footer>
     </main>
   );
 }

@@ -99,6 +99,9 @@ const cleanerSchema = new mongoose.Schema(
     stripeSubscriptionId: { type: String, default: '' },
     premiumSince: { type: Date },
     premiumEndedAt: { type: Date },
+
+    resetPasswordToken: { type: String, default: '' },
+    resetPasswordExpires: { type: Date, default: null },
   },
   {
     timestamps: true,

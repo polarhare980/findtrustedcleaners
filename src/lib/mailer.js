@@ -1,18 +1,10 @@
-import nodemailer from 'nodemailer';
+import { sendEmail } from '@/lib/mail';
 
-export const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_FROM,
-    pass: process.env.EMAIL_APP_PASSWORD,
-  },
-});
-
-export const sendResetCode = async (to, code) => {
-  await transporter.sendMail({
-    from: `"Find Trusted Cleaners" <${process.env.EMAIL_FROM}>`,
+export async function sendResetCode(to, code) {
+  return sendEmail({
     to,
     subject: 'Your Password Reset Code',
+    text: `Your FindTrustedCleaners reset code is ${code}. It expires in 10 minutes.`,
     html: `
       <p>Hi,</p>
       <p>Your <strong>FindTrustedCleaners</strong> reset code is:</p>
@@ -20,4 +12,4 @@ export const sendResetCode = async (to, code) => {
       <p>This code will expire in 10 minutes.</p>
     `,
   });
-};
+}

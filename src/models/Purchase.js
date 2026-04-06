@@ -52,10 +52,11 @@ const PurchaseSchema = new mongoose.Schema(
     // declined: cleaner declined and payment cancelled/refunded
     status: {
       type: String,
-      enum: ['pending', 'pending_approval', 'approved', 'accepted', 'declined', 'cancelled', 'confirmed', 'booked'],
+      enum: ['pending', 'pending_approval', 'approved', 'accepted', 'declined', 'cancelled', 'confirmed', 'booked', 'failed'],
       default: 'pending',
       index: true,
     },
+    expiresAt: { type: Date, default: null, index: true },
   },
   { timestamps: true }
 );
@@ -63,5 +64,6 @@ const PurchaseSchema = new mongoose.Schema(
 // Helpful compound indexes
 PurchaseSchema.index({ cleanerId: 1, day: 1, hour: 1, status: 1 });
 PurchaseSchema.index({ clientId: 1, createdAt: -1 });
+PurchaseSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 export default mongoose.models.Purchase || mongoose.model('Purchase', PurchaseSchema);

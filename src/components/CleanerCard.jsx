@@ -49,8 +49,8 @@ export default function CleanerCard({
     const p = profile || {};
     return {
       name: p.companyName || p.realName || cleaner?.companyName || cleaner?.realName || 'Cleaner',
-      image: (typeof p.image === 'string' && p.image.trim()) ? p.image
-           : (typeof cleaner?.image === 'string' && cleaner.image.trim()) ? cleaner.image
+      image: (typeof (p.image || p.profileImage) === 'string' && String(p.image || p.profileImage).trim()) ? String(p.image || p.profileImage).trim()
+           : (typeof (cleaner?.image || cleaner?.profileImage) === 'string' && String(cleaner?.image || cleaner?.profileImage).trim()) ? String(cleaner?.image || cleaner?.profileImage).trim()
            : '/default-avatar.png',
       postcode: p?.address?.postcode || p?.postcode || cleaner?.address?.postcode || cleaner?.postcode || '',
       description: p?.description || cleaner?.description || '',

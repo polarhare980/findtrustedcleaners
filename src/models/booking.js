@@ -30,9 +30,13 @@ const BookingSchema = new mongoose.Schema(
     // (Optional) Stripe refs if you ever store them here
     paymentIntentId:  { type: String },
     stripeSessionId:  { type: String },
+
+    expiresAt: { type: Date, default: null, index: true },
   },
   { timestamps: true }
 );
+
+BookingSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 // IMPORTANT: model name is "Booking"; keep imports consistent with the FILE name:
 //   import Booking from '@/models/booking'   // <-- lowercase path to match filename
