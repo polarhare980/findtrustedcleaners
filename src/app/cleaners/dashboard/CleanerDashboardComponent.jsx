@@ -748,7 +748,7 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
       }}
       className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-6 py-2 rounded-lg"
     >
-      💎 Upgrade to Premium (50p/year)
+      💎 Upgrade to Premium (£7.99/year)
     </button>
   </div>
 ) : (

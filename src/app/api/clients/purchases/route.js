@@ -35,6 +35,24 @@ function applySpan(grid, day, start, span, value) {
   }
 }
 
+
+function normalizeServiceKey(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+}
+
+function findActiveService(services = [], serviceKey = '') {
+  const wanted = normalizeServiceKey(serviceKey);
+  return (services || []).find((s) => {
+    if (!s || s.active === false) return false;
+    return normalizeServiceKey(s.key || s.name) === wanted;
+  }) || null;
+}
+
 function buildEffectiveDayGrid(cleaner, day, isoDate) {
   const baseDay = cleaner?.availability?.[day] || {};
   const overrideDay = isoDate ? cleaner?.availabilityOverrides?.[isoDate] || {} : {};
@@ -126,7 +144,7 @@ export async function POST(req) {
   const cleaner = await Cleaner.findById(cleanerId).lean();
   if (!cleaner) return json({ success: false, message: 'Cleaner not found.' }, 404);
 
-  const svc = (cleaner.servicesDetailed || []).find((s) => s && s.key === serviceKey && s.active !== false) || null;
+  const svc = findActiveService(cleaner.servicesDetailed || [], serviceKey);
   if (!svc) return json({ success: false, message: 'Please select a valid service.' }, 400);
 
   const effDuration = Number(svc?.defaultDurationMins ?? 60);

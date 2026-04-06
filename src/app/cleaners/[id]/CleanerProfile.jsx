@@ -213,19 +213,31 @@ export default function CleanerProfile() {
       .filter(Boolean);
   }, [cleaner]);
 
+  const normalizeServiceKey = (value) =>
+    String(value || '')
+      .trim()
+      .toLowerCase()
+      .replace(/&/g, ' and ')
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '');
+
   const activeServices = useMemo(
-    () => (Array.isArray(cleaner?.servicesDetailed) ? cleaner.servicesDetailed.filter((s) => s?.name && s?.active !== false) : []),
+    () => (Array.isArray(cleaner?.servicesDetailed)
+      ? cleaner.servicesDetailed
+          .filter((s) => s?.name && s?.active !== false)
+          .map((s) => ({ ...s, key: normalizeServiceKey(s?.key || s?.name) }))
+      : []),
     [cleaner?.servicesDetailed]
   );
 
   const selectedService = useMemo(
-    () => activeServices.find((svc) => svc.key === selectedServiceKey) || activeServices[0] || null,
+    () => activeServices.find((svc) => normalizeServiceKey(svc.key) === normalizeServiceKey(selectedServiceKey)) || activeServices[0] || null,
     [activeServices, selectedServiceKey]
   );
 
   useEffect(() => {
     if (!activeServices.length) return;
-    if (!selectedServiceKey || !activeServices.some((svc) => svc.key === selectedServiceKey)) {
+    if (!selectedServiceKey || !activeServices.some((svc) => normalizeServiceKey(svc.key) === normalizeServiceKey(selectedServiceKey))) {
       setSelectedServiceKey(activeServices[0].key);
       return;
     }

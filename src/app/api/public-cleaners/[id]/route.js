@@ -93,19 +93,24 @@ export async function GET(_req, context) {
       availabilityOverrides: normalizeOverrides(c.availabilityOverrides),
       services: Array.isArray(c.services) ? c.services : [],
       servicesDetailed: Array.isArray(c.servicesDetailed)
-        ? c.servicesDetailed.map((s) => ({
-            key: (s?.key || '').toString().trim().toLowerCase(),
-            name: s?.name || '',
-            active: s?.active !== false,
-            defaultDurationMins: numOrFallback(s?.defaultDurationMins, 60),
-            minDurationMins: numOrFallback(s?.minDurationMins, 60),
-            maxDurationMins: numOrFallback(s?.maxDurationMins, 240),
-            incrementMins: numOrFallback(s?.incrementMins, 60),
-            bufferBeforeMins: numOrFallback(s?.bufferBeforeMins, 0),
-            bufferAfterMins: numOrFallback(s?.bufferAfterMins, 0),
-            basePrice: optNum(s?.basePrice),
-            pricePerHour: optNum(s?.pricePerHour),
-          }))
+        ? c.servicesDetailed.map((s) => {
+            const name = s?.name || '';
+            const price = optNum(s?.price ?? s?.basePrice);
+            return {
+              key: slugifyServiceKey(s?.key || name),
+              name,
+              active: s?.active !== false,
+              defaultDurationMins: numOrFallback(s?.defaultDurationMins, 60),
+              minDurationMins: numOrFallback(s?.minDurationMins, 60),
+              maxDurationMins: numOrFallback(s?.maxDurationMins, 240),
+              incrementMins: numOrFallback(s?.incrementMins, 60),
+              bufferBeforeMins: numOrFallback(s?.bufferBeforeMins, 0),
+              bufferAfterMins: numOrFallback(s?.bufferAfterMins, 0),
+              price,
+              basePrice: price,
+              pricePerHour: optNum(s?.pricePerHour),
+            };
+          })
         : [],
       address: {
         houseNameNumber: c?.address?.houseNameNumber || '',
@@ -164,4 +169,14 @@ function normalizeOverrides(overrides) {
     if (Object.keys(cleaned).length > 0) out[iso] = cleaned;
   }
   return out;
+}
+
+
+function slugifyServiceKey(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
 }

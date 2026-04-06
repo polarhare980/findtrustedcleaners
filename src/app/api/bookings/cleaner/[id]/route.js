@@ -23,6 +23,20 @@ function toHourString(h) {
   return Number.isFinite(n) ? String(parseInt(n, 10)) : '';
 }
 
+function normalizeServiceKey(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+}
+
+function findActiveService(services = [], serviceKey = '') {
+  const wanted = normalizeServiceKey(serviceKey);
+  return (services || []).find((s) => s && s.active !== false && normalizeServiceKey(s.key || s.name) === wanted) || null;
+}
+
 function applyDaySpan(grid, day, start, span, value) {
   if (!grid[day]) grid[day] = {};
   for (let i = 0; i < Math.max(1, span); i++) grid[day][String(start + i)] = value;
@@ -121,7 +135,7 @@ export async function POST(req, context) {
 
     const cleaner = await Cleaner.findById(cleanerId).lean();
     if (!cleaner) return json({ success: false, message: 'Cleaner not found' }, 404);
-    const service = (cleaner.servicesDetailed || []).find((s) => s && s.key === serviceKey && s.active !== false);
+    const service = findActiveService(cleaner.servicesDetailed || [], serviceKey);
     if (!service) return json({ success: false, message: 'Service not available' }, 400);
 
     const span = requiredHourSpan({ durationMins: service?.defaultDurationMins ?? 60, bufferBeforeMins: 0, bufferAfterMins: 0 });

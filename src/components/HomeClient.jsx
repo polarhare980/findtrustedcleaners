@@ -188,6 +188,7 @@ export default function HomeClient() {
           </Link>
           <nav className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-8 text-sm font-medium">
             <Link href="/cleaners" className="nav-link">Find a Cleaner</Link>
+            <Link href="/register/client" className="nav-link">Register as Client</Link>
             <Link href="/register/cleaners" className="nav-link">List Yourself</Link>
             <Link href="/how-it-works" className="nav-link">How It Works</Link>
             <Link href="/login" className="nav-link">Login</Link>
