@@ -1,3 +1,4 @@
+// redeploy trigger
 // ✅ This is a SERVER component by default (no 'use client' here)
 import BookingConfirmationPageClient from './BookingConfirmationPageClient';
 
