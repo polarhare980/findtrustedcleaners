@@ -11,6 +11,6 @@ export async function DELETE(req, { params }) {
   await dbConnect();
   const rv = await Review.findByIdAndDelete(id); if (!rv) return json({ success:false, message:'Not found' }, 404);
   const agg = await Review.aggregate([{ $match: { cleanerId: rv.cleanerId } }, { $group: { _id: '$cleanerId', avg: { $avg: '$rating' }, count: { $sum: 1 } } }]);
-  const { avg=0, count=0 } = agg[0] || {}; await Cleaner.findByIdAndUpdate(rv.cleanerId, { ratingAvg: avg, ratingCount: count });
+  const { avg=0, count=0 } = agg[0] || {}; await Cleaner.findByIdAndUpdate(rv.cleanerId, { rating: avg, ratingCount: count });
   return json({ success:true });
 }

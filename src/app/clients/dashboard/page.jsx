@@ -554,7 +554,7 @@ export default function ClientDashboardComponent() {
                         {'★'.repeat(Math.floor(favorite.rating || 5))}
                       </div>
                       <span className="text-sm text-gray-600">
-                        ({favorite.reviewCount || 0} reviews)
+                        ({favorite.ratingCount || 0} reviews)
                       </span>
                     </div>
                     <div className="flex gap-2">

@@ -310,7 +310,7 @@ export default function MyFavouriteCleanersPage() {
                 <div className="text-sm text-yellow-600 mb-4">
                   {c.googleReviewRating
                     ? <>⭐ {c.googleReviewRating} ({c.googleReviewCount || 0}) on Google</>
-                    : (c.rating ? <>⭐ {c.rating} ({c.reviewCount || 0})</> : '⭐ Not rated yet')}
+                    : (c.rating ? <>⭐ {c.rating} ({c.ratingCount || 0})</> : '⭐ Not rated yet')}
                 </div>
 
                 <div className="flex gap-2">

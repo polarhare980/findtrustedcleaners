@@ -551,7 +551,7 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium, isFavourite, on
         {cleaner.googleReviews?.rating ? (
           <p className="cleaner-rating text-sm text-yellow-600">⭐ {cleaner.googleReviews.rating} ({cleaner.googleReviews.count || 0}) on Google</p>
         ) : cleaner.rating ? (
-          <p className="cleaner-rating text-sm text-yellow-600">⭐ {cleaner.rating} ({cleaner.reviewCount || 0}) from site users</p>
+          <p className="cleaner-rating text-sm text-yellow-600">⭐ {cleaner.rating} ({cleaner.ratingCount || 0}) from site users</p>
         ) : (
           <p className="cleaner-rating text-sm text-gray-600">⭐ Not rated yet</p>
         )}

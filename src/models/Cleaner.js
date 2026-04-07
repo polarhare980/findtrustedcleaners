@@ -88,7 +88,8 @@ const cleanerSchema = new mongoose.Schema(
     views: { type: Number, default: 0 },
     profileUnlocks: { type: Number, default: 0 },
     completedJobs: { type: Number, default: 0 },
-    rating: { type: Number },
+    rating: { type: Number, default: 0 },
+    ratingCount: { type: Number, default: 0 },
 
     photos: { type: [PhotoSchema], default: [] },
     videoUrl: { type: String },

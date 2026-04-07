@@ -65,7 +65,7 @@ export default function CleanerCard({
       rating:
         p?.googleReviews?.rating ?? p?.rating ?? cleaner?.googleReviews?.rating ?? cleaner?.rating ?? null,
       ratingCount:
-        p?.googleReviews?.count ?? p?.reviewCount ?? cleaner?.googleReviews?.count ?? cleaner?.reviewCount ?? null,
+        p?.googleReviews?.count ?? p?.ratingCount ?? cleaner?.googleReviews?.count ?? cleaner?.ratingCount ?? null,
       dbs: p?.dbsChecked ?? cleaner?.dbsChecked ?? false,
       insured: p?.businessInsurance ?? cleaner?.businessInsurance ?? false,
       availability:

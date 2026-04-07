@@ -340,7 +340,7 @@ export default function FindCleanerPage() {
                             {cleaner.rating || cleaner.googleReviewRating ? (
                               <div className="flex flex-col bg-white/50 px-3 py-1 rounded-xl text-sm text-yellow-600">
                                 {cleaner.rating && (
-                                  <span>⭐ {cleaner.rating} ({cleaner.reviewCount || 0}) from site users</span>
+                                  <span>⭐ {cleaner.rating} ({cleaner.ratingCount || 0}) from site users</span>
                                 )}
                                 {cleaner.googleReviewRating && cleaner.googleReviewCount && (
                                   <span>⭐ {cleaner.googleReviewRating} ({cleaner.googleReviewCount}) from Google</span>

@@ -1,46 +1,82 @@
-import { NextResponse } from "next/server";
-import { protectApiRoute } from "@/lib/auth";
-import dbConnect from "@/lib/dbConnect";
-import Review from "@/models/Review";
-import Purchase from "@/models/Purchase";
-import Cleaner from "@/models/Cleaner";
+import { NextResponse } from 'next/server';
+import { protectApiRoute } from '@/lib/auth';
+import dbConnect from '@/lib/dbConnect';
+import Review from '@/models/Review';
+import Purchase from '@/models/Purchase';
+import Cleaner from '@/models/Cleaner';
 
-export const runtime = "nodejs";
+export const runtime = 'nodejs';
+
+const ALLOWED_STATUSES = new Set(['accepted', 'approved', 'booked', 'confirmed']);
+const ALLOWED_HIGHLIGHTS = [
+  'On time',
+  'Friendly',
+  'Good communication',
+  'Quality of cleaning',
+  'Would book again',
+];
 
 function json(data, status = 200) {
   return NextResponse.json(data, { status });
 }
 
+function normaliseHighlights(input) {
+  if (!Array.isArray(input)) return [];
+  const valid = new Set(ALLOWED_HIGHLIGHTS);
+  return Array.from(new Set(input.map((v) => String(v || '').trim()).filter((v) => valid.has(v))));
+}
+
 export async function POST(req) {
-  const { valid, user, response } = await protectApiRoute(req, "client");
+  const { valid, user, response } = await protectApiRoute(req, 'client');
   if (!valid) return response;
 
-  const { cleanerId, purchaseId, rating, text } = await req.json().catch(() => ({}));
-  const numericRating = Number(rating);
+  const body = await req.json().catch(() => ({}));
+  const purchaseId = body?.purchaseId;
+  const cleanerIdFromBody = body?.cleanerId;
+  const numericRating = Number(body?.rating);
+  const text = String(body?.text ?? body?.review ?? '').trim();
+  const highlights = normaliseHighlights(body?.highlights);
+  const wouldBookAgain = body?.wouldBookAgain !== false;
 
-  if (!cleanerId || !purchaseId || !numericRating) return json({ success: false, message: "Missing fields" }, 400);
-  if (numericRating < 1 || numericRating > 5) return json({ success: false, message: "Invalid rating" }, 400);
+  if (!purchaseId || !numericRating) {
+    return json({ success: false, message: 'Please choose a booking and a star rating.' }, 400);
+  }
+  if (numericRating < 1 || numericRating > 5) {
+    return json({ success: false, message: 'Please choose a rating between 1 and 5.' }, 400);
+  }
 
   await dbConnect();
 
   const purchase = await Purchase.findById(purchaseId);
-  if (!purchase || String(purchase.clientId) !== String(user._id) || String(purchase.cleanerId) !== String(cleanerId)) {
-    return json({ success: false, message: "Not allowed" }, 403);
+  if (!purchase || String(purchase.clientId) !== String(user._id)) {
+    return json({ success: false, message: 'This booking is not available to review.' }, 403);
   }
 
-  if (!["accepted", "approved", "booked", "confirmed"].includes(String(purchase.status || '').toLowerCase())) {
-    return json({ success: false, message: "You can only review completed/accepted jobs" }, 400);
+  const cleanerId = String(cleanerIdFromBody || purchase.cleanerId || '');
+  if (!cleanerId || String(purchase.cleanerId) !== cleanerId) {
+    return json({ success: false, message: 'This review does not match the cleaner on the booking.' }, 403);
+  }
+
+  if (!ALLOWED_STATUSES.has(String(purchase.status || '').toLowerCase())) {
+    return json({ success: false, message: 'You can only review accepted or completed bookings.' }, 400);
   }
 
   const existing = await Review.findOne({ purchaseId });
-  if (existing) return json({ success: false, message: "A review has already been submitted for this booking." }, 409);
+  if (existing) {
+    return json({ success: false, message: 'A review has already been submitted for this booking.' }, 409);
+  }
 
   const review = await Review.create({
     cleanerId,
     clientId: user._id,
     purchaseId,
     rating: numericRating,
-    text: String(text || '').trim(),
+    text,
+    highlights,
+    wouldBookAgain,
+    serviceName: String(purchase.serviceName || '').trim(),
+    appointmentAt: purchase.appointmentAt || null,
+    verifiedBooking: true,
   });
 
   const agg = await Review.aggregate([
@@ -61,5 +97,5 @@ export async function POST(req) {
   }
   await purchase.save();
 
-  return json({ success: true, data: review }, 201);
+  return json({ success: true, message: 'Thanks for your review.', data: review }, 201);
 }

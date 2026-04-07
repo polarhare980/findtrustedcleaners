@@ -2,9 +2,10 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import PurchaseButton from '@/components/PurchaseButton';
 import ReviewFormClient from '@/components/ReviewFormClient';
+import RatingStars from '@/components/RatingStars';
 import Link from 'next/link';
 
 // Public APIs
@@ -139,6 +140,7 @@ function composeWeekView(baseWeekly = {}, overridesByISO = {}, mondayDate, purch
 
 export default function CleanerProfile() {
   const { id } = useParams();
+  const searchParams = useSearchParams();
 
   const [cleaner, setCleaner] = useState(null);
   const [purchases, setPurchases] = useState([]);
@@ -147,6 +149,7 @@ export default function CleanerProfile() {
   const [selectedServiceKey, setSelectedServiceKey] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [reviewData, setReviewData] = useState({ summary: null, data: [] });
 
   // Week selector (public view: future only; premium up to 4 weeks total)
   const [weekOffset, setWeekOffset] = useState(0); // 0=this week
@@ -164,12 +167,14 @@ export default function CleanerProfile() {
     (async () => {
       try {
         setLoading(true);
-        const [cRes, pRes] = await Promise.all([
+        const [cRes, pRes, rRes] = await Promise.all([
           fetch(PUBLIC_CLEANER_API(id), { credentials: 'include' }),
           fetch(PUBLIC_PURCHASES_API(id), { credentials: 'include' }),
+          fetch(`/api/public/cleaners/${id}/reviews`, { credentials: 'include' }),
         ]);
         const cJson = await cRes.json().catch(() => ({}));
         const pJson = await pRes.json().catch(() => ({}));
+        const rJson = await rRes.json().catch(() => ({}));
 
         if (!alive) return;
 
@@ -185,6 +190,7 @@ export default function CleanerProfile() {
         });
 
         setPurchases(Array.isArray(pJson?.purchases) ? pJson.purchases : []);
+        setReviewData({ summary: rJson?.summary || null, data: Array.isArray(rJson?.data) ? rJson.data : [] });
         setError('');
       } catch (e) {
         setError(e?.message || 'Failed to load profile');
@@ -253,6 +259,15 @@ export default function CleanerProfile() {
   // ---- Google Reviews (dashboard fields first) ----
   const googleReviewRating = cleaner?.googleReviewRating ?? cleaner?.googleReviews?.rating ?? null;
   const googleReviewCount = cleaner?.googleReviewCount ?? cleaner?.googleReviews?.count ?? null;
+  const siteReviewAverage = Number(reviewData?.summary?.average || cleaner?.rating || 0);
+  const siteReviewCount = Number(reviewData?.summary?.count || cleaner?.ratingCount || 0);
+  const siteBreakdown = reviewData?.summary?.breakdown || { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+  const siteHighlights = reviewData?.summary?.highlights || {};
+  const topReviewHighlights = Object.entries(siteHighlights)
+    .filter(([, count]) => Number(count) > 0)
+    .sort((a, b) => Number(b[1]) - Number(a[1]))
+    .slice(0, 4);
+  const isTopRated = siteReviewCount >= 5 && siteReviewAverage >= 4.5;
 
   // ---- Availability for the selected week (matches Dashboard precedence) ----
   const composedWeek = useMemo(() => {
@@ -274,6 +289,15 @@ export default function CleanerProfile() {
     }
     return 'unavailable';
   }
+
+  useEffect(() => {
+    if (!searchParams?.get('review')) return;
+    const timer = setTimeout(() => {
+      const el = document.getElementById('leave-review-section');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchParams]);
 
   function onSelect(day, hour) {
     if (getCellState(day, hour) !== 'available') return;
@@ -315,6 +339,8 @@ export default function CleanerProfile() {
   const badges = [];
   if (cleaner.isPremium)
     badges.push({ key: 'premium', label: 'Premium', tone: 'from-amber-400 to-yellow-500' });
+  if (isTopRated)
+    badges.push({ key: 'top-rated', label: 'Top Rated', tone: 'from-amber-300 to-orange-500' });
   if (cleaner.businessInsurance)
     badges.push({ key: 'insured', label: 'Insured', tone: 'from-emerald-400 to-teal-500' });
   if (cleaner.dbsChecked)
@@ -365,20 +391,29 @@ export default function CleanerProfile() {
           {/* Minimal, non-contact location only */}
           <p className="text-sm text-gray-600">{cleaner?.address?.postcode || ''}</p>
 
-          {/* Google reviews: rating & count only (URL hidden) */}
-          {(googleReviewRating != null || googleReviewCount != null) && (
-            <div className="flex items-center gap-3 text-sm text-slate-700 mt-2">
-              {googleReviewRating != null && (
-                <span className="font-semibold">
-                  ⭐{' '}
-                  {Number.isFinite(Number(googleReviewRating))
-                    ? Number(googleReviewRating).toFixed(1)
-                    : googleReviewRating}
-                </span>
-              )}
-              {googleReviewCount != null && <span>({googleReviewCount} reviews)</span>}
-            </div>
-          )}
+          <div className="mt-3 grid gap-2">
+            {siteReviewCount > 0 && (
+              <div className="flex items-center gap-3 flex-wrap text-sm text-slate-700">
+                <RatingStars value={siteReviewAverage} count={siteReviewCount} size={16} />
+                <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">Verified platform reviews</span>
+                {isTopRated ? (
+                  <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">Top Rated Cleaner</span>
+                ) : null}
+              </div>
+            )}
+
+            {(googleReviewRating != null || googleReviewCount != null) && (
+              <div className="flex items-center gap-3 text-sm text-slate-600">
+                <span>Google:</span>
+                {googleReviewRating != null && (
+                  <span className="font-semibold">
+                    ⭐ {Number.isFinite(Number(googleReviewRating)) ? Number(googleReviewRating).toFixed(1) : googleReviewRating}
+                  </span>
+                )}
+                {googleReviewCount != null && <span>({googleReviewCount} reviews)</span>}
+              </div>
+            )}
+          </div>
 
           {hourlyRate && (
             <div className="text-slate-800 text-lg font-semibold mt-3">£{hourlyRate}/hour</div>
@@ -683,6 +718,85 @@ export default function CleanerProfile() {
       </section>
 
       <section className="mt-8">
+        <h2 className="text-xl font-bold text-teal-900 mb-3">Verified customer reviews</h2>
+        <div className="rounded-2xl p-5 bg-white/70 border border-slate-100 shadow">
+          {siteReviewCount > 0 ? (
+            <div className="grid gap-6 lg:grid-cols-[280px,1fr]">
+              <div className="rounded-2xl border border-slate-100 bg-white/80 p-5">
+                <div className="text-3xl font-extrabold text-slate-900">{siteReviewAverage.toFixed(1)}</div>
+                <div className="mt-2"><RatingStars value={siteReviewAverage} count={siteReviewCount} size={18} /></div>
+                <div className="mt-4 space-y-2">
+                  {[5,4,3,2,1].map((star) => {
+                    const count = Number(siteBreakdown?.[star] || 0);
+                    const width = siteReviewCount ? `${(count / siteReviewCount) * 100}%` : '0%';
+                    return (
+                      <div key={star} className="flex items-center gap-2 text-sm text-slate-600">
+                        <span className="w-8">{star}★</span>
+                        <div className="h-2 flex-1 rounded-full bg-slate-100 overflow-hidden">
+                          <div className="h-full rounded-full bg-teal-500" style={{ width }} />
+                        </div>
+                        <span className="w-6 text-right">{count}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+                {topReviewHighlights.length > 0 ? (
+                  <div className="mt-5">
+                    <div className="text-sm font-semibold text-slate-900 mb-2">Customers often mention</div>
+                    <div className="flex flex-wrap gap-2">
+                      {topReviewHighlights.map(([label, count]) => (
+                        <span key={label} className="rounded-full border border-teal-200 bg-teal-50 px-2.5 py-1 text-xs font-medium text-teal-700">
+                          {label} · {count}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="space-y-4">
+                {reviewData.data.slice(0, 6).map((review) => (
+                  <article key={review._id} className="rounded-2xl border border-slate-100 bg-white/80 p-5">
+                    <div className="flex items-start justify-between gap-3 flex-wrap">
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <RatingStars value={Number(review.rating || 0)} count={0} size={15} />
+                          {review.verifiedBooking ? (
+                            <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">Verified booking</span>
+                          ) : null}
+                          {review.wouldBookAgain ? (
+                            <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-semibold text-slate-700">Would book again</span>
+                          ) : null}
+                        </div>
+                        <div className="mt-1 text-xs text-slate-500">
+                          {review.serviceName || 'Cleaning service'}
+                          {review.createdAt ? ` • ${new Date(review.createdAt).toLocaleDateString('en-GB')}` : ''}
+                        </div>
+                      </div>
+                    </div>
+                    {Array.isArray(review.highlights) && review.highlights.length > 0 ? (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {review.highlights.map((item) => (
+                          <span key={item} className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs text-slate-700">{item}</span>
+                        ))}
+                      </div>
+                    ) : null}
+                    {review.text ? (
+                      <p className="mt-3 text-slate-700 leading-7">“{review.text}”</p>
+                    ) : (
+                      <p className="mt-3 text-sm text-slate-500">No written comment left for this booking.</p>
+                    )}
+                  </article>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="text-sm text-slate-600">No verified platform reviews yet. The first completed booking review will appear here.</div>
+          )}
+        </div>
+      </section>
+
+      <section id="leave-review-section" className="mt-8">
         <h2 className="text-xl font-bold text-teal-900 mb-3">Leave a Review</h2>
         <div className="rounded-2xl p-5 bg-white/70 border border-slate-100 shadow">
           <ReviewFormClient cleanerId={String(cleaner._id)} />

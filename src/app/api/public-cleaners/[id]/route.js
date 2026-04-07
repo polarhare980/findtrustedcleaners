@@ -66,6 +66,8 @@ export async function GET(_req, context) {
     googleReviewRating: 1,
     googleReviewCount: 1,
     videoUrl: 1,
+    rating: 1,
+    ratingCount: 1,
     createdAt: 1,
   };
 
@@ -125,6 +127,8 @@ export async function GET(_req, context) {
         count: typeof c?.googleReviewCount === 'number' ? c.googleReviewCount : null,
       },
       videoUrl: c?.videoUrl || '',
+      rating: typeof c?.rating === 'number' ? c.rating : 0,
+      ratingCount: typeof c?.ratingCount === 'number' ? c.ratingCount : 0,
       createdAt: c?.createdAt || null,
     };
 
