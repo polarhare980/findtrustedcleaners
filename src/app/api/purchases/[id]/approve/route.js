@@ -87,8 +87,11 @@ export async function PUT(req, context) {
 
     // Mark purchase accepted (do NOT mutate cleaner.availability; UI reads from purchases feed)
     purchase.status = 'accepted';
+    purchase.completedAt = purchase.completedAt || new Date();
     purchase.expiresAt = getPurchaseExpiryDate('accepted');
     await purchase.save();
+
+    await Cleaner.findByIdAndUpdate(purchase.cleanerId, { $inc: { completedJobs: 1 } }).catch(() => null);
 
     return json({
       success: true,

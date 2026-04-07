@@ -1,5 +1,10 @@
-import { redirect } from "next/navigation";
+import ServicesDashboardEditor from '../ServicesDashboardEditor';
 
-export default function CleanerServicesEntryPage() {
-  redirect('/cleaners/dashboard?section=services');
+export const metadata = {
+  title: 'Edit Services | Find Trusted Cleaners',
+  description: 'Manage your cleaner services, pricing, and durations.',
+};
+
+export default function CleanerServicesPage() {
+  return <ServicesDashboardEditor />;
 }

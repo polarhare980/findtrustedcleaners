@@ -129,6 +129,8 @@ export default function CleanerDashboard() {
   const [editData, setEditData] = useState({});
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
+  const [reviewsSummary, setReviewsSummary] = useState({ average: 0, count: 0, breakdown: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 } });
+  const [recentReviews, setRecentReviews] = useState([]);
 
   const [combined, setCombined] = useState([]);       // bookings + pending purchases
   const [pendingRequests, setPendingRequests] = useState([]);
@@ -337,6 +339,7 @@ export default function CleanerDashboard() {
         setFormData(seed);
         setEditData(seed);
         setEditOverrides(seed.availabilityOverrides || {});
+        await refreshReviews(cleanerUser._id);
       } catch (e) {
         console.error('Dashboard init failed:', e);
         router.push('/login');
@@ -366,6 +369,26 @@ export default function CleanerDashboard() {
     );
   };
 
+  const refreshReviews = async (cleanerId = me?._id) => {
+    if (!cleanerId) return;
+    const res = await fetch(`/api/public/cleaners/${cleanerId}/reviews`, { credentials: 'include' });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data?.success) return;
+
+    const summary = data.summary || {};
+    setReviewsSummary({
+      average: Number(summary.average || 0),
+      count: Number(summary.count || 0),
+      breakdown: summary.breakdown || { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 },
+    });
+    setRecentReviews(Array.isArray(data.data) ? data.data.slice(0, 6) : []);
+    setFormData((prev) => prev ? ({
+      ...prev,
+      rating: Number(summary.average || 0),
+      ratingCount: Number(summary.count || 0),
+    }) : prev);
+  };
+
   const processPendingRequest = async (purchaseId, action) => {
     if (!purchaseId) throw new Error('Missing pending request id.');
 
@@ -383,7 +406,10 @@ export default function CleanerDashboard() {
     }
 
     await refreshBookingState();
-    setMessage(action === 'accept' ? '✅ Booking accepted and payment captured!' : '✅ Booking declined and slot freed.');
+    if (action === 'accept') {
+      setFormData((prev) => prev ? { ...prev, completedJobs: Number(prev.completedJobs || 0) + 1 } : prev);
+    }
+    setMessage(action === 'accept' ? '✅ Booking accepted and payment captured! Completed jobs updated.' : '✅ Booking declined and slot freed.');
   };
 
   // Toggle availability for a specific day/hour
@@ -994,110 +1020,36 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
           </div>
         </div>
 
-        {/* Services & Duration (everyone) */}
+        {/* Services summary */}
         <div id="services-editor" className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl mb-6 p-6">
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent mb-4">
-            🧹 Services
-          </h2>
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-4">
+            <div>
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent">
+                🧹 Services
+              </h2>
+              <p className="text-sm text-gray-600 mt-1">Your live service list. Use the dedicated services editor to change pricing, duration, and what is active.</p>
+            </div>
+            <button
+              onClick={() => router.push('/cleaners/dashboard/services')}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-xl font-semibold transition-all"
+            >
+              <span>🧹</span>
+              <span>Edit Services</span>
+            </button>
+          </div>
 
-          {editMode ? (
-            <div className="space-y-4">
-              <p className="text-sm text-gray-600">Keep this simple: service name, fixed price if you have one, and duration.</p>
-              {(editData.servicesDetailed || []).map((svc, idx) => (
-                <div key={idx} className="p-4 bg-white/70 rounded-xl border border-gray-200 space-y-3">
-                  <input
-                    className="w-full p-2 border rounded"
-                    placeholder="Service Name"
-                    value={svc.name || ''}
-                    onChange={(e) => {
-                      const next = [...editData.servicesDetailed];
-                      next[idx].name = e.target.value;
-                      setEditData({ ...editData, servicesDetailed: next });
-                    }}
-                  />
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    <input
-                      type="number"
-                      className="p-2 border rounded"
-                      placeholder="Price (optional)"
-                      value={svc.price ?? svc.basePrice ?? ''}
-                      onChange={(e) => {
-                        const next = [...editData.servicesDetailed];
-                        next[idx].price = e.target.value;
-                        next[idx].basePrice = e.target.value;
-                        setEditData({ ...editData, servicesDetailed: next });
-                      }}
-                    />
-                    <input
-                      type="number"
-                      className="p-2 border rounded"
-                      placeholder="Duration (mins)"
-                      value={svc.defaultDurationMins ?? ''}
-                      onChange={(e) => {
-                        const next = [...editData.servicesDetailed];
-                        next[idx].defaultDurationMins = e.target.value;
-                        setEditData({ ...editData, servicesDetailed: next });
-                      }}
-                    />
-                  </div>
-
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={svc.active !== false}
-                      onChange={(e) => {
-                        const next = [...editData.servicesDetailed];
-                        next[idx].active = e.target.checked;
-                        setEditData({ ...editData, servicesDetailed: next });
-                      }}
-                    />
-                    Active
-                  </label>
-
-                  <button
-                    className="text-red-600 text-sm"
-                    onClick={() => {
-                      const next = [...editData.servicesDetailed];
-                      next.splice(idx, 1);
-                      setEditData({ ...editData, servicesDetailed: next });
-                    }}
-                  >
-                    Remove
-                  </button>
+          {(formData.servicesDetailed || []).filter((s) => s.active !== false).length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {formData.servicesDetailed.filter((s) => s.active !== false).map((svc, i) => (
+                <div key={i} className="rounded-xl border border-white/60 bg-white/70 p-4">
+                  <div className="font-semibold text-gray-900">{svc.name || 'Untitled service'}</div>
+                  <div className="text-sm text-gray-600 mt-1">{svc.defaultDurationMins || 60} mins</div>
+                  <div className="text-sm text-gray-700 mt-1">{svc.price != null || svc.basePrice != null ? `£${svc.price ?? svc.basePrice}` : 'Price on request'}</div>
                 </div>
               ))}
-
-              {/* Add new service */}
-              <button
-                className="px-4 py-2 bg-teal-600 text-white rounded"
-                onClick={() =>
-                  setEditData({
-                    ...editData,
-                    servicesDetailed: [
-                      ...(editData.servicesDetailed || []),
-                      { name: '', price: '', defaultDurationMins: '', active: true },
-                    ],
-                  })
-                }
-              >
-                ➕ Add Service
-              </button>
             </div>
           ) : (
-            <>
-              {(formData.servicesDetailed || []).filter((s) => s.active !== false).length > 0 ? (
-                <ul className="list-disc list-inside text-gray-800">
-                  {formData.servicesDetailed.map((svc, i) => (
-                    <li key={i}>
-                      {svc.name} ({svc.defaultDurationMins || 60} mins{svc.price != null || svc.basePrice != null ? ` • £${svc.price ?? svc.basePrice}` : ''})
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-gray-600">No detailed services listed</p>
-              )}
-            </>
+            <div className="rounded-xl border border-dashed border-gray-300 bg-white/60 p-5 text-gray-600">No active services listed yet.</div>
           )}
         </div>
 
@@ -1469,10 +1421,64 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
         <div id="reviews-section"></div>
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-          <StatCard icon="📊" title="Profile Views" value={formData.views || 0} onClick={() => router.push(`/cleaners/${formData._id}`)} />
-          <StatCard icon="⭐" title="Rating" value={formData.rating ? `${Number(formData.rating).toFixed(1)}/5` : 'N/A'} onClick={() => document.getElementById('reviews-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} />
-          <StatCard icon="🏆" title="Completed Jobs" value={formData.completedJobs || 0} onClick={() => router.push('/cleaners/bookings?tab=accepted')} />
+          <StatCard icon="📊" title="Profile Views" value={formData.views || 0} helpText="Tap to open your public profile" onClick={() => router.push(`/cleaners/${formData._id}`)} />
+          <StatCard icon="⭐" title="Rating" value={reviewsSummary.count ? `${Number(reviewsSummary.average || 0).toFixed(1)}/5` : 'No reviews yet'} helpText={`${reviewsSummary.count || 0} verified review${Number(reviewsSummary.count || 0) === 1 ? '' : 's'}`} onClick={() => document.getElementById('reviews-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} />
+          <StatCard icon="🏆" title="Completed Jobs" value={formData.completedJobs || 0} helpText="Increases when you accept a booking" onClick={() => router.push('/cleaners/bookings?tab=accepted')} />
           <StatCard icon="💎" title="Account Status" value={formData.isPremium ? '✨ Premium' : '🆓 Free'} />
+        </div>
+
+        <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl mb-6 p-6">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-5">
+            <div>
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent">⭐ Ratings & Reviews</h2>
+              <p className="text-sm text-gray-600 mt-1">This section reflects real reviews left through your booking flow.</p>
+            </div>
+            <button
+              onClick={() => router.push(`/cleaners/${formData._id}`)}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-white/70 border rounded-xl font-medium hover:bg-white"
+            >
+              <span>View public profile</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+            <div className="rounded-xl bg-white/70 border border-white/60 p-4">
+              <div className="text-sm text-gray-500">Average rating</div>
+              <div className="text-3xl font-bold text-gray-900 mt-1">{reviewsSummary.count ? Number(reviewsSummary.average || 0).toFixed(1) : '—'}</div>
+            </div>
+            <div className="rounded-xl bg-white/70 border border-white/60 p-4">
+              <div className="text-sm text-gray-500">Verified reviews</div>
+              <div className="text-3xl font-bold text-gray-900 mt-1">{reviewsSummary.count || 0}</div>
+            </div>
+            <div className="rounded-xl bg-white/70 border border-white/60 p-4">
+              <div className="text-sm text-gray-500">5 star reviews</div>
+              <div className="text-3xl font-bold text-gray-900 mt-1">{Number(reviewsSummary.breakdown?.[5] || 0)}</div>
+            </div>
+          </div>
+
+          {recentReviews.length ? (
+            <div className="space-y-3">
+              {recentReviews.map((review) => (
+                <div key={review._id} className="rounded-xl bg-white/70 border border-white/60 p-4">
+                  <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                    <div className="font-semibold text-gray-900">{'★'.repeat(Number(review.rating || 0))}{'☆'.repeat(Math.max(0, 5 - Number(review.rating || 0)))}</div>
+                    <div className="text-sm text-gray-500">{review.createdAt ? new Date(review.createdAt).toLocaleDateString('en-GB') : ''}</div>
+                  </div>
+                  {review.serviceName ? <div className="text-sm text-teal-700 mt-1">{review.serviceName}</div> : null}
+                  <div className="text-sm text-gray-700 mt-2 whitespace-pre-wrap">{review.text || 'No written comment left.'}</div>
+                  {Array.isArray(review.highlights) && review.highlights.length ? (
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      {review.highlights.map((tag) => (
+                        <span key={tag} className="px-2.5 py-1 rounded-full bg-teal-50 text-teal-700 text-xs font-medium border border-teal-100">{tag}</span>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-xl border border-dashed border-gray-300 bg-white/60 p-5 text-gray-600">No verified reviews yet. Once a client leaves a review, it will appear here automatically.</div>
+          )}
         </div>
 
         {/* Quick Actions */}
@@ -1528,7 +1534,7 @@ function Field({ label, children, wide, editMode }) {
   );
 }
 
-function StatCard({ icon, title, value, onClick }) {
+function StatCard({ icon, title, value, onClick, helpText = '' }) {
   return (
     <button type="button" onClick={onClick} className="w-full bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-2xl p-6 text-center hover:-translate-y-1 transition-all">
       <div className="text-3xl mb-2">{icon}</div>
@@ -1536,6 +1542,7 @@ function StatCard({ icon, title, value, onClick }) {
         {title}
       </h3>
       <p className="text-2xl font-bold text-gray-800 mt-2">{value}</p>
+      {helpText ? <p className="text-xs text-gray-500 mt-2">{helpText}</p> : null}
     </button>
   );
 }

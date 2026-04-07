@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import mongoose from 'mongoose';
 import dbConnect from '@/lib/dbConnect';
 import Cleaner from '@/models/Cleaner';
+import { getTokenFromRequest, verifyToken } from '@/lib/auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -72,8 +73,17 @@ export async function GET(_req, context) {
   };
 
   try {
+    const token = getTokenFromRequest(_req);
+    const viewer = token ? verifyToken(token) : null;
+    const isOwnCleanerView = viewer?.type === 'cleaner' && String(viewer?._id || viewer?.id || '') === String(id);
+
     const c = await Cleaner.findById(id, projection).lean();
     if (!c) return json({ success: false, message: 'Cleaner not found.' }, 404);
+
+    if (!isOwnCleanerView) {
+      await Cleaner.findByIdAndUpdate(id, { $inc: { views: 1 } }).catch(() => null);
+      c.views = Number(c.views || 0) + 1;
+    }
 
     const cleaner = {
       _id: String(c._id),
