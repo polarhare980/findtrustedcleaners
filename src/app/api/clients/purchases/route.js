@@ -6,8 +6,9 @@ import Purchase from '@/models/Purchase';
 import Cleaner from '@/models/Cleaner';
 import Booking from '@/models/booking';
 import { requiredHourSpan, hasContiguousAvailability } from '@/lib/availability';
-import { buildCleanerBookingNotificationEmail, sendEmail } from '@/lib/mail';
+import { sendCleanerPendingBookingEmail } from '@/lib/notifications';
 import { getPurchaseExpiryDate } from '@/lib/purchaseExpiry';
+import { parseAppointmentDate } from '@/lib/bookingDates';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -98,8 +99,8 @@ export async function GET(req) {
 
   try {
     const purchases = await Purchase.find({ clientId: user._id })
-      .sort({ createdAt: -1 })
-      .populate('cleanerId', 'realName companyName')
+      .sort({ appointmentAt: 1, createdAt: -1 })
+      .populate('cleanerId', 'realName companyName image')
       .lean();
     return json({ success: true, purchases });
   } catch (err) {
@@ -201,6 +202,8 @@ export async function POST(req) {
     return json({ success: false, message: 'Could not validate availability.' }, 500);
   }
 
+  const appointmentAt = parseAppointmentDate({ isoDate, day, hour: startHourStr });
+
   const doc = await Purchase.create({
     cleanerId,
     clientId: isClientUser ? user._id : undefined,
@@ -210,6 +213,7 @@ export async function POST(req) {
     day,
     hour: startHourStr,
     isoDate: typeof isoDate === 'string' ? isoDate : undefined,
+    appointmentAt: appointmentAt || undefined,
     span,
     serviceKey,
     serviceName: svc?.name || undefined,
@@ -223,24 +227,16 @@ export async function POST(req) {
     expiresAt: getPurchaseExpiryDate('pending_approval'),
   });
 
-  if (cleaner?.email) {
-    const emailPayload = buildCleanerBookingNotificationEmail({
-      cleanerName: cleaner.realName || cleaner.companyName || '',
-      clientName: isClientUser ? (user.fullName || user.name || '') : guestName,
-      serviceName: svc?.name || '',
-      day,
-      time: formatHourLabel(startHourStr),
-      isoDate: typeof isoDate === 'string' ? isoDate : '',
-      area: formatArea(cleaner),
-      dashboardUrl: `${process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'https://www.findtrustedcleaners.com'}/cleaners/bookings`,
-    });
-
-    sendEmail({ to: cleaner.email, ...emailPayload })
-      .then(() => console.info('[booking-email] cleaner notified', { purchaseId: String(doc._id), cleanerId: String(cleaner._id) }))
-      .catch((error) => console.error('[booking-email] failed', { purchaseId: String(doc._id), cleanerId: String(cleaner._id), message: error?.message || 'Unknown error' }));
-  } else {
-    console.warn('[booking-email] cleaner has no email', { purchaseId: String(doc._id), cleanerId: String(cleaner?._id || cleanerId) });
-  }
+  sendCleanerPendingBookingEmail({
+    cleaner,
+    client: {
+      name: isClientUser ? (user.fullName || user.name || '') : guestName,
+      area: isClientUser ? [user?.address?.town, user?.address?.county, user?.address?.postcode].filter(Boolean).join(', ') : '',
+    },
+    purchase: { ...doc.toObject(), _id: String(doc._id) },
+  })
+    .then(() => console.info('[booking-email] cleaner notified', { purchaseId: String(doc._id), cleanerId: String(cleaner._id) }))
+    .catch((error) => console.error('[booking-email] failed', { purchaseId: String(doc._id), cleanerId: String(cleaner._id), message: error?.message || 'Unknown error' }));
 
   return json({
     success: true,

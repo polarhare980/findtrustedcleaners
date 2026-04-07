@@ -56,6 +56,12 @@ const PurchaseSchema = new mongoose.Schema(
       default: 'pending',
       index: true,
     },
+    appointmentAt: { type: Date, default: null, index: true },
+    cleanerReminderSentAt: { type: Date, default: null },
+    clientReminderSentAt: { type: Date, default: null },
+    reviewRequestSentAt: { type: Date, default: null },
+    reviewSubmittedAt: { type: Date, default: null },
+    completedAt: { type: Date, default: null },
     expiresAt: { type: Date, default: null, index: true },
   },
   { timestamps: true }
@@ -64,6 +70,7 @@ const PurchaseSchema = new mongoose.Schema(
 // Helpful compound indexes
 PurchaseSchema.index({ cleanerId: 1, day: 1, hour: 1, status: 1 });
 PurchaseSchema.index({ clientId: 1, createdAt: -1 });
+PurchaseSchema.index({ appointmentAt: 1, status: 1 });
 PurchaseSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 export default mongoose.models.Purchase || mongoose.model('Purchase', PurchaseSchema);

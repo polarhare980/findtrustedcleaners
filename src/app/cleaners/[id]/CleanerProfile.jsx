@@ -4,6 +4,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import PurchaseButton from '@/components/PurchaseButton';
+import ReviewFormClient from '@/components/ReviewFormClient';
 import Link from 'next/link';
 
 // Public APIs
@@ -680,6 +681,14 @@ export default function CleanerProfile() {
           You can contact this cleaner directly at any time. You can also send a booking request through the platform without creating an account. Your contact details will be passed to the cleaner.
         </div>
       </section>
+
+      <section className="mt-8">
+        <h2 className="text-xl font-bold text-teal-900 mb-3">Leave a Review</h2>
+        <div className="rounded-2xl p-5 bg-white/70 border border-slate-100 shadow">
+          <ReviewFormClient cleanerId={String(cleaner._id)} />
+        </div>
+      </section>
+
     </main>
   );
 }

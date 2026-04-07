@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { secureFetch } from '@/lib/secureFetch';
 
@@ -118,6 +118,7 @@ function composeWeekView(baseWeekly = {}, overridesByISO = {}, mondayDate, overl
 // -------------------- Component --------------------
 export default function CleanerDashboard() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -278,6 +279,14 @@ export default function CleanerDashboard() {
   }
 
   useEffect(() => setMounted(true), []);
+
+
+  useEffect(() => {
+    const section = searchParams?.get('section');
+    if (!section) return;
+    const el = document.getElementById(section === 'services' ? 'services-editor' : section);
+    if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
+  }, [searchParams]);
 
   // Load everything
   useEffect(() => {
@@ -632,7 +641,7 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
                 Cleaner Dashboard
               </h1>
               <p className="text-gray-600">Manage your cleaning services and availability</p>
-            </div>
+            </button>
 
             <div className="flex flex-wrap items-center gap-3 mt-4 md:mt-0">
               {formData?.dbsChecked && (
@@ -1219,6 +1228,13 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
               </p>
             </div>
             <button
+              onClick={() => router.push('/cleaners/dashboard/services')}
+              className="flex items-center justify-center gap-3 px-5 py-4 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-xl font-semibold transition-all"
+            >
+              <span className="text-xl">🧹</span>
+              <span>Edit Services</span>
+            </button>
+            <button
               onClick={() => router.push('/cleaners/bookings')}
               className="px-4 py-2 rounded-lg bg-white/70 border font-medium hover:bg-white"
             >
@@ -1450,11 +1466,12 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
           </div>
         </div>
 
+        <div id="reviews-section"></div>
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-          <StatCard icon="📊" title="Profile Views" value={formData.views || 0} />
-          <StatCard icon="⭐" title="Rating" value={formData.rating ? `${Number(formData.rating).toFixed(1)}/5` : 'N/A'} />
-          <StatCard icon="🏆" title="Completed Jobs" value={formData.completedJobs || 0} />
+          <StatCard icon="📊" title="Profile Views" value={formData.views || 0} onClick={() => router.push(`/cleaners/${formData._id}`)} />
+          <StatCard icon="⭐" title="Rating" value={formData.rating ? `${Number(formData.rating).toFixed(1)}/5` : 'N/A'} onClick={() => document.getElementById('reviews-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} />
+          <StatCard icon="🏆" title="Completed Jobs" value={formData.completedJobs || 0} onClick={() => router.push('/cleaners/bookings?tab=accepted')} />
           <StatCard icon="💎" title="Account Status" value={formData.isPremium ? '✨ Premium' : '🆓 Free'} />
         </div>
 
@@ -1471,6 +1488,13 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
   <span className="text-xl">📄</span>
   <span>Export My Data</span>
 </button>
+            <button
+              onClick={() => router.push('/cleaners/dashboard/services')}
+              className="flex items-center justify-center gap-3 px-5 py-4 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-xl font-semibold transition-all"
+            >
+              <span className="text-xl">🧹</span>
+              <span>Edit Services</span>
+            </button>
             <button
               onClick={() => router.push('/cleaners/bookings')}
               className="flex items-center justify-center gap-3 px-5 py-4 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-xl font-semibold transition-all"
@@ -1504,15 +1528,15 @@ function Field({ label, children, wide, editMode }) {
   );
 }
 
-function StatCard({ icon, title, value }) {
+function StatCard({ icon, title, value, onClick }) {
   return (
-    <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-2xl p-6 text-center hover:-translate-y-1 transition-all">
+    <button type="button" onClick={onClick} className="w-full bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-2xl p-6 text-center hover:-translate-y-1 transition-all">
       <div className="text-3xl mb-2">{icon}</div>
       <h3 className="text-xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent">
         {title}
       </h3>
       <p className="text-2xl font-bold text-gray-800 mt-2">{value}</p>
-    </div>
+    </button>
   );
 }
 

@@ -100,6 +100,7 @@ export default function HomeClient() {
   const [premiumCleaners, setPremiumCleaners] = useState([]);
   const [freeCleaners, setFreeCleaners] = useState([]);
   const [favouriteIds, setFavouriteIds] = useState([]);
+  const [viewer, setViewer] = useState(null);
 
   useEffect(() => setMounted(true), []);
 
@@ -112,6 +113,19 @@ export default function HomeClient() {
         setFavouriteIds(Array.isArray(arr) ? arr.map(String) : []);
       }
     } catch {}
+  }, []);
+
+
+  useEffect(() => {
+    let live = true;
+    (async () => {
+      try {
+        const res = await fetch('/api/auth/me', { credentials: 'include' });
+        const data = await res.json().catch(() => ({}));
+        if (live && res.ok && data?.success) setViewer(data.user || null);
+      } catch {}
+    })();
+    return () => { live = false; };
   }, []);
 
   // Split premium vs free and hydrate with purchases
@@ -141,7 +155,7 @@ export default function HomeClient() {
     }
   };
 
-  const handleToggleFavourite = (cleanerId) => {
+  const handleToggleFavourite = async (cleanerId) => {
     const id = String(cleanerId);
     const updated = favouriteIds.includes(id)
       ? favouriteIds.filter((x) => x !== id)
@@ -150,6 +164,17 @@ export default function HomeClient() {
     try {
       localStorage.setItem('favourites', JSON.stringify(updated));
     } catch {}
+
+    if (viewer?.type === 'client') {
+      try {
+        await fetch('/api/clients/toggle-favorite', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cleanerId: id }),
+        });
+      } catch {}
+    }
   };
 
   // Simple price chart

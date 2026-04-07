@@ -17,6 +17,7 @@ export default function FindCleanerPage() {
 
   // ✅ Logged-in client detection
   const [isClient, setIsClient] = useState(false);
+  const [viewerLoaded, setViewerLoaded] = useState(false);
 
   // Load cleaners whenever filters change
   useEffect(() => {
@@ -62,23 +63,31 @@ export default function FindCleanerPage() {
         const res = await fetch('/api/auth/me', { credentials: 'include' });
         if (!res.ok) return;
         const data = await res.json();
-        if (!ignore) setIsClient(data?.user?.type === 'client');
+        if (!ignore) { setIsClient(data?.user?.type === 'client'); setViewerLoaded(true); }
       } catch {
         // ignore
-      }
+      } finally { if (!ignore) setViewerLoaded(true); }
     })();
     return () => { ignore = true; };
   }, []);
 
   // ✅ Helpers for local favourites
   const isFavourite = (id) => favouriteIds.includes(String(id));
-  const toggleFavourite = (id) => {
+  const toggleFavourite = async (id) => {
     const s = String(id);
-    setFavouriteIds((prev) => {
-      const next = prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s];
-      localStorage.setItem('favourites', JSON.stringify(next));
-      return next;
-    });
+    const next = favouriteIds.includes(s) ? favouriteIds.filter((x) => x !== s) : [...favouriteIds, s];
+    setFavouriteIds(next);
+    localStorage.setItem('favourites', JSON.stringify(next));
+
+    if (isClient) {
+      try {
+        await fetch('/api/clients/toggle-favorite', {
+          method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cleanerId: s })
+        });
+      } catch (e) {
+        console.error('Favourite sync failed', e);
+      }
+    }
   };
 
   const LoadingSpinner = () => (

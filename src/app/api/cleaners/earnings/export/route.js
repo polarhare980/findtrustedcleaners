@@ -1,7 +1,6 @@
-// app/api/cleaner/earnings/export/route.js
 import { connectToDatabase } from '@/lib/db';
 import { protectApiRoute } from '@/lib/auth';
-import Booking from '@/models/booking';
+import Purchase from '@/models/Purchase';
 import Cleaner from '@/models/Cleaner';
 import { NextResponse } from 'next/server';
 
@@ -9,26 +8,30 @@ export async function GET(req) {
   await connectToDatabase();
 
   const { valid, user, response } = await protectApiRoute(req);
-  if (!valid || user.type !== 'cleaner') return response;
+  if (!valid) return response;
+  if (user.type !== 'cleaner') {
+    return NextResponse.json({ success: false, message: 'Access denied.' }, { status: 403 });
+  }
 
-  const cleaner = await Cleaner.findById(user._id);
+  const cleaner = await Cleaner.findById(user._id).lean();
   if (!cleaner?.isPremium) {
     return NextResponse.json({ success: false, message: 'Premium access required' }, { status: 403 });
   }
 
-  const bookings = await Booking.find({ cleanerId: user._id, status: 'accepted' });
+  const purchases = await Purchase.find({ cleanerId: user._id, status: { $in: ['accepted', 'approved', 'booked', 'confirmed'] } }).lean();
 
   const csvRows = [
-    ['Date', 'Amount (£)', 'Client ID', 'Status'],
-    ...bookings.map((b) => [
-      new Date(b.createdAt).toLocaleDateString(),
-      b.amount.toFixed(2),
-      b.clientId?.toString(),
-      b.status,
+    ['Appointment', 'Amount (£)', 'Client', 'Status', 'Service'],
+    ...purchases.map((p) => [
+      p.isoDate || p.day || '',
+      Number(p.amount || 0).toFixed(2),
+      p.guestName || String(p.clientId || ''),
+      p.status,
+      p.serviceName || p.serviceKey || '',
     ])
   ];
 
-  const csv = csvRows.map(row => row.join(',')).join('\n');
+  const csv = csvRows.map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(',')).join('\n');
 
   return new Response(csv, {
     status: 200,

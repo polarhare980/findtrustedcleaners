@@ -513,12 +513,12 @@ export default function ClientDashboardComponent() {
                       {booking.day} - {booking.service || 'Cleaning Service'}
                     </p>
                     <div className="flex gap-2">
-                      <button className="text-xs bg-blue-600 text-white px-3 py-1 rounded-full hover:bg-blue-700 transition-colors">
-                        Reschedule
-                      </button>
-                      <button className="text-xs bg-gray-500 text-white px-3 py-1 rounded-full hover:bg-gray-600 transition-colors">
-                        Cancel
-                      </button>
+                      <Link href="/clients/bookings" className="text-xs bg-blue-600 text-white px-3 py-1 rounded-full hover:bg-blue-700 transition-colors">
+                        View booking
+                      </Link>
+                      <Link href={`/cleaners/${booking.cleanerId?._id || ''}`} className="text-xs bg-gray-500 text-white px-3 py-1 rounded-full hover:bg-gray-600 transition-colors">
+                        Cleaner profile
+                      </Link>
                     </div>
                   </div>
                 ))}
@@ -565,7 +565,7 @@ export default function ClientDashboardComponent() {
                         View Profile
                       </Link>
                       <Link
-                        href={`/book/${favorite._id}`}
+                        href={`/cleaners/${favorite._id}`}
                         className="text-xs bg-green-600 text-white px-3 py-1 rounded-full hover:bg-green-700 transition-colors"
                       >
                         Book Now
