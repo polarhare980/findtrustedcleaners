@@ -129,6 +129,7 @@ export default function CleanerDashboard() {
   const [editData, setEditData] = useState({});
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
+  const upgradeHandledRef = useRef(false);
   const [reviewsSummary, setReviewsSummary] = useState({ average: 0, count: 0, breakdown: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 } });
   const [recentReviews, setRecentReviews] = useState([]);
 
@@ -290,6 +291,14 @@ export default function CleanerDashboard() {
     if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
   }, [searchParams]);
 
+  useEffect(() => {
+    if (!searchParams) return;
+    const upgrade = searchParams.get('upgrade');
+    if (upgrade !== 'success' || upgradeHandledRef.current) return;
+    upgradeHandledRef.current = true;
+    setMessage('✅ Premium unlocked successfully. Your premium features are now live.');
+  }, [searchParams]);
+
   // Load everything
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -299,7 +308,7 @@ export default function CleanerDashboard() {
         setLoading(true);
 
         // Who am I?
-        const resMe = await secureFetch('/api/auth/me');
+        const resMe = await secureFetch('/api/auth/me', { cache: 'no-store' });
         const dataMe = await resMe.json();
         if (!dataMe?.success || dataMe?.user?.type !== 'cleaner') {
           router.push('/login');
@@ -1034,7 +1043,7 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
               className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-xl font-semibold transition-all"
             >
               <span>🧹</span>
-              <span>Edit Services</span>
+              <span>Edit Services Only</span>
             </button>
           </div>
 
@@ -1179,13 +1188,6 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
                 Client pays first, request stays pending, then you accept to capture payment or decline to release it.
               </p>
             </div>
-            <button
-              onClick={() => router.push('/cleaners/dashboard/services')}
-              className="flex items-center justify-center gap-3 px-5 py-4 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-xl font-semibold transition-all"
-            >
-              <span className="text-xl">🧹</span>
-              <span>Edit Services</span>
-            </button>
             <button
               onClick={() => router.push('/cleaners/bookings')}
               className="px-4 py-2 rounded-lg bg-white/70 border font-medium hover:bg-white"
@@ -1420,10 +1422,8 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
 
         <div id="reviews-section"></div>
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-          <StatCard icon="📊" title="Profile Views" value={formData.views || 0} helpText="Tap to open your public profile" onClick={() => router.push(`/cleaners/${formData._id}`)} />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <StatCard icon="⭐" title="Rating" value={reviewsSummary.count ? `${Number(reviewsSummary.average || 0).toFixed(1)}/5` : 'No reviews yet'} helpText={`${reviewsSummary.count || 0} verified review${Number(reviewsSummary.count || 0) === 1 ? '' : 's'}`} onClick={() => document.getElementById('reviews-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} />
-          <StatCard icon="🏆" title="Completed Jobs" value={formData.completedJobs || 0} helpText="Increases when you accept a booking" onClick={() => router.push('/cleaners/bookings?tab=accepted')} />
           <StatCard icon="💎" title="Account Status" value={formData.isPremium ? '✨ Premium' : '🆓 Free'} />
         </div>
 
@@ -1494,13 +1494,6 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
   <span className="text-xl">📄</span>
   <span>Export My Data</span>
 </button>
-            <button
-              onClick={() => router.push('/cleaners/dashboard/services')}
-              className="flex items-center justify-center gap-3 px-5 py-4 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-xl font-semibold transition-all"
-            >
-              <span className="text-xl">🧹</span>
-              <span>Edit Services</span>
-            </button>
             <button
               onClick={() => router.push('/cleaners/bookings')}
               className="flex items-center justify-center gap-3 px-5 py-4 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-xl font-semibold transition-all"
