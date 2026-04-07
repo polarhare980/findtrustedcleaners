@@ -11,6 +11,25 @@ const fetcher = (url) => fetch(url, { credentials: 'include' }).then((r) => r.js
 
 // Public APIs
 const CLEANERS_API = '/api/public-cleaners';
+
+function getCleanerCardImage(cleaner) {
+  const directImage = typeof cleaner?.image === 'string' ? cleaner.image.trim() : '';
+  if (directImage) return directImage;
+
+  const legacyProfileImage = typeof cleaner?.profileImage === 'string' ? cleaner.profileImage.trim() : '';
+  if (legacyProfileImage) return legacyProfileImage;
+
+  if (Array.isArray(cleaner?.photos)) {
+    for (const photo of cleaner.photos) {
+      if (!photo) continue;
+      if (typeof photo === 'string' && photo.trim()) return photo.trim();
+      const url = photo.url || photo.secure_url || photo.secureUrl || photo.src || '';
+      if (typeof url === 'string' && url.trim()) return url.trim();
+    }
+  }
+
+  return '/default-avatar.png';
+}
 const PURCHASES_API = (id) => `/api/public/purchases/cleaners/${id}`;
 
 // Hours & days for the mini-grid
@@ -522,7 +541,7 @@ function CleanerCard({ cleaner, handleBookingRequest, isPremium, isFavourite, on
       {/* Image */}
       <div className="cleaner-image relative z-10">
         <img
-          src={typeof (cleaner.image || cleaner.profileImage) === 'string' && String(cleaner.image || cleaner.profileImage).trim() !== '' ? String(cleaner.image || cleaner.profileImage).trim() : '/default-avatar.png'}
+          src={getCleanerCardImage(cleaner)}
           alt={cleaner.companyName || cleaner.realName || 'Cleaner'}
           loading="lazy"
           className="w-full h-full object-cover"

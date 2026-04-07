@@ -20,6 +20,23 @@ function cx(...classes) {
   return classes.filter(Boolean).join(' ');
 }
 
+function resolveCleanerImage(cleaner) {
+  const directImage = typeof cleaner?.image === 'string' ? cleaner.image.trim() : '';
+  if (directImage) return directImage;
+
+  const legacyProfileImage = typeof cleaner?.profileImage === 'string' ? cleaner.profileImage.trim() : '';
+  if (legacyProfileImage) return legacyProfileImage;
+
+  if (Array.isArray(cleaner?.photos)) {
+    for (const photo of cleaner.photos) {
+      if (typeof photo === 'string' && photo.trim()) return photo.trim();
+      if (photo && typeof photo.url === 'string' && photo.url.trim()) return photo.url.trim();
+    }
+  }
+
+  return '/default-avatar.png';
+}
+
 function truncate(txt, n = 120) {
   if (!txt) return '';
   return txt.length <= n ? txt : txt.slice(0, n - 1) + '…';
@@ -49,9 +66,7 @@ export default function CleanerCard({
     const p = profile || {};
     return {
       name: p.companyName || p.realName || cleaner?.companyName || cleaner?.realName || 'Cleaner',
-      image: (typeof (p.image || p.profileImage) === 'string' && String(p.image || p.profileImage).trim()) ? String(p.image || p.profileImage).trim()
-           : (typeof (cleaner?.image || cleaner?.profileImage) === 'string' && String(cleaner?.image || cleaner?.profileImage).trim()) ? String(cleaner?.image || cleaner?.profileImage).trim()
-           : '/default-avatar.png',
+      image: resolveCleanerImage(p) || resolveCleanerImage(cleaner),
       postcode: p?.address?.postcode || p?.postcode || cleaner?.address?.postcode || cleaner?.postcode || '',
       description: p?.description || cleaner?.description || '',
       services: Array.isArray(p?.services) && p.services.length ? p.services

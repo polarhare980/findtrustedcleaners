@@ -4,6 +4,23 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 
+function resolveCleanerImage(cleaner) {
+  const directImage = typeof cleaner?.image === 'string' ? cleaner.image.trim() : '';
+  if (directImage) return directImage;
+
+  const legacyProfileImage = typeof cleaner?.profileImage === 'string' ? cleaner.profileImage.trim() : '';
+  if (legacyProfileImage) return legacyProfileImage;
+
+  if (Array.isArray(cleaner?.photos)) {
+    for (const photo of cleaner.photos) {
+      if (typeof photo === 'string' && photo.trim()) return photo.trim();
+      if (photo && typeof photo.url === 'string' && photo.url.trim()) return photo.url.trim();
+    }
+  }
+
+  return '/default-avatar.png';
+}
+
 export default function FindCleanerPage() {
   const [filteredCleaners, setFilteredCleaners] = useState([]);
   const [postcode, setPostcode] = useState('');
@@ -307,7 +324,7 @@ export default function FindCleanerPage() {
                         {/* Profile Image */}
                         <div className="flex-shrink-0">
                           <img
-                            src={cleaner.image || '/default-avatar.png'}
+                            src={resolveCleanerImage(cleaner)}
                             alt={cleaner.realName || 'Cleaner'}
                             className="w-20 h-20 object-cover rounded-full border-2 border-white/50 shadow-lg"
                           />

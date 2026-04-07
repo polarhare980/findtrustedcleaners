@@ -4,6 +4,28 @@ import Cleaner from "@/models/Cleaner";
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 
+function firstPhotoUrl(photos) {
+  if (!Array.isArray(photos)) return "";
+  for (const photo of photos) {
+    if (typeof photo === "string" && photo.trim()) return photo.trim();
+    if (photo && typeof photo.url === "string" && photo.url.trim()) return photo.url.trim();
+  }
+  return "";
+}
+
+function resolveCleanerImage(cleaner = {}) {
+  const image = typeof cleaner?.image === "string" ? cleaner.image.trim() : "";
+  if (image) return image;
+
+  const legacyProfileImage = typeof cleaner?.profileImage === "string" ? cleaner.profileImage.trim() : "";
+  if (legacyProfileImage) return legacyProfileImage;
+
+  const galleryImage = firstPhotoUrl(cleaner?.photos);
+  if (galleryImage) return galleryImage;
+
+  return "/default-avatar.png";
+}
+
 // 🧠 Compute bookingStatus from nested availability object
 function determineBookingStatus(availability = {}) {
   let hasAvailable = false;
@@ -50,7 +72,7 @@ export async function GET(req) {
             realName: cleaner.realName,
             companyName: cleaner.companyName,
             postcode: cleaner.address?.postcode || cleaner.postcode, // support both
-            image: cleaner.image || "/default-avatar.png",
+            image: resolveCleanerImage(cleaner),
             rates: cleaner.rates,
             isPremium: !!cleaner.isPremium,
             rating: cleaner.rating || null,
@@ -103,7 +125,7 @@ export async function GET(req) {
             realName: c.realName,
             companyName: c.companyName,
             postcode: c.address?.postcode || c.postcode,
-            image: c.image || "/default-avatar.png",
+            image: resolveCleanerImage(c),
             rates: c.rates,
             isPremium: !!c.isPremium,
             rating: c.rating || null,
