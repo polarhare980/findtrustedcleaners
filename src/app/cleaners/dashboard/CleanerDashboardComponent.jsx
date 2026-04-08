@@ -660,14 +660,14 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
       <div className="max-w-7xl mx-auto">
 
         {/* Header */}
-        <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl mb-6 p-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-            <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent mb-2">
-                Cleaner Dashboard
-              </h1>
-              <p className="text-gray-600">Manage your cleaning services and availability</p>
-            </button>
+          <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl mb-6 p-6">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+              <div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent mb-2">
+            Cleaner Dashboard
+                </h1>
+                <p className="text-gray-600">Manage your cleaning services and availability</p>
+              </div>
 
             <div className="flex flex-wrap items-center gap-3 mt-4 md:mt-0">
               {formData?.dbsChecked && (
