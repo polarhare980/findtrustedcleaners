@@ -5,7 +5,18 @@ import Cleaner from '@/models/Cleaner';
 import { protectApiRoute } from '@/lib/auth';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-const SITE_URL = process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://www.findtrustedcleaners.com';
+const DEFAULT_SITE_URL = process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://www.findtrustedcleaners.com';
+
+function getBaseUrl(req) {
+  const origin = req?.headers?.get?.('origin');
+  if (origin) return origin.replace(/\/$/, '');
+
+  const host = req?.headers?.get?.('x-forwarded-host') || req?.headers?.get?.('host');
+  const proto = req?.headers?.get?.('x-forwarded-proto') || (process.env.NODE_ENV === 'production' ? 'https' : 'http');
+  if (host) return `${proto}://${host}`;
+
+  return DEFAULT_SITE_URL.replace(/\/$/, '');
+}
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -36,7 +47,8 @@ export async function POST(req) {
 
     if (!customerId) return NextResponse.json({ error: 'No Stripe customer found for this cleaner yet.' }, { status: 400 });
 
-    const session = await stripe.billingPortal.sessions.create({ customer: customerId, return_url: `${SITE_URL}/cleaners/dashboard` });
+    const baseUrl = getBaseUrl(req);
+    const session = await stripe.billingPortal.sessions.create({ customer: customerId, return_url: `${baseUrl}/cleaners/dashboard` });
     return NextResponse.json({ url: session.url }, { status: 200 });
   } catch (err) {
     console.error('❌ Portal error:', err);

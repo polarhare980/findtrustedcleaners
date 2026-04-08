@@ -5,7 +5,18 @@ import Cleaner from '@/models/Cleaner';
 import { protectApiRoute } from '@/lib/auth';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-const SITE_URL = process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://www.findtrustedcleaners.com';
+const DEFAULT_SITE_URL = process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://www.findtrustedcleaners.com';
+
+function getBaseUrl(req) {
+  const origin = req?.headers?.get?.('origin');
+  if (origin) return origin.replace(/\/$/, '');
+
+  const host = req?.headers?.get?.('x-forwarded-host') || req?.headers?.get?.('host');
+  const proto = req?.headers?.get?.('x-forwarded-proto') || (process.env.NODE_ENV === 'production' ? 'https' : 'http');
+  if (host) return `${proto}://${host}`;
+
+  return DEFAULT_SITE_URL.replace(/\/$/, '');
+}
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -40,7 +51,9 @@ export async function POST(req) {
       return NextResponse.json({ success: false, error: 'Cleaner not found' }, { status: 404 });
     }
 
-    logCheckout('route hit', { route: '/api/stripe/create-checkout-session', cleanerId: String(cleaner._id), priceId });
+    const baseUrl = getBaseUrl(req);
+
+    logCheckout('route hit', { route: '/api/stripe/create-checkout-session', cleanerId: String(cleaner._id), priceId, baseUrl });
 
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
@@ -49,11 +62,13 @@ export async function POST(req) {
       metadata: {
         cleanerId: String(cleaner._id),
         planType: 'premium_yearly',
+        premiumUpgrade: 'true',
+        subscription: 'true',
         source: 'cleaner_dashboard',
       },
       client_reference_id: String(cleaner._id),
-      success_url: `${SITE_URL}/cleaners/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${SITE_URL}/cleaners/dashboard?upgrade=cancelled`,
+      success_url: `${baseUrl}/cleaners/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/cleaners/dashboard?upgrade=cancelled`,
     });
 
     logCheckout('session created', { cleanerId: String(cleaner._id), sessionId: session.id, priceId });
