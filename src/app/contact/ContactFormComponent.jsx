@@ -7,6 +7,8 @@ import { useState } from 'react';
 
 export default function ContactFormComponent() {
   const [form, setForm] = useState({ name: '', email: '', message: '' });
+  const SUPPORT_EMAIL = 'Findtrustedcleaners@gmail.com';
+
   const [status, setStatus] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -20,12 +22,23 @@ export default function ContactFormComponent() {
     setStatus('');
     setIsSubmitting(true);
 
-    // simulate form sending - no backend setup yet
-    setTimeout(() => {
-      setStatus('Thanks for reaching out! We&apos;ll be in touch shortly.');
+    try {
+      const subject = encodeURIComponent(`Support request from ${form.name}`);
+      const body = encodeURIComponent(
+        `Name: ${form.name}
+Email: ${form.email}
+
+Message:
+${form.message}`
+      );
+
+      window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${subject}&body=${body}`;
+
+      setStatus('Your email app should now open with your message ready to send.');
       setForm({ name: '', email: '', message: '' });
+    } finally {
       setIsSubmitting(false);
-    }, 1000);
+    }
   };
 
   return (
@@ -74,7 +87,7 @@ export default function ContactFormComponent() {
               💬 Contact Us
             </h1>
             <p className="text-xl text-gray-700 max-w-2xl mx-auto leading-relaxed">
-              Have a question or need help? Drop us a message and we&apos;ll get back to you within 24 hours.
+              Have a question or need help? Drop us a message and your email app will open with everything pre-filled for you.
             </p>
           </div>
 
@@ -164,7 +177,7 @@ export default function ContactFormComponent() {
           </div>
 
           {/* Contact Information Cards */}
-          <div className="grid md:grid-cols-3 gap-6 mb-8">
+          <div className="grid md:grid-cols-2 gap-6 mb-8">
             {/* Email Card */}
             <div className="bg-white/80 backdrop-blur-sm border border-white/30 rounded-2xl p-6 text-center transition-all duration-300 hover:translate-y-[-5px] hover:shadow-[0_12px_40px_rgba(0,0,0,0.15)]">
               <div className="w-16 h-16 bg-gradient-to-r from-teal-500 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl">
@@ -173,25 +186,10 @@ export default function ContactFormComponent() {
               <h3 className="text-xl font-semibold text-teal-800 mb-2">Email Us</h3>
               <p className="text-gray-600 text-sm mb-3">Get in touch via email</p>
               <a 
-                href="mailto:hello@findtrustedcleaners.co.uk" 
+                href={`mailto:${SUPPORT_EMAIL}`} 
                 className="text-teal-600 hover:text-teal-800 font-medium transition-colors duration-300"
               >
-                hello@findtrustedcleaners.co.uk
-              </a>
-            </div>
-
-            {/* Phone Card */}
-            <div className="bg-white/80 backdrop-blur-sm border border-white/30 rounded-2xl p-6 text-center transition-all duration-300 hover:translate-y-[-5px] hover:shadow-[0_12px_40px_rgba(0,0,0,0.15)]">
-              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl">
-                📞
-              </div>
-              <h3 className="text-xl font-semibold text-blue-800 mb-2">Call Us</h3>
-              <p className="text-gray-600 text-sm mb-3">Mon-Fri, 9AM-6PM</p>
-              <a 
-                href="tel:+441234567890" 
-                className="text-blue-600 hover:text-blue-800 font-medium transition-colors duration-300"
-              >
-                +44 123 456 7890
+                {SUPPORT_EMAIL}
               </a>
             </div>
 
