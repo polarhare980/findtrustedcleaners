@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 
-// ✅ SEO Meta Tags for App Router
+// ✅ SEO Meta Tags for App Routers 
 export const metadata = {
   title: 'About Us | FindTrustedCleaners',
   description: 'Learn about the family-run team behind FindTrustedCleaners, helping connect reliable local cleaners with households across the UK.',
