@@ -3,6 +3,7 @@
 import { useState } from 'react';
 
 export default function AdminCleanerRow({ row }) {
+  const cleanerId = String(row?._id || row?.id || '').trim();
   const [slug, setSlug] = useState(row.slug || '');
   const [visible, setVisible] = useState(row.isVisible !== false);
   const [msg, setMsg] = useState('');
@@ -14,7 +15,7 @@ export default function AdminCleanerRow({ row }) {
     setMsg('');
     setIsSaving(true);
     try {
-      const res = await fetch(`/api/admin/cleaners/${row._id}`, {
+      const res = await fetch(`/api/admin/cleaners/${encodeURIComponent(cleanerId)}`, {
         method: 'PATCH',
         headers: { 'content-type': 'application/json' },
         credentials: 'include',
@@ -31,6 +32,10 @@ export default function AdminCleanerRow({ row }) {
 
   async function removeCleaner() {
     const label = row.companyName || row.realName || 'this cleaner';
+    if (!cleanerId) {
+      setMsg('Missing cleaner id');
+      return;
+    }
     const confirmed = window.confirm(
       `Delete ${label}? This will also remove linked bookings, purchases, reviews, saved favourites, and cleaner login records. This cannot be undone.`
     );
@@ -41,7 +46,7 @@ export default function AdminCleanerRow({ row }) {
     setIsDeleting(true);
 
     try {
-      const res = await fetch(`/api/admin/cleaners/${row._id}`, {
+      const res = await fetch(`/api/admin/cleaners/${encodeURIComponent(cleanerId)}`, {
         method: 'DELETE',
         credentials: 'include',
       });

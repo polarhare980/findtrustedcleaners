@@ -15,11 +15,25 @@ function json(data, status = 200) {
   return NextResponse.json(data, { status });
 }
 
+function getCleanerId(req, params) {
+  const fromParams = params?.id;
+  if (fromParams) return String(fromParams).trim();
+
+  try {
+    const url = new URL(req.url);
+    const parts = url.pathname.split('/').filter(Boolean);
+    const last = parts[parts.length - 1];
+    return last ? decodeURIComponent(last).trim() : '';
+  } catch {
+    return '';
+  }
+}
+
 export async function PATCH(req, { params }) {
   const { valid, response } = await protectApiRoute(req, 'admin');
   if (!valid) return response;
 
-  const id = params?.id;
+  const id = getCleanerId(req, params);
   const body = await req.json();
   if (!id) return json({ success: false, message: 'Missing id' }, 400);
 
@@ -54,7 +68,7 @@ export async function DELETE(req, { params }) {
   const { valid, response } = await protectApiRoute(req, 'admin');
   if (!valid) return response;
 
-  const id = params?.id;
+  const id = getCleanerId(req, params);
   if (!id) return json({ success: false, message: 'Missing id' }, 400);
 
   await dbConnect();
