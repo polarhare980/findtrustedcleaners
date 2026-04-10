@@ -1,79 +1,75 @@
-'use client';
-
 import Link from 'next/link';
 import PublicHeader from '@/components/PublicHeader';
 import PublicFooter from '@/components/PublicFooter';
 import PageHero from '@/components/PageHero';
 
-const clientSteps = [
-  'Browse cleaner profiles in your area.',
-  'See availability, services, and profile details upfront.',
-  'Request a suitable booking slot.',
-  'Wait for the cleaner to approve before payment completes.',
-];
+export const metadata = {
+  title: 'How it works | Find Trusted Cleaners',
+  description: 'See how clients and cleaners use Find Trusted Cleaners.',
+};
 
-const cleanerSteps = [
-  'Create your profile and add your services.',
-  'Set your working hours using the availability grid.',
-  'Receive booking requests through your dashboard.',
-  'Approve or decline requests before moving forward.',
-];
-
-export default function HowItWorks() {
+export default function HowItWorksPage() {
   return (
-    <main className="site-shell">
-      <PublicHeader ctaHref="/register/cleaners" ctaLabel="For cleaners" />
-
+    <main className="min-h-screen bg-slate-50">
+      <PublicHeader />
       <PageHero
-        eyebrow="How FindTrustedCleaners works"
-        title="A clearer booking flow for clients and cleaners"
-        description="FindTrustedCleaners is built to make the process simpler: clients can compare profiles first, and cleaners stay in control of approvals."
+        eyebrow="How it works"
+        title="A clearer way to connect cleaners and clients"
+        description="FindTrustedCleaners is built to make browsing, requesting, and managing bookings simpler for both sides."
+        actions={<>
+          <Link href="/cleaners" className="ftc-button-primary">Find a cleaner</Link>
+          <Link href="/register/cleaners" className="ftc-button-secondary">List your business</Link>
+        </>}
       />
 
-      <section className="section-shell pb-8">
+      <section className="site-section py-10">
         <div className="grid gap-6 lg:grid-cols-2">
-          <div className="surface-card p-8">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-teal-700">For clients</p>
-            <h2 className="mt-2 text-3xl font-semibold text-slate-900">Find and request with more confidence</h2>
-            <ol className="mt-6 space-y-4">
-              {clientSteps.map((step, index) => (
-                <li key={step} className="soft-panel flex gap-4 p-4 text-sm leading-6 text-slate-600">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal-600 font-semibold text-white">{index + 1}</span>
-                  <span>{step}</span>
-                </li>
-              ))}
-            </ol>
-          </div>
-
-          <div className="surface-card p-8">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-teal-700">For cleaners</p>
-            <h2 className="mt-2 text-3xl font-semibold text-slate-900">Show your availability and manage requests</h2>
-            <ol className="mt-6 space-y-4">
-              {cleanerSteps.map((step, index) => (
-                <li key={step} className="soft-panel flex gap-4 p-4 text-sm leading-6 text-slate-600">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-900 font-semibold text-white">{index + 1}</span>
-                  <span>{step}</span>
-                </li>
-              ))}
-            </ol>
-          </div>
+          <FlowCard
+            title="For clients"
+            items={[
+              'Browse local cleaner profiles for free.',
+              'See availability, ratings, and service information upfront.',
+              'Request a time slot with your chosen cleaner.',
+              'Payment only moves forward once the cleaner approves the request.',
+              'Requested slots are marked to help prevent double booking.',
+            ]}
+          />
+          <FlowCard
+            title="For cleaners"
+            items={[
+              'Register your cleaning business and build your public profile.',
+              'Set your working hours using the availability grid.',
+              'Keep your contact details protected until a booking is confirmed.',
+              'Accept or decline requests from your dashboard.',
+              'Update availability as bookings come in so the calendar stays clear.',
+            ]}
+          />
         </div>
       </section>
 
-      <section className="section-shell py-8">
+      <section className="site-section pb-12">
         <div className="surface-card p-8 text-center sm:p-10">
-          <h2 className="text-3xl font-semibold text-slate-900">Ready to get started?</h2>
-          <p className="mx-auto mt-4 max-w-2xl text-slate-600">
-            Whether you are looking for a cleaner or listing your services, the next step is straightforward.
-          </p>
-          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-            <Link href="/cleaners" className="brand-button">Find a cleaner</Link>
-            <Link href="/register/cleaners" className="brand-button-secondary">Register as a cleaner</Link>
-          </div>
+          <h2 className="text-3xl font-bold text-slate-900">Why people prefer this model</h2>
+          <p className="mx-auto mt-4 max-w-3xl text-slate-600">Instead of relying on endless quote requests, the platform focuses on clearer profiles, visible availability, and a cleaner approval step before payment. That makes the experience easier to understand on first glance.</p>
         </div>
       </section>
-
       <PublicFooter />
     </main>
+  );
+}
+
+function FlowCard({ title, items }) {
+  return (
+    <div className="surface-card p-8">
+      <h2 className="text-2xl font-bold text-slate-900">{title}</h2>
+      <ol className="mt-6 space-y-4">
+        {items.map((item, index) => (
+          <li key={item} className="flex gap-4">
+            <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-teal-700 text-sm font-bold text-white">{index + 1}</span>
+            <span className="text-slate-600">{item}</span>
+          </li>
+        ))}
+      </ol>
+    </div>
   );
 }

@@ -2,8 +2,8 @@
 @plugin "@tailwindcss/typography";
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --background: #ffffff;
+  --foreground: #171717;
 }
 
 @theme inline {
@@ -13,115 +13,66 @@
   --font-mono: var(--font-geist-mono);
 }
 
-html {
-  scroll-behavior: smooth;
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
 }
 
 body {
-  background:
-    radial-gradient(circle at top, rgba(13, 148, 136, 0.08), transparent 35%),
-    linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+  background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
-}
-
-img {
-  max-width: 100%;
-  height: auto;
 }
 
 .input {
   display: block;
   width: 100%;
-  padding: 0.875rem 1rem;
-  border: 1px solid #cbd5e1;
-  border-radius: 0.9rem;
-  background: rgba(255,255,255,0.96);
-  color: #0f172a;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
 }
 
-.input:focus {
-  outline: none;
-  border-color: #0f766e;
-  box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
-}
-
-.site-shell {
-  min-height: 100vh;
-  background: transparent;
-}
-
-.section-shell {
-  margin-left: auto;
-  margin-right: auto;
-  max-width: 80rem;
-  padding-left: 1rem;
-  padding-right: 1rem;
-}
-
-.surface-card {
-  border: 1px solid rgba(226, 232, 240, 0.9);
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
-  border-radius: 1.5rem;
-}
-
-.soft-panel {
-  border: 1px solid rgba(226, 232, 240, 0.9);
-  background: rgba(255, 255, 255, 0.88);
-  border-radius: 1.25rem;
-}
-
-.brand-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 9999px;
-  background: #0f766e;
-  color: #fff;
-  font-weight: 600;
-  padding: 0.875rem 1.5rem;
-  transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: 0 10px 25px rgba(15, 118, 110, 0.18);
-}
-
-.brand-button:hover {
-  background: #115e59;
-  transform: translateY(-1px);
-}
-
-.brand-button-secondary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 9999px;
-  border: 1px solid #cbd5e1;
-  background: #fff;
-  color: #0f172a;
-  font-weight: 600;
-  padding: 0.875rem 1.5rem;
-  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.brand-button-secondary:hover {
-  border-color: #0f766e;
-  transform: translateY(-1px);
-}
-
+/* 🌟 Cleaner Card Styling - Professional, Modern */
 .cleaner-card {
-  background-color: rgba(255, 255, 255, 0.96);
-  border: 1px solid rgba(226, 232, 240, 0.9);
-  border-radius: 1.25rem;
-  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+  background-color: white;
+  background-opacity: 0.95;
+  border-radius: 1rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   padding: 1.5rem;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .cleaner-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 22px 48px rgba(15, 23, 42, 0.12);
+  transform: translateY(-5px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
 }
 
+.cleaner-card h2 {
+  color: #0D9488;
+}
+
+.cleaner-card p {
+  color: #4A4A4A;
+}
+
+/* 🌟 Button Styling - Modern CTA */
+.cta-button {
+  background-color: #0D9488;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.cta-button:hover {
+  background-color: #0B8279;
+  transform: scale(1.05);
+}
+
+/* 🌟 Status Badge Styling */
 .status-badge {
   padding: 0.25rem 0.75rem;
   border-radius: 9999px;
@@ -129,30 +80,123 @@ img {
   font-weight: 600;
 }
 
-.status-available { background-color: #dcfce7; color: #166534; }
-.status-pending { background-color: #fef3c7; color: #92400e; }
-.status-booked { background-color: #fee2e2; color: #991b1b; }
+.status-available {
+  background-color: #22C55E;
+  color: white;
+}
 
+.status-pending {
+  background-color: #FACC15;
+  color: white;
+}
+
+.status-booked {
+  background-color: #EF4444;
+  color: white;
+}
+
+/* 🌟 Empty State Styling */
 .empty-state {
-  background-color: rgba(255,255,255,0.96);
-  border: 1px solid rgba(226, 232, 240, 0.9);
-  border-radius: 1.5rem;
-  box-shadow: 0 16px 40px rgba(15,23,42,0.08);
+  background-color: white;
+  background-opacity: 0.95;
+  border-radius: 1rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   padding: 2rem;
   text-align: center;
-  color: #64748b;
+  color: #6B7280;
   margin-top: 2rem;
 }
 
+.empty-state p {
+  margin-bottom: 1rem;
+}
+
+.empty-state a {
+  display: inline-block;
+  background-color: #0D9488;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.empty-state a:hover {
+  background-color: #0B8279;
+  transform: scale(1.05);
+}
+
+/* Add this to your existing src/app/globals.css file */
+
 @keyframes fade-in {
-  from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-@keyframes slide-up {
-  from { opacity: 0; transform: translateY(22px); }
-  to { opacity: 1; transform: translateY(0); }
+.animate-fade-in {
+  animation: fade-in 0.8s ease-out both;
+}
+html {
+  scroll-behavior: smooth;
 }
 
-.animate-fade-in { animation: fade-in 0.6s ease-out both; }
-.animate-slide-up { animation: slide-up 0.5s ease-out both; }
+body {
+  color: #0f172a;
+  background: #f8fafc;
+}
+
+a {
+  text-underline-offset: 3px;
+}
+
+.site-section {
+  @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
+}
+
+.surface-card {
+  @apply rounded-3xl border border-slate-200 bg-white shadow-sm;
+}
+
+.surface-muted {
+  @apply rounded-3xl border border-slate-200 bg-slate-50;
+}
+
+.ftc-input,
+.ftc-select,
+.ftc-textarea {
+  @apply w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 shadow-sm outline-none transition;
+}
+
+.ftc-input:focus,
+.ftc-select:focus,
+.ftc-textarea:focus {
+  @apply border-teal-400 ring-4 ring-teal-100;
+}
+
+.ftc-button-primary {
+  @apply inline-flex items-center justify-center rounded-full bg-teal-700 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-800;
+}
+
+.ftc-button-secondary {
+  @apply inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-teal-200 hover:bg-teal-50 hover:text-teal-800;
+}
+
+.ftc-chip {
+  @apply inline-flex items-center rounded-full bg-teal-50 px-3 py-1 text-xs font-semibold text-teal-800 ring-1 ring-teal-100;
+}
+
+@media (max-width: 640px) {
+  .hide-scrollbar-mobile {
+    scrollbar-width: none;
+  }
+
+  .hide-scrollbar-mobile::-webkit-scrollbar {
+    display: none;
+  }
+}

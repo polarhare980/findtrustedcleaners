@@ -3,8 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import DashboardShell from '@/components/DashboardShell';
-import DashboardHeader from '@/components/DashboardHeader';
+import AccountShell from '@/components/AccountShell';
 
 export default function CleanerEarningsPage() {
   const router = useRouter();
@@ -22,8 +21,7 @@ export default function CleanerEarningsPage() {
           return;
         }
         setData(json.data);
-      } catch (err) {
-        console.error('Earnings load error:', err);
+      } catch {
         router.push('/login');
       } finally {
         setLoading(false);
@@ -39,9 +37,13 @@ export default function CleanerEarningsPage() {
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url; a.download = 'earnings.csv'; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error('Export failed:', err);
+      a.href = url;
+      a.download = 'earnings.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
       alert('Failed to export earnings. Are you a premium cleaner?');
     }
   };
@@ -49,35 +51,26 @@ export default function CleanerEarningsPage() {
   if (loading || !data) return <LoadingSpinner />;
 
   return (
-    <DashboardShell ctaHref="/cleaners/dashboard" ctaLabel="Dashboard">
-      <DashboardHeader
-        title="Your earnings"
-        description="Track completed jobs, profile views, and conversion performance from one cleaner dashboard."
-        primaryHref="/cleaners/dashboard"
-        primaryLabel="Back to dashboard"
-      />
-      <section className="surface-card p-6 sm:p-8">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <Card title="Confirmed jobs" value={data.totalJobs} />
-          <Card title="Total earnings" value={`£${data.totalEarnings.toFixed(2)}`} />
-          <Card title="Profile views" value={data.views} />
-          <Card title="Unlocks" value={data.unlocks} />
-          <Card title="Conversion rate" value={`${data.conversionRate}%`} />
-        </div>
-        <div className="mt-6 flex flex-wrap gap-3">
-          <button onClick={handleExport} className="brand-button">Export earnings CSV</button>
-        </div>
-        <p className="mt-4 text-sm text-slate-500">These figures are based on accepted bookings and your cleaner profile activity.</p>
-      </section>
-    </DashboardShell>
+    <AccountShell title="Your earnings dashboard" description="Premium cleaner insights based on accepted bookings and profile activity." backHref="/cleaners/dashboard" backLabel="Back to dashboard">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <Card title="Confirmed jobs" value={data.totalJobs} emoji="📋" />
+        <Card title="Total earnings" value={`£${data.totalEarnings.toFixed(2)}`} emoji="💵" />
+        <Card title="Profile views" value={data.views} emoji="👁️" />
+        <Card title="Unlocks" value={data.unlocks} emoji="🔓" />
+        <Card title="Conversion rate" value={`${data.conversionRate}%`} emoji="📈" />
+      </div>
+      <div className="mt-6">
+        <button onClick={handleExport} className="ftc-button-primary">Export earnings CSV</button>
+      </div>
+    </AccountShell>
   );
 }
 
-function Card({ title, value }) {
+function Card({ title, value, emoji }) {
   return (
-    <div className="soft-panel p-5 text-center">
-      <h2 className="text-sm font-medium uppercase tracking-wide text-slate-500">{title}</h2>
-      <p className="mt-3 text-3xl font-semibold text-slate-900">{value}</p>
+    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 text-center">
+      <h2 className="text-lg font-semibold text-slate-700">{emoji} {title}</h2>
+      <p className="mt-2 text-4xl font-bold text-slate-900">{value}</p>
     </div>
   );
 }

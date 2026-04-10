@@ -1,27 +1,26 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Head from 'next/head';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import PublicHeader from '@/components/PublicHeader';
 import PublicFooter from '@/components/PublicFooter';
 import PageHero from '@/components/PageHero';
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [userType, setUserType] = useState('cleaner');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
-
     try {
       const res = await fetch('/api/login', {
         method: 'POST',
@@ -29,12 +28,7 @@ export default function LoginPage() {
         credentials: 'include',
         body: JSON.stringify({ email, password, userType }),
       });
-
-      let data = {};
-      try {
-        data = await res.json();
-      } catch {}
-
+      const data = await res.json().catch(() => ({}));
       if (res.ok && data.success) {
         router.push(userType === 'client' ? '/clients/dashboard' : '/cleaners/dashboard');
       } else {
@@ -53,88 +47,55 @@ export default function LoginPage() {
         <title>Login | Find Trusted Cleaners</title>
         <meta name="description" content="Login to your Find Trusted Cleaners account as a client or cleaner." />
       </Head>
+      <main className="min-h-screen bg-slate-50">
+        <PublicHeader />
+        <PageHero eyebrow="Account access" title="Login to your account" description="Choose whether you are signing in as a cleaner or a client." />
 
-      <main className="site-shell">
-        <PublicHeader ctaHref="/register/client" ctaLabel="Register" />
-
-        <PageHero
-          eyebrow="Account access"
-          title="Sign in to your FindTrustedCleaners account"
-          description="Log in as a cleaner or client to manage bookings, profiles, and account settings."
-        />
-
-        <section className="section-shell pb-16">
-          <div className="mx-auto grid max-w-5xl gap-8 lg:grid-cols-[0.9fr,1.1fr]">
-            <aside className="surface-card p-8">
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-teal-700">Why sign in?</p>
-              <h2 className="mt-2 text-2xl font-semibold text-slate-900">Manage everything in one place</h2>
-              <ul className="mt-6 space-y-4 text-sm leading-6 text-slate-600">
-                <li>• Clients can review bookings, favourites, and account details.</li>
-                <li>• Cleaners can manage profiles, services, and availability.</li>
-                <li>• Password reset and verification flows are built into your account area.</li>
-              </ul>
-            </aside>
-
-            <form onSubmit={handleLogin} className="surface-card p-8 sm:p-10">
-              <div className="flex gap-3 rounded-full bg-slate-100 p-1">
+        <section className="site-section py-10">
+          <div className="mx-auto max-w-lg surface-card p-6 sm:p-8">
+            <div className="mb-6 flex rounded-full bg-slate-100 p-1">
+              {['cleaner', 'client'].map((type) => (
                 <button
+                  key={type}
                   type="button"
-                  className={`flex-1 rounded-full px-4 py-3 text-sm font-semibold transition ${userType === 'cleaner' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600'}`}
-                  onClick={() => setUserType('cleaner')}
+                  onClick={() => setUserType(type)}
+                  className={`flex-1 rounded-full px-4 py-2 text-sm font-semibold transition ${userType === type ? 'bg-white text-teal-800 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
                 >
-                  Cleaner
+                  {type === 'cleaner' ? 'Cleaner' : 'Client'}
                 </button>
-                <button
-                  type="button"
-                  className={`flex-1 rounded-full px-4 py-3 text-sm font-semibold transition ${userType === 'client' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600'}`}
-                  onClick={() => setUserType('client')}
-                >
-                  Client
-                </button>
+              ))}
+            </div>
+
+            <form onSubmit={handleLogin} className="space-y-5">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-700">Email address</label>
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="ftc-input" placeholder="Enter your email" />
               </div>
-
-              <div className="mt-8 space-y-5">
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-700">Email address</label>
-                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="input" />
-                </div>
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-700">Password</label>
-                  <div className="relative">
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      className="input pr-14"
-                    />
-                    <button
-                      type="button"
-                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full px-3 py-2 text-sm text-slate-500"
-                      onClick={() => setShowPassword((v) => !v)}
-                    >
-                      {showPassword ? 'Hide' : 'Show'}
-                    </button>
-                  </div>
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-700">Password</label>
+                <div className="relative">
+                  <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} required className="ftc-input pr-12" placeholder="Enter your password" />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-500 hover:text-teal-800">
+                    {showPassword ? 'Hide' : 'Show'}
+                  </button>
                 </div>
               </div>
 
-              {error ? <div className="mt-5 rounded-2xl bg-red-50 p-4 text-sm text-red-700">{error}</div> : null}
+              {error ? <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
 
-              <button type="submit" disabled={isLoading} className="brand-button mt-8 w-full">
-                {isLoading ? 'Signing in...' : `Sign in as ${userType === 'client' ? 'client' : 'cleaner'}`}
+              <button type="submit" disabled={isLoading} className="ftc-button-primary w-full disabled:opacity-60">
+                {isLoading ? 'Signing in…' : `Sign in as ${userType}`}
               </button>
 
-              <div className="mt-6 flex flex-col gap-3 text-sm text-slate-600 sm:flex-row sm:justify-between">
-                <Link href="/forgot-password" className="hover:text-teal-700 hover:underline">Forgot password?</Link>
-                <Link href={userType === 'cleaner' ? '/register/cleaners' : '/register/client'} className="hover:text-teal-700 hover:underline">
+              <div className="flex flex-col gap-3 pt-2 text-sm sm:flex-row sm:items-center sm:justify-between">
+                <Link href="/forgot-password" className="text-teal-700 hover:text-teal-900">Forgot password?</Link>
+                <Link href={userType === 'cleaner' ? '/register/cleaners' : '/register/client'} className="text-teal-700 hover:text-teal-900">
                   Register as a {userType}
                 </Link>
               </div>
             </form>
           </div>
         </section>
-
         <PublicFooter />
       </main>
     </>

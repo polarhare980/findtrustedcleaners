@@ -22,7 +22,6 @@ function ClientRegisterPage() {
   });
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -34,42 +33,24 @@ function ClientRegisterPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage('');
-    setIsLoading(true);
-
     if (form.password !== form.confirmPassword) {
       setMessage('Passwords do not match.');
-      setIsLoading(false);
       return;
     }
-
+    setIsLoading(true);
     try {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fullName: form.fullName,
-          email: form.email,
-          phone: form.phone,
-          houseNameNumber: form.houseNameNumber,
-          street: form.street,
-          county: form.county,
-          postcode: form.postcode,
-          password: form.password,
-          userType: 'client',
-        }),
         credentials: 'include',
+        body: JSON.stringify({ ...form, userType: 'client' }),
       });
-
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success) {
-          const nextUrl = searchParams.get('next');
-          router.push(nextUrl || '/clients/dashboard');
-        } else {
-          setMessage('Registration failed. Please try again.');
-        }
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data?.success) {
+        const nextUrl = searchParams.get('next');
+        router.push(nextUrl || '/clients/dashboard');
       } else {
-        setMessage('Failed to register. Please try again.');
+        setMessage(data?.message || 'Registration failed. Please try again.');
       }
     } catch {
       setMessage('An unexpected error occurred. Please try again.');
@@ -79,70 +60,56 @@ function ClientRegisterPage() {
   };
 
   return (
-    <main className="site-shell">
-      <Head>
-        <title>Register as a Client | Find Trusted Cleaners</title>
-      </Head>
-
-      <PublicHeader ctaHref="/login" ctaLabel="Login" />
-      <PageHero
-        eyebrow="Client registration"
-        title="Create your client account"
-        description="Save favourites, request bookings, and manage your cleaning enquiries in one place."
-      />
-
-      <section className="section-shell pb-16">
-        <div className="mx-auto max-w-3xl surface-card p-8 sm:p-10">
-          <form onSubmit={handleSubmit} className="space-y-8">
-            <div>
-              <h2 className="text-2xl font-semibold text-slate-900">Your details</h2>
-              <div className="mt-5 grid gap-4 md:grid-cols-2">
-                <input type="text" name="fullName" placeholder="Full name" value={form.fullName} onChange={handleChange} className="input md:col-span-2" required />
-                <input type="email" name="email" placeholder="Email address" value={form.email} onChange={handleChange} className="input" required />
-                <input type="tel" name="phone" placeholder="Phone number" value={form.phone} onChange={handleChange} className="input" required />
+    <>
+      <Head><title>Register as a Client | Find Trusted Cleaners</title></Head>
+      <main className="min-h-screen bg-slate-50">
+        <PublicHeader />
+        <PageHero eyebrow="Client registration" title="Create your client account" description="Set up your details once so you can save favourites, request bookings, and manage appointments more easily." />
+        <section className="site-section py-10">
+          <div className="mx-auto max-w-3xl surface-card p-6 sm:p-8">
+            <form onSubmit={handleSubmit} className="space-y-8">
+              <div>
+                <h2 className="text-xl font-semibold text-slate-900">Your details</h2>
+                <div className="mt-4 grid gap-4 md:grid-cols-2">
+                  <input name="fullName" placeholder="Full name" value={form.fullName} onChange={handleChange} className="ftc-input" required />
+                  <input name="email" type="email" placeholder="Email address" value={form.email} onChange={handleChange} className="ftc-input" required />
+                  <input name="phone" placeholder="Phone number" value={form.phone} onChange={handleChange} className="ftc-input" required />
+                </div>
               </div>
-            </div>
 
-            <div>
-              <h2 className="text-2xl font-semibold text-slate-900">Address</h2>
-              <div className="mt-5 grid gap-4 md:grid-cols-2">
-                <input type="text" name="houseNameNumber" placeholder="House name or number" value={form.houseNameNumber} onChange={handleChange} className="input" required />
-                <input type="text" name="street" placeholder="Street" value={form.street} onChange={handleChange} className="input" required />
-                <input type="text" name="county" placeholder="County" value={form.county} onChange={handleChange} className="input" required />
-                <input type="text" name="postcode" placeholder="Postcode" value={form.postcode} onChange={handleChange} className="input" required />
+              <div>
+                <h2 className="text-xl font-semibold text-slate-900">Address</h2>
+                <div className="mt-4 grid gap-4 md:grid-cols-2">
+                  <input name="houseNameNumber" placeholder="House name or number" value={form.houseNameNumber} onChange={handleChange} className="ftc-input" required />
+                  <input name="street" placeholder="Street" value={form.street} onChange={handleChange} className="ftc-input" required />
+                  <input name="county" placeholder="County" value={form.county} onChange={handleChange} className="ftc-input" required />
+                  <input name="postcode" placeholder="Postcode" value={form.postcode} onChange={handleChange} className="ftc-input" required />
+                </div>
               </div>
-            </div>
 
-            <div>
-              <h2 className="text-2xl font-semibold text-slate-900">Security</h2>
-              <div className="mt-5 grid gap-4 md:grid-cols-2">
-                <input type="password" name="password" placeholder="Password" value={form.password} onChange={handleChange} className="input" required />
-                <input type="password" name="confirmPassword" placeholder="Confirm password" value={form.confirmPassword} onChange={handleChange} className="input" required />
+              <div>
+                <h2 className="text-xl font-semibold text-slate-900">Security</h2>
+                <div className="mt-4 grid gap-4 md:grid-cols-2">
+                  <input name="password" type="password" placeholder="Password" value={form.password} onChange={handleChange} className="ftc-input" required />
+                  <input name="confirmPassword" type="password" placeholder="Confirm password" value={form.confirmPassword} onChange={handleChange} className="ftc-input" required />
+                </div>
               </div>
-            </div>
 
-            {message ? <div className="rounded-2xl bg-slate-100 p-4 text-sm text-slate-700">{message}</div> : null}
+              {message ? <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{message}</div> : null}
 
-            <button type="submit" disabled={isLoading} className="brand-button w-full">
-              {isLoading ? 'Creating your account...' : 'Register as a client'}
-            </button>
-
-            <p className="text-sm text-slate-600">
-              Already registered? <Link href="/login" className="font-semibold text-teal-700 hover:underline">Sign in here</Link>.
-            </p>
-          </form>
-        </div>
-      </section>
-
-      <PublicFooter />
-    </main>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <button type="submit" disabled={isLoading} className="ftc-button-primary">{isLoading ? 'Creating account…' : 'Create account'}</button>
+                <Link href="/login" className="text-sm text-teal-700 hover:text-teal-900">Already have an account? Login</Link>
+              </div>
+            </form>
+          </div>
+        </section>
+        <PublicFooter />
+      </main>
+    </>
   );
 }
 
-export default function ClientRegisterPageWrapper() {
-  return (
-    <Suspense fallback={null}>
-      <ClientRegisterPage />
-    </Suspense>
-  );
+export default function RegisterClientPage() {
+  return <Suspense fallback={null}><ClientRegisterPage /></Suspense>;
 }

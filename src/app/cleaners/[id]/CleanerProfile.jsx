@@ -7,8 +7,6 @@ import PurchaseButton from '@/components/PurchaseButton';
 import ReviewFormClient from '@/components/ReviewFormClient';
 import RatingStars from '@/components/RatingStars';
 import Link from 'next/link';
-import PublicHeader from '@/components/PublicHeader';
-import PublicFooter from '@/components/PublicFooter';
 
 // Public APIs
 const PUBLIC_CLEANER_API = (id) => `/api/public-cleaners/${id}`;
@@ -351,7 +349,7 @@ export default function CleanerProfile() {
   return (
     <main className="max-w-6xl mx-auto p-4">
       {/* Header */}
-      <header className="rounded-2xl bg-slate-50 backdrop-blur shadow p-6 md:p-8 flex flex-col md:flex-row gap-6 items-start">
+      <header className="rounded-2xl bg-white/60 backdrop-blur shadow p-6 md:p-8 flex flex-col md:flex-row gap-6 items-start">
         {/* Hero */}
         <div className="w-full md:w-64 shrink-0">
           <div className="relative w-full aspect-[4/3] overflow-hidden rounded-2xl shadow">
@@ -365,7 +363,7 @@ export default function CleanerProfile() {
               <div className="w-full h-full grid place-items-center text-slate-400">No photo</div>
             )}
             {cleaner.imageHasText && (
-              <div className="absolute inset-0 grid place-items-center text-xs font-semibold text-slate-700 bg-slate-50">
+              <div className="absolute inset-0 grid place-items-center text-xs font-semibold text-slate-700 bg-white/60">
                 Contact info hidden for safety
               </div>
             )}
@@ -424,7 +422,7 @@ export default function CleanerProfile() {
 
         {/* CTA (scrolls to availability; keeps contact gated) */}
         <div className="w-full md:w-60">
-          <div className="rounded-2xl p-5 bg-white border border-slate-100 shadow flex flex-col gap-3">
+          <div className="rounded-2xl p-5 bg-white/70 border border-slate-100 shadow flex flex-col gap-3">
             <div className="text-sm text-slate-600">Interested?</div>
             <button
               onClick={() => {
@@ -446,7 +444,7 @@ export default function CleanerProfile() {
       {cleaner.bio && (
         <section className="mt-8">
           <h2 className="text-xl font-bold text-teal-900 mb-2">Public Bio</h2>
-          <div className="rounded-2xl p-5 bg-white border border-slate-100 shadow">
+          <div className="rounded-2xl p-5 bg-white/70 border border-slate-100 shadow">
             <p className="text-slate-700 leading-7 whitespace-pre-line">{cleaner.bio}</p>
           </div>
         </section>
@@ -469,7 +467,7 @@ export default function CleanerProfile() {
                   loading="lazy"
                 />
                 {p.hasText && (
-                  <div className="absolute inset-0 grid place-items-center text-xs font-semibold text-slate-700 bg-slate-50">
+                  <div className="absolute inset-0 grid place-items-center text-xs font-semibold text-slate-700 bg-white/60">
                     Contact info hidden for safety
                   </div>
                 )}
@@ -483,7 +481,7 @@ export default function CleanerProfile() {
       {/* Contact details */}
       <section className="mt-8">
         <h2 className="text-xl font-bold text-teal-900 mb-3">Contact details</h2>
-        <div className="rounded-2xl p-5 bg-white border border-slate-100 shadow grid gap-3 md:grid-cols-2">
+        <div className="rounded-2xl p-5 bg-white/70 border border-slate-100 shadow grid gap-3 md:grid-cols-2">
           <div>
             <div className="text-xs uppercase tracking-wide text-slate-500">Phone</div>
             {cleaner.phone ? (
@@ -518,7 +516,7 @@ export default function CleanerProfile() {
             {cleaner.services.map((s, i) => (
               <li
                 key={i}
-                className="px-3 py-1.5 rounded-full bg-white border border-slate-100 text-sm text-slate-700 shadow"
+                className="px-3 py-1.5 rounded-full bg-white/70 border border-slate-100 text-sm text-slate-700 shadow"
               >
                 {typeof s === 'string' ? s : s?.name || 'Service'}
               </li>
@@ -562,7 +560,7 @@ export default function CleanerProfile() {
             >
               ◀
             </button>
-            <div className="px-3 py-1 rounded bg-white border text-sm">
+            <div className="px-3 py-1 rounded bg-white/70 border text-sm">
               Week of {fmtRangeLabel(mondaySelected)}
               {!cleaner?.isPremium && (
                 <span className="ml-2 text-xs text-amber-700">(Free: this week only)</span>
@@ -586,7 +584,7 @@ export default function CleanerProfile() {
           </div>
         </div>
 
-        <div className="rounded-2xl overflow-hidden border border-slate-100 bg-slate-50 shadow">
+        <div className="rounded-2xl overflow-hidden border border-slate-100 bg-white/60 shadow">
           <div className="overflow-x-auto touch-pan-x">
           <div className="min-w-[760px]">
           <div className="grid" style={{ gridTemplateColumns: `120px repeat(${HOURS.length}, minmax(44px,1fr))` }}>
@@ -641,7 +639,7 @@ export default function CleanerProfile() {
 
         {/* Booking request panel */}
         <div id="purchase-panel" className="mt-5">
-          <div className="rounded-2xl p-5 bg-white border border-slate-100 shadow flex flex-col gap-4">
+          <div className="rounded-2xl p-5 bg-white/70 border border-slate-100 shadow flex flex-col gap-4">
             <div className="grid gap-4 md:grid-cols-3">
               <div className="md:col-span-2 text-sm text-slate-700">
                 {selected.day && selected.hour != null && selectedISO ? (
@@ -721,7 +719,7 @@ export default function CleanerProfile() {
 
       <section className="mt-8">
         <h2 className="text-xl font-bold text-teal-900 mb-3">Verified customer reviews</h2>
-        <div className="rounded-2xl p-5 bg-white border border-slate-100 shadow">
+        <div className="rounded-2xl p-5 bg-white/70 border border-slate-100 shadow">
           {siteReviewCount > 0 ? (
             <div className="grid gap-6 lg:grid-cols-[280px,1fr]">
               <div className="rounded-2xl border border-slate-100 bg-white/80 p-5">
@@ -800,13 +798,11 @@ export default function CleanerProfile() {
 
       <section id="leave-review-section" className="mt-8">
         <h2 className="text-xl font-bold text-teal-900 mb-3">Leave a Review</h2>
-        <div className="rounded-2xl p-5 bg-white border border-slate-100 shadow">
+        <div className="rounded-2xl p-5 bg-white/70 border border-slate-100 shadow">
           <ReviewFormClient cleanerId={String(cleaner._id)} />
         </div>
       </section>
 
     </main>
-      <PublicFooter />
-    </>
   );
 }

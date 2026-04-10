@@ -4,8 +4,6 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import Link from 'next/link';
-import PublicHeader from '@/components/PublicHeader';
-import PublicFooter from '@/components/PublicFooter';
 import { fetchClient } from '@/lib/fetchClient'; // (kept if you use elsewhere)
 import { secureFetch } from '@/lib/secureFetch';
 
@@ -282,7 +280,7 @@ export default function ClientDashboardComponent() {
     return (
       <main className="min-h-screen py-12 px-6 bg-gradient-to-br from-teal-900/20 to-teal-700/10">
         <div className="max-w-2xl mx-auto">
-          <div className="bg-transparent/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] p-8 text-center shadow-[0_8px_32px_rgba(0,0,0,0.1)] animate-fade-in">
+          <div className="bg-white/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] p-8 text-center shadow-[0_8px_32px_rgba(0,0,0,0.1)] animate-fade-in">
             <h1 className="text-3xl font-bold mb-4 bg-gradient-to-r from-red-600 to-red-700 bg-clip-text text-transparent">Error</h1>
             <p className="text-gray-700">{error}</p>
           </div>
@@ -312,8 +310,8 @@ export default function ClientDashboardComponent() {
         )}
 
         {/* Welcome Header */}
-        <div className="bg-transparent/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] p-8 mb-8 shadow-[0_8px_32px_rgba(0,0,0,0.1)] animate-fade-in">
-          <h1 className="text-4xl font-bold mb-2 text-slate-900">
+        <div className="bg-white/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] p-8 mb-8 shadow-[0_8px_32px_rgba(0,0,0,0.1)] animate-fade-in">
+          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-teal-600 to-teal-700 bg-clip-text text-transparent">
             Welcome back, {client?.fullName}!
           </h1>
           <p className="text-gray-700">Manage your profile, view bookings, and track your cleaning history.</p>
@@ -322,7 +320,7 @@ export default function ClientDashboardComponent() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Profile Section */}
           <div className="lg:col-span-2">
-            <div className="bg-transparent/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] p-8 shadow-[0_8px_32px_rgba(0,0,0,0.1)] animate-slide-up">
+            <div className="bg-white/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] p-8 shadow-[0_8px_32px_rgba(0,0,0,0.1)] animate-slide-up">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-3xl font-bold text-teal-800">Profile Information</h2>
                 <button
@@ -336,16 +334,16 @@ export default function ClientDashboardComponent() {
               {!isEditing ? (
                 <div className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="bg-transparent/80 p-4 rounded-2xl">
+                    <div className="bg-white/80 p-4 rounded-2xl">
                       <h3 className="font-semibold text-teal-800 mb-2">Full Name</h3>
                       <p className="text-gray-700">{client?.fullName}</p>
                     </div>
-                    <div className="bg-transparent/80 p-4 rounded-2xl">
+                    <div className="bg-white/80 p-4 rounded-2xl">
                       <h3 className="font-semibold text-teal-800 mb-2">Phone</h3>
                       <p className="text-gray-700">{client?.phone}</p>
                     </div>
                   </div>
-                  <div className="bg-transparent/80 p-4 rounded-2xl">
+                  <div className="bg-white/80 p-4 rounded-2xl">
                     <h3 className="font-semibold text-teal-800 mb-2">Address</h3>
                     <p className="text-gray-700">
                       {client?.address?.houseNameNumber} {client?.address?.street}, {client?.address?.county} {client?.address?.postcode}
@@ -362,7 +360,7 @@ export default function ClientDashboardComponent() {
                         name="fullName"
                         value={formData.fullName}
                         onChange={handleChange}
-                        className="w-full bg-transparent/80 backdrop-blur-[20px] border border-white/20 rounded-xl px-4 py-3 text-gray-700 focus:outline-none focus:border-teal-600 transition-all duration-300"
+                        className="w-full bg-white/80 backdrop-blur-[20px] border border-white/20 rounded-xl px-4 py-3 text-gray-700 focus:outline-none focus:border-teal-600 transition-all duration-300"
                       />
                     </div>
                     <div>
@@ -372,7 +370,7 @@ export default function ClientDashboardComponent() {
                         name="phone"
                         value={formData.phone}
                         onChange={handleChange}
-                        className="w-full bg-transparent/80 backdrop-blur-[20px] border border-white/20 rounded-xl px-4 py-3 text-gray-700 focus:outline-none focus:border-teal-600 transition-all duration-300"
+                        className="w-full bg-white/80 backdrop-blur-[20px] border border-white/20 rounded-xl px-4 py-3 text-gray-700 focus:outline-none focus:border-teal-600 transition-all duration-300"
                       />
                     </div>
                   </div>
@@ -384,7 +382,7 @@ export default function ClientDashboardComponent() {
                         name="houseNameNumber"
                         value={formData.address.houseNameNumber}
                         onChange={handleChange}
-                        className="w-full bg-transparent/80 backdrop-blur-[20px] border border-white/20 rounded-xl px-4 py-3 text-gray-700 focus:outline-none focus:border-teal-600 transition-all duration-300"
+                        className="w-full bg-white/80 backdrop-blur-[20px] border border-white/20 rounded-xl px-4 py-3 text-gray-700 focus:outline-none focus:border-teal-600 transition-all duration-300"
                       />
                     </div>
                     <div>
@@ -394,7 +392,7 @@ export default function ClientDashboardComponent() {
                         name="street"
                         value={formData.address.street}
                         onChange={handleChange}
-                        className="w-full bg-transparent/80 backdrop-blur-[20px] border border-white/20 rounded-xl px-4 py-3 text-gray-700 focus:outline-none focus:border-teal-600 transition-all duration-300"
+                        className="w-full bg-white/80 backdrop-blur-[20px] border border-white/20 rounded-xl px-4 py-3 text-gray-700 focus:outline-none focus:border-teal-600 transition-all duration-300"
                       />
                     </div>
                   </div>
@@ -406,7 +404,7 @@ export default function ClientDashboardComponent() {
                         name="county"
                         value={formData.address.county}
                         onChange={handleChange}
-                        className="w-full bg-transparent/80 backdrop-blur-[20px] border border-white/20 rounded-xl px-4 py-3 text-gray-700 focus:outline-none focus:border-teal-600 transition-all duration-300"
+                        className="w-full bg-white/80 backdrop-blur-[20px] border border-white/20 rounded-xl px-4 py-3 text-gray-700 focus:outline-none focus:border-teal-600 transition-all duration-300"
                       />
                     </div>
                     <div>
@@ -416,7 +414,7 @@ export default function ClientDashboardComponent() {
                         name="postcode"
                         value={formData.address.postcode}
                         onChange={handleChange}
-                        className="w-full bg-transparent/80 backdrop-blur-[20px] border border-white/20 rounded-xl px-4 py-3 text-gray-700 focus:outline-none focus:border-teal-600 transition-all duration-300"
+                        className="w-full bg-white/80 backdrop-blur-[20px] border border-white/20 rounded-xl px-4 py-3 text-gray-700 focus:outline-none focus:border-teal-600 transition-all duration-300"
                       />
                     </div>
                   </div>
@@ -436,7 +434,7 @@ export default function ClientDashboardComponent() {
 
           {/* Quick Actions */}
           <div className="space-y-6">
-            <div className="bg-transparent/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] p-6 shadow-[0_8px_32px_rgba(0,0,0,0.1)] animate-slide-up">
+            <div className="bg-white/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] p-6 shadow-[0_8px_32px_rgba(0,0,0,0.1)] animate-slide-up">
               <h3 className="text-xl font-bold text-teal-800 mb-4">Quick Actions</h3>
               <div className="space-y-3">
                 <Link
@@ -461,7 +459,7 @@ export default function ClientDashboardComponent() {
             </div>
 
             {/* Account Management */}
-<div className="bg-transparent/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] p-6 shadow-[0_8px_32px_rgba(0,0,0,0.1)] animate-slide-up">
+<div className="bg-white/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] p-6 shadow-[0_8px_32px_rgba(0,0,0,0.1)] animate-slide-up">
   <h3 className="text-xl font-bold text-teal-800 mb-4">Account Management</h3>
   
   <button
@@ -484,7 +482,7 @@ export default function ClientDashboardComponent() {
 
         {/* Upcoming Appointments */}
         <div className="mt-8">
-          <div className="bg-transparent/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] p-8 shadow-[0_8px_32px_rgba(0,0,0,0.1)] animate-slide-up">
+          <div className="bg-white/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] p-8 shadow-[0_8px_32px_rgba(0,0,0,0.1)] animate-slide-up">
             <h2 className="text-3xl font-bold text-teal-800 mb-6">📅 Upcoming Appointments</h2>
             {upcomingBookings.length === 0 ? (
               <div className="text-center py-8">
@@ -532,11 +530,11 @@ export default function ClientDashboardComponent() {
         {/* Favorite Cleaners */}
         {favorites.length > 0 && (
           <div className="mt-8">
-            <div className="bg-transparent/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] p-8 shadow-[0_8px_32px_rgba(0,0,0,0.1)] animate-slide-up">
+            <div className="bg-white/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] p-8 shadow-[0_8px_32px_rgba(0,0,0,0.1)] animate-slide-up">
               <h2 className="text-3xl font-bold text-teal-800 mb-6">❤️ Your Favorite Cleaners</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {favorites.slice(0, 6).map((favorite) => (
-                  <div key={favorite._id} className="bg-transparent/80 p-4 rounded-2xl hover:shadow-lg transition-all duration-300">
+                  <div key={favorite._id} className="bg-white/80 p-4 rounded-2xl hover:shadow-lg transition-all duration-300">
                     <div className="flex justify-between items-start mb-2">
                       <h4 className="font-semibold text-teal-800">
                         {favorite.companyName || favorite.realName}
@@ -582,7 +580,7 @@ export default function ClientDashboardComponent() {
 
         {/* Your Bookings Section */}
         <div className="mt-8">
-          <div className="bg-transparent/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] p-8 shadow-[0_8px_32px_rgba(0,0,0,0.1)] animate-slide-up">
+          <div className="bg-white/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] p-8 shadow-[0_8px_32px_rgba(0,0,0,0.1)] animate-slide-up">
             <h2 className="text-3xl font-bold text-teal-800 mb-6">Your Bookings</h2>
             {purchases.length === 0 ? (
               <div className="text-center py-8">
@@ -591,7 +589,7 @@ export default function ClientDashboardComponent() {
             ) : (
               <div className="space-y-4">
                 {purchases.slice(0, 3).map((purchase) => (
-                  <div key={purchase._id} className="bg-transparent/80 p-4 rounded-2xl hover:shadow-lg transition-all duration-300">
+                  <div key={purchase._id} className="bg-white/80 p-4 rounded-2xl hover:shadow-lg transition-all duration-300">
                     <div className="flex justify-between items-start mb-2">
                       <h4 className="font-semibold text-teal-800">
                         Access to {purchase.cleanerId?.companyName || purchase.cleanerId?.realName || 'Cleaner'}
