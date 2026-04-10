@@ -1,7 +1,6 @@
-// src/app/page.js  (SERVER COMPONENT)
 export const metadata = {
-  title: 'Find Trusted Cleaners — UK Local Cleaners',
-  description: 'Browse trusted cleaner profiles and book online. Transparent pricing and verified reviews.',
+  title: 'Find Trusted Cleaners | Compare local cleaners across the UK',
+  description: 'Browse cleaner profiles, view availability, and request bookings through FindTrustedCleaners.',
 };
 
 import HomeClient from '@/components/HomeClient';
