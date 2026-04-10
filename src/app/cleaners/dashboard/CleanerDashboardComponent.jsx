@@ -4,6 +4,8 @@ import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { secureFetch } from '@/lib/secureFetch';
+import PublicHeader from '@/components/PublicHeader';
+import PublicFooter from '@/components/PublicFooter';
 
 // -------------------- Constants (match Profile) --------------------
 const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
@@ -656,14 +658,15 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
   if (loading || !formData) return <LoadingSpinner />;
 
   return (
-    <div className="min-h-screen bg-white py-6 px-4">
-      <div className="max-w-7xl mx-auto">
+    <div className="site-shell">
+      <PublicHeader ctaHref="/cleaners/dashboard" ctaLabel="Dashboard" />
+      <div className="section-shell py-10 sm:py-12">
 
         {/* Header */}
-          <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl mb-6 p-6">
+          <div className="surface-card mb-6 p-6">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between">
               <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent mb-2">
+                <h1 className="text-3xl font-bold text-slate-900 mb-2">
             Cleaner Dashboard
                 </h1>
                 <p className="text-gray-600">Manage your cleaning services and availability</p>
@@ -702,7 +705,7 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
         {/* Delete Modal */}
         {showDeleteModal && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white/90 backdrop-blur-md border border-white/20 rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <div className="surface-card max-w-md w-full p-6">
               <h3 className="text-2xl font-bold text-red-600 mb-4">⚠️ Delete Profile</h3>
               <p className="text-gray-700 mb-4">This action cannot be undone.</p>
               <p className="text-gray-700 mb-4">Type <strong>DELETE</strong> to confirm:</p>
@@ -760,7 +763,7 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
 
         {/* Premium upsell/status */}
 {!formData?.isPremium ? (
-  <div className="bg-gradient-to-r from-amber-400/20 to-amber-500/20 backdrop-blur-md border border-amber-400/30 text-amber-800 px-4 py-3 rounded-lg mb-6">
+  <div className="rounded-2xl border border-amber-200 bg-amber-50 text-amber-800 px-4 py-3 mb-6">
     <p className="mb-2 font-semibold">✨ You are using a Free Account</p>
     <p className="text-sm mb-3">
       Upgrade to set your diary up to <strong>{(Number(formData?.premiumWeeksAhead ?? 3) + 1)}</strong> weeks ahead, show a gallery, and support the platform.
@@ -787,7 +790,7 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
     </button>
   </div>
 ) : (
-  <div className="bg-gradient-to-r from-green-400/20 to-green-500/20 backdrop-blur-md border border-green-400/30 text-green-800 px-4 py-3 rounded-lg mb-6">
+  <div className="rounded-2xl border border-green-200 bg-green-50 text-green-800 px-4 py-3 mb-6">
     <div className="font-semibold mb-3">
       ✨ You are a Premium Cleaner! You can schedule up to{' '}
       <strong>{(Number(formData?.premiumWeeksAhead ?? 3) + 1)}</strong> weeks ahead.
@@ -813,7 +816,7 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
           alert('Something went wrong while opening the billing portal.');
         }
       }}
-      className="inline-flex items-center gap-2 bg-white/70 text-teal-800 border border-teal-300 px-4 py-2 rounded-lg hover:bg-white transition"
+      className="inline-flex items-center gap-2 bg-white text-teal-800 border border-teal-300 px-4 py-2 rounded-lg hover:bg-white transition"
     >
       🧾 Manage / Cancel Premium
     </button>
@@ -822,8 +825,8 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
 
 
         {/* Profile info */}
-        <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl mb-6 p-6">
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent mb-4">
+        <div className="surface-card mb-6 p-6">
+          <h2 className="text-2xl font-bold text-slate-900 mb-4">
             👤 Profile Information
           </h2>
 
@@ -849,55 +852,55 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <Field label="Real Name" editMode={editMode}>
               {editMode ? (
-                <input className="w-full p-3 bg-white/80 border rounded-lg" value={editData.realName || ''} onChange={(e) => handleInputChange('realName', e.target.value)} />
+                <input className="w-full p-3 input" value={editData.realName || ''} onChange={(e) => handleInputChange('realName', e.target.value)} />
               ) : <p className="text-gray-800 font-medium">{formData.realName || 'Not set'}</p>}
             </Field>
 
             <Field label="⭐ Google Rating (0–5)" editMode={editMode}>
               {editMode ? (
-                <input type="number" step="0.1" min="0" max="5" className="w-full p-3 bg-white/80 border rounded-lg" value={editData.googleReviewRating || ''} onChange={(e) => handleInputChange('googleReviewRating', parseFloat(e.target.value))} />
+                <input type="number" step="0.1" min="0" max="5" className="w-full p-3 input" value={editData.googleReviewRating || ''} onChange={(e) => handleInputChange('googleReviewRating', parseFloat(e.target.value))} />
               ) : <p className="text-gray-800 font-medium">{formData.googleReviewRating ? `${formData.googleReviewRating} / 5` : 'Not set'}</p>}
             </Field>
 
             <Field label="🧮 Review Count" editMode={editMode}>
               {editMode ? (
-                <input type="number" min="0" className="w-full p-3 bg-white/80 border rounded-lg" value={editData.googleReviewCount || ''} onChange={(e) => handleInputChange('googleReviewCount', parseInt(e.target.value))} />
+                <input type="number" min="0" className="w-full p-3 input" value={editData.googleReviewCount || ''} onChange={(e) => handleInputChange('googleReviewCount', parseInt(e.target.value))} />
               ) : <p className="text-gray-800 font-medium">{formData.googleReviewCount ? `${formData.googleReviewCount} reviews` : 'Not set'}</p>}
             </Field>
 
             <Field wide label="🔗 Google Review Link" editMode={editMode}>
               {editMode ? (
-                <input type="url" className="w-full p-3 bg-white/80 border rounded-lg" value={editData.googleReviewUrl || ''} onChange={(e) => handleInputChange('googleReviewUrl', e.target.value)} placeholder="https://www.google.com/search?q=your+business" />
+                <input type="url" className="w-full p-3 input" value={editData.googleReviewUrl || ''} onChange={(e) => handleInputChange('googleReviewUrl', e.target.value)} placeholder="https://www.google.com/search?q=your+business" />
               ) : <p className="text-blue-600 underline break-words">{formData.googleReviewUrl || 'Not set'}</p>}
             </Field>
 
             <Field label="Company Name" editMode={editMode}>
               {editMode ? (
-                <input className="w-full p-3 bg-white/80 border rounded-lg" value={editData.companyName || ''} onChange={(e) => handleInputChange('companyName', e.target.value)} />
+                <input className="w-full p-3 input" value={editData.companyName || ''} onChange={(e) => handleInputChange('companyName', e.target.value)} />
               ) : <p className="text-gray-800 font-medium">{formData.companyName || 'Not set'}</p>}
             </Field>
 
             <Field label="Email" editMode={editMode}>
               {editMode ? (
-                <input type="email" className="w-full p-3 bg-white/80 border rounded-lg" value={editData.email || ''} onChange={(e) => handleInputChange('email', e.target.value)} />
+                <input type="email" className="w-full p-3 input" value={editData.email || ''} onChange={(e) => handleInputChange('email', e.target.value)} />
               ) : <p className="text-gray-800 font-medium">{formData.email || 'Not set'}</p>}
             </Field>
 
             <Field label="Phone" editMode={editMode}>
               {editMode ? (
-                <input type="tel" className="w-full p-3 bg-white/80 border rounded-lg" value={editData.phone || ''} onChange={(e) => handleInputChange('phone', e.target.value)} />
+                <input type="tel" className="w-full p-3 input" value={editData.phone || ''} onChange={(e) => handleInputChange('phone', e.target.value)} />
               ) : <p className="text-gray-800 font-medium">{formData.phone || 'Not set'}</p>}
             </Field>
 
             <Field label="Hourly Rate (£)" editMode={editMode}>
               {editMode ? (
-                <input type="number" className="w-full p-3 bg-white/80 border rounded-lg" value={editData.rates || ''} onChange={(e) => handleInputChange('rates', e.target.value)} />
+                <input type="number" className="w-full p-3 input" value={editData.rates || ''} onChange={(e) => handleInputChange('rates', e.target.value)} />
               ) : <p className="text-gray-800 font-medium">£{formData.rates ?? '0'}</p>}
             </Field>
 
             <Field label="Business Insurance" editMode={editMode}>
               {editMode ? (
-                <select className="w-full p-3 bg-white/80 border rounded-lg" value={editData.businessInsurance ? 'true' : 'false'} onChange={(e) => handleInputChange('businessInsurance', e.target.value === 'true')}>
+                <select className="w-full p-3 input" value={editData.businessInsurance ? 'true' : 'false'} onChange={(e) => handleInputChange('businessInsurance', e.target.value === 'true')}>
                   <option value="false">No</option>
                   <option value="true">Yes</option>
                 </select>
@@ -906,7 +909,7 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
 
             <Field label="DBS Checked" editMode={editMode}>
               {editMode ? (
-                <select className="w-full p-3 bg-white/80 border rounded-lg" value={editData.dbsChecked ? 'true' : 'false'} onChange={(e) => handleInputChange('dbsChecked', e.target.value === 'true')}>
+                <select className="w-full p-3 input" value={editData.dbsChecked ? 'true' : 'false'} onChange={(e) => handleInputChange('dbsChecked', e.target.value === 'true')}>
                   <option value="false">No</option>
                   <option value="true">Yes</option>
                 </select>
@@ -916,7 +919,7 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
             <Field wide label="Services Offered" editMode={editMode}>
               {editMode ? (
                 <input
-                  className="w-full p-3 bg-white/80 border rounded-lg"
+                  className="w-full p-3 input"
                   value={editData.services?.join(', ') || ''}
                   onChange={(e) => handleServicesChange(e.target.value)}
                   placeholder="e.g., Deep cleaning, Regular cleaning, Oven clean"
@@ -961,7 +964,7 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
                       const f = e.target.files?.[0];
                       if (f) { setSelectedFile(f); setImagePreview(URL.createObjectURL(f)); }
                     }}
-                    className="w-full p-3 bg-white/80 border rounded-lg"
+                    className="w-full p-3 input"
                   />
 
                   <div className="flex flex-wrap gap-3">
@@ -985,10 +988,10 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
               {editMode ? (
                 <>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-                    <input className="w-full p-3 bg-white/80 border rounded-lg" placeholder="House/Number" value={editData.address?.houseNameNumber || ''} onChange={(e) => handleInputChange('address.houseNameNumber', e.target.value)} />
-                    <input className="w-full p-3 bg-white/80 border rounded-lg" placeholder="Street" value={editData.address?.street || ''} onChange={(e) => handleInputChange('address.street', e.target.value)} />
-                    <input className="w-full p-3 bg-white/80 border rounded-lg" placeholder="County" value={editData.address?.county || ''} onChange={(e) => handleInputChange('address.county', e.target.value)} />
-                    <input className="w-full p-3 bg-white/80 border rounded-lg" placeholder="Postcode" value={editData.address?.postcode || ''} onChange={(e) => handleInputChange('address.postcode', e.target.value)} />
+                    <input className="w-full p-3 input" placeholder="House/Number" value={editData.address?.houseNameNumber || ''} onChange={(e) => handleInputChange('address.houseNameNumber', e.target.value)} />
+                    <input className="w-full p-3 input" placeholder="Street" value={editData.address?.street || ''} onChange={(e) => handleInputChange('address.street', e.target.value)} />
+                    <input className="w-full p-3 input" placeholder="County" value={editData.address?.county || ''} onChange={(e) => handleInputChange('address.county', e.target.value)} />
+                    <input className="w-full p-3 input" placeholder="Postcode" value={editData.address?.postcode || ''} onChange={(e) => handleInputChange('address.postcode', e.target.value)} />
                   </div>
                 </>
               ) : (
@@ -1006,7 +1009,7 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
                 <textarea
                   rows={4}
                   maxLength={1000}
-                  className="w-full p-3 bg-white/80 border rounded-lg resize-none"
+                  className="w-full p-3 input resize-none"
                   value={editData.bio || ''}
                   onChange={(e) => handleInputChange('bio', e.target.value)}
                   placeholder="Tell clients about your experience. Don’t include direct contact details."
@@ -1021,10 +1024,10 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
         </div>
 
         {/* Services summary */}
-        <div id="services-editor" className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl mb-6 p-6">
+        <div id="services-editor" className="surface-card mb-6 p-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-4">
             <div>
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent">
+              <h2 className="text-2xl font-bold text-slate-900">
                 🧹 Services
               </h2>
               <p className="text-sm text-gray-600 mt-1">Your live service list. Use the dedicated services editor to change pricing, duration, and what is active.</p>
@@ -1041,7 +1044,7 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
           {(formData.servicesDetailed || []).filter((s) => s.active !== false).length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {formData.servicesDetailed.filter((s) => s.active !== false).map((svc, i) => (
-                <div key={i} className="rounded-xl border border-white/60 bg-white/70 p-4">
+                <div key={i} className="rounded-xl border border-white/60 bg-white p-4">
                   <div className="font-semibold text-gray-900">{svc.name || 'Untitled service'}</div>
                   <div className="text-sm text-gray-600 mt-1">{svc.defaultDurationMins || 60} mins</div>
                   <div className="text-sm text-gray-700 mt-1">{svc.price != null || svc.basePrice != null ? `£${svc.price ?? svc.basePrice}` : 'Price on request'}</div>
@@ -1049,15 +1052,15 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
               ))}
             </div>
           ) : (
-            <div className="rounded-xl border border-dashed border-gray-300 bg-white/60 p-5 text-gray-600">No active services listed yet.</div>
+            <div className="rounded-xl border border-dashed border-gray-300 bg-slate-50 p-5 text-gray-600">No active services listed yet.</div>
           )}
         </div>
 
         {/* Gallery (Premium only) */}
         {formData.isPremium && (
-          <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl mb-6 p-6">
+          <div className="surface-card mb-6 p-6">
             <div className="flex items-center justify-between gap-3 mb-4">
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent">
+              <h2 className="text-2xl font-bold text-slate-900">
                 🖼️ Gallery (Premium)
               </h2>
 
@@ -1104,7 +1107,7 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
                   const files = e.dataTransfer?.files;
                   handleGalleryFiles(files);
                 }}
-                className="border-2 border-dashed border-teal-300 rounded-xl p-6 text-center bg-white/60"
+                className="border-2 border-dashed border-teal-300 rounded-xl p-6 text-center bg-slate-50"
               >
                 <p className="text-gray-700 font-medium mb-1">Drag & drop photos here</p>
                 <p className="text-sm text-gray-500">or click <span className="underline cursor-pointer" onClick={openFilePicker}>Insert picture</span></p>
@@ -1146,7 +1149,7 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
               {/* Empty state */}
               {((editMode ? editData.photos : formData.photos) || []).length === 0 && (
                 <div className="col-span-full">
-                  <div className="rounded-xl border border-dashed border-gray-300 p-8 text-center bg-white/60">
+                  <div className="rounded-xl border border-dashed border-gray-300 p-8 text-center bg-slate-50">
                     <p className="text-gray-700 font-medium">No photos yet</p>
                     {editMode && (
                       <button
@@ -1169,10 +1172,10 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
 
 
         {/* Pending requests */}
-        <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl mb-6 p-6">
+        <div className="surface-card mb-6 p-6">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mb-4">
             <div>
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-amber-600 to-orange-700 bg-clip-text text-transparent">
+              <h2 className="text-2xl font-bold text-slate-900">
                 ⏳ Pending booking requests
               </h2>
               <p className="text-gray-600 mt-1">
@@ -1188,7 +1191,7 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
             </button>
             <button
               onClick={() => router.push('/cleaners/bookings')}
-              className="px-4 py-2 rounded-lg bg-white/70 border font-medium hover:bg-white"
+              className="px-4 py-2 rounded-lg bg-white border font-medium hover:bg-white"
             >
               View full booking inbox
             </button>
@@ -1201,7 +1204,7 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
           ) : (
             <div className="space-y-3">
               {pendingRequests.map((req) => (
-                <div key={req._id} className="rounded-xl bg-white/70 border border-white/60 p-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div key={req._id} className="rounded-xl bg-white border border-white/60 p-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                   <div>
                     <div className="font-semibold text-gray-900">
                       {req.day} • {req.time || `${String(req.hour || '').padStart(2, '0')}:00`}
@@ -1266,10 +1269,10 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
         </div>
 
         {/* Availability grid — honours overrides; week-0 override toggle */}
-        <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl mb-6 p-6">
+        <div className="surface-card mb-6 p-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-4">
             <div className="flex items-center gap-3">
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent">
+              <h2 className="text-2xl font-bold text-slate-900">
                 🗓️ Availability Management
               </h2>
               {formData?.dbsChecked && (
@@ -1289,7 +1292,7 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
               >
                 ◀
               </button>
-              <div className="px-3 py-2 rounded-lg bg-white/70 border font-medium">
+              <div className="px-3 py-2 rounded-lg bg-white border font-medium">
                 Week of {fmtRangeLabel(mondaySelected)}
                 {!formData.isPremium && <span className="ml-2 text-xs text-amber-700">(Free: this week only)</span>}
               </div>
@@ -1427,30 +1430,30 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
           <StatCard icon="💎" title="Account Status" value={formData.isPremium ? '✨ Premium' : '🆓 Free'} />
         </div>
 
-        <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl mb-6 p-6">
+        <div className="surface-card mb-6 p-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-5">
             <div>
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent">⭐ Ratings & Reviews</h2>
+              <h2 className="text-2xl font-bold text-slate-900">⭐ Ratings & Reviews</h2>
               <p className="text-sm text-gray-600 mt-1">This section reflects real reviews left through your booking flow.</p>
             </div>
             <button
               onClick={() => router.push(`/cleaners/${formData._id}`)}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-white/70 border rounded-xl font-medium hover:bg-white"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-white border rounded-xl font-medium hover:bg-white"
             >
               <span>View public profile</span>
             </button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
-            <div className="rounded-xl bg-white/70 border border-white/60 p-4">
+            <div className="rounded-xl bg-white border border-white/60 p-4">
               <div className="text-sm text-gray-500">Average rating</div>
               <div className="text-3xl font-bold text-gray-900 mt-1">{reviewsSummary.count ? Number(reviewsSummary.average || 0).toFixed(1) : '—'}</div>
             </div>
-            <div className="rounded-xl bg-white/70 border border-white/60 p-4">
+            <div className="rounded-xl bg-white border border-white/60 p-4">
               <div className="text-sm text-gray-500">Verified reviews</div>
               <div className="text-3xl font-bold text-gray-900 mt-1">{reviewsSummary.count || 0}</div>
             </div>
-            <div className="rounded-xl bg-white/70 border border-white/60 p-4">
+            <div className="rounded-xl bg-white border border-white/60 p-4">
               <div className="text-sm text-gray-500">5 star reviews</div>
               <div className="text-3xl font-bold text-gray-900 mt-1">{Number(reviewsSummary.breakdown?.[5] || 0)}</div>
             </div>
@@ -1459,7 +1462,7 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
           {recentReviews.length ? (
             <div className="space-y-3">
               {recentReviews.map((review) => (
-                <div key={review._id} className="rounded-xl bg-white/70 border border-white/60 p-4">
+                <div key={review._id} className="rounded-xl bg-white border border-white/60 p-4">
                   <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                     <div className="font-semibold text-gray-900">{'★'.repeat(Number(review.rating || 0))}{'☆'.repeat(Math.max(0, 5 - Number(review.rating || 0)))}</div>
                     <div className="text-sm text-gray-500">{review.createdAt ? new Date(review.createdAt).toLocaleDateString('en-GB') : ''}</div>
@@ -1477,13 +1480,13 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
               ))}
             </div>
           ) : (
-            <div className="rounded-xl border border-dashed border-gray-300 bg-white/60 p-5 text-gray-600">No verified reviews yet. Once a client leaves a review, it will appear here automatically.</div>
+            <div className="rounded-xl border border-dashed border-gray-300 bg-slate-50 p-5 text-gray-600">No verified reviews yet. Once a client leaves a review, it will appear here automatically.</div>
           )}
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-XL p-6 mt-10">
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent mb-6">
+        <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl p-6 mt-10">
+          <h2 className="text-2xl font-bold text-slate-900 mb-6">
             ⚡ Quick Actions
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1519,6 +1522,7 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
         </div>
 
       </div>
+      <PublicFooter />
     </div>
   );
 }
@@ -1538,7 +1542,7 @@ function StatCard({ icon, title, value, onClick, helpText = '' }) {
   return (
     <button type="button" onClick={onClick} className="w-full bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-2xl p-6 text-center hover:-translate-y-1 transition-all">
       <div className="text-3xl mb-2">{icon}</div>
-      <h3 className="text-xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent">
+      <h3 className="text-xl font-bold text-slate-900">
         {title}
       </h3>
       <p className="text-2xl font-bold text-gray-800 mt-2">{value}</p>

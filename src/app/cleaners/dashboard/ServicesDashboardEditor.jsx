@@ -4,6 +4,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { secureFetch } from '@/lib/secureFetch';
+import DashboardShell from '@/components/DashboardShell';
+import DashboardHeader from '@/components/DashboardHeader';
 
 function normalizeServiceKey(value) {
   return String(value || '')
@@ -60,7 +62,6 @@ export default function ServicesDashboardEditor() {
 
   useEffect(() => {
     let active = true;
-
     (async () => {
       try {
         setLoading(true);
@@ -70,13 +71,11 @@ export default function ServicesDashboardEditor() {
           router.push('/login');
           return;
         }
-
         if (!active) return;
         const user = data.user || {};
         const normalisedServices = Array.isArray(user.servicesDetailed)
           ? user.servicesDetailed.map((service, index) => normaliseService(service, index))
           : [];
-
         setCleanerId(String(user._id || user.id || ''));
         setCompanyName(user.companyName || user.realName || 'Your services');
         setServices(normalisedServices);
@@ -88,10 +87,7 @@ export default function ServicesDashboardEditor() {
         if (active) setLoading(false);
       }
     })();
-
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, [router]);
 
   const hasChanges = useMemo(() => JSON.stringify(services) !== savedSnapshot, [services, savedSnapshot]);
@@ -106,16 +102,8 @@ export default function ServicesDashboardEditor() {
     }));
   };
 
-  const addService = () => {
-    setServices((prev) => ([
-      ...prev,
-      normaliseService({ name: '', price: '', defaultDurationMins: 60, active: true }, prev.length),
-    ]));
-  };
-
-  const removeService = (index) => {
-    setServices((prev) => prev.filter((_, idx) => idx !== index));
-  };
+  const addService = () => setServices((prev) => ([...prev, normaliseService({ name: '', price: '', defaultDurationMins: 60, active: true }, prev.length)]));
+  const removeService = (index) => setServices((prev) => prev.filter((_, idx) => idx !== index));
 
   const handleSave = async () => {
     setSaving(true);
@@ -123,167 +111,100 @@ export default function ServicesDashboardEditor() {
     try {
       const payload = toPayload(services);
       const res = await fetch(`/api/cleaners/${cleanerId}`, {
-        method: 'PUT',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ servicesDetailed: payload }),
+        method: 'PUT', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ servicesDetailed: payload }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.message || 'Failed to save services');
-
       const normalisedSaved = payload.map((service, index) => normaliseService(service, index));
       setServices(normalisedSaved);
       setSavedSnapshot(JSON.stringify(normalisedSaved));
-      setMessage('✅ Services updated successfully.');
+      setMessage('Services updated successfully.');
     } catch (error) {
       console.error('Failed to save services:', error);
-      setMessage(`❌ ${error.message || 'Failed to save services.'}`);
+      setMessage(error.message || 'Failed to save services.');
     } finally {
       setSaving(false);
     }
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 to-cyan-100 p-6">
-        <LoadingSpinner />
-      </div>
-    );
+    return <div className="site-shell grid min-h-screen place-items-center p-6"><LoadingSpinner /></div>;
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 via-cyan-50 to-blue-50 p-4 md:p-8">
-      <div className="max-w-5xl mx-auto space-y-6">
-        <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl p-6">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-wide text-teal-700">Cleaner dashboard</p>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent mt-1">
-                Edit Services
-              </h1>
-              <p className="text-gray-600 mt-2">Manage the services clients can book for {companyName}.</p>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={() => router.push('/cleaners/dashboard')}
-                className="px-4 py-2 rounded-xl bg-white/80 border border-white/60 text-gray-800 font-medium hover:bg-white"
-              >
-                ← Back to dashboard
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={saving || !hasChanges}
-                className={`px-5 py-2 rounded-xl text-white font-semibold ${saving || !hasChanges ? 'bg-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800'}`}
-              >
-                {saving ? 'Saving…' : 'Save services'}
-              </button>
-            </div>
-          </div>
-          {message ? <div className="mt-4 rounded-xl bg-white/70 border border-white/60 px-4 py-3 text-sm text-gray-800">{message}</div> : null}
-        </div>
+    <DashboardShell ctaHref="/cleaners/dashboard" ctaLabel="Dashboard">
+      <div className="space-y-6">
+        <DashboardHeader
+          title="Edit services"
+          description={`Manage the services clients can book for ${companyName}. Keep it simple: service name, optional price, and duration.`}
+          primaryHref="/cleaners/dashboard"
+          primaryLabel="Back to dashboard"
+        />
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl p-6 space-y-4">
-            <div className="flex items-center justify-between gap-3">
+        {message ? <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">{message}</div> : null}
+
+        <div className="grid gap-6 lg:grid-cols-3">
+          <section className="surface-card lg:col-span-2 p-6">
+            <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h2 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent">Service list</h2>
-                <p className="text-sm text-gray-600 mt-1">Keep this simple: service name, optional price, duration, and whether it is active.</p>
+                <h2 className="text-2xl font-semibold text-slate-900">Service list</h2>
+                <p className="mt-1 text-sm text-slate-600">Show clients exactly what they can book.</p>
               </div>
-              <button
-                onClick={addService}
-                className="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-purple-700 text-white font-semibold hover:from-purple-700 hover:to-purple-800"
-              >
-                ➕ Add service
-              </button>
+              <button onClick={addService} className="brand-button">Add service</button>
             </div>
 
-            {services.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-gray-300 bg-white/60 p-6 text-center text-gray-600">
-                No services added yet.
-              </div>
-            ) : (
-              services.map((service, index) => (
-                <div key={`${service.key || 'service'}-${index}`} className="rounded-2xl border border-white/60 bg-white/70 p-4 space-y-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1">
-                      <label className="block text-sm font-medium text-gray-600 mb-2">Service name</label>
-                      <input
-                        value={service.name || ''}
-                        onChange={(e) => updateService(index, 'name', e.target.value)}
-                        placeholder="Example: Single oven clean"
-                        className="w-full p-3 border rounded-xl bg-white/90"
-                      />
-                    </div>
-                    <button
-                      onClick={() => removeService(index)}
-                      className="mt-7 px-3 py-2 rounded-xl border border-red-200 text-red-700 bg-white hover:bg-red-50"
-                    >
-                      Remove
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-600 mb-2">Price (optional)</label>
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={service.price ?? ''}
-                        onChange={(e) => updateService(index, 'price', e.target.value)}
-                        placeholder="45"
-                        className="w-full p-3 border rounded-xl bg-white/90"
-                      />
+            <div className="space-y-4">
+              {!services.length ? (
+                <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-slate-600">No services added yet.</div>
+              ) : services.map((service, index) => (
+                <div key={`${service.key || 'service'}-${index}`} className="soft-panel p-4">
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <div className="md:col-span-2">
+                      <label className="mb-2 block text-sm font-medium text-slate-600">Service name</label>
+                      <input value={service.name || ''} onChange={(e) => updateService(index, 'name', e.target.value)} placeholder="Example: Single oven clean" className="input" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-600 mb-2">Duration (mins)</label>
-                      <input
-                        type="number"
-                        min="15"
-                        step="15"
-                        value={service.defaultDurationMins ?? '60'}
-                        onChange={(e) => updateService(index, 'defaultDurationMins', e.target.value)}
-                        placeholder="60"
-                        className="w-full p-3 border rounded-xl bg-white/90"
-                      />
+                      <label className="mb-2 block text-sm font-medium text-slate-600">Price</label>
+                      <input value={service.price || ''} onChange={(e) => updateService(index, 'price', e.target.value)} placeholder="Optional" className="input" />
+                    </div>
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-slate-600">Duration (mins)</label>
+                      <input value={service.defaultDurationMins || '60'} onChange={(e) => updateService(index, 'defaultDurationMins', e.target.value)} className="input" />
                     </div>
                     <div className="flex items-end">
-                      <label className="inline-flex items-center gap-3 rounded-xl border border-white/60 bg-white/90 px-4 py-3 w-full cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={service.active !== false}
-                          onChange={(e) => updateService(index, 'active', e.target.checked)}
-                          className="h-4 w-4"
-                        />
-                        <span className="text-sm font-medium text-gray-700">Active and bookable</span>
+                      <label className="inline-flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3">
+                        <input type="checkbox" checked={service.active !== false} onChange={(e) => updateService(index, 'active', e.target.checked)} className="h-4 w-4" />
+                        <span className="text-sm font-medium text-slate-700">Active and bookable</span>
                       </label>
+                    </div>
+                    <div className="flex items-end justify-end md:col-span-1">
+                      <button onClick={() => removeService(index)} className="brand-button-secondary">Remove</button>
                     </div>
                   </div>
                 </div>
-              ))
-            )}
-          </div>
+              ))}
+            </div>
 
-          <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl p-6">
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent">Live summary</h2>
-            <p className="text-sm text-gray-600 mt-1">This is what your active service setup currently looks like.</p>
+            <div className="mt-6">
+              <button onClick={handleSave} disabled={saving || !hasChanges} className="brand-button disabled:cursor-not-allowed disabled:opacity-60">{saving ? 'Saving…' : 'Save services'}</button>
+            </div>
+          </section>
 
+          <aside className="surface-card p-6">
+            <h2 className="text-2xl font-semibold text-slate-900">Live summary</h2>
+            <p className="mt-1 text-sm text-slate-600">This is how your active services currently look.</p>
             <div className="mt-4 space-y-3">
               {activeServices.length ? activeServices.map((service, index) => (
-                <div key={`${service.key || 'active'}-${index}`} className="rounded-xl border border-white/60 bg-white/70 p-4">
-                  <div className="font-semibold text-gray-900">{service.name}</div>
-                  <div className="text-sm text-gray-600 mt-1">{service.defaultDurationMins || 60} mins</div>
-                  <div className="text-sm text-gray-700 mt-1">{service.price !== '' ? `£${service.price}` : 'Price on request'}</div>
+                <div key={`${service.key || 'active'}-${index}`} className="soft-panel p-4">
+                  <div className="font-semibold text-slate-900">{service.name}</div>
+                  <div className="mt-1 text-sm text-slate-600">{service.defaultDurationMins || 60} mins</div>
+                  <div className="mt-1 text-sm text-slate-700">{service.price !== '' ? `£${service.price}` : 'Price on request'}</div>
                 </div>
-              )) : (
-                <div className="rounded-xl border border-dashed border-gray-300 bg-white/60 p-4 text-sm text-gray-600">
-                  No active services yet.
-                </div>
-              )}
+              )) : <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-600">No active services yet.</div>}
             </div>
-          </div>
+          </aside>
         </div>
       </div>
-    </div>
+    </DashboardShell>
   );
 }

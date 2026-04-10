@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import Link from 'next/link';
+import PublicHeader from '@/components/PublicHeader';
+import PublicFooter from '@/components/PublicFooter';
 
 const fetchJson = async (url, opts = {}) => {
   const res = await fetch(url, { credentials: 'include', ...opts });
@@ -112,18 +114,18 @@ export default function CleanerBookingsPage() {
         {/* Content Area */}
         <div className="animate-slide-up" style={{ animationDelay: '0.2s' }}>
           {loading ? (
-            <div className="backdrop-blur-xl bg-white/25 border border-white/20 rounded-3xl p-12 text-center shadow-xl">
+            <div className="surface-card p-12 text-center">
               <div className="inline-block w-8 h-8 border-4 border-teal-600 border-t-transparent rounded-full animate-spin mb-4"></div>
               <p className="text-teal-800 font-medium">Loading bookings...</p>
             </div>
           ) : err ? (
-            <div className="backdrop-blur-xl bg-red-50/80 border border-red-200/50 rounded-3xl p-8 shadow-xl">
+            <div className="rounded-3xl border border-red-200 bg-red-50 p-8">
               <p className="text-red-700 font-medium text-center">{err}</p>
             </div>
           ) : (
             <div className="space-y-4">
               {(grouped[activeTab] || []).length === 0 ? (
-                <div className="backdrop-blur-xl bg-white/25 border border-white/20 rounded-3xl p-12 text-center shadow-xl">
+                <div className="surface-card p-12 text-center">
                   <div className="text-6xl mb-4">📋</div>
                   <p className="text-xl text-teal-800 font-medium">No bookings in this category</p>
                   <p className="text-teal-600 mt-2">New client requests will appear here for you to accept or decline.</p>
@@ -132,7 +134,7 @@ export default function CleanerBookingsPage() {
                 grouped[activeTab].map((b, index) => (
                   <div 
                     key={b._id} 
-                    className="backdrop-blur-xl bg-white/25 border border-white/20 rounded-3xl p-6 md:p-8 shadow-xl transition-all duration-300 hover:transform hover:-translate-y-2 hover:shadow-2xl hover:bg-white/35"
+                    className="cleaner-card"
                     style={{ animationDelay: `${index * 0.1}s` }}
                   >
                     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
@@ -145,7 +147,7 @@ export default function CleanerBookingsPage() {
                           </h3>
                         </div>
                         
-                        <div className="backdrop-blur-sm bg-white/20 rounded-2xl p-4 space-y-2">
+                        <div className="soft-panel p-4 space-y-2">
                           <div className="flex items-center gap-2 text-teal-700">
                             <span className="text-sm">📅</span>
                             <span className="font-medium">Requested: {formatCreated(b.createdAt)}</span>

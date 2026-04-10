@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import DashboardShell from '@/components/DashboardShell';
+import DashboardHeader from '@/components/DashboardHeader';
 
 export default function ClientBookingsPage() {
   const [rows, setRows] = useState([]);
@@ -27,37 +29,39 @@ export default function ClientBookingsPage() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-teal-900/20 to-teal-700/10 py-10 px-4">
-      <div className="max-w-5xl mx-auto">
-        <div className="bg-white/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] p-8 shadow-[0_8px_32px_rgba(0,0,0,0.1)]">
-          <div className="flex items-center justify-between gap-4 mb-6">
-            <h1 className="text-3xl font-bold text-teal-800">Your Bookings</h1>
-            <Link href="/clients/dashboard" className="px-4 py-2 rounded-xl bg-teal-600 text-white">Back to dashboard</Link>
-          </div>
+    <DashboardShell ctaHref="/clients/dashboard" ctaLabel="Dashboard">
+      <DashboardHeader
+        title="Your bookings"
+        description="Keep track of upcoming appointments, cleaner responses, and completed work in one place."
+        primaryHref="/cleaners"
+        primaryLabel="Find a cleaner"
+        secondaryHref="/clients/dashboard"
+        secondaryLabel="Back to dashboard"
+      />
 
-          {loading ? <p>Loading…</p> : error ? <p className="text-red-600">{error}</p> : rows.length === 0 ? (
-            <p className="text-gray-700">You do not have any bookings yet.</p>
-          ) : (
-            <div className="space-y-4">
-              {rows.map((row) => (
-                <div key={row._id} className="bg-white/80 rounded-2xl p-4 border border-white/30">
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                    <div>
-                      <div className="font-semibold text-teal-800">{row.cleanerId?.companyName || row.cleanerId?.realName || 'Cleaner'}</div>
-                      <div className="text-sm text-gray-600">{row.serviceName || row.serviceKey || 'Cleaning service'}</div>
-                      <div className="text-sm text-gray-600">{row.isoDate || row.day} at {String(row.hour).padStart(2, '0')}:00</div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-sm">{row.status}</span>
-                      <Link href={`/cleaners/${row.cleanerId?._id || row.cleanerId || ''}`} className="px-4 py-2 rounded-xl bg-teal-600 text-white text-sm">View cleaner</Link>
-                    </div>
+      <section className="surface-card p-6 sm:p-8">
+        {loading ? <p className="text-slate-600">Loading bookings…</p> : error ? <p className="text-rose-700">{error}</p> : rows.length === 0 ? (
+          <div className="empty-state mt-0"><p>You do not have any bookings yet.</p></div>
+        ) : (
+          <div className="space-y-4">
+            {rows.map((row) => (
+              <div key={row._id} className="soft-panel p-5">
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <div className="text-lg font-semibold text-slate-900">{row.cleanerId?.companyName || row.cleanerId?.realName || 'Cleaner'}</div>
+                    <div className="text-sm text-slate-600">{row.serviceName || row.serviceKey || 'Cleaning service'}</div>
+                    <div className="mt-1 text-sm text-slate-500">{row.isoDate || row.day} at {String(row.hour).padStart(2, '0')}:00</div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="status-badge bg-slate-100 text-slate-700">{row.status}</span>
+                    <Link href={`/cleaners/${row.cleanerId?._id || row.cleanerId || ''}`} className="brand-button">View cleaner</Link>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </main>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+    </DashboardShell>
   );
 }

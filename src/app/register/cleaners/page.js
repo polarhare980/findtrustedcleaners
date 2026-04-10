@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import Head from 'next/head';
 import Link from 'next/link';
 import React from 'react';
+import PublicHeader from '@/components/PublicHeader';
+import PublicFooter from '@/components/PublicFooter';
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const DAY_MAP = {
@@ -172,29 +174,11 @@ export default function CleanerRegister() {
         <title>Register as a Cleaner | Find Trusted Cleaners</title>
       </Head>
 
-      <main className="min-h-screen relative overflow-hidden text-slate-800">
-        <div className="absolute inset-0 -z-10">
-          <img src="/background.jpg" alt="Background" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-br from-teal-950/35 via-white/40 to-teal-700/20" />
-        </div>
-
-        <header className="sticky top-0 z-30 border-b border-white/20 bg-white/50 backdrop-blur-xl shadow-sm">
-          <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-            <Link href="/" className="group">
-              <img src="/findtrusted-logo.png" alt="Logo" className="w-32 h-auto transition-transform duration-300 group-hover:scale-105" />
-            </Link>
-            <nav className="flex flex-wrap items-center gap-4 text-sm font-medium text-slate-700">
-              <Link href="/cleaners" className="hover:text-teal-700">Find a Cleaner</Link>
-              <Link href="/register/client" className="rounded-full bg-white/70 px-4 py-2 text-teal-800 shadow-sm ring-1 ring-teal-200 hover:bg-white">Register as Client</Link>
-              <Link href="/register/cleaners" className="hover:text-teal-700">List Yourself</Link>
-              <Link href="/login" className="hover:text-teal-700">Login</Link>
-              <Link href="/blog" className="hover:text-teal-700">Blog</Link>
-            </nav>
-          </div>
-        </header>
-
-        <section className="mx-auto max-w-5xl px-4 py-10">
-          <div className="mb-8 rounded-3xl border border-white/30 bg-white/60 p-6 shadow-2xl backdrop-blur-xl">
+      <div className="site-shell">
+        <PublicHeader ctaHref="/login" ctaLabel="Login" />
+        <main className="section-shell py-10 sm:py-12 text-slate-800">
+        <section>
+          <div className="surface-card mb-8 p-6 sm:p-8">
             <p className="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-teal-700">Cleaner registration</p>
             <h1 className="text-3xl font-bold text-teal-900 md:text-4xl">Create your cleaner profile</h1>
             <p className="mt-3 max-w-2xl text-slate-600">Match the rest of the platform styling, keep setup simple, and only add an hourly rate if it actually applies to your cleaning business.</p>
@@ -204,7 +188,7 @@ export default function CleanerRegister() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-              <section className="rounded-3xl border border-white/30 bg-white/60 p-6 shadow-2xl backdrop-blur-xl">
+              <section className="surface-card p-6">
                 <h2 className="mb-4 text-xl font-semibold text-teal-900">About you</h2>
                 <div className="grid gap-4 md:grid-cols-2">
                   {[
@@ -241,7 +225,7 @@ export default function CleanerRegister() {
                 </div>
               </section>
 
-              <section className="rounded-3xl border border-white/30 bg-white/60 p-6 shadow-2xl backdrop-blur-xl">
+              <section className="surface-card p-6">
                 <h2 className="mb-4 text-xl font-semibold text-teal-900">Pricing & trust</h2>
                 <div className="space-y-4">
                   <div>
@@ -263,7 +247,7 @@ export default function CleanerRegister() {
               </section>
             </div>
 
-            <section className="rounded-3xl border border-white/30 bg-white/60 p-6 shadow-2xl backdrop-blur-xl">
+            <section className="surface-card p-6">
               <div className="mb-4 flex items-center justify-between gap-4">
                 <div>
                   <h2 className="text-xl font-semibold text-teal-900">Services</h2>
@@ -288,7 +272,7 @@ export default function CleanerRegister() {
               {errors.services ? <p className="mt-3 text-sm text-rose-600">{errors.services}</p> : null}
             </section>
 
-            <section className="rounded-3xl border border-white/30 bg-white/60 p-6 shadow-2xl backdrop-blur-xl">
+            <section className="surface-card p-6">
               <div className="mb-4">
                 <h2 className="text-xl font-semibold text-teal-900">Availability</h2>
                 <p className="text-sm text-slate-500">Default is unavailable. Tap a slot to mark it available.</p>
@@ -336,6 +320,8 @@ export default function CleanerRegister() {
           </form>
         </section>
       </main>
+      <PublicFooter />
+    </div>
     </>
   );
 }

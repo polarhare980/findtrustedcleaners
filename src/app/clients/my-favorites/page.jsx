@@ -1,5 +1,8 @@
 'use client';
 
+import PublicHeader from '@/components/PublicHeader';
+import PublicFooter from '@/components/PublicFooter';
+
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -225,28 +228,34 @@ export default function MyFavouriteCleanersPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen grid place-items-center bg-gradient-to-br from-teal-900/20 to-teal-700/10">
+      <>
+        <PublicHeader ctaHref="/clients/dashboard" ctaLabel="Dashboard" />
+      <main className="site-shell"><div className="section-shell grid place-items-center py-16">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-teal-600" />
           <p className="mt-3 text-gray-700">Loading your favourite cleaners…</p>
         </div>
-      </main>
+      </div></main>
+        <PublicFooter />
+      </>
     );
   }
 
   return (
-    <main className="min-h-screen py-12 px-6 bg-gradient-to-br from-teal-900/20 to-teal-700/10">
+    <>
+      <PublicHeader ctaHref="/clients/dashboard" ctaLabel="Dashboard" />
+    <main className="site-shell"><div className="section-shell py-10 sm:py-12">
       <div className="max-w-6xl mx-auto">
         <div className="mb-8 flex items-center justify-between">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-teal-600 to-teal-700 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-semibold tracking-tight text-slate-900">
             ❤️ My Favourite Cleaners
           </h1>
           <div className="flex gap-3">
-            <Link href="/cleaners" className="bg-teal-600 text-white px-6 py-3 rounded-xl shadow hover:bg-teal-700 transition">
+            <Link href="/cleaners" className="brand-button">
               Browse Cleaners
             </Link>
             {isClient && (
-              <Link href="/clients/dashboard" className="bg-gray-700 text-white px-6 py-3 rounded-xl shadow hover:bg-gray-800 transition">
+              <Link href="/clients/dashboard" className="brand-button-secondary">
                 Client Dashboard
               </Link>
             )}
@@ -257,7 +266,7 @@ export default function MyFavouriteCleanersPage() {
         {error && <div className="mb-6 bg-red-600 text-white px-6 py-3 rounded-xl shadow">{error}</div>}
 
         {(!favourites || favourites.length === 0) ? (
-          <div className="bg-white/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] p-8 text-center shadow">
+          <div className="surface-card p-8 text-center">
             <p className="text-gray-700 mb-4">You haven’t added any favourites yet.</p>
             <Link href="/cleaners" className="inline-block bg-teal-600 text-white px-6 py-3 rounded-[50px] shadow hover:bg-teal-700 transition">
               Find a Cleaner
@@ -266,7 +275,7 @@ export default function MyFavouriteCleanersPage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {favourites.map((c) => (
-              <article key={c._id} className="bg-white/90 border border-white/30 rounded-2xl p-5 shadow hover:shadow-lg transition">
+              <article key={c._id} className="cleaner-card">
                 <div className="flex items-start justify-between mb-3">
                   <h3 className="text-lg font-semibold text-teal-800">
                     {c.companyName || c.realName || 'Cleaner'}
@@ -326,6 +335,8 @@ export default function MyFavouriteCleanersPage() {
           </div>
         )}
       </div>
-    </main>
+    </div></main>
+      <PublicFooter />
+    </>
   );
 }
