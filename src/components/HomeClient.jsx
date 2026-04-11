@@ -183,45 +183,34 @@ export default function HomeClient() {
       <section className="site-section pb-8">
         <div className="overflow-hidden rounded-[34px] border border-white/70 bg-white/90 shadow-[0_22px_70px_rgba(15,23,42,0.08)] backdrop-blur-xl">
           <div className="border-b border-teal-100 bg-[radial-gradient(circle_at_top_left,_rgba(20,184,166,0.22),_transparent_34%),linear-gradient(135deg,#f7fffe_0%,#ecfdfa_48%,#ffffff_100%)] p-6 sm:p-7">
-            <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-3xl">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="rounded-full bg-teal-700 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-white">Local price snapshots</span>
                   <span className="rounded-full border border-teal-200 bg-white/80 px-3 py-1 text-xs font-semibold text-teal-800">
-                    {serviceScope === 'local' ? `Area matched: ${serviceArea?.outward || serviceArea?.label || 'local'}` : 'Fallback: wider market view'}
+                    {postcode
+                      ? `Showing ${postcode.toUpperCase()}`
+                      : serviceScope === 'local'
+                        ? `Near ${serviceArea?.outward || serviceArea?.label || 'you'}`
+                        : 'Wider market view'}
                   </span>
                 </div>
-                <h2 className="mt-4 text-3xl font-bold tracking-tight text-slate-900 sm:text-[2.15rem]">See real service pricing that matches the visitor&apos;s area</h2>
+                <h2 className="mt-4 text-3xl font-bold tracking-tight text-slate-900 sm:text-[2.15rem]">Popular services near you</h2>
                 <p className="mt-3 text-base leading-7 text-slate-600 sm:text-lg">
-                  These cards are built from cleaner service profiles already on the platform. When we can detect a nearby postcode, the prices shown are area-linked. When we cannot, we fall back to the wider marketplace.
+                  Scroll across to compare live from-prices pulled from cleaner service profiles, then open the matching search results for that service.
                 </p>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-2 lg:min-w-[340px]">
-                <div className="rounded-[24px] border border-white/70 bg-white/88 p-4 shadow-sm">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Pricing source</p>
-                  <p className="mt-2 text-lg font-bold text-slate-900">
-                    {postcode
-                      ? `Manual search: ${postcode.toUpperCase()}`
-                      : serviceArea?.outward
-                        ? `Visitor area: ${serviceArea.outward}`
-                        : 'Wider marketplace'}
-                  </p>
-                  <p className="mt-1 text-sm text-slate-500">Service cards only use prices stored inside cleaner service profiles.</p>
-                </div>
-                <div className="rounded-[24px] border border-white/70 bg-white/88 p-4 shadow-sm">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">What visitors see</p>
-                  <p className="mt-2 text-lg font-bold text-slate-900">From-price cards with local links</p>
-                  <p className="mt-1 text-sm text-slate-500">Each card opens a filtered cleaner search for that service and area.</p>
-                </div>
+              <div className="flex flex-wrap gap-3">
+                <Link href="/cleaners" className="ftc-button-primary">Browse all services</Link>
+                <p className="inline-flex items-center rounded-full border border-slate-200 bg-white/85 px-4 py-3 text-sm text-slate-600">
+                  {postcode
+                    ? 'Showing prices for your searched area.'
+                    : serviceArea?.outward
+                      ? `Using nearby pricing around ${serviceArea.outward}.`
+                      : 'Add a postcode above to tighten local pricing.'}
+                </p>
               </div>
-            </div>
-
-            <div className="mt-5 flex flex-wrap gap-3">
-              <Link href="/cleaners" className="ftc-button-primary">Browse all services</Link>
-              <p className="inline-flex items-center rounded-full border border-slate-200 bg-white/85 px-4 py-3 text-sm text-slate-600">
-                Tip: enter a postcode above to tighten the prices to the area you want to browse.
-              </p>
             </div>
           </div>
 
@@ -235,54 +224,52 @@ export default function HomeClient() {
                 Service pricing cards will appear here automatically as cleaners add priced services to their profile.
               </div>
             ) : (
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                {serviceMarket.map((service, index) => {
+              <div className="-mx-1 flex gap-4 overflow-x-auto px-1 pb-2 snap-x snap-mandatory [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                {serviceMarket.map((service) => {
                   const appliedPostcode = postcode || serviceArea?.outward || '';
                   const href = `/cleaners?service=${encodeURIComponent(service.label)}${appliedPostcode ? `&postcode=${encodeURIComponent(appliedPostcode)}` : ''}`;
                   return (
                     <Link
                       key={service.key}
                       href={href}
-                      className="group relative overflow-hidden rounded-[30px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fffe_100%)] p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-teal-200 hover:shadow-[0_22px_60px_rgba(15,23,42,0.10)]"
+                      className="group relative min-w-[280px] max-w-[280px] snap-start overflow-hidden rounded-[30px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fffe_100%)] p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-teal-200 hover:shadow-[0_22px_60px_rgba(15,23,42,0.10)] sm:min-w-[320px] sm:max-w-[320px]"
                     >
                       <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-teal-500 via-cyan-400 to-teal-700" />
                       <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-teal-700">Service option</p>
-                          <h3 className="mt-3 text-[1.7rem] font-bold leading-tight text-slate-900">{service.label}</h3>
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-teal-700">Service</p>
+                          <h3 className="mt-3 text-2xl font-bold leading-tight text-slate-900">{service.label}</h3>
                         </div>
-                        <span className="rounded-full bg-teal-50 px-3 py-2 text-center text-xs font-semibold text-teal-900 shadow-sm">
+                        <span className="shrink-0 rounded-full bg-teal-50 px-3 py-2 text-center text-xs font-semibold text-teal-900 shadow-sm">
                           {service.cleanerCount} cleaner{service.cleanerCount === 1 ? '' : 's'}
                         </span>
                       </div>
 
-                      <div className="mt-6 rounded-[24px] border border-teal-100 bg-teal-50/70 p-4">
-                        <div className="flex items-end gap-2">
+                      <div className="mt-5 rounded-[24px] border border-teal-100 bg-teal-50/70 p-4">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">From price</p>
+                        <div className="mt-2 flex items-end gap-2">
                           <span className="text-4xl font-black tracking-tight text-slate-900">
                             {service.minPrice != null ? `£${service.minPrice}` : 'Quote'}
                           </span>
                           <span className="pb-1 text-sm font-medium text-slate-500">
-                            {service.minPrice != null ? 'from local profiles' : 'shown on profile'}
+                            {service.minPrice != null ? 'on profile' : 'on request'}
                           </span>
                         </div>
-                        <p className="mt-2 text-sm text-slate-600">
-                          {service.pricedCount || 0} priced profile{service.pricedCount === 1 ? '' : 's'} contributing to this service snapshot.
-                        </p>
                       </div>
 
                       <div className="mt-4 flex flex-wrap gap-2">
                         <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700">
-                          {serviceScope === 'local' ? `Area-linked${serviceArea?.outward ? ` · ${serviceArea.outward}` : ''}` : 'Marketplace-wide'}
+                          {serviceScope === 'local' ? `Local${serviceArea?.outward ? ` · ${serviceArea.outward}` : ''}` : 'Marketplace'}
                         </span>
                         {service.avgDurationMins ? (
-                          <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700">Around {service.avgDurationMins} mins</span>
+                          <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700">{service.avgDurationMins} mins avg</span>
                         ) : null}
                         <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700">
-                          {service.pricedCount || service.cleanerCount} profile{(service.pricedCount || service.cleanerCount) === 1 ? '' : 's'} with details
+                          {service.pricedCount || 0} priced
                         </span>
                       </div>
 
-                      <div className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-teal-700">
+                      <div className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-teal-700">
                         View matching cleaners
                         <span aria-hidden="true" className="transition-transform duration-300 group-hover:translate-x-1">→</span>
                       </div>

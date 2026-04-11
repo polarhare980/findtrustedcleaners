@@ -161,7 +161,7 @@ export default function ServicesDashboardEditor() {
               <h1 className="text-3xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent mt-1">
                 Edit Services
               </h1>
-              <p className="text-gray-600 mt-2">Manage the services clients can book for {companyName}.</p>
+              <p className="text-gray-600 mt-2">Manage the services clients can book for {companyName}. Prices saved here feed your public profile and homepage service snapshots.</p>
             </div>
             <div className="flex flex-wrap gap-3">
               <button
@@ -187,7 +187,7 @@ export default function ServicesDashboardEditor() {
             <div className="flex items-center justify-between gap-3">
               <div>
                 <h2 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent">Service list</h2>
-                <p className="text-sm text-gray-600 mt-1">Keep this simple: service name, optional price, duration, and whether it is active.</p>
+                <p className="text-sm text-gray-600 mt-1">Keep this simple: service name, price, duration, and whether it is active. Homepage price cards use this data.</p>
               </div>
               <button
                 onClick={addService}

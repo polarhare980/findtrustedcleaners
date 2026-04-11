@@ -509,36 +509,46 @@ export default function CleanerProfile() {
       </section>
 
       {/* Services */}
-      {Array.isArray(cleaner.services) && cleaner.services.length > 0 && (
-        <section className="mt-8">
-          <h2 className="text-xl font-bold text-teal-900 mb-3">Services</h2>
-          <ul className="flex flex-wrap gap-2">
-            {cleaner.services.map((s, i) => (
-              <li
-                key={i}
-                className="px-3 py-1.5 rounded-full bg-white/70 border border-slate-100 text-sm text-slate-700 shadow"
-              >
-                {typeof s === 'string' ? s : s?.name || 'Service'}
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {/* Service Durations */}
       {Array.isArray(cleaner.servicesDetailed) &&
-        cleaner.servicesDetailed.filter((s) => s?.name && s?.active !== false).length > 0 && (
-          <section className="mt-6">
-            <h2 className="text-xl font-bold text-teal-900 mb-3">Service Durations</h2>
-            <ul className="list-disc list-inside text-slate-700">
+        cleaner.servicesDetailed.filter((s) => s?.name && s?.active !== false).length > 0 ? (
+          <section className="mt-8">
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <h2 className="text-xl font-bold text-teal-900">Services</h2>
+              <span className="text-sm text-slate-500">Prices and durations set by the cleaner</span>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
               {cleaner.servicesDetailed
                 .filter((svc) => svc?.name && svc?.active !== false)
                 .map((svc, i) => (
-                  <li key={`${svc.name}-${i}`}>{svc.name} ({svc.defaultDurationMins ?? 60} mins{svc.price != null ? ` • £${svc.price}` : ''})</li>
+                  <div key={`${svc.name}-${i}`} className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className="text-base font-semibold text-slate-900">{svc.name}</h3>
+                        <p className="mt-1 text-sm text-slate-500">{svc.defaultDurationMins ?? 60} mins</p>
+                      </div>
+                      <div className="rounded-full bg-teal-50 px-3 py-1.5 text-sm font-semibold text-teal-800">
+                        {svc.price != null ? `£${svc.price}` : 'Quote'}
+                      </div>
+                    </div>
+                  </div>
                 ))}
+            </div>
+          </section>
+        ) : Array.isArray(cleaner.services) && cleaner.services.length > 0 ? (
+          <section className="mt-8">
+            <h2 className="text-xl font-bold text-teal-900 mb-3">Services</h2>
+            <ul className="flex flex-wrap gap-2">
+              {cleaner.services.map((s, i) => (
+                <li
+                  key={i}
+                  className="px-3 py-1.5 rounded-full bg-white/70 border border-slate-100 text-sm text-slate-700 shadow"
+                >
+                  {typeof s === 'string' ? s : s?.name || 'Service'}
+                </li>
+              ))}
             </ul>
           </section>
-        )}
+        ) : null}
 
       {/* Availability (week navigation like dashboard) */}
       <section id="booking-section" className="mt-10">
