@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { connectToDatabase } from '@/lib/db';
 import Cleaner from '@/models/Cleaner';
+import CleanerProfile from '@/app/cleaners/[id]/CleanerProfile';
+import { buildServiceMarket } from '@/lib/serviceMarketplace';
 
 function isObjectIdLike(value = '') {
   return /^[a-f\d]{24}$/i.test(String(value || ''));
@@ -188,6 +190,7 @@ export default async function Page({ params }) {
   }
 
   const faqItems = buildFaqs(locationName, cleaners);
+  const serviceMarket = buildServiceMarket(cleaners, 10);
   const nearbyLinks = getNearbyLinks(locationSlug, cleaners);
   const shouldNoindex = cleaners.length < 2;
 
@@ -273,6 +276,41 @@ export default async function Page({ params }) {
           </article>
         ))}
       </section>
+
+      {serviceMarket.length ? (
+        <section className="mb-10">
+          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">Popular service options in {locationName}</p>
+              <h2 className="text-2xl font-bold text-teal-900">Quick compare cards for fixed-price and specialist work</h2>
+            </div>
+            <Link
+              href={`/cleaners?postcode=${encodeURIComponent(locationName)}`}
+              className="inline-flex rounded-xl border border-teal-200 bg-white px-4 py-2 font-medium text-teal-700"
+            >
+              View all local cleaners
+            </Link>
+          </div>
+
+          <div className="flex gap-4 overflow-x-auto pb-2">
+            {serviceMarket.map((service) => (
+              <Link
+                key={service.key}
+                href={`/cleaners?postcode=${encodeURIComponent(locationName)}&service=${encodeURIComponent(service.label)}`}
+                className="min-w-[240px] rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:border-teal-200"
+              >
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-teal-700">{service.cleanerCount} cleaner{service.cleanerCount === 1 ? '' : 's'}</p>
+                <h3 className="mt-2 text-lg font-semibold text-slate-900">{service.label}</h3>
+                <div className="mt-4 text-3xl font-bold text-slate-900">{service.minPrice != null ? `£${service.minPrice}` : 'Quote'}</div>
+                <p className="mt-1 text-sm text-slate-500">{service.minPrice != null ? 'from listed profile prices' : 'pricing shown on profile'}</p>
+                {service.avgDurationMins ? (
+                  <p className="mt-3 text-sm text-slate-600">Typical duration around {service.avgDurationMins} minutes</p>
+                ) : null}
+              </Link>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <section className="mb-10">
         <h2 className="text-2xl font-bold text-teal-900 mb-4">

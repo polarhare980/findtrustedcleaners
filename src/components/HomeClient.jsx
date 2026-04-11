@@ -9,6 +9,7 @@ import PublicHeader from '@/components/PublicHeader';
 import PublicFooter from '@/components/PublicFooter';
 import PageHero from '@/components/PageHero';
 import { injectPendingFromPurchases } from '@/lib/availability';
+import { buildServiceMarket } from '@/lib/serviceMarketplace';
 
 const fetcher = (url) => fetch(url, { credentials: 'include' }).then((r) => r.json());
 const CLEANERS_API = '/api/public-cleaners';
@@ -137,6 +138,7 @@ export default function HomeClient() {
   };
 
   const cleanerCount = useMemo(() => Array.isArray(data?.cleaners) ? data.cleaners.length : 0, [data]);
+  const serviceMarket = useMemo(() => buildServiceMarket(data?.cleaners || [], 12), [data]);
 
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,#f7fbfb_0%,#f8fafc_38%,#f8fafc_100%)] text-slate-900">
@@ -170,6 +172,64 @@ export default function HomeClient() {
             </div>
             <button onClick={() => router.push(`/cleaners?postcode=${encodeURIComponent(postcode)}`)} className="ftc-button-primary w-full lg:w-auto">Search now</button>
           </div>
+        </div>
+      </section>
+
+      <section className="site-section pb-8">
+        <div className="overflow-hidden rounded-[32px] border border-white/70 bg-white/88 p-6 shadow-[0_22px_70px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-7">
+          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">Price snapshots</p>
+              <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">Popular priced services people can compare quickly</h2>
+              <p className="mt-2 max-w-3xl text-slate-600">Built from cleaner profiles already on the platform, so visitors can see where fixed-price services are available before opening full profiles.</p>
+            </div>
+            <Link href="/cleaners" className="ftc-button-secondary">Browse all services</Link>
+          </div>
+
+          {!serviceMarket.length ? (
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-5 py-6 text-sm text-slate-600">
+              Service pricing cards will appear here automatically as cleaners add priced services to their profile.
+            </div>
+          ) : (
+            <div className="flex gap-4 overflow-x-auto pb-2 hide-scrollbar-mobile">
+              {serviceMarket.map((service) => {
+                const href = `/cleaners?service=${encodeURIComponent(service.label)}${postcode ? `&postcode=${encodeURIComponent(postcode)}` : ''}`;
+                return (
+                  <Link
+                    key={service.key}
+                    href={href}
+                    className="min-w-[250px] flex-1 rounded-[28px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fffe_100%)] p-5 shadow-sm transition hover:-translate-y-1 hover:border-teal-200 hover:shadow-[0_18px_50px_rgba(15,23,42,0.10)]"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-teal-700">Service option</p>
+                        <h3 className="mt-2 text-xl font-bold text-slate-900">{service.label}</h3>
+                      </div>
+                      <span className="rounded-full bg-teal-50 px-3 py-1 text-xs font-semibold text-teal-800">{service.cleanerCount} cleaner{service.cleanerCount === 1 ? '' : 's'}</span>
+                    </div>
+
+                    <div className="mt-5 flex items-end gap-2">
+                      <span className="text-3xl font-bold text-slate-900">
+                        {service.minPrice != null ? `£${service.minPrice}` : 'Quote'}
+                      </span>
+                      <span className="pb-1 text-sm text-slate-500">
+                        {service.minPrice != null ? 'from' : 'pricing on profile'}
+                      </span>
+                    </div>
+
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {service.avgDurationMins ? (
+                        <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600">Around {service.avgDurationMins} mins</span>
+                      ) : null}
+                      <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600">{service.pricedCount || service.cleanerCount} profile{(service.pricedCount || service.cleanerCount) === 1 ? '' : 's'} with details</span>
+                    </div>
+
+                    <div className="mt-5 text-sm font-semibold text-teal-700">View matching cleaners →</div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </div>
       </section>
 
