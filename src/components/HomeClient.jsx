@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
@@ -354,14 +354,46 @@ export default function HomeClient() {
 }
 
 function CleanerSection({ title, subtitle, cleaners, isLoading, favouriteIds, onToggleFavourite, onBookingRequest, premium = false }) {
+  const railRef = useRef(null);
+
+  const scrollRail = (direction) => {
+    if (!railRef.current) return;
+    railRef.current.scrollBy({
+      left: direction === 'left' ? -360 : 360,
+      behavior: 'smooth',
+    });
+  };
+
   return (
     <section className="site-section py-8">
-      <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-slate-900">{title}</h2>
           <p className="mt-2 text-slate-600">{subtitle}</p>
         </div>
-        <Link href="/cleaners" className="ftc-button-secondary">View all cleaners</Link>
+        <div className="flex flex-wrap items-center gap-3">
+          {premium ? (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => scrollRail('left')}
+                aria-label="Scroll premium cleaners left"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-teal-200 hover:text-teal-700"
+              >
+                ←
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollRail('right')}
+                aria-label="Scroll premium cleaners right"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-teal-200 hover:text-teal-700"
+              >
+                →
+              </button>
+            </div>
+          ) : null}
+          <Link href="/cleaners" className="ftc-button-secondary">View all cleaners</Link>
+        </div>
       </div>
 
       {isLoading ? (
@@ -369,16 +401,17 @@ function CleanerSection({ title, subtitle, cleaners, isLoading, favouriteIds, on
       ) : !cleaners?.length ? (
         <div className="surface-card p-8 text-slate-600">No cleaners are available here yet.</div>
       ) : (
-        <div className="flex gap-5 overflow-x-auto pb-2 hide-scrollbar-mobile">
+        <div ref={railRef} className="flex gap-5 overflow-x-auto pb-2 hide-scrollbar-mobile scroll-smooth">
           {cleaners.map((cleaner) => (
-            <CleanerCard
-              key={cleaner._id}
-              cleaner={cleaner}
-              handleBookingRequest={onBookingRequest}
-              isPremium={premium || cleaner.isPremium}
-              isFavourite={favouriteIds.includes(String(cleaner._id))}
-              onToggleFavourite={(id) => onToggleFavourite(String(id))}
-            />
+            <div key={cleaner._id} className="min-w-[280px] shrink-0 sm:min-w-[320px]">
+              <CleanerCard
+                cleaner={cleaner}
+                handleBookingRequest={onBookingRequest}
+                isPremium={premium || cleaner.isPremium}
+                isFavourite={favouriteIds.includes(String(cleaner._id))}
+                onToggleFavourite={(id) => onToggleFavourite(String(id))}
+              />
+            </div>
           ))}
         </div>
       )}
