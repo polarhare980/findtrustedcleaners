@@ -151,11 +151,11 @@ export default function HomeClient() {
       <PageHero
         eyebrow="Trusted cleaner marketplace"
         title="Find trusted cleaners near you"
-        description="Browse verified cleaner profiles, view real availability, and send booking requests without endless quote chasing."
+        description="Browse cleaner profiles for free, compare real availability, and send booking requests through a simpler, clearer marketplace."
         actions={(
           <>
             <button onClick={() => router.push(`/cleaners?postcode=${encodeURIComponent(postcode)}`)} className="ftc-button-primary">Find a cleaner</button>
-            <Link href="/register/cleaners" className="ftc-button-secondary">List your business</Link>
+            <Link href="/register/cleaners" className="ftc-button-secondary">Join as a cleaner</Link>
           </>
         )}
       />
@@ -285,9 +285,9 @@ export default function HomeClient() {
       <section className="site-section pb-8">
         <div className="grid gap-4 md:grid-cols-3">
           {[
-            ['Browse cleaners', 'Search local cleaner profiles and compare who suits your home and budget.'],
-            ['Check availability', 'See current availability before you commit, so the process feels clearer from the start.'],
-            ['Send a request', 'Choose your cleaner and request a booking. Payment only moves forward after approval.'],
+            ['Browse for free', 'Search local cleaner profiles, compare services, and explore the marketplace without paying to browse.'],
+            ['Check live details', 'See service pricing, profile information, and current availability before you commit.'],
+            ['Request with confidence', 'Choose your cleaner and send a request. Payment only moves forward after approval.'],
           ].map(([title, text], index) => (
             <div key={title} className="surface-card p-6">
               <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-teal-700 text-sm font-bold text-white">{index + 1}</div>
@@ -299,7 +299,7 @@ export default function HomeClient() {
       </section>
 
       <CleanerSection
-        title="Featured premium cleaners"
+        title="Premium cleaners with stronger profile presence"
         isLoading={isLoading}
         cleaners={premiumCleaners}
         favouriteIds={favouriteIds}
@@ -314,10 +314,10 @@ export default function HomeClient() {
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">Why choose us</p>
               <h2 className="mt-2 text-3xl font-bold text-slate-900">A simpler way to book cleaning services</h2>
-              <p className="mt-4 text-slate-600">Large marketplaces can rely on brand recognition. We focus on clarity instead — straightforward profiles, visible availability, and a cleaner booking flow that feels easier to trust.</p>
+              <p className="mt-4 text-slate-600">Large marketplaces can rely on brand recognition and hard sell tactics. We focus on clarity instead: free browsing for clients, free basic listings for cleaners, and an optional premium upgrade for businesses that want stronger visibility.</p>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
-              {['Cleaner profiles, not vague listings', 'Availability shown upfront', 'No endless quote chasing', 'Built for UK households and local businesses'].map((item) => (
+              {['Free to browse for clients', 'Free basic listing for cleaners', 'Premium upgrade is optional', 'Built for UK households and local businesses'].map((item) => (
                 <div key={item} className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700">{item}</div>
               ))}
             </div>
@@ -326,8 +326,8 @@ export default function HomeClient() {
       </section>
 
       <CleanerSection
-        title="More cleaners on the platform"
-        subtitle={`Browse ${cleanerCount || 'our'} cleaner profiles and keep checking back as the network grows.`}
+        title="More cleaners you can browse for free"
+        subtitle={`Browse ${cleanerCount || 'our'} cleaner profiles for free and keep checking back as the network grows.`}
         isLoading={isLoading}
         cleaners={freeCleaners}
         favouriteIds={favouriteIds}
@@ -338,8 +338,8 @@ export default function HomeClient() {
       <section className="site-section py-12">
         <div className="rounded-[32px] border border-white/70 bg-white/88 p-8 text-center shadow-[0_24px_70px_rgba(15,23,42,0.09)] backdrop-blur-xl sm:p-10">
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">For cleaners</p>
-          <h2 className="mt-2 text-3xl font-bold text-slate-900">Want more direct booking requests?</h2>
-          <p className="mx-auto mt-4 max-w-2xl text-slate-600">Create your profile, set your availability, and let clients come to you through a cleaner, more transparent booking process.</p>
+          <h2 className="mt-2 text-3xl font-bold text-slate-900">Want to win more direct booking requests?</h2>
+          <p className="mx-auto mt-4 max-w-2xl text-slate-600">Join the marketplace for free, set your availability, and start getting discovered. Upgrade to premium when you want stronger visibility and a more powerful profile presence.</p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Link href="/register/cleaners" className="ftc-button-primary">Create cleaner profile</Link>
             <Link href="/how-it-works" className="ftc-button-secondary">See how it works</Link>
