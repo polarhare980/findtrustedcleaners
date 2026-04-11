@@ -3,7 +3,7 @@ import mongoose, { Schema, models } from 'mongoose';
 const ReviewSchema = new Schema(
   {
     cleanerId: { type: Schema.Types.ObjectId, ref: 'Cleaner', index: true, required: true },
-    clientId: { type: Schema.Types.ObjectId, ref: 'Client', required: true },
+    clientId: { type: Schema.Types.ObjectId, ref: 'Client', default: null },
     purchaseId: { type: Schema.Types.ObjectId, ref: 'Purchase', index: true, required: true, unique: true },
     rating: { type: Number, min: 1, max: 5, required: true },
     text: { type: String, trim: true, maxlength: 1200, default: '' },

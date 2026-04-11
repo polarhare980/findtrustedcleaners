@@ -11,9 +11,11 @@ function bookingUrlForClient(cleanerId) {
   return new URL(`/cleaners/${cleanerId}`, SITE_URL).toString();
 }
 
-function reviewUrlForClient(cleanerId, purchaseId) {
-  const url = new URL(bookingUrlForClient(cleanerId));
-  if (purchaseId) url.searchParams.set('review', purchaseId);
+function reviewUrlForPurchase(purchase) {
+  const token = safe(purchase?.reviewToken);
+  if (token) return new URL(`/review/${token}`, SITE_URL).toString();
+  const url = new URL(bookingUrlForClient(purchase?.cleanerId));
+  if (purchase?._id) url.searchParams.set('review', purchase._id);
   return url.toString();
 }
 
@@ -103,7 +105,7 @@ export async function sendClientBookingRequestConfirmationEmail({ to, recipientN
 export async function sendBookingAcceptedEmail({ to, recipientName, cleanerName, purchase }) {
   if (!to) return { skipped: true, reason: 'missing_client_email' };
   const detailsUrl = bookingUrlForClient(purchase?.cleanerId);
-  const reviewUrl = reviewUrlForClient(purchase?.cleanerId, purchase?._id);
+  const reviewUrl = reviewUrlForPurchase(purchase);
   return sendEmail({
     to,
     subject: 'Your cleaning request has been accepted',
@@ -200,7 +202,7 @@ export async function sendBookingReminderEmail({ to, recipientName, cleanerName,
 
 export async function sendReviewRequestEmail({ to, recipientName, cleanerName, purchase }) {
   if (!to) return { skipped: true, reason: 'missing_email' };
-  const reviewUrl = reviewUrlForClient(purchase?.cleanerId, purchase?._id);
+  const reviewUrl = reviewUrlForPurchase(purchase);
   return sendEmail({
     to,
     subject: 'How did your cleaning appointment go?',

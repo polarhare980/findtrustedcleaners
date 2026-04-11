@@ -59,6 +59,8 @@ const PurchaseSchema = new mongoose.Schema(
     appointmentAt: { type: Date, default: null, index: true },
     cleanerReminderSentAt: { type: Date, default: null },
     clientReminderSentAt: { type: Date, default: null },
+    reviewToken: { type: String, unique: true, sparse: true, index: true },
+    reviewTokenCreatedAt: { type: Date, default: null },
     reviewRequestSentAt: { type: Date, default: null },
     reviewSubmittedAt: { type: Date, default: null },
     completedAt: { type: Date, default: null },

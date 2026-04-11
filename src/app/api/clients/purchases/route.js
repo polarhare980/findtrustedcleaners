@@ -9,6 +9,7 @@ import { requiredHourSpan, hasContiguousAvailability } from '@/lib/availability'
 import { sendCleanerPendingBookingEmail, sendClientBookingRequestConfirmationEmail } from '@/lib/notifications';
 import { getPurchaseExpiryDate } from '@/lib/purchaseExpiry';
 import { parseAppointmentDate } from '@/lib/bookingDates';
+import { createReviewToken } from '@/lib/reviewAccess';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -204,6 +205,8 @@ export async function POST(req) {
 
   const appointmentAt = parseAppointmentDate({ isoDate, day, hour: startHourStr });
 
+  const reviewToken = createReviewToken();
+
   const doc = await Purchase.create({
     cleanerId,
     clientId: isClientUser ? user._id : undefined,
@@ -223,6 +226,8 @@ export async function POST(req) {
     currency,
     amount: typeof amount === 'number' ? amount : undefined,
     status: 'pending_approval',
+    reviewToken,
+    reviewTokenCreatedAt: new Date(),
     notes: typeof notes === 'string' ? notes.trim() : undefined,
     expiresAt: getPurchaseExpiryDate('pending_approval'),
   });
