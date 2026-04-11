@@ -22,11 +22,11 @@ export default function LoginPage() {
     setError('');
     setIsLoading(true);
     try {
-      const res = await fetch('/api/login', {
+      const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ email, password, userType }),
+        body: JSON.stringify({ email: email.trim().toLowerCase(), password, userType }),
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok && data.success) {
