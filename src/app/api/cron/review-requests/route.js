@@ -8,6 +8,6 @@ export const dynamic = 'force-dynamic';
 export async function GET(req) {
   if (!isAuthorizedCron(req)) return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
   await connectToDatabase();
-  const result = await runBookingLifecycleSweep({ mode: 'all' });
+  const result = await runBookingLifecycleSweep({ mode: 'reviews' });
   return NextResponse.json(result);
 }

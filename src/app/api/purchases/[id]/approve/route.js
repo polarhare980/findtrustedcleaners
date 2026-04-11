@@ -6,6 +6,8 @@ import Purchase from '@/models/Purchase';
 import Cleaner from '@/models/Cleaner';
 import Stripe from 'stripe';
 import { getPurchaseExpiryDate } from '@/lib/purchaseExpiry';
+import Client from '@/models/Client';
+import { sendBookingAcceptedEmail } from '@/lib/notifications';
 
 const stripeSecret = process.env.STRIPE_SECRET_KEY || '';
 const stripe = stripeSecret ? new Stripe(stripeSecret) : null;
@@ -92,6 +94,20 @@ export async function PUT(req, context) {
     await purchase.save();
 
     await Cleaner.findByIdAndUpdate(purchase.cleanerId, { $inc: { completedJobs: 1 } }).catch(() => null);
+
+    const client = purchase.clientId ? await Client.findById(purchase.clientId).lean().catch(() => null) : null;
+    const clientEmail = client?.email || purchase.guestEmail || '';
+    const clientName = client?.fullName || client?.name || purchase.guestName || '';
+    const cleanerName = cleaner?.companyName || cleaner?.realName || 'your cleaner';
+
+    sendBookingAcceptedEmail({
+      to: clientEmail,
+      recipientName: clientName,
+      cleanerName,
+      purchase: { ...purchase.toObject(), _id: String(purchase._id), cleanerId: String(purchase.cleanerId) },
+    })
+      .then(() => console.info('[booking-email] acceptance sent', { purchaseId: String(purchase._id) }))
+      .catch((error) => console.error('[booking-email] acceptance failed', { purchaseId: String(purchase._id), message: error?.message || 'Unknown error' }));
 
     return json({
       success: true,

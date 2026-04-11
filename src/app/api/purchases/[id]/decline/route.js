@@ -5,6 +5,9 @@ import { protectApiRoute } from '@/lib/auth';
 import Purchase from '@/models/Purchase';
 import Stripe from 'stripe';
 import { getPurchaseExpiryDate } from '@/lib/purchaseExpiry';
+import Cleaner from '@/models/Cleaner';
+import Client from '@/models/Client';
+import { sendBookingDeclinedEmail } from '@/lib/notifications';
 
 const stripeSecret = process.env.STRIPE_SECRET_KEY || '';
 const stripe = stripeSecret ? new Stripe(stripeSecret) : null;
@@ -90,6 +93,20 @@ export async function PUT(req, context) {
     purchase.status = 'declined';
     purchase.expiresAt = getPurchaseExpiryDate('declined');
     await purchase.save();
+
+    const [cleaner, client] = await Promise.all([
+      Cleaner.findById(purchase.cleanerId).lean().catch(() => null),
+      purchase.clientId ? Client.findById(purchase.clientId).lean().catch(() => null) : Promise.resolve(null),
+    ]);
+
+    sendBookingDeclinedEmail({
+      to: client?.email || purchase.guestEmail || '',
+      recipientName: client?.fullName || client?.name || purchase.guestName || '',
+      cleanerName: cleaner?.companyName || cleaner?.realName || 'the cleaner',
+      purchase: { ...purchase.toObject(), _id: String(purchase._id), cleanerId: String(purchase.cleanerId) },
+    })
+      .then(() => console.info('[booking-email] decline sent', { purchaseId: String(purchase._id) }))
+      .catch((error) => console.error('[booking-email] decline failed', { purchaseId: String(purchase._id), message: error?.message || 'Unknown error' }));
 
     return json({
       success: true,

@@ -282,6 +282,17 @@ export default function HomeClient() {
         </div>
       </section>
 
+      <CleanerSection
+        title="Premium local cleaners (featured)"
+        subtitle="Premium cleaners appear higher on the homepage, directly after local price snapshots, to help turn comparison into enquiries."
+        isLoading={isLoading}
+        cleaners={premiumCleaners}
+        favouriteIds={favouriteIds}
+        onToggleFavourite={handleToggleFavourite}
+        onBookingRequest={handleBookingRequest}
+        premium
+      />
+
       <section className="site-section pb-8">
         <div className="grid gap-4 md:grid-cols-3">
           {[
@@ -298,15 +309,6 @@ export default function HomeClient() {
         </div>
       </section>
 
-      <CleanerSection
-        title="Premium cleaners"
-        isLoading={isLoading}
-        cleaners={premiumCleaners}
-        favouriteIds={favouriteIds}
-        onToggleFavourite={handleToggleFavourite}
-        onBookingRequest={handleBookingRequest}
-        premium
-      />
 
       <section className="site-section py-8">
         <div className="surface-muted p-8">

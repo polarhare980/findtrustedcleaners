@@ -6,7 +6,7 @@ import Purchase from '@/models/Purchase';
 import Cleaner from '@/models/Cleaner';
 import Booking from '@/models/booking';
 import { requiredHourSpan, hasContiguousAvailability } from '@/lib/availability';
-import { sendCleanerPendingBookingEmail } from '@/lib/notifications';
+import { sendCleanerPendingBookingEmail, sendClientBookingRequestConfirmationEmail } from '@/lib/notifications';
 import { getPurchaseExpiryDate } from '@/lib/purchaseExpiry';
 import { parseAppointmentDate } from '@/lib/bookingDates';
 
@@ -227,16 +227,33 @@ export async function POST(req) {
     expiresAt: getPurchaseExpiryDate('pending_approval'),
   });
 
+  const purchaseForEmails = { ...doc.toObject(), _id: String(doc._id), cleanerId: String(cleaner._id) };
+  const clientNameForEmail = isClientUser ? (user.fullName || user.name || '') : guestName;
+  const clientEmailForEmail = isClientUser ? (user.email || guestEmail || '') : guestEmail;
+  const clientAreaForEmail = isClientUser
+    ? [user?.address?.town, user?.address?.county, user?.address?.postcode].filter(Boolean).join(', ')
+    : '';
+  const cleanerNameForEmail = cleaner?.companyName || cleaner?.realName || 'your cleaner';
+
   sendCleanerPendingBookingEmail({
     cleaner,
     client: {
-      name: isClientUser ? (user.fullName || user.name || '') : guestName,
-      area: isClientUser ? [user?.address?.town, user?.address?.county, user?.address?.postcode].filter(Boolean).join(', ') : '',
+      name: clientNameForEmail,
+      area: clientAreaForEmail,
     },
-    purchase: { ...doc.toObject(), _id: String(doc._id) },
+    purchase: purchaseForEmails,
   })
     .then(() => console.info('[booking-email] cleaner notified', { purchaseId: String(doc._id), cleanerId: String(cleaner._id) }))
     .catch((error) => console.error('[booking-email] failed', { purchaseId: String(doc._id), cleanerId: String(cleaner._id), message: error?.message || 'Unknown error' }));
+
+  sendClientBookingRequestConfirmationEmail({
+    to: clientEmailForEmail,
+    recipientName: clientNameForEmail,
+    cleanerName: cleanerNameForEmail,
+    purchase: purchaseForEmails,
+  })
+    .then(() => console.info('[booking-email] client confirmation sent', { purchaseId: String(doc._id) }))
+    .catch((error) => console.error('[booking-email] client confirmation failed', { purchaseId: String(doc._id), message: error?.message || 'Unknown error' }));
 
   return json({
     success: true,
