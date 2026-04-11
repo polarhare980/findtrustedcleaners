@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Head from 'next/head';
 import Link from 'next/link';
 import React from 'react';
+import PublicHeader from '@/components/PublicHeader';
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const DAY_MAP = {
@@ -178,20 +179,7 @@ export default function CleanerRegister() {
           <div className="absolute inset-0 bg-gradient-to-br from-teal-950/35 via-white/40 to-teal-700/20" />
         </div>
 
-        <header className="sticky top-0 z-30 border-b border-white/20 bg-white/50 backdrop-blur-xl shadow-sm">
-          <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-            <Link href="/" className="group">
-              <img src="/findtrusted-logo.png" alt="Logo" className="w-32 h-auto transition-transform duration-300 group-hover:scale-105" />
-            </Link>
-            <nav className="flex flex-wrap items-center gap-4 text-sm font-medium text-slate-700">
-              <Link href="/cleaners" className="hover:text-teal-700">Find a Cleaner</Link>
-              <Link href="/register/client" className="rounded-full bg-white/70 px-4 py-2 text-teal-800 shadow-sm ring-1 ring-teal-200 hover:bg-white">Register as Client</Link>
-              <Link href="/register/cleaners" className="hover:text-teal-700">List Yourself</Link>
-              <Link href="/login" className="hover:text-teal-700">Login</Link>
-              <Link href="/blog" className="hover:text-teal-700">Blog</Link>
-            </nav>
-          </div>
-        </header>
+        <PublicHeader />
 
         <section className="mx-auto max-w-5xl px-4 py-10">
           <div className="mb-8 rounded-3xl border border-white/30 bg-white/60 p-6 shadow-2xl backdrop-blur-xl">

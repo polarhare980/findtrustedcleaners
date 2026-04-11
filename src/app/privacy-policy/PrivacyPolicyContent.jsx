@@ -1,34 +1,14 @@
 'use client';
 
 import Link from 'next/link';
+import PublicHeader from '@/components/PublicHeader';
 import Image from 'next/image';
 
 export default function PrivacyPolicyContent() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-teal-900/20 to-teal-700/10">
       {/* Header (unchanged) */}
-      <header className="sticky top-0 z-50 bg-white/25 backdrop-blur-[20px] border-b border-white/20 shadow-md">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex justify-between items-center">
-            <Link href="/" className="transform hover:scale-105 transition-all duration-300">
-              <Image 
-                src="/findtrusted-logo.png" 
-                alt="FindTrustedCleaners Logo" 
-                className="w-32 h-auto" 
-                width={128} 
-                height={40} 
-              />
-            </Link>
-            <nav className="hidden md:flex space-x-6 text-sm font-medium">
-              <Link href="/cleaners" className="text-gray-700 hover:text-teal-600 hover:bg-white/20 px-3 py-2 rounded-xl transition-all duration-300">Find a Cleaner</Link>
-              <Link href="/register/cleaners" className="text-gray-700 hover:text-teal-600 hover:bg-white/20 px-3 py-2 rounded-xl transition-all duration-300">List Yourself</Link>
-              <Link href="/how-it-works" className="text-gray-700 hover:text-teal-600 hover:bg-white/20 px-3 py-2 rounded-xl transition-all duration-300">How It Works</Link>
-              <Link href="/login" className="bg-gradient-to-r from-teal-600 to-teal-700 text-white px-4 py-2 rounded-xl font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 hover:scale-105">Login</Link>
-              <Link href="/blog" className="text-gray-700 hover:text-teal-600 hover:bg-white/20 px-3 py-2 rounded-xl transition-all duration-300">Blog</Link>
-            </nav>
-          </div>
-        </div>
-      </header>
+      <PublicHeader />
 
       {/* Hero */}
       <section className="py-16 px-6 animate-fade-in">

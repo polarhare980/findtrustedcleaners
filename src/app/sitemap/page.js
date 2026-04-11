@@ -41,33 +41,7 @@ export default function SiteMapPage() {
     >
       <div className="absolute inset-0 bg-gradient-to-br from-teal-900/20 to-teal-700/10"></div>
 
-      <header className="relative z-10 backdrop-blur-md bg-white/10 border-b border-white/20 shadow-lg">
-        <div className="flex items-center justify-between px-6 py-4">
-          <Link href="/" className="transition-transform duration-300 hover:scale-105">
-            <img src="/findtrusted-logo.png" alt="Logo" className="w-32 h-auto" />
-          </Link>
-          <nav className="space-x-6 text-sm font-medium text-white">
-            <Link href="/cleaners" className="hover:bg-white/10 px-3 py-2 rounded-lg transition-all duration-300">
-              Find a Cleaner
-            </Link>
-            <Link href="/register/cleaners" className="hover:bg-white/10 px-3 py-2 rounded-lg transition-all duration-300">
-              List Yourself
-            </Link>
-            <Link href="/how-it-works" className="hover:bg-white/10 px-3 py-2 rounded-lg transition-all duration-300">
-              How It Works
-            </Link>
-            <Link href="/login" className="hover:bg-white/10 px-3 py-2 rounded-lg transition-all duration-300">
-              Login
-            </Link>
-            <Link href="/about" className="hover:bg-white/10 px-3 py-2 rounded-lg transition-all duration-300">
-              About
-            </Link>
-            <Link href="/faq" className="hover:bg-white/10 px-3 py-2 rounded-lg transition-all duration-300">
-              FAQ
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <PublicHeader />
 
       <section className="relative z-10 max-w-4xl mx-auto p-6 py-12">
         <div className="text-center mb-12 animate-fade-in">

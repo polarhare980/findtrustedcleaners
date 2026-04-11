@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import PublicHeader from '@/components/PublicHeader';
 
 // ✅ SEO Meta Tags for App Router
 export const metadata = {
@@ -28,35 +29,7 @@ export default function AboutPage() {
     <main className="min-h-screen bg-gradient-to-br from-teal-900/20 to-teal-700/10 text-gray-700" style={{ fontFamily: "'Inter', sans-serif" }}>
 
       {/* Glass Morphism Header */}
-      <header className="sticky top-0 z-50 bg-white/25 backdrop-blur-xl border-b border-white/20 shadow-lg">
-        <div className="flex items-center justify-between px-6 py-4 max-w-7xl mx-auto">
-          <Link href="/" className="transition-transform duration-300 hover:scale-105">
-            <Image 
-              src="/findtrusted-logo.png" 
-              alt="Find Trusted Cleaners Logo" 
-              className="w-32 h-auto" 
-              width={128} 
-              height={40} 
-              priority
-            />
-          </Link>
-          <nav className="hidden md:flex space-x-8 text-sm font-medium">
-            <Link href="/" className="text-gray-700 hover:text-teal-600 transition-colors duration-300 hover:scale-105">Home</Link>
-            <Link href="/cleaners" className="text-gray-700 hover:text-teal-600 transition-colors duration-300 hover:scale-105">Find a Cleaner</Link>
-            <Link href="/register/cleaners" className="text-gray-700 hover:text-teal-600 transition-colors duration-300 hover:scale-105">List Yourself</Link>
-            <Link href="/how-it-works" className="text-gray-700 hover:text-teal-600 transition-colors duration-300 hover:scale-105">How It Works</Link>
-            <Link href="/about" className="text-teal-700 font-semibold">About</Link>
-            <Link href="/login" className="text-gray-700 hover:text-teal-600 transition-colors duration-300 hover:scale-105">Login</Link>
-            <Link href="/blog" className="text-gray-700 hover:text-teal-600 transition-colors duration-300 hover:scale-105">Blog</Link>
-          </nav>
-          {/* Mobile menu button */}
-          <button className="md:hidden p-2 rounded-lg bg-white/30 backdrop-blur-md border border-white/20">
-            <svg className="w-6 h-6 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-        </div>
-      </header>
+      <PublicHeader />
 
       {/* Hero Section with Glass Morphism */}
       <section className="px-6 py-16 max-w-6xl mx-auto">

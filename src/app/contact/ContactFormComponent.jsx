@@ -3,6 +3,7 @@
 'use client';
 
 import Link from 'next/link';
+import PublicHeader from '@/components/PublicHeader';
 import { useState } from 'react';
 
 export default function ContactFormComponent() {
@@ -47,37 +48,7 @@ ${form.message}`
       <div className="min-h-screen bg-gradient-to-br from-teal-900/20 to-teal-700/10 relative">
         
         {/* Glass Morphism Header */}
-        <header className="sticky top-0 z-50 bg-white/25 backdrop-blur-[20px] border-b border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.1)]">
-          <div className="max-w-6xl mx-auto flex items-center justify-between px-6 py-4">
-            <Link href="/" className="transition-transform duration-300 hover:scale-105">
-              <img src="/findtrusted-logo.png" alt="FindTrustedCleaners Logo" className="w-32 h-auto" />
-            </Link>
-            <nav className="hidden md:flex space-x-8 text-sm font-medium">
-              {[
-                { href: '/cleaners', label: 'Find a Cleaner' },
-                { href: '/register/cleaners', label: 'List Yourself' },
-                { href: '/how-it-works', label: 'How It Works' },
-                { href: '/login', label: 'Login' },
-                { href: '/about', label: 'About' }
-              ].map((link, index) => (
-                <Link 
-                  key={index}
-                  href={link.href}
-                  className="text-teal-800 hover:text-teal-600 transition-all duration-300 hover:scale-105 font-semibold"
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </nav>
-            
-            {/* Mobile menu button */}
-            <button className="md:hidden text-teal-800 hover:text-teal-600 transition-colors duration-300">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-          </div>
-        </header>
+        <PublicHeader />
 
         {/* Main Content */}
         <main className="max-w-4xl mx-auto p-6 py-12">

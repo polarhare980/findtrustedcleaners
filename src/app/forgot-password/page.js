@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
+import PublicHeader from '@/components/PublicHeader';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -43,20 +44,7 @@ export default function ForgotPasswordPage() {
       <main className="min-h-screen bg-gradient-to-br from-teal-900/20 to-teal-700/10 text-gray-700 relative">
         <div className="absolute inset-0 bg-gradient-to-br from-teal-900/20 to-teal-700/10"></div>
 
-        <header className="relative z-10 backdrop-blur-20 bg-white/25 border-b border-white/20 shadow-lg">
-          <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-            <Link href="/" className="transition-transform duration-300 hover:scale-105">
-              <img src="/findtrusted-logo.png" alt="Logo" className="w-32 h-auto" />
-            </Link>
-            <nav className="hidden md:flex space-x-8 text-sm font-medium">
-              <Link href="/cleaners" className="text-teal-800 hover:text-teal-600 transition-colors duration-300 hover:bg-white/20 px-3 py-2 rounded-lg">Find a Cleaner</Link>
-              <Link href="/register/cleaners" className="text-teal-800 hover:text-teal-600 transition-colors duration-300 hover:bg-white/20 px-3 py-2 rounded-lg">List Yourself</Link>
-              <Link href="/how-it-works" className="text-teal-800 hover:text-teal-600 transition-colors duration-300 hover:bg-white/20 px-3 py-2 rounded-lg">How It Works</Link>
-              <Link href="/login" className="text-teal-800 hover:text-teal-600 transition-colors duration-300 hover:bg-white/20 px-3 py-2 rounded-lg">Login</Link>
-              <Link href="/about" className="text-teal-800 hover:text-teal-600 transition-colors duration-300 hover:bg-white/20 px-3 py-2 rounded-lg">About</Link>
-            </nav>
-          </div>
-        </header>
+        <PublicHeader />
 
         <section className="relative z-10 max-w-md mx-auto p-6 py-12">
           <div className="text-center mb-8 animate-fade-in">

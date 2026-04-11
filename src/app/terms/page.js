@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import PublicHeader from '@/components/PublicHeader';
 
 // ✅ SEO Meta Tags
 export const metadata = {
@@ -27,17 +28,7 @@ export default function TermsAndConditions() {
       {/* Background with subtle pattern */}
       <div className="absolute inset-0 bg-[url('/cleaning-bg.jpg')] bg-cover bg-center opacity-10"></div>
       
-      {/* Glass morphism header */}
-      <div className="sticky top-0 z-10 backdrop-blur-md bg-white/25 border-b border-white/20">
-        <div className="max-w-4xl mx-auto p-6">
-          <Link href="/" className="text-teal-600 hover:text-teal-700 transition-colors duration-300 flex items-center gap-2">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Back to Home
-          </Link>
-        </div>
-      </div>
+      <PublicHeader />
 
       <section className="py-12 px-6 max-w-4xl mx-auto relative z-10">
         {/* Hero section with glass morphism */}
