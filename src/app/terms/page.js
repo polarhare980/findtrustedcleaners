@@ -168,7 +168,7 @@ export default function TermsAndConditions() {
                 <h2 className="text-2xl font-semibold text-teal-800 mb-3">Contact</h2>
                 <p className="text-gray-700 leading-relaxed">
                   If you have questions about these terms, please contact us at{' '}
-                  <span className="font-semibold text-teal-700">support@findtrustedcleaners.co.uk</span>.
+                  <span className="font-semibold text-teal-700">Findtrustedcleaners@gmail.com</span>.
                 </p>
               </div>
             </div>

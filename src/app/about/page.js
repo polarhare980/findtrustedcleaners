@@ -1,15 +1,17 @@
 import Link from 'next/link';
-import Image from 'next/image';
 import PublicHeader from '@/components/PublicHeader';
+import PublicFooter from '@/components/PublicFooter';
 
-// ✅ SEO Meta Tags for App Router
 export const metadata = {
   title: 'About Us | FindTrustedCleaners',
-  description: 'Learn about the family-run team behind FindTrustedCleaners, helping connect reliable local cleaners with households across the UK.',
-  keywords: 'About FindTrustedCleaners, Oven Detailing, family-run cleaning, trusted local cleaners, home services',
+  description:
+    'Learn about the family-run team behind FindTrustedCleaners and why we built a clearer, fairer way to connect households with trusted local cleaners.',
+  keywords:
+    'About FindTrustedCleaners, family-run cleaning platform, trusted local cleaners, UK cleaner marketplace',
   openGraph: {
     title: 'About Us | FindTrustedCleaners',
-    description: 'Family-run and friendly, we created FindTrustedCleaners to connect trusted local cleaners with people who need help at home.',
+    description:
+      'Family-run and practical, FindTrustedCleaners was built to make it easier for households to find trusted local cleaners and for cleaners to be discovered fairly.',
     url: 'https://www.findtrustedcleaners.co.uk/about',
     siteName: 'FindTrustedCleaners',
     images: [
@@ -24,229 +26,135 @@ export const metadata = {
   },
 };
 
+const values = [
+  {
+    title: 'Built around clarity',
+    text: 'We want people to see useful information quickly, compare real options, and feel confident before they book.',
+  },
+  {
+    title: 'Fair for cleaners',
+    text: 'Independent cleaners should be able to present their work properly without feeling pushed into a hard-sell marketplace.',
+  },
+  {
+    title: 'Practical for households',
+    text: 'Cleaner profiles, visible details, and live availability help reduce the back-and-forth that usually slows everything down.',
+  },
+  {
+    title: 'Rooted in real service work',
+    text: 'This was created by people who understand local service businesses, not by a faceless company trying to overcomplicate things.',
+  },
+];
+
 export default function AboutPage() {
   return (
-    <main className="min-h-screen bg-gradient-to-br from-teal-900/20 to-teal-700/10 text-gray-700" style={{ fontFamily: "'Inter', sans-serif" }}>
-
-      {/* Glass Morphism Header */}
+    <main className="min-h-screen bg-slate-50 text-slate-900">
       <PublicHeader />
 
-      {/* Hero Section with Glass Morphism */}
-      <section className="px-6 py-16 max-w-6xl mx-auto">
-        {/* Breadcrumb */}
-        <nav className="text-sm text-gray-600 mb-8">
-          <div className="bg-white/30 backdrop-blur-md rounded-full px-4 py-2 border border-white/20 inline-flex items-center gap-2">
-            <Link href="/" className="hover:text-teal-600 transition-colors duration-300">Home</Link> 
-            <span className="text-teal-600">→</span>
-            <span className="text-teal-700 font-medium">About Us</span>
+      <section className="site-section py-8">
+        <nav className="mb-8 text-sm text-slate-500">
+          <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 shadow-sm">
+            <Link href="/" className="transition-colors hover:text-teal-700">
+              Home
+            </Link>
+            <span>/</span>
+            <span className="font-medium text-slate-900">About Us</span>
           </div>
         </nav>
 
-        {/* Hero Content */}
-        <div className="text-center mb-16">
-          <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent">
-            About FindTrustedCleaners
-          </h1>
-          <p className="text-xl text-gray-700 mb-8 max-w-4xl mx-auto leading-relaxed">
-            Connecting reliable local cleaners with real homes across the UK.
-          </p>
-          
-          {/* Visual indicator */}
-          <div className="flex justify-center mb-8">
-            <div className="w-16 h-1 bg-gradient-to-r from-teal-600 to-teal-800 rounded-full"></div>
-          </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="bg-white/25 backdrop-blur-xl border border-white/20 rounded-3xl p-8 shadow-2xl mb-8">
-          <div className="space-y-6 text-lg leading-relaxed">
-            <p>
-              Hi there – we&apos;re the same friendly folks behind{' '}
-              <a 
-                href="https://www.ovendetailing.com" 
-                className="text-teal-600 hover:text-teal-800 underline font-medium transition-colors duration-300" 
-                target="_blank" 
-                rel="noopener noreferrer"
-              >
-                www.OvenDetailing.com
-              </a>
-              , a small, family-run oven cleaning business based in West Sussex.
-            </p>
-
-            <p>
-              Over the years, we&apos;ve been asked again and again: <strong>&ldquo;Do you know a good cleaner?&rdquo;</strong> It turns out <em>a lot</em> of people are searching for help they can actually trust – and many great local cleaners are trying to find regular work without signing up to expensive apps or bidding against each other for jobs.
-            </p>
-
-            <p>
-              So, we thought – why not build something simple that works for everyone?
-            </p>
-          </div>
-        </div>
-
-        {/* Values Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
-          <div className="bg-white/25 backdrop-blur-xl border border-white/20 rounded-3xl p-8 shadow-2xl hover:shadow-3xl transition-all duration-500 hover:transform hover:-translate-y-2">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-16 h-16 bg-gradient-to-r from-teal-600 to-teal-800 rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-lg">
-                🎯
-              </div>
-              <h2 className="text-3xl font-bold text-teal-800">Our Mission</h2>
+        <div className="surface-card overflow-hidden">
+          <div className="border-b border-slate-200 bg-gradient-to-r from-teal-50 via-white to-slate-50 px-6 py-12 sm:px-10">
+            <div className="max-w-4xl">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">
+                About FindTrustedCleaners
+              </p>
+              <h1 className="mt-3 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
+                A cleaner marketplace built to feel straightforward, useful, and fair.
+              </h1>
+              <p className="mt-5 max-w-3xl text-lg leading-8 text-slate-600">
+                We created FindTrustedCleaners to help households find reliable local cleaners more easily, and to give cleaners a better way to be discovered without the usual noise.
+              </p>
             </div>
-            <p className="text-gray-700 leading-relaxed">
-              FindTrustedCleaners connects reliable local cleaners with everyday people who just want their homes looked after – without the fuss, subscription fees, or salesy nonsense.
-            </p>
           </div>
 
-          <div className="bg-white/25 backdrop-blur-xl border border-white/20 rounded-3xl p-8 shadow-2xl hover:shadow-3xl transition-all duration-500 hover:transform hover:-translate-y-2">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-16 h-16 bg-gradient-to-r from-teal-600 to-teal-800 rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-lg">
-                👨‍👩‍👧‍👦
-              </div>
-              <h2 className="text-3xl font-bold text-teal-800">Who We Are</h2>
+          <div className="grid gap-8 px-6 py-10 sm:px-10 lg:grid-cols-[1.2fr_0.8fr]">
+            <div className="space-y-6 text-base leading-8 text-slate-600 sm:text-lg">
+              <p>
+                We are the same family-run team behind{' '}
+                <a
+                  href="https://www.ovendetailing.com"
+                  className="font-semibold text-teal-700 underline decoration-teal-200 underline-offset-4 transition-colors hover:text-teal-800"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Oven Detailing
+                </a>
+                , a local service business based in West Sussex.
+              </p>
+
+              <p>
+                Over time, one question kept coming up: do you know a good cleaner? That simple question showed us the same gap again and again. People wanted trustworthy help at home, while good local cleaners needed a better way to show what they offer and when they are available.
+              </p>
+
+              <p>
+                So we built something designed to be clearer from both sides. Households can browse real cleaner profiles, compare options, and check availability. Cleaners can present themselves properly without being squeezed into an overly aggressive lead-selling model.
+              </p>
+
+              <p>
+                The aim is not to overcomplicate a simple service. It is to make the process feel more transparent, more respectful, and easier to trust.
+              </p>
             </div>
-            <p className="text-gray-700 leading-relaxed">
-              We&apos;re not a faceless corporation. We&apos;re a small, family-run team from West Sussex trying to make life easier for cleaners and families alike.
-            </p>
-          </div>
-        </div>
 
-        {/* Key Benefits */}
-        <div className="bg-white/25 backdrop-blur-xl border border-white/20 rounded-3xl p-8 shadow-2xl mb-8">
-          <div className="flex items-center gap-4 mb-8">
-            <div className="w-16 h-16 bg-gradient-to-r from-teal-600 to-teal-800 rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-lg">
-              ⭐
-            </div>
-            <h2 className="text-3xl font-bold text-teal-800">Why People Choose Us</h2>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {[
-              { icon: "🔍", title: "Clarity", text: "See cleaner availability before you book." },
-              { icon: "⚖️", title: "Fairness", text: "No crazy commission fees or hidden charges." },
-              { icon: "🛡️", title: "Trust", text: "Only verified contact details are shared after booking." },
-              { icon: "🤝", title: "Support", text: "Helping independent cleaners and families thrive." }
-            ].map((benefit, index) => (
-              <div key={index} className="flex items-start gap-4 p-4 bg-white/40 backdrop-blur-sm rounded-2xl border border-white/30 hover:bg-white/50 transition-all duration-300">
-                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white text-xl font-bold shadow-lg flex-shrink-0">
-                  {benefit.icon}
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-800 mb-1">{benefit.title}:</h3>
-                  <p className="text-gray-700 leading-relaxed">{benefit.text}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Why We Built It */}
-        <div className="bg-white/25 backdrop-blur-xl border border-white/20 rounded-3xl p-8 shadow-2xl mb-8">
-          <div className="flex items-center gap-4 mb-8">
-            <div className="w-16 h-16 bg-gradient-to-r from-teal-600 to-teal-800 rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-lg">
-              💡
-            </div>
-            <h2 className="text-3xl font-bold text-teal-800">Why We Built It</h2>
-          </div>
-          
-          <div className="space-y-6 text-lg leading-relaxed">
-            <p>
-              We know what it&apos;s like to juggle work, family, and cleaning. We also know what it&apos;s like to run a local service business, doing the graft and hoping the next job will come through.
-            </p>
-
-            <p>
-              <strong>FindTrustedCleaners</strong> bridges that gap. It&apos;s a space where:
-            </p>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-start gap-3 p-4 bg-white/40 backdrop-blur-sm rounded-2xl border border-white/30">
-                <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-teal-600 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
-                  ✓
-                </div>
-                <p className="text-gray-700">Cleaners don&apos;t have to pay to list or fight over leads.</p>
-              </div>
-              <div className="flex items-start gap-3 p-4 bg-white/40 backdrop-blur-sm rounded-2xl border border-white/30">
-                <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-teal-600 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
-                  ✓
-                </div>
-                <p className="text-gray-700">Clients don&apos;t have to endlessly message or second guess who to trust.</p>
+            <div className="surface-muted p-6 sm:p-8">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">
+                What matters to us
+              </p>
+              <div className="mt-6 space-y-4">
+                {values.map((item) => (
+                  <div key={item.title} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <h2 className="text-lg font-semibold text-slate-900">{item.title}</h2>
+                    <p className="mt-2 text-sm leading-7 text-slate-600 sm:text-base">{item.text}</p>
+                  </div>
+                ))}
               </div>
             </div>
-
-            <p className="text-center text-xl text-teal-700 font-medium italic">
-              Just honest, real-time info – and real people behind it.
-            </p>
-          </div>
-        </div>
-
-        {/* Contact Section */}
-        <div className="bg-white/25 backdrop-blur-xl border border-white/20 rounded-3xl p-8 shadow-2xl text-center">
-          <div className="flex items-center justify-center gap-4 mb-6">
-            <div className="w-16 h-16 bg-gradient-to-r from-teal-600 to-teal-800 rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-lg">
-              📧
-            </div>
-            <h2 className="text-3xl font-bold text-teal-800">Get In Touch</h2>
-          </div>
-          
-          <p className="text-lg text-gray-700 mb-6 leading-relaxed">
-            Thanks for stopping by. Whether you&apos;re booking a cleaner or listing your services – we&apos;re genuinely glad you&apos;re here.
-          </p>
-          
-          <div className="flex flex-col sm:flex-row justify-center gap-4 text-lg">
-            <Link href="/contact" className="text-teal-600 hover:text-teal-800 underline font-medium transition-colors duration-300">
-              Visit our Contact Page
-            </Link>
-            <span className="text-gray-500 hidden sm:inline">or</span>
-            <span className="text-gray-700">
-              Email: <strong className="text-teal-700">hello@findtrustedcleaners.co.uk</strong>
-            </span>
           </div>
         </div>
       </section>
 
-      {/* Glass Morphism Footer */}
-      <footer className="bg-white/25 backdrop-blur-xl border-t border-white/20 shadow-lg">
-        <div className="max-w-6xl mx-auto py-12 px-6">
-          <nav className="flex flex-wrap justify-center gap-6 mb-8">
-            {[
-              { href: "/about", text: "About Us" },
-              { href: "/terms", text: "Terms & Conditions" },
-              { href: "/privacy-policy", text: "Privacy Policy" },
-              { href: "/cookie-policy", text: "Cookie Policy" },
-              { href: "/contact", text: "Contact" },
-              { href: "/faq", text: "FAQs" },
-              { href: "/sitemap", text: "Site Map" }
-            ].map((link, index) => (
-              <Link key={index} href={link.href} className="text-gray-700 hover:text-teal-600 transition-colors duration-300 font-medium">
-                {link.text}
-              </Link>
-            ))}
-          </nav>
+      <section className="site-section pb-10">
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div className="surface-card p-8">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">Why we built it</p>
+            <h2 className="mt-3 text-3xl font-bold text-slate-900">Less friction for both sides.</h2>
+            <div className="mt-5 space-y-4 text-slate-600">
+              <p>Clients should not have to second guess who to trust or spend ages chasing replies.</p>
+              <p>Cleaners should not have to fight through confusing platforms just to win regular work.</p>
+              <p>We built FindTrustedCleaners to sit in the middle with a calmer, more practical approach.</p>
+            </div>
+          </div>
 
-          <div className="text-center">
-            <p className="text-gray-700 mb-4 text-lg font-medium">
-              &copy; {new Date().getFullYear()} FindTrustedCleaners. All rights reserved.
+          <div className="surface-card p-8">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">Get in touch</p>
+            <h2 className="mt-3 text-3xl font-bold text-slate-900">Questions, feedback, or support.</h2>
+            <p className="mt-5 text-slate-600">
+              If you need help with the platform or want to contact the team, use the contact page or email us directly.
             </p>
-
-            <div className="bg-white/40 backdrop-blur-md rounded-2xl p-4 border border-white/30 inline-block">
-              <p className="text-sm text-gray-600 max-w-2xl">
-                FindTrustedCleaners is committed to GDPR compliance. Read our{' '}
-                <Link href="/privacy-policy" className="text-teal-600 hover:text-teal-800 underline font-medium">
-                  Privacy Policy
-                </Link>{' '}
-                and{' '}
-                <Link href="/cookie-policy" className="text-teal-600 hover:text-teal-800 underline font-medium">
-                  Cookie Policy
-                </Link>{' '}
-                for details on how we protect your data. You may{' '}
-                <Link href="/contact" className="text-teal-600 hover:text-teal-800 underline font-medium">
-                  contact us
-                </Link>{' '}
-                at any time to manage your personal information.
-              </p>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+              <Link href="/contact" className="ftc-button-primary">
+                Visit the contact page
+              </Link>
+              <a
+                href="mailto:Findtrustedcleaners@gmail.com"
+                className="ftc-button-secondary"
+              >
+                Findtrustedcleaners@gmail.com
+              </a>
             </div>
           </div>
         </div>
-      </footer>
+      </section>
+
+      <PublicFooter />
     </main>
   );
 }

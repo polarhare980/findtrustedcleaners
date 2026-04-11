@@ -300,7 +300,6 @@ export default function HomeClient() {
 
       <CleanerSection
         title="Featured premium cleaners"
-        subtitle="Profiles with stronger visibility, rich detail, and live availability."
         isLoading={isLoading}
         cleaners={premiumCleaners}
         favouriteIds={favouriteIds}
