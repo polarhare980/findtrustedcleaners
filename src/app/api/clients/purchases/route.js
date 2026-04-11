@@ -233,27 +233,65 @@ export async function POST(req) {
   const clientAreaForEmail = isClientUser
     ? [user?.address?.town, user?.address?.county, user?.address?.postcode].filter(Boolean).join(', ')
     : '';
+  const clientPhoneForEmail = isClientUser ? (user.phone || guestPhone || '') : guestPhone;
   const cleanerNameForEmail = cleaner?.companyName || cleaner?.realName || 'your cleaner';
 
-  sendCleanerPendingBookingEmail({
-    cleaner,
-    client: {
-      name: clientNameForEmail,
-      area: clientAreaForEmail,
-    },
-    purchase: purchaseForEmails,
-  })
-    .then(() => console.info('[booking-email] cleaner notified', { purchaseId: String(doc._id), cleanerId: String(cleaner._id) }))
-    .catch((error) => console.error('[booking-email] failed', { purchaseId: String(doc._id), cleanerId: String(cleaner._id), message: error?.message || 'Unknown error' }));
+  const pendingEmailResults = await Promise.allSettled([
+    sendCleanerPendingBookingEmail({
+      cleaner,
+      client: {
+        name: clientNameForEmail,
+        email: clientEmailForEmail,
+        phone: clientPhoneForEmail,
+        area: clientAreaForEmail,
+      },
+      purchase: purchaseForEmails,
+    }),
+    sendClientBookingRequestConfirmationEmail({
+      to: clientEmailForEmail,
+      recipientName: clientNameForEmail,
+      cleanerName: cleanerNameForEmail,
+      purchase: purchaseForEmails,
+    }),
+  ]);
 
-  sendClientBookingRequestConfirmationEmail({
-    to: clientEmailForEmail,
-    recipientName: clientNameForEmail,
-    cleanerName: cleanerNameForEmail,
-    purchase: purchaseForEmails,
-  })
-    .then(() => console.info('[booking-email] client confirmation sent', { purchaseId: String(doc._id) }))
-    .catch((error) => console.error('[booking-email] client confirmation failed', { purchaseId: String(doc._id), message: error?.message || 'Unknown error' }));
+  const [cleanerPendingEmail, clientPendingEmail] = pendingEmailResults;
+
+  if (cleanerPendingEmail?.status === 'fulfilled') {
+    const result = cleanerPendingEmail.value;
+    if (result?.skipped) {
+      console.warn('[booking-email] cleaner pending skipped', {
+        purchaseId: String(doc._id),
+        cleanerId: String(cleaner._id),
+        reason: result.reason,
+      });
+    } else {
+      console.info('[booking-email] cleaner pending sent', { purchaseId: String(doc._id), cleanerId: String(cleaner._id) });
+    }
+  } else {
+    console.error('[booking-email] cleaner pending failed', {
+      purchaseId: String(doc._id),
+      cleanerId: String(cleaner._id),
+      message: cleanerPendingEmail?.reason?.message || 'Unknown error',
+    });
+  }
+
+  if (clientPendingEmail?.status === 'fulfilled') {
+    const result = clientPendingEmail.value;
+    if (result?.skipped) {
+      console.warn('[booking-email] client pending skipped', {
+        purchaseId: String(doc._id),
+        reason: result.reason,
+      });
+    } else {
+      console.info('[booking-email] client pending sent', { purchaseId: String(doc._id) });
+    }
+  } else {
+    console.error('[booking-email] client pending failed', {
+      purchaseId: String(doc._id),
+      message: clientPendingEmail?.reason?.message || 'Unknown error',
+    });
+  }
 
   return json({
     success: true,

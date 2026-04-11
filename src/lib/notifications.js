@@ -6,9 +6,13 @@ function safe(v) {
   return String(v || '').trim();
 }
 
-function bookingUrlForClient(cleanerId, purchaseId) {
+function bookingUrlForClient(cleanerId) {
   if (!cleanerId) return `${SITE_URL}/clients/dashboard`;
-  const url = new URL(`/cleaners/${cleanerId}`, SITE_URL);
+  return new URL(`/cleaners/${cleanerId}`, SITE_URL).toString();
+}
+
+function reviewUrlForClient(cleanerId, purchaseId) {
+  const url = new URL(bookingUrlForClient(cleanerId));
   if (purchaseId) url.searchParams.set('review', purchaseId);
   return url.toString();
 }
@@ -43,8 +47,10 @@ export async function sendCleanerPendingBookingEmail({ cleaner, client, purchase
   const lines = [
     `Hi ${safe(cleaner.realName || cleaner.companyName || 'there')},`,
     '',
-    'You have a new pending booking request.',
+    'You have a new pending booking request that needs your approval.',
     ...bookingSummaryLines({ purchase, clientName: client?.name, includeCleaner: false }),
+    client?.email ? `Client email: ${client.email}` : null,
+    client?.phone ? `Client phone: ${client.phone}` : null,
     client?.area ? `Area: ${client.area}` : null,
     `Review request: ${dashboardUrlForCleaner()}`,
   ].filter(Boolean);
@@ -56,8 +62,11 @@ export async function sendCleanerPendingBookingEmail({ cleaner, client, purchase
     html: `<div style="font-family:Arial,sans-serif;line-height:1.6;color:#1f2937;max-width:640px;margin:0 auto;padding:24px;">
       <h2 style="color:#0f766e;margin:0 0 16px;">New pending job request</h2>
       <p>Hi ${safe(cleaner.realName || cleaner.companyName || 'there')},</p>
+      <p>You have a new pending booking request that needs your approval.</p>
       <ul style="padding-left:18px;">
         ${bookingSummaryItems({ purchase, clientName: client?.name, includeCleaner: false })}
+        ${client?.email ? `<li><strong>Client email:</strong> ${client.email}</li>` : ''}
+        ${client?.phone ? `<li><strong>Client phone:</strong> ${client.phone}</li>` : ''}
         ${client?.area ? `<li><strong>Area:</strong> ${client.area}</li>` : ''}
       </ul>
       <p><a href="${dashboardUrlForCleaner()}" style="display:inline-block;background:#0f766e;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:600;">Open booking inbox</a></p>
@@ -67,7 +76,7 @@ export async function sendCleanerPendingBookingEmail({ cleaner, client, purchase
 
 export async function sendClientBookingRequestConfirmationEmail({ to, recipientName, cleanerName, purchase }) {
   if (!to) return { skipped: true, reason: 'missing_client_email' };
-  const detailsUrl = bookingUrlForClient(purchase?.cleanerId, purchase?._id);
+  const detailsUrl = bookingUrlForClient(purchase?.cleanerId);
   const subject = 'Your booking request has been sent';
   return sendEmail({
     to,
@@ -93,7 +102,8 @@ export async function sendClientBookingRequestConfirmationEmail({ to, recipientN
 
 export async function sendBookingAcceptedEmail({ to, recipientName, cleanerName, purchase }) {
   if (!to) return { skipped: true, reason: 'missing_client_email' };
-  const detailsUrl = bookingUrlForClient(purchase?.cleanerId, purchase?._id);
+  const detailsUrl = bookingUrlForClient(purchase?.cleanerId);
+  const reviewUrl = reviewUrlForClient(purchase?.cleanerId, purchase?._id);
   return sendEmail({
     to,
     subject: 'Your cleaning request has been accepted',
@@ -103,6 +113,7 @@ export async function sendBookingAcceptedEmail({ to, recipientName, cleanerName,
       `${safe(cleanerName || 'Your cleaner')} has accepted your booking request.`,
       ...bookingSummaryLines({ purchase, cleanerName, includeClient: false }),
       `View details: ${detailsUrl}`,
+      `Leave a review after the appointment: ${reviewUrl}`,
     ].filter(Boolean).join('\n'),
     html: `<div style="font-family:Arial,sans-serif;line-height:1.6;color:#1f2937;max-width:640px;margin:0 auto;padding:24px;">
       <h2 style="color:#0f766e;margin:0 0 16px;">Booking accepted</h2>
@@ -110,6 +121,30 @@ export async function sendBookingAcceptedEmail({ to, recipientName, cleanerName,
       <p><strong>${safe(cleanerName || 'Your cleaner')}</strong> has accepted your booking request.</p>
       <ul style="padding-left:18px;">${bookingSummaryItems({ purchase, cleanerName, includeClient: false })}</ul>
       <p><a href="${detailsUrl}" style="display:inline-block;background:#0f766e;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:600;">Open booking details</a></p>
+      <p style="margin-top:14px;"><a href="${reviewUrl}" style="display:inline-block;background:#ffffff;color:#0f766e;padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:600;border:1px solid #0f766e;">Leave a review later</a></p>
+    </div>`,
+  });
+}
+
+export async function sendCleanerBookingAcceptedEmail({ to, recipientName, clientName, purchase }) {
+  if (!to) return { skipped: true, reason: 'missing_cleaner_email' };
+  const actionUrl = dashboardUrlForCleaner();
+  return sendEmail({
+    to,
+    subject: 'Booking accepted and confirmed',
+    text: [
+      `Hi ${safe(recipientName || 'there')},`,
+      '',
+      'You approved this booking request. It is now accepted.',
+      ...bookingSummaryLines({ purchase, clientName, includeCleaner: false }),
+      `Open bookings: ${actionUrl}`,
+    ].filter(Boolean).join('\n'),
+    html: `<div style="font-family:Arial,sans-serif;line-height:1.6;color:#1f2937;max-width:640px;margin:0 auto;padding:24px;">
+      <h2 style="color:#0f766e;margin:0 0 16px;">Booking accepted</h2>
+      <p>Hi ${safe(recipientName || 'there')},</p>
+      <p>You approved this booking request. It is now accepted.</p>
+      <ul style="padding-left:18px;">${bookingSummaryItems({ purchase, clientName, includeCleaner: false })}</ul>
+      <p><a href="${actionUrl}" style="display:inline-block;background:#0f766e;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:600;">Open bookings</a></p>
     </div>`,
   });
 }
@@ -142,7 +177,7 @@ export async function sendBookingDeclinedEmail({ to, recipientName, cleanerName,
 export async function sendBookingReminderEmail({ to, recipientName, cleanerName, clientName, purchase, role }) {
   if (!to) return { skipped: true, reason: 'missing_email' };
   const subject = 'Appointment reminder from FindTrustedCleaners';
-  const actionUrl = role === 'cleaner' ? dashboardUrlForCleaner() : bookingUrlForClient(purchase?.cleanerId, purchase?._id);
+  const actionUrl = role === 'cleaner' ? dashboardUrlForCleaner() : bookingUrlForClient(purchase?.cleanerId);
   return sendEmail({
     to,
     subject,
@@ -165,7 +200,7 @@ export async function sendBookingReminderEmail({ to, recipientName, cleanerName,
 
 export async function sendReviewRequestEmail({ to, recipientName, cleanerName, purchase }) {
   if (!to) return { skipped: true, reason: 'missing_email' };
-  const reviewUrl = bookingUrlForClient(purchase?.cleanerId, purchase?._id);
+  const reviewUrl = reviewUrlForClient(purchase?.cleanerId, purchase?._id);
   return sendEmail({
     to,
     subject: 'How did your cleaning appointment go?',

@@ -7,7 +7,7 @@ import Cleaner from '@/models/Cleaner';
 import Stripe from 'stripe';
 import { getPurchaseExpiryDate } from '@/lib/purchaseExpiry';
 import Client from '@/models/Client';
-import { sendBookingAcceptedEmail } from '@/lib/notifications';
+import { sendBookingAcceptedEmail, sendCleanerBookingAcceptedEmail } from '@/lib/notifications';
 
 const stripeSecret = process.env.STRIPE_SECRET_KEY || '';
 const stripe = stripeSecret ? new Stripe(stripeSecret) : null;
@@ -47,7 +47,7 @@ export async function PUT(req, context) {
     }
 
     // Sanity: cleaner still exists
-    const cleaner = await Cleaner.findById(purchase.cleanerId).select('_id').lean();
+    const cleaner = await Cleaner.findById(purchase.cleanerId).select('_id companyName realName email').lean();
     if (!cleaner) return json({ error: 'Cleaner not found.' }, 404);
 
     // Optional Stripe capture (manual-capture flow)
@@ -100,14 +100,59 @@ export async function PUT(req, context) {
     const clientName = client?.fullName || client?.name || purchase.guestName || '';
     const cleanerName = cleaner?.companyName || cleaner?.realName || 'your cleaner';
 
-    sendBookingAcceptedEmail({
-      to: clientEmail,
-      recipientName: clientName,
-      cleanerName,
-      purchase: { ...purchase.toObject(), _id: String(purchase._id), cleanerId: String(purchase.cleanerId) },
-    })
-      .then(() => console.info('[booking-email] acceptance sent', { purchaseId: String(purchase._id) }))
-      .catch((error) => console.error('[booking-email] acceptance failed', { purchaseId: String(purchase._id), message: error?.message || 'Unknown error' }));
+    const purchaseForEmails = { ...purchase.toObject(), _id: String(purchase._id), cleanerId: String(purchase.cleanerId) };
+    const acceptanceEmailResults = await Promise.allSettled([
+      sendBookingAcceptedEmail({
+        to: clientEmail,
+        recipientName: clientName,
+        cleanerName,
+        purchase: purchaseForEmails,
+      }),
+      sendCleanerBookingAcceptedEmail({
+        to: cleaner?.email || '',
+        recipientName: cleaner?.realName || cleaner?.companyName || '',
+        clientName,
+        purchase: purchaseForEmails,
+      }),
+    ]);
+
+    const [clientAcceptanceEmail, cleanerAcceptanceEmail] = acceptanceEmailResults;
+
+    if (clientAcceptanceEmail?.status === 'fulfilled') {
+      const result = clientAcceptanceEmail.value;
+      if (result?.skipped) {
+        console.warn('[booking-email] client acceptance skipped', {
+          purchaseId: String(purchase._id),
+          reason: result.reason,
+        });
+      } else {
+        console.info('[booking-email] client acceptance sent', { purchaseId: String(purchase._id) });
+      }
+    } else {
+      console.error('[booking-email] client acceptance failed', {
+        purchaseId: String(purchase._id),
+        message: clientAcceptanceEmail?.reason?.message || 'Unknown error',
+      });
+    }
+
+    if (cleanerAcceptanceEmail?.status === 'fulfilled') {
+      const result = cleanerAcceptanceEmail.value;
+      if (result?.skipped) {
+        console.warn('[booking-email] cleaner acceptance skipped', {
+          purchaseId: String(purchase._id),
+          cleanerId: String(purchase.cleanerId),
+          reason: result.reason,
+        });
+      } else {
+        console.info('[booking-email] cleaner acceptance sent', { purchaseId: String(purchase._id), cleanerId: String(purchase.cleanerId) });
+      }
+    } else {
+      console.error('[booking-email] cleaner acceptance failed', {
+        purchaseId: String(purchase._id),
+        cleanerId: String(purchase.cleanerId),
+        message: cleanerAcceptanceEmail?.reason?.message || 'Unknown error',
+      });
+    }
 
     return json({
       success: true,
