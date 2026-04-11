@@ -139,7 +139,7 @@ export default function HomeClient() {
   const cleanerCount = useMemo(() => Array.isArray(data?.cleaners) ? data.cleaners.length : 0, [data]);
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-900">
+    <main className="min-h-screen bg-[linear-gradient(180deg,#f7fbfb_0%,#f8fafc_38%,#f8fafc_100%)] text-slate-900">
       <PublicHeader />
       <PageHero
         eyebrow="Trusted cleaner marketplace"
@@ -153,15 +153,15 @@ export default function HomeClient() {
         )}
       />
 
-      <section className="site-section -mt-6 pb-10">
-        <div className="surface-card p-5 sm:p-6">
+      <section className="site-section -mt-10 pb-10">
+        <div className="rounded-[30px] border border-white/70 bg-white/86 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.10)] backdrop-blur-xl sm:p-6">
           <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr_auto] lg:items-end">
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-700">Postcode</label>
               <input value={postcode} onChange={(e) => setPostcode(e.target.value)} placeholder="Enter your postcode" className="ftc-input" />
             </div>
             <div>
-              <p className="mb-2 text-sm font-medium text-slate-700">Why people use FindTrustedCleaners</p>
+              <p className="mb-2 text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">Why people use FindTrustedCleaners</p>
               <div className="flex flex-wrap gap-2">
                 <span className="ftc-chip">Verified cleaners</span>
                 <span className="ftc-chip">Real availability</span>
@@ -228,7 +228,7 @@ export default function HomeClient() {
       />
 
       <section className="site-section py-12">
-        <div className="surface-card p-8 text-center sm:p-10">
+        <div className="rounded-[32px] border border-white/70 bg-white/88 p-8 text-center shadow-[0_24px_70px_rgba(15,23,42,0.09)] backdrop-blur-xl sm:p-10">
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">For cleaners</p>
           <h2 className="mt-2 text-3xl font-bold text-slate-900">Want more direct booking requests?</h2>
           <p className="mx-auto mt-4 max-w-2xl text-slate-600">Create your profile, set your availability, and let clients come to you through a cleaner, more transparent booking process.</p>
