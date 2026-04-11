@@ -283,8 +283,7 @@ export default function HomeClient() {
       </section>
 
       <CleanerSection
-        title="Premium local cleaners (featured)"
-        subtitle="Premium cleaners appear higher on the homepage, directly after local price snapshots, to help turn comparison into enquiries."
+        title="Premium local cleaners"
         isLoading={isLoading}
         cleaners={premiumCleaners}
         favouriteIds={favouriteIds}
