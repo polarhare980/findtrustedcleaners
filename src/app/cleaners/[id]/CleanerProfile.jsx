@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { useParams, useSearchParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import PurchaseButton from '@/components/PurchaseButton';
 import RatingStars from '@/components/RatingStars';
 import Link from 'next/link';
@@ -139,7 +139,6 @@ function composeWeekView(baseWeekly = {}, overridesByISO = {}, mondayDate, purch
 
 export default function CleanerProfile() {
   const { id } = useParams();
-  const searchParams = useSearchParams();
 
   const [cleaner, setCleaner] = useState(null);
   const [purchases, setPurchases] = useState([]);
@@ -289,14 +288,6 @@ export default function CleanerProfile() {
     return 'unavailable';
   }
 
-  useEffect(() => {
-    if (!searchParams?.get('review')) return;
-    const timer = setTimeout(() => {
-      const el = document.getElementById('leave-review-section');
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [searchParams]);
 
   function onSelect(day, hour) {
     if (getCellState(day, hour) !== 'available') return;
@@ -804,16 +795,6 @@ export default function CleanerProfile() {
           )}
         </div>
       </section>
-
-      <section id="leave-review-section" className="mt-8">
-        <h2 className="text-xl font-bold text-teal-900 mb-3">Leave a Review</h2>
-        <div className="rounded-2xl p-5 bg-white/70 border border-slate-100 shadow">
-          <p className="text-sm leading-7 text-slate-600">
-            Reviews can only be submitted through the private email link sent after a real booking. Public visitors can read reviews here, but review submission is not exposed on the public profile.
-          </p>
-        </div>
-      </section>
-
     </main>
   );
 }
