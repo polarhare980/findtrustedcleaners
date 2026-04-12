@@ -109,7 +109,7 @@ export async function GET(req) {
   const radiusMiles = parseRadiusMiles(searchParams.get('radius'), DEFAULT_SEARCH_RADIUS_MILES);
   const minRating = parseFloat(searchParams.get('minRating')) || 0;
   const bookingStatus = searchParams.get('bookingStatus') || 'all';
-  const serviceType = searchParams.get('serviceType')?.trim() || '';
+  const serviceType = searchParams.get('serviceType')?.trim() || searchParams.get('service')?.trim() || '';
 
   try {
     if (id) {
