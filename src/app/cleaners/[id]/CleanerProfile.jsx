@@ -10,6 +10,7 @@ import Link from 'next/link';
 // Public APIs
 const PUBLIC_CLEANER_API = (id) => `/api/public-cleaners/${id}`;
 const PUBLIC_PURCHASES_API = (id) => `/api/public/purchases/cleaners/${id}`;
+const FALLBACK_IMAGE = '/default-avatar.png';
 
 // ---- Constants (match Dashboard) ----
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -324,7 +325,7 @@ export default function CleanerProfile() {
       : (cleaner.rates && (cleaner.rates.hourly || cleaner.rates.regular)) || null;
 
   const coverPhoto =
-    normalizedPhotos.find((p) => !p.hasText)?.url || cleaner?.image || normalizedPhotos[0]?.url || null;
+    normalizedPhotos.find((p) => !p.hasText)?.url || cleaner?.image || normalizedPhotos[0]?.url || FALLBACK_IMAGE;
 
   // ----- Badges (match dashboard flags) -----
   const badges = [];
@@ -344,15 +345,15 @@ export default function CleanerProfile() {
         {/* Hero */}
         <div className="w-full md:w-64 shrink-0">
           <div className="relative w-full aspect-[4/3] overflow-hidden rounded-2xl shadow">
-            {coverPhoto ? (
-              <img
-                src={coverPhoto}
-                alt={cleaner.companyName || cleaner.realName || 'Cleaner'}
-                className={`object-cover w-full h-full ${cleaner.imageHasText ? 'blur-sm' : ''}`}
-              />
-            ) : (
-              <div className="w-full h-full grid place-items-center text-slate-400">No photo</div>
-            )}
+            <img
+              src={coverPhoto}
+              alt={cleaner.companyName || cleaner.realName || 'Cleaner'}
+              className={`object-cover w-full h-full ${cleaner.imageHasText ? 'blur-sm' : ''}`}
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = FALLBACK_IMAGE;
+              }}
+            />
             {cleaner.imageHasText && (
               <div className="absolute inset-0 grid place-items-center text-xs font-semibold text-slate-700 bg-white/60">
                 Contact info hidden for safety
@@ -471,10 +472,14 @@ export default function CleanerProfile() {
                 className="relative rounded-xl overflow-hidden bg-slate-100 border border-slate-100 shadow"
               >
                 <img
-                  src={p.url}
+                  src={p.url || FALLBACK_IMAGE}
                   alt={`Cleaner photo ${i + 1}`}
                   className={`w-full h-40 md:h-44 object-cover ${p.hasText ? 'blur-sm' : ''}`}
                   loading="lazy"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = FALLBACK_IMAGE;
+                  }}
                 />
                 {p.hasText && (
                   <div className="absolute inset-0 grid place-items-center text-xs font-semibold text-slate-700 bg-white/60">
