@@ -173,26 +173,26 @@ export default function CleanerRegister() {
         <title>Register as a Cleaner | Find Trusted Cleaners</title>
       </Head>
 
-      <main className="min-h-screen relative overflow-hidden text-slate-800">
+      <main className="min-h-screen relative overflow-hidden bg-slate-50 text-slate-800">
         <div className="absolute inset-0 -z-10">
-          <img src="/background.jpg" alt="Background" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-br from-teal-950/35 via-white/40 to-teal-700/20" />
+          <img src="/background.jpg" alt="" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(20,184,166,0.16),transparent_38%),linear-gradient(180deg,rgba(248,250,252,0.90),rgba(240,253,250,0.82),rgba(248,250,252,0.96))]" />
         </div>
 
         <PublicHeader />
 
         <section className="mx-auto max-w-5xl px-4 py-10">
-          <div className="mb-8 rounded-3xl border border-white/30 bg-white/60 p-6 shadow-2xl backdrop-blur-xl">
+          <div className="mb-8 rounded-[32px] border border-white/60 bg-white/78 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.12)] backdrop-blur-xl">
             <p className="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-teal-700">Cleaner registration</p>
             <h1 className="text-3xl font-bold text-teal-900 md:text-4xl">Create your cleaner profile</h1>
-            <p className="mt-3 max-w-2xl text-slate-600">Match the rest of the platform styling, keep setup simple, and only add an hourly rate if it actually applies to your cleaning business.</p>
+            <p className="mt-3 max-w-2xl text-slate-600">Build a cleaner profile that feels polished, trustworthy and easy for clients to understand. Add your details, trust signals, services and availability in one place.</p>
           </div>
 
           {errors.submit ? <div className="mb-6 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-700">{errors.submit}</div> : null}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-              <section className="rounded-3xl border border-white/30 bg-white/60 p-6 shadow-2xl backdrop-blur-xl">
+              <section className="rounded-[32px] border border-white/60 bg-white/78 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.12)] backdrop-blur-xl">
                 <h2 className="mb-4 text-xl font-semibold text-teal-900">About you</h2>
                 <div className="grid gap-4 md:grid-cols-2">
                   {[
@@ -229,7 +229,7 @@ export default function CleanerRegister() {
                 </div>
               </section>
 
-              <section className="rounded-3xl border border-white/30 bg-white/60 p-6 shadow-2xl backdrop-blur-xl">
+              <section className="rounded-[32px] border border-white/60 bg-white/78 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.12)] backdrop-blur-xl">
                 <h2 className="mb-4 text-xl font-semibold text-teal-900">Pricing & trust</h2>
                 <div className="space-y-4">
                   <div>
@@ -251,7 +251,7 @@ export default function CleanerRegister() {
               </section>
             </div>
 
-            <section className="rounded-3xl border border-white/30 bg-white/60 p-6 shadow-2xl backdrop-blur-xl">
+            <section className="rounded-[32px] border border-white/60 bg-white/78 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.12)] backdrop-blur-xl">
               <div className="mb-4 flex items-center justify-between gap-4">
                 <div>
                   <h2 className="text-xl font-semibold text-teal-900">Services</h2>
@@ -260,7 +260,7 @@ export default function CleanerRegister() {
               </div>
               <div className="grid gap-4 lg:grid-cols-2">
                 {Object.entries(SERVICE_CATEGORIES).map(([category, services]) => (
-                  <div key={category} className="rounded-2xl bg-white/70 p-4 ring-1 ring-white/40">
+                  <div key={category} className="rounded-[24px] border border-white/70 bg-white/84 p-4 shadow-sm">
                     <h3 className="mb-3 font-semibold text-slate-800">{category}</h3>
                     <div className="grid gap-2 sm:grid-cols-2">
                       {services.map((service) => (
@@ -276,7 +276,7 @@ export default function CleanerRegister() {
               {errors.services ? <p className="mt-3 text-sm text-rose-600">{errors.services}</p> : null}
             </section>
 
-            <section className="rounded-3xl border border-white/30 bg-white/60 p-6 shadow-2xl backdrop-blur-xl">
+            <section className="rounded-[32px] border border-white/60 bg-white/78 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.12)] backdrop-blur-xl">
               <div className="mb-4">
                 <h2 className="text-xl font-semibold text-teal-900">Availability</h2>
                 <p className="text-sm text-slate-500">Default is unavailable. Tap a slot to mark it available.</p>
@@ -313,12 +313,12 @@ export default function CleanerRegister() {
               </div>
             </section>
 
-            <label className="flex items-start gap-3 rounded-2xl border border-white/30 bg-white/60 px-4 py-4 text-sm text-slate-700 shadow-lg backdrop-blur-xl">
+            <label className="flex items-start gap-3 rounded-[24px] border border-white/60 bg-white/78 px-4 py-4 text-sm text-slate-700 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl">
               <input type="checkbox" required className="mt-1 h-4 w-4 accent-teal-700" />
               <span>I agree to the <Link href="/terms" className="font-medium text-teal-700 underline">Terms & Conditions</Link> and <Link href="/privacy-policy" className="font-medium text-teal-700 underline">Privacy Policy</Link>.</span>
             </label>
 
-            <button type="submit" disabled={isSubmitting} className={`w-full rounded-2xl px-5 py-4 text-base font-semibold text-white shadow-xl transition ${isSubmitting ? 'cursor-not-allowed bg-slate-400' : 'bg-gradient-to-r from-teal-600 to-teal-700 hover:-translate-y-0.5 hover:from-teal-700 hover:to-teal-800'}`}>
+            <button type="submit" disabled={isSubmitting} className={`w-full rounded-2xl px-5 py-4 text-base font-semibold text-white shadow-xl transition ${isSubmitting ? 'cursor-not-allowed bg-slate-400' : 'bg-gradient-to-r from-teal-600 to-teal-700 shadow-[0_18px_40px_rgba(13,148,136,0.28)] hover:-translate-y-0.5 hover:from-teal-700 hover:to-teal-800'}`}>
               {isSubmitting ? 'Registering…' : 'Register Cleaner'}
             </button>
           </form>

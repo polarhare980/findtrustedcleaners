@@ -1,5 +1,3 @@
-// File: src/app/contact/ContactFormComponent.jsx
-
 'use client';
 
 import Link from 'next/link';
@@ -8,14 +6,13 @@ import { useState } from 'react';
 
 export default function ContactFormComponent() {
   const [form, setForm] = useState({ name: '', email: '', message: '' });
-  const SUPPORT_EMAIL = 'Findtrustedcleaners@gmail.com';
-
   const [status, setStatus] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const SUPPORT_EMAIL = 'Findtrustedcleaners@gmail.com';
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
@@ -26,15 +23,10 @@ export default function ContactFormComponent() {
     try {
       const subject = encodeURIComponent(`Support request from ${form.name}`);
       const body = encodeURIComponent(
-        `Name: ${form.name}
-Email: ${form.email}
-
-Message:
-${form.message}`
+        `Name: ${form.name}\nEmail: ${form.email}\n\nMessage:\n${form.message}`
       );
 
       window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${subject}&body=${body}`;
-
       setStatus('Your email app should now open with your message ready to send.');
       setForm({ name: '', email: '', message: '' });
     } finally {
@@ -43,215 +35,116 @@ ${form.message}`
   };
 
   return (
-    <>
-      {/* Background with gradient overlay */}
-      <div className="min-h-screen bg-gradient-to-br from-teal-900/20 to-teal-700/10 relative">
-        
-        {/* Glass Morphism Header */}
-        <PublicHeader />
+    <main className="min-h-screen relative overflow-hidden bg-slate-50 text-slate-800">
+      <div className="absolute inset-0 -z-10">
+        <img src="/background.jpg" alt="" className="h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(20,184,166,0.14),transparent_40%),linear-gradient(180deg,rgba(248,250,252,0.92),rgba(240,253,250,0.84),rgba(248,250,252,0.96))]" />
+      </div>
 
-        {/* Main Content */}
-        <main className="max-w-4xl mx-auto p-6 py-12">
-          {/* Hero Section */}
-          <div className="text-center mb-12 animate-[fadeIn_0.8s_ease-out]">
-            <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent mb-6">
-              💬 Contact Us
-            </h1>
-            <p className="text-xl text-gray-700 max-w-2xl mx-auto leading-relaxed">
-              Have a question or need help? Drop us a message and your email app will open with everything pre-filled for you.
+      <PublicHeader />
+
+      <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
+          <div className="rounded-[32px] border border-white/60 bg-white/78 p-8 shadow-[0_24px_80px_rgba(15,23,42,0.12)] backdrop-blur-xl md:p-10">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-teal-700">Contact</p>
+            <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 md:text-5xl">Get in touch</h1>
+            <p className="mt-4 max-w-xl text-base leading-7 text-slate-600 md:text-lg">
+              Need help with a booking flow, cleaner profile, account issue or general question? Send a message and your email app will open with everything filled in.
             </p>
+
+            <div className="mt-8 grid gap-4 sm:grid-cols-2">
+              <div className="rounded-[28px] border border-teal-100 bg-teal-50/75 p-5">
+                <p className="text-sm font-semibold text-slate-900">Support email</p>
+                <a href={`mailto:${SUPPORT_EMAIL}`} className="mt-2 block text-sm text-teal-700 underline underline-offset-4">
+                  {SUPPORT_EMAIL}
+                </a>
+                <p className="mt-3 text-sm leading-6 text-slate-600">Best for account questions, profile updates and booking issues.</p>
+              </div>
+              <div className="rounded-[28px] border border-white/70 bg-white/78 p-5">
+                <p className="text-sm font-semibold text-slate-900">Typical response time</p>
+                <p className="mt-2 text-2xl font-semibold text-teal-700">Within 24 hours</p>
+                <p className="mt-3 text-sm leading-6 text-slate-600">Clear messages with names, email addresses and page details are the quickest to resolve.</p>
+              </div>
+            </div>
+
+            <div className="mt-6 rounded-[28px] border border-white/70 bg-[linear-gradient(135deg,rgba(255,255,255,0.92),rgba(240,253,250,0.88))] p-5">
+              <p className="text-sm font-semibold text-slate-900">Useful links</p>
+              <div className="mt-3 flex flex-wrap gap-3 text-sm">
+                <Link href="/faq" className="rounded-full border border-slate-200 bg-white px-4 py-2 font-medium text-slate-700 transition hover:border-teal-200 hover:text-teal-800">FAQ</Link>
+                <Link href="/register/cleaners" className="rounded-full border border-slate-200 bg-white px-4 py-2 font-medium text-slate-700 transition hover:border-teal-200 hover:text-teal-800">Cleaner registration</Link>
+                <Link href="/how-it-works" className="rounded-full border border-slate-200 bg-white px-4 py-2 font-medium text-slate-700 transition hover:border-teal-200 hover:text-teal-800">How it works</Link>
+              </div>
+            </div>
           </div>
 
-          {/* Contact Form Card */}
-          <div className="bg-white/25 backdrop-blur-[20px] border border-white/20 rounded-[20px] shadow-[0_8px_32px_rgba(0,0,0,0.1)] p-8 mb-8 animate-[slideUp_0.5s_ease-out]">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Name Field */}
-              <div className="space-y-2">
-                <label htmlFor="name" className="block text-sm font-semibold text-teal-800">
-                  👤 Your Name
-                </label>
+          <div className="rounded-[32px] border border-white/60 bg-white/82 p-8 shadow-[0_24px_80px_rgba(15,23,42,0.12)] backdrop-blur-xl md:p-10">
+            <h2 className="text-2xl font-semibold text-slate-900">Send a message</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">We will open your email app with the message ready to send.</p>
+
+            <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+              <div>
+                <label htmlFor="name" className="mb-2 block text-sm font-medium text-slate-700">Your name</label>
                 <input
-                  type="text"
                   id="name"
                   name="name"
+                  type="text"
                   value={form.name}
                   onChange={handleChange}
-                  placeholder="Enter your full name"
-                  className="w-full p-4 bg-white/80 backdrop-blur-sm border border-white/30 rounded-xl focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all duration-300 text-gray-700 placeholder-gray-500"
+                  placeholder="Full name"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-slate-800 outline-none transition focus:border-teal-400 focus:ring-4 focus:ring-teal-100"
                   required
                 />
               </div>
 
-              {/* Email Field */}
-              <div className="space-y-2">
-                <label htmlFor="email" className="block text-sm font-semibold text-teal-800">
-                  📧 Your Email
-                </label>
+              <div>
+                <label htmlFor="email" className="mb-2 block text-sm font-medium text-slate-700">Your email</label>
                 <input
-                  type="email"
                   id="email"
                   name="email"
+                  type="email"
                   value={form.email}
                   onChange={handleChange}
-                  placeholder="Enter your email address"
-                  className="w-full p-4 bg-white/80 backdrop-blur-sm border border-white/30 rounded-xl focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all duration-300 text-gray-700 placeholder-gray-500"
+                  placeholder="Email address"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-slate-800 outline-none transition focus:border-teal-400 focus:ring-4 focus:ring-teal-100"
                   required
                 />
               </div>
 
-              {/* Message Field */}
-              <div className="space-y-2">
-                <label htmlFor="message" className="block text-sm font-semibold text-teal-800">
-                  💭 Your Message
-                </label>
+              <div>
+                <label htmlFor="message" className="mb-2 block text-sm font-medium text-slate-700">Your message</label>
                 <textarea
                   id="message"
                   name="message"
+                  rows="7"
                   value={form.message}
                   onChange={handleChange}
-                  placeholder="Tell us how we can help you..."
-                  rows="6"
-                  className="w-full p-4 bg-white/80 backdrop-blur-sm border border-white/30 rounded-xl focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all duration-300 text-gray-700 placeholder-gray-500 resize-none"
+                  placeholder="Tell us what you need help with"
+                  className="w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-slate-800 outline-none transition focus:border-teal-400 focus:ring-4 focus:ring-teal-100"
                   required
                 />
               </div>
 
-              {/* Submit Button */}
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-gradient-to-r from-teal-600 to-teal-700 text-white px-8 py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:translate-y-[-2px] hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-3"
+                className={`inline-flex w-full items-center justify-center rounded-2xl px-5 py-4 text-base font-semibold text-white shadow-[0_18px_40px_rgba(13,148,136,0.28)] transition ${
+                  isSubmitting
+                    ? 'cursor-not-allowed bg-slate-400 shadow-none'
+                    : 'bg-gradient-to-r from-teal-600 to-teal-700 hover:-translate-y-0.5 hover:from-teal-700 hover:to-teal-800'
+                }`}
               >
-                {isSubmitting ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    Sending...
-                  </>
-                ) : (
-                  <>
-                    <span>🚀</span>
-                    Send Message
-                  </>
-                )}
+                {isSubmitting ? 'Opening email app…' : 'Send message'}
               </button>
 
-              {/* Status Message */}
-              {status && (
-                <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-4 rounded-xl text-center font-medium animate-[slideUp_0.3s_ease-out]">
-                  <div className="flex items-center justify-center gap-2">
-                    <span className="text-xl">✅</span>
-                    <span>{status}</span>
-                  </div>
+              {status ? (
+                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                  {status}
                 </div>
-              )}
+              ) : null}
             </form>
           </div>
-
-          {/* Contact Information Cards */}
-          <div className="grid md:grid-cols-2 gap-6 mb-8">
-            {/* Email Card */}
-            <div className="bg-white/80 backdrop-blur-sm border border-white/30 rounded-2xl p-6 text-center transition-all duration-300 hover:translate-y-[-5px] hover:shadow-[0_12px_40px_rgba(0,0,0,0.15)]">
-              <div className="w-16 h-16 bg-gradient-to-r from-teal-500 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl">
-                📧
-              </div>
-              <h3 className="text-xl font-semibold text-teal-800 mb-2">Email Us</h3>
-              <p className="text-gray-600 text-sm mb-3">Get in touch via email</p>
-              <a 
-                href={`mailto:${SUPPORT_EMAIL}`} 
-                className="text-teal-600 hover:text-teal-800 font-medium transition-colors duration-300"
-              >
-                {SUPPORT_EMAIL}
-              </a>
-            </div>
-
-            {/* Response Time Card */}
-            <div className="bg-white/80 backdrop-blur-sm border border-white/30 rounded-2xl p-6 text-center transition-all duration-300 hover:translate-y-[-5px] hover:shadow-[0_12px_40px_rgba(0,0,0,0.15)]">
-              <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl">
-                ⚡
-              </div>
-              <h3 className="text-xl font-semibold text-green-800 mb-2">Quick Response</h3>
-              <p className="text-gray-600 text-sm mb-3">We typically respond within</p>
-              <span className="text-green-600 font-medium">24 hours</span>
-            </div>
-          </div>
-        </main>
-      </div>
-
-      {/* Footer with Glass Morphism */}
-      <footer className="bg-gradient-to-r from-teal-600 to-teal-700 text-white border-t border-teal-500/20 py-8 px-6">
-        <div className="max-w-6xl mx-auto">
-          {/* Navigation Links */}
-          <nav className="flex flex-wrap justify-center gap-6 mb-6">
-            {[
-              { href: '/about', label: 'About Us' },
-              { href: '/terms', label: 'Terms & Conditions' },
-              { href: '/privacy-policy', label: 'Privacy Policy' },
-              { href: '/cookie-policy', label: 'Cookie Policy' },
-              { href: '/contact', label: 'Contact' },
-              { href: '/faq', label: 'FAQs' },
-              { href: '/sitemap', label: 'Site Map' }
-            ].map((link, index) => (
-              <Link 
-                key={index}
-                href={link.href}
-                className="text-white/90 hover:text-white hover:scale-105 transition-all duration-300 font-medium"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-
-          {/* Copyright */}
-          <div className="text-center">
-            <p className="text-white/90 mb-4 text-lg">
-              &copy; {new Date().getFullYear()} FindTrustedCleaners. All rights reserved.
-            </p>
-
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 max-w-4xl mx-auto">
-              <p className="text-white/80 text-sm leading-relaxed">
-                FindTrustedCleaners is committed to GDPR compliance. Read our{' '}
-                <Link href="/privacy-policy" className="text-white underline underline-offset-2 hover:text-teal-100 transition-colors duration-300">
-                  Privacy Policy
-                </Link>
-                {' '}and{' '}
-                <Link href="/cookie-policy" className="text-white underline underline-offset-2 hover:text-teal-100 transition-colors duration-300">
-                  Cookie Policy
-                </Link>
-                {' '}for details on how we protect your data. You may{' '}
-                <Link href="/contact" className="text-white underline underline-offset-2 hover:text-teal-100 transition-colors duration-300">
-                  contact us
-                </Link>
-                {' '}at any time to manage your personal information.
-              </p>
-            </div>
-          </div>
         </div>
-      </footer>
-
-      {/* Custom Animation Keyframes */}
-      <style jsx>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        
-        @keyframes slideUp {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-      `}</style>
-    </>
+      </section>
+    </main>
   );
 }

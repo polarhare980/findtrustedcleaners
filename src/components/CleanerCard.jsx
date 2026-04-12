@@ -34,6 +34,18 @@ function getReviewSummary(cleaner = {}) {
   return null
 }
 
+function getVisibleServices(cleaner = {}) {
+  const detailed = Array.isArray(cleaner?.servicesDetailed)
+    ? cleaner.servicesDetailed
+        .filter((service) => service?.name && service?.active !== false)
+        .map((service) => service.name)
+    : []
+
+  if (detailed.length) return detailed
+  if (Array.isArray(cleaner?.services)) return cleaner.services.filter(Boolean)
+  return []
+}
+
 export default function CleanerCard({ cleaner, isFavourite = false, onToggleFavourite }) {
   const [liked, setLiked] = useState(Boolean(isFavourite))
 
@@ -42,7 +54,9 @@ export default function CleanerCard({ cleaner, isFavourite = false, onToggleFavo
   }, [isFavourite])
 
   const reviewSummary = useMemo(() => getReviewSummary(cleaner), [cleaner])
+  const services = useMemo(() => getVisibleServices(cleaner), [cleaner])
   const isPremium = Boolean(cleaner?.isPremium)
+  const hourlyRate = Number(cleaner?.rates || cleaner?.hourlyRate || 0)
 
   const handleFavourite = (e) => {
     e.preventDefault()
@@ -78,7 +92,7 @@ export default function CleanerCard({ cleaner, isFavourite = false, onToggleFavo
 
             <button
               onClick={handleFavourite}
-              className="absolute top-3 right-3 rounded-full bg-white/85 p-2 shadow-sm backdrop-blur-md transition hover:bg-white"
+              className="absolute right-3 top-3 rounded-full bg-white/85 p-2 shadow-sm backdrop-blur-md transition hover:bg-white"
               aria-label={liked ? 'Remove from favourites' : 'Add to favourites'}
             >
               <Heart
@@ -108,10 +122,38 @@ export default function CleanerCard({ cleaner, isFavourite = false, onToggleFavo
 
           <div className={`mt-4 ${isPremium ? 'space-y-3' : 'space-y-2.5'}`}>
             <div className="flex items-start justify-between gap-3">
-              <h3 className={`font-semibold text-slate-900 ${isPremium ? 'text-xl' : 'text-lg'}`}>
-                {cleaner.companyName}
-              </h3>
+              <div>
+                <h3 className={`font-semibold text-slate-900 ${isPremium ? 'text-xl' : 'text-lg'}`}>
+                  {cleaner.companyName}
+                </h3>
+                {hourlyRate > 0 ? (
+                  <p className="mt-1 text-sm font-medium text-slate-500">From £{hourlyRate}/hr</p>
+                ) : null}
+              </div>
             </div>
+
+            <div className="flex flex-wrap gap-2">
+              {cleaner?.businessInsurance ? (
+                <span className={`rounded-full border px-3 py-1 text-[11px] font-semibold ${isPremium ? 'border-teal-200 bg-teal-50 text-teal-800' : 'border-teal-100 bg-teal-50/80 text-teal-700'}`}>
+                  Insured
+                </span>
+              ) : null}
+              {cleaner?.dbsChecked ? (
+                <span className={`rounded-full border px-3 py-1 text-[11px] font-semibold ${isPremium ? 'border-blue-200 bg-blue-50 text-blue-800' : 'border-blue-100 bg-blue-50/80 text-blue-700'}`}>
+                  DBS Checked
+                </span>
+              ) : null}
+            </div>
+
+            {services.length ? (
+              <div className={`rounded-2xl border px-4 py-3 ${isPremium ? 'border-amber-100 bg-white/80' : 'border-slate-200 bg-slate-50/90'}`}>
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Services</p>
+                <p className="mt-2 text-sm leading-6 text-slate-600 line-clamp-2">
+                  {services.slice(0, isPremium ? 4 : 3).join(', ')}
+                  {services.length > (isPremium ? 4 : 3) ? '…' : ''}
+                </p>
+              </div>
+            ) : null}
 
             {reviewSummary ? (
               <div className={`rounded-2xl border px-4 py-3 ${isPremium ? 'border-amber-100 bg-amber-50/70' : 'border-slate-200 bg-slate-50/90'}`}>
