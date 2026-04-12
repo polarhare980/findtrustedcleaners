@@ -2,33 +2,20 @@ import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/db';
 import Cleaner from '@/models/Cleaner';
 import { buildServiceMarket } from '@/lib/serviceMarketplace';
+import {
+  DEFAULT_SEARCH_RADIUS_MILES,
+  findBestCleanerDistanceMiles,
+  getOutwardPostcode,
+  normalizePostcode,
+  parseRadiusMiles,
+} from '@/lib/postcodeSearch';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-function normalizePostcode(value = '') {
-  return String(value || '').trim().toUpperCase().replace(/\s+/g, ' ').trim();
-}
-
-function getOutwardPostcode(value = '') {
-  const normal = normalizePostcode(value);
-  if (!normal) return '';
-  return normal.split(' ')[0] || normal;
-}
-
-function escapeRegex(value = '') {
-  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-function buildAreaRegex(postcode = '') {
-  const outward = getOutwardPostcode(postcode);
-  if (!outward) return null;
-  return new RegExp(`^${escapeRegex(outward)}(?:\\b|\\s|$)`, 'i');
-}
-
 function extractAreaFromRequest(request) {
-  const qp = new URL(request.url).searchParams.get('postcode');
-  const manualPostcode = normalizePostcode(qp || '');
+  const params = new URL(request.url).searchParams;
+  const manualPostcode = normalizePostcode(params.get('postcode') || '');
   if (manualPostcode) {
     return {
       postcode: manualPostcode,
@@ -63,29 +50,49 @@ export async function GET(request) {
   try {
     await connectToDatabase();
 
+    const params = new URL(request.url).searchParams;
+    const requestedService = String(params.get('service') || '').trim();
+    const radiusMiles = parseRadiusMiles(params.get('radius'), DEFAULT_SEARCH_RADIUS_MILES);
     const area = extractAreaFromRequest(request);
-    const regex = area.country && area.country !== 'GB' ? null : buildAreaRegex(area.postcode);
 
     const projection = ['realName', 'companyName', 'services', 'servicesDetailed', 'address', 'additionalPostcodes'].join(' ');
 
-    let cleaners = [];
+    const serviceQuery = requestedService
+      ? {
+          $or: [
+            { services: { $in: [requestedService] } },
+            { servicesDetailed: { $elemMatch: { name: requestedService, active: { $ne: false } } } },
+          ],
+        }
+      : {};
+
+    const cleaners = await Cleaner.find(serviceQuery).select(projection).lean();
+
+    let scopedCleaners = cleaners;
     let scope = 'national';
 
-    if (regex) {
-      cleaners = await Cleaner.find({
-        $or: [{ 'address.postcode': regex }, { additionalPostcodes: regex }],
-      })
-        .select(projection)
-        .lean();
+    if (area.postcode) {
+      const withDistances = await Promise.all(
+        cleaners.map(async (cleaner) => {
+          const match = await findBestCleanerDistanceMiles(area.postcode, cleaner);
+          return {
+            ...cleaner,
+            searchDistanceMiles: Number.isFinite(match.distanceMiles) ? Number(match.distanceMiles.toFixed(1)) : null,
+          };
+        })
+      );
 
-      if (cleaners.length) scope = 'local';
+      const nearby = withDistances
+        .filter((cleaner) => typeof cleaner.searchDistanceMiles === 'number' && cleaner.searchDistanceMiles <= radiusMiles)
+        .sort((a, b) => (a.searchDistanceMiles ?? Infinity) - (b.searchDistanceMiles ?? Infinity));
+
+      if (nearby.length) {
+        scopedCleaners = nearby;
+        scope = 'local';
+      }
     }
 
-    if (!cleaners.length) {
-      cleaners = await Cleaner.find({}).select(projection).lean();
-    }
-
-    const serviceMarket = buildServiceMarket(cleaners, 12);
+    const serviceMarket = buildServiceMarket(scopedCleaners, 12);
 
     return NextResponse.json({
       success: true,
@@ -93,33 +100,14 @@ export async function GET(request) {
       area: {
         postcode: area.postcode || '',
         outward: area.outward || '',
-        city: area.city || '',
-        region: area.region || '',
-        country: area.country || '',
-        source: area.source,
         label: summarizeArea(area),
+        source: area.source,
+        radiusMiles,
       },
       serviceMarket,
     });
   } catch (error) {
-    console.error('GET /api/service-marketplace error:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        scope: 'national',
-        area: {
-          postcode: '',
-          outward: '',
-          city: '',
-          region: '',
-          country: '',
-          source: 'none',
-          label: 'the UK',
-        },
-        serviceMarket: [],
-        message: 'Server error',
-      },
-      { status: 500 }
-    );
+    console.error('service marketplace error', error);
+    return NextResponse.json({ success: false, message: 'Failed to load service marketplace.' }, { status: 500 });
   }
 }

@@ -6,6 +6,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import React from 'react';
 import PublicHeader from '@/components/PublicHeader';
+import { SERVICE_CATEGORIES } from '@/lib/serviceOptions';
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const DAY_MAP = {
@@ -19,13 +20,6 @@ const DAY_MAP = {
 };
 const HOURS = Array.from({ length: 13 }, (_, i) => 7 + i);
 
-const SERVICE_CATEGORIES = {
-  'Domestic Cleaning': ['Regular House Cleaning', 'Deep Cleaning', 'Spring Cleaning', 'End of Tenancy', 'After-party Cleaning', 'Holiday Let Cleaning'],
-  'Specialist Cleaning': ['Oven Cleaning', 'Carpet Cleaning', 'Upholstery Cleaning', 'Mattress Cleaning', 'Curtain Cleaning', 'Mould Removal'],
-  'Exterior Cleaning': ['Window Cleaning', 'Gutter Cleaning', 'Roof Cleaning', 'Pressure Washing'],
-  'Vehicle Cleaning': ['Car Valeting', 'Fleet Cleaning'],
-  'Commercial Cleaning': ['Office Cleaning', 'Retail Cleaning', 'Gym Cleaning'],
-};
 
 function buildDenseBaseAvailability(formAvailability) {
   const out = {};

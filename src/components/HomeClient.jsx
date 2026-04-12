@@ -9,6 +9,7 @@ import PublicHeader from '@/components/PublicHeader';
 import PublicFooter from '@/components/PublicFooter';
 import PageHero from '@/components/PageHero';
 import { injectPendingFromPurchases } from '@/lib/availability';
+import { ALL_SERVICE_OPTIONS } from '@/lib/serviceOptions';
 
 const fetcher = (url) => fetch(url, { credentials: 'include' }).then((r) => r.json());
 const CLEANERS_API = '/api/public-cleaners';
@@ -80,6 +81,7 @@ export default function HomeClient() {
   const router = useRouter();
   const { data, isLoading } = useSWR(CLEANERS_API, fetcher);
   const [postcode, setPostcode] = useState('');
+  const [serviceType, setServiceType] = useState('');
   const [favouriteIds, setFavouriteIds] = useState([]);
   const [viewer, setViewer] = useState(null);
   const [premiumCleaners, setPremiumCleaners] = useState([]);
@@ -138,8 +140,8 @@ export default function HomeClient() {
 
   const cleanerCount = useMemo(() => Array.isArray(data?.cleaners) ? data.cleaners.length : 0, [data]);
   const serviceMarketUrl = postcode
-    ? `/api/service-marketplace?postcode=${encodeURIComponent(postcode)}`
-    : '/api/service-marketplace';
+    ? `/api/service-marketplace?postcode=${encodeURIComponent(postcode)}&service=${encodeURIComponent(serviceType || '')}`
+    : `/api/service-marketplace?service=${encodeURIComponent(serviceType || '')}`;
   const { data: serviceMarketData, isLoading: isLoadingServiceMarket } = useSWR(serviceMarketUrl, fetcher);
   const serviceMarket = useMemo(() => Array.isArray(serviceMarketData?.serviceMarket) ? serviceMarketData.serviceMarket : [], [serviceMarketData]);
   const serviceArea = serviceMarketData?.area || null;
@@ -150,7 +152,16 @@ export default function HomeClient() {
       <PublicHeader />
       <section className="site-section pt-6 pb-2">
         <div className="rounded-[30px] border border-white/70 bg-white/88 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.10)] backdrop-blur-xl sm:p-6">
-          <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr_auto] lg:items-end">
+          <div className="grid gap-4 lg:grid-cols-[1fr_1fr_1fr_auto] lg:items-end">
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">Service</label>
+              <select value={serviceType} onChange={(e) => setServiceType(e.target.value)} className="ftc-select">
+                <option value="">All cleaning services</option>
+                {ALL_SERVICE_OPTIONS.map((service) => (
+                  <option key={service} value={service}>{service}</option>
+                ))}
+              </select>
+            </div>
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-700">Postcode</label>
               <input value={postcode} onChange={(e) => setPostcode(e.target.value)} placeholder="Enter your postcode" className="ftc-input" />
@@ -163,7 +174,7 @@ export default function HomeClient() {
                 <span className="ftc-chip">Cleaner approval before payment</span>
               </div>
             </div>
-            <button onClick={() => router.push(`/cleaners?postcode=${encodeURIComponent(postcode)}`)} className="ftc-button-primary w-full lg:w-auto">Search now</button>
+            <button onClick={() => router.push(`/cleaners?postcode=${encodeURIComponent(postcode)}${serviceType ? `&service=${encodeURIComponent(serviceType)}` : ''}`)} className="ftc-button-primary w-full lg:w-auto">Search now</button>
           </div>
         </div>
       </section>
@@ -174,7 +185,7 @@ export default function HomeClient() {
         description="Browse cleaner profiles for free, compare real availability, and send booking requests through a simpler, clearer marketplace."
         actions={(
           <>
-            <button onClick={() => router.push(`/cleaners?postcode=${encodeURIComponent(postcode)}`)} className="ftc-button-primary">Find a cleaner</button>
+            <button onClick={() => router.push(`/cleaners?postcode=${encodeURIComponent(postcode)}${serviceType ? `&service=${encodeURIComponent(serviceType)}` : ''}`)} className="ftc-button-primary">Find a cleaner</button>
             <Link href="/register/cleaners" className="ftc-button-secondary">Join as a cleaner</Link>
           </>
         )}

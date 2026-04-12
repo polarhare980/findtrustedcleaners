@@ -8,6 +8,7 @@ import PublicHeader from '@/components/PublicHeader';
 import PublicFooter from '@/components/PublicFooter';
 import PageHero from '@/components/PageHero';
 import { buildServiceMarket } from '@/lib/serviceMarketplace';
+import { ALL_SERVICE_OPTIONS } from '@/lib/serviceOptions';
 
 export default function FindCleanerPage() {
   const searchParams = useSearchParams();
@@ -17,6 +18,7 @@ export default function FindCleanerPage() {
   const [bookingStatus, setBookingStatus] = useState('all');
   const [loading, setLoading] = useState(true);
   const [serviceType, setServiceType] = useState('');
+  const [radiusMiles, setRadiusMiles] = useState(8);
   const [favouriteIds, setFavouriteIds] = useState([]);
   const [isClient, setIsClient] = useState(false);
 
@@ -24,14 +26,16 @@ export default function FindCleanerPage() {
     const qpPostcode = searchParams.get('postcode') || '';
     const qpService = searchParams.get('service') || '';
     if (qpPostcode && !postcode) setPostcode(qpPostcode);
+    const qpRadius = Number(searchParams.get('radius') || '');
     if (qpService && !serviceType) setServiceType(qpService);
+    if (Number.isFinite(qpRadius) && qpRadius > 0) setRadiusMiles(qpRadius);
   }, [searchParams, postcode, serviceType]);
 
   useEffect(() => {
     const fetchFilteredCleaners = async () => {
       try {
         setLoading(true);
-        const url = `/api/cleaners?postcode=${encodeURIComponent(postcode || '')}&minRating=${minRating}&bookingStatus=${encodeURIComponent(bookingStatus)}&serviceType=${encodeURIComponent(serviceType || '')}`;
+        const url = `/api/cleaners?postcode=${encodeURIComponent(postcode || '')}&radius=${encodeURIComponent(radiusMiles)}&minRating=${minRating}&bookingStatus=${encodeURIComponent(bookingStatus)}&serviceType=${encodeURIComponent(serviceType || '')}`;
         const res = await fetch(url, { credentials: 'include' });
         const json = await res.json();
         setFilteredCleaners(Array.isArray(json.cleaners) ? json.cleaners : []);
@@ -42,7 +46,7 @@ export default function FindCleanerPage() {
       }
     };
     fetchFilteredCleaners();
-  }, [postcode, minRating, bookingStatus, serviceType]);
+  }, [postcode, radiusMiles, minRating, bookingStatus, serviceType]);
 
   useEffect(() => {
     try {
@@ -93,14 +97,28 @@ export default function FindCleanerPage() {
 
       <section className="site-section py-8">
         <div className="surface-card p-6 sm:p-8">
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-700">Postcode</label>
               <input type="text" placeholder="Enter postcode" value={postcode} onChange={(e) => setPostcode(e.target.value)} className="ftc-input" />
             </div>
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-700">Service</label>
-              <input type="text" placeholder="For example oven cleaning" value={serviceType} onChange={(e) => setServiceType(e.target.value)} className="ftc-input" />
+              <select value={serviceType} onChange={(e) => setServiceType(e.target.value)} className="ftc-select">
+                <option value="">All cleaning services</option>
+                {ALL_SERVICE_OPTIONS.map((service) => (
+                  <option key={service} value={service}>{service}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">Search radius</label>
+              <select value={radiusMiles} onChange={(e) => setRadiusMiles(Number(e.target.value))} className="ftc-select">
+                <option value={5}>5 miles</option>
+                <option value={8}>8 miles</option>
+                <option value={10}>10 miles</option>
+                <option value={15}>15 miles</option>
+              </select>
             </div>
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-700">Minimum rating</label>
@@ -140,6 +158,7 @@ export default function FindCleanerPage() {
                     setServiceType('');
                     setMinRating(0);
                     setBookingStatus('all');
+                    setRadiusMiles(8);
                   }}
                   className="ftc-button-secondary"
                 >
@@ -181,7 +200,7 @@ export default function FindCleanerPage() {
         ) : (
           <>
             <div className="mb-5 flex items-center justify-between gap-4">
-              <p className="text-sm text-slate-600">Showing {filteredCleaners.length} cleaner profile{filteredCleaners.length === 1 ? '' : 's'}.</p>
+              <p className="text-sm text-slate-600">Showing {filteredCleaners.length} cleaner profile{filteredCleaners.length === 1 ? '' : 's'}{postcode ? ` within ${radiusMiles} miles.` : '.'}</p>
             </div>
             <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
               {filteredCleaners.map((cleaner) => (
