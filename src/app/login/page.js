@@ -1,6 +1,6 @@
-import PremiumBenefits from '@/components/PremiumBenefits'
 'use client';
 
+import PremiumBenefits from '@/components/PremiumBenefits'
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Head from 'next/head';
