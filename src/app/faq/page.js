@@ -1,3 +1,4 @@
+import PremiumBenefits from '@/components/PremiumBenefits'
 // File: src/app/faq/page.js
 
 import FAQComponent from './FAQComponent';
@@ -26,3 +27,5 @@ export default function Page() {
   return <FAQComponent />;
 }
 
+
+<PremiumBenefits />

@@ -1,3 +1,4 @@
+import PremiumBenefits from '@/components/PremiumBenefits'
 'use client';
 
 import { useState } from 'react';
@@ -97,7 +98,8 @@ export default function LoginPage() {
           </div>
         </section>
         <PublicFooter />
-      </main>
+      <PremiumBenefits />
+</main>
     </>
   );
 }

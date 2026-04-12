@@ -1,3 +1,4 @@
+import PremiumBenefits from '@/components/PremiumBenefits'
 // File: src/app/contact/page.js
 
 import ContactFormComponent from './ContactFormComponent';
@@ -25,3 +26,5 @@ export const metadata = {
 export default function Page() {
   return <ContactFormComponent />;
 }
+
+<PremiumBenefits />

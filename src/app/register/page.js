@@ -1,3 +1,4 @@
+import PremiumBenefits from '@/components/PremiumBenefits'
 'use client'; import { useState } from 'react';
 export default function RegisterPage() {
   const [name, setName] = useState(''); const [email, setEmail] = useState(''); const [password, setPassword] = useState('');
@@ -11,4 +12,5 @@ export default function RegisterPage() {
   <div className="text-sm">Account type:</div><div className="flex gap-4">
   <label className="inline-flex items-center gap-2"><input type="radio" name="type" value="client" checked={type==='client'} onChange={e=>setType(e.target.value)}/>Client</label>
   <label className="inline-flex items-center gap-2"><input type="radio" name="type" value="cleaner" checked={type==='cleaner'} onChange={e=>setType(e.target.value)}/>Cleaner</label>
-  </div><button className="px-3 py-2 rounded-xl bg-slate-900 text-white">Register</button>{msg && <div className="text-sm">{msg}</div>}</form></main>); }
+  </div><button className="px-3 py-2 rounded-xl bg-slate-900 text-white">Register</button>{msg && <div className="text-sm">{msg}</div>}</form><PremiumBenefits />
+</main>); }
