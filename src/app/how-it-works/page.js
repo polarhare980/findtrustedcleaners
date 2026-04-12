@@ -95,9 +95,9 @@ export default function HowItWorksPage() {
           </div>
         </div>
       </section>
+      <PremiumBenefits />
       <PublicFooter />
-    <PremiumBenefits />
-</main>
+    </main>
   );
 }
 

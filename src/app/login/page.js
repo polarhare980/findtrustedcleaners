@@ -97,9 +97,9 @@ export default function LoginPage() {
             </form>
           </div>
         </section>
+        <PremiumBenefits />
         <PublicFooter />
-      <PremiumBenefits />
-</main>
+      </main>
     </>
   );
 }

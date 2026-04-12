@@ -1,4 +1,3 @@
-import PremiumBenefits from '@/components/PremiumBenefits'
 // File: src/app/faq/page.js
 
 import FAQComponent from './FAQComponent';
@@ -26,6 +25,3 @@ export const metadata = {
 export default function Page() {
   return <FAQComponent />;
 }
-
-
-<PremiumBenefits />

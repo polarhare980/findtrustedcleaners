@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import PublicHeader from '@/components/PublicHeader';
+import PublicFooter from '@/components/PublicFooter';
+import PremiumBenefits from '@/components/PremiumBenefits';
 import { useState } from 'react';
 
 const FAQS = [
@@ -147,6 +149,9 @@ export default function FAQComponent() {
           </div>
         </div>
       </section>
+
+      <PremiumBenefits />
+      <PublicFooter />
     </main>
   );
 }

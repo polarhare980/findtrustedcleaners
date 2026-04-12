@@ -5,6 +5,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import PurchaseButton from '@/components/PurchaseButton';
 import RatingStars from '@/components/RatingStars';
+import PublicHeader from '@/components/PublicHeader';
+import PublicFooter from '@/components/PublicFooter';
+import PremiumBenefits from '@/components/PremiumBenefits';
 import Link from 'next/link';
 
 // Public APIs
@@ -303,17 +306,23 @@ export default function CleanerProfile() {
 
   if (loading) {
     return (
-      <main className="max-w-6xl mx-auto p-4">
-        <div className="animate-pulse rounded-2xl p-8 bg-white/50 backdrop-blur shadow">Loading…</div>
+      <main className="min-h-screen bg-[linear-gradient(180deg,#f7fbfb_0%,#f8fafc_38%,#f8fafc_100%)] text-slate-900">
+        <PublicHeader />
+        <div className="mx-auto max-w-6xl px-4 py-10">
+          <div className="animate-pulse rounded-[28px] border border-white/70 bg-white/80 p-8 shadow-[0_24px_80px_rgba(15,23,42,0.10)] backdrop-blur-xl">Loading cleaner profile…</div>
+        </div>
+        <PublicFooter />
       </main>
     );
   }
   if (error || !cleaner) {
     return (
-      <main className="max-w-6xl mx-auto p-4">
-        <div className="rounded-2xl p-6 bg-rose-50 text-rose-700 border border-rose-200">
-          {error || 'Cleaner not found'}
+      <main className="min-h-screen bg-[linear-gradient(180deg,#f7fbfb_0%,#f8fafc_38%,#f8fafc_100%)] text-slate-900">
+        <PublicHeader />
+        <div className="mx-auto max-w-6xl px-4 py-10">
+          <div className="rounded-[28px] border border-rose-200 bg-rose-50 p-6 text-rose-700 shadow-sm">{error || 'Cleaner not found'}</div>
         </div>
+        <PublicFooter />
       </main>
     );
   }
@@ -339,9 +348,22 @@ export default function CleanerProfile() {
     badges.push({ key: 'dbs', label: 'DBS Checked', tone: 'from-blue-400 to-indigo-500' });
 
   return (
-    <main className="max-w-6xl mx-auto p-4">
+    <main className="min-h-screen bg-[linear-gradient(180deg,#f7fbfb_0%,#f8fafc_38%,#f8fafc_100%)] text-slate-900">
+      <PublicHeader />
+      <div className="mx-auto max-w-6xl px-4 py-8 md:py-10">
+        <section className="mb-6 rounded-[30px] border border-white/70 bg-white/88 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.10)] backdrop-blur-xl sm:p-6">
+          <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+            <div className="max-w-3xl">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">Cleaner profile</p>
+              <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">{cleaner.companyName || cleaner.realName || 'Cleaner'}</h1>
+              <p className="mt-3 text-base leading-7 text-slate-600">View trust signals, service pricing, recent reviews and live availability in one place before you book.</p>
+            </div>
+            <div className="rounded-2xl border border-teal-100 bg-teal-50/70 px-4 py-3 text-sm text-teal-900">Public profile with live availability and booking request flow.</div>
+          </div>
+        </section>
+
       {/* Header */}
-      <header className="rounded-2xl bg-white/60 backdrop-blur shadow p-6 md:p-8 flex flex-col md:flex-row gap-6 items-start">
+      <header className="rounded-[30px] border border-white/70 bg-white/90 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.10)] backdrop-blur-xl md:p-8 flex flex-col md:flex-row gap-6 items-start">
         {/* Hero */}
         <div className="w-full md:w-64 shrink-0">
           <div className="relative w-full aspect-[4/3] overflow-hidden rounded-2xl shadow">
@@ -450,6 +472,30 @@ export default function CleanerProfile() {
           </div>
         </div>
       </header>
+
+      <section className="mt-6 grid gap-4 md:grid-cols-3">
+        <div className="rounded-[24px] border border-slate-200 bg-white/85 p-5 shadow-sm">
+          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Trust signals</div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {badges.length ? badges.map((b) => (
+              <span key={`trust-${b.key}`} className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700">
+                {b.label}
+              </span>
+            )) : <span className="text-sm text-slate-500">Profile details are still being built out.</span>}
+          </div>
+        </div>
+
+        <div className="rounded-[24px] border border-slate-200 bg-white/85 p-5 shadow-sm">
+          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Review snapshot</div>
+          <div className="mt-3 text-3xl font-bold text-slate-900">{siteReviewCount > 0 ? siteReviewAverage.toFixed(1) : '—'}</div>
+          <div className="mt-2 text-sm text-slate-600">{siteReviewCount > 0 ? `${siteReviewCount} verified platform review${siteReviewCount === 1 ? '' : 's'}` : 'No verified platform reviews yet.'}</div>
+        </div>
+
+        <div className="rounded-[24px] border border-slate-200 bg-white/85 p-5 shadow-sm">
+          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Booking clarity</div>
+          <div className="mt-3 text-sm leading-6 text-slate-600">Green slots are available, grey slots are already pending or booked, and red slots are unavailable.</div>
+        </div>
+      </section>
 
       {/* Public Bio */}
       {cleaner.bio && (
@@ -609,7 +655,7 @@ export default function CleanerProfile() {
           </div>
         </div>
 
-        <div className="rounded-2xl overflow-hidden border border-slate-100 bg-white/60 shadow">
+        <div className="rounded-[28px] overflow-hidden border border-white/70 bg-white/88 shadow-[0_24px_70px_rgba(15,23,42,0.08)] backdrop-blur-xl">
           <div className="overflow-x-auto touch-pan-x">
           <div className="min-w-[760px]">
           <div className="grid" style={{ gridTemplateColumns: `120px repeat(${HOURS.length}, minmax(44px,1fr))` }}>
@@ -660,6 +706,12 @@ export default function CleanerProfile() {
             ))}
           </div>
           </div>
+        </div>
+
+        <div className="border-t border-slate-100 bg-slate-50/70 px-4 py-3 text-xs text-slate-600">
+          <span className="mr-4 inline-flex items-center gap-2"><span className="inline-block h-3 w-3 rounded-full bg-emerald-200" /> Available</span>
+          <span className="mr-4 inline-flex items-center gap-2"><span className="inline-block h-3 w-3 rounded-full bg-slate-300" /> Pending or booked</span>
+          <span className="inline-flex items-center gap-2"><span className="inline-block h-3 w-3 rounded-full bg-rose-200" /> Unavailable</span>
         </div>
 
         {/* Booking request panel */}
@@ -744,7 +796,7 @@ export default function CleanerProfile() {
 
       <section className="mt-8">
         <h2 className="text-xl font-bold text-teal-900 mb-3">Verified customer reviews</h2>
-        <div className="rounded-2xl p-5 bg-white/70 border border-slate-100 shadow">
+        <div className="rounded-[28px] border border-white/70 bg-white/88 p-5 shadow-[0_24px_70px_rgba(15,23,42,0.08)] backdrop-blur-xl">
           {siteReviewCount > 0 ? (
             <div className="grid gap-6 lg:grid-cols-[280px,1fr]">
               <div className="rounded-2xl border border-slate-100 bg-white/80 p-5">
@@ -821,6 +873,10 @@ export default function CleanerProfile() {
           )}
         </div>
       </section>
+      </div>
+
+      <PremiumBenefits />
+      <PublicFooter />
     </main>
   );
 }

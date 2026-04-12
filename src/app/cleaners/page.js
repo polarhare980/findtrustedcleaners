@@ -181,10 +181,30 @@ export default function CleanerSearchPage() {
           </div>
         ) : (
           <div className="rounded-[28px] border border-slate-200 bg-white/90 p-10 text-center shadow-sm">
-            <h2 className="text-2xl font-semibold text-slate-900">No cleaners found yet</h2>
-            <p className="mt-3 text-slate-600">
-              Try a nearby postcode, widen the radius, or remove the service filter to see more results.
-            </p>
+            <div className="mx-auto flex max-w-3xl flex-col items-center">
+              <div className="mb-4 inline-flex rounded-full border border-teal-100 bg-teal-50 px-4 py-2 text-sm font-semibold text-teal-800">Search tips</div>
+              <h2 className="text-2xl font-semibold text-slate-900">No cleaners found yet</h2>
+              <p className="mt-3 max-w-2xl text-slate-600">
+                There may not be a match for this exact search yet. Try broadening your radius, using a nearby postcode, or removing the service filter to see more local options.
+              </p>
+
+              <div className="mt-6 flex flex-wrap justify-center gap-3">
+                <button onClick={() => setRadius('12')} className="ftc-button-secondary">Broaden radius</button>
+                <button onClick={() => setPostcode('')} className="ftc-button-secondary">Try nearby postcode</button>
+                <button onClick={() => setServiceType('')} className="ftc-button-secondary">Remove service filter</button>
+                <button
+                  onClick={() => {
+                    setPostcode('')
+                    setServiceType('')
+                    setRadius('8')
+                    router.replace('/cleaners')
+                  }}
+                  className="ftc-button-primary"
+                >
+                  Show all cleaners
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </section>

@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import PublicHeader from '@/components/PublicHeader';
+import PublicFooter from '@/components/PublicFooter';
+import PremiumBenefits from '@/components/PremiumBenefits';
 import { useState } from 'react';
 
 export default function ContactFormComponent() {
@@ -145,6 +147,9 @@ export default function ContactFormComponent() {
           </div>
         </div>
       </section>
+
+      <PremiumBenefits />
+      <PublicFooter />
     </main>
   );
 }
