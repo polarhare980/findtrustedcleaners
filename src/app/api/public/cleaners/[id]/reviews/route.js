@@ -10,7 +10,8 @@ function json(data, status = 200) {
 
 const HIGHLIGHT_KEYS = ['On time', 'Friendly', 'Good communication', 'Quality of cleaning', 'Would book again'];
 
-export async function GET(_req, { params }) {
+export async function GET(_req, context) {
+  const params = await context?.params;
   const id = params?.id;
   if (!id) return json({ success: false, message: 'Missing id' }, 400);
 
@@ -46,7 +47,7 @@ export async function GET(_req, { params }) {
         highlightCounts[tag] += 1;
       }
     }
-    if (row?.wouldBookAgain) highlightCounts['Would book again'] += 0;
+    if (row?.wouldBookAgain) highlightCounts['Would book again'] += 1;
   }
 
   return json({

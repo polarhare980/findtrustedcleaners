@@ -144,10 +144,10 @@ export default function AboutPage() {
                 Visit the contact page
               </Link>
               <a
-                href="mailto:Findtrustedcleaners@gmail.com"
+                href="mailto:findtrustedcleaners@gmail.com"
                 className="ftc-button-secondary"
               >
-                Findtrustedcleaners@gmail.com
+                findtrustedcleaners@gmail.com
               </a>
             </div>
           </div>

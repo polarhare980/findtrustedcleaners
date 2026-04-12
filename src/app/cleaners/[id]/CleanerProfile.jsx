@@ -324,7 +324,7 @@ export default function CleanerProfile() {
       : (cleaner.rates && (cleaner.rates.hourly || cleaner.rates.regular)) || null;
 
   const coverPhoto =
-    normalizedPhotos.find((p) => !p.hasText)?.url || (normalizedPhotos[0]?.url || null);
+    normalizedPhotos.find((p) => !p.hasText)?.url || cleaner?.image || normalizedPhotos[0]?.url || null;
 
   // ----- Badges (match dashboard flags) -----
   const badges = [];

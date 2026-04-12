@@ -8,7 +8,7 @@ export default function ContactFormComponent() {
   const [form, setForm] = useState({ name: '', email: '', message: '' });
   const [status, setStatus] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const SUPPORT_EMAIL = 'Findtrustedcleaners@gmail.com';
+  const SUPPORT_EMAIL = 'findtrustedcleaners@gmail.com';
 
   const handleChange = (e) => {
     const { name, value } = e.target;

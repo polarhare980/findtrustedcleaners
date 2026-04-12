@@ -148,20 +148,8 @@ export default function HomeClient() {
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,#f7fbfb_0%,#f8fafc_38%,#f8fafc_100%)] text-slate-900">
       <PublicHeader />
-      <PageHero
-        eyebrow="Trusted cleaner marketplace"
-        title="Find trusted cleaners near you"
-        description="Browse cleaner profiles for free, compare real availability, and send booking requests through a simpler, clearer marketplace."
-        actions={(
-          <>
-            <button onClick={() => router.push(`/cleaners?postcode=${encodeURIComponent(postcode)}`)} className="ftc-button-primary">Find a cleaner</button>
-            <Link href="/register/cleaners" className="ftc-button-secondary">Join as a cleaner</Link>
-          </>
-        )}
-      />
-
-      <section className="site-section -mt-10 pb-10">
-        <div className="rounded-[30px] border border-white/70 bg-white/86 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.10)] backdrop-blur-xl sm:p-6">
+      <section className="site-section pt-6 pb-2">
+        <div className="rounded-[30px] border border-white/70 bg-white/88 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.10)] backdrop-blur-xl sm:p-6">
           <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr_auto] lg:items-end">
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-700">Postcode</label>
@@ -179,6 +167,20 @@ export default function HomeClient() {
           </div>
         </div>
       </section>
+
+      <PageHero
+        eyebrow="Trusted cleaner marketplace"
+        title="Find trusted cleaners near you"
+        description="Browse cleaner profiles for free, compare real availability, and send booking requests through a simpler, clearer marketplace."
+        actions={(
+          <>
+            <button onClick={() => router.push(`/cleaners?postcode=${encodeURIComponent(postcode)}`)} className="ftc-button-primary">Find a cleaner</button>
+            <Link href="/register/cleaners" className="ftc-button-secondary">Join as a cleaner</Link>
+          </>
+        )}
+      />
+
+      
 
       <section className="site-section pb-8">
         <div className="overflow-hidden rounded-[34px] border border-white/70 bg-white/90 shadow-[0_22px_70px_rgba(15,23,42,0.08)] backdrop-blur-xl">
