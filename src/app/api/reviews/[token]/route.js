@@ -70,7 +70,8 @@ async function loadPurchaseByTokenOrId(tokenOrId) {
   return { purchase, cleaner, client, existingReview };
 }
 
-export async function GET(_req, { params }) {
+export async function GET(_req, context) {
+  const params = await Promise.resolve(context?.params);
   const token = String(params?.token || '').trim();
   if (!token) {
     return json({ success: false, message: 'Missing review token.' }, 400);
@@ -126,7 +127,8 @@ export async function GET(_req, { params }) {
   });
 }
 
-export async function POST(req, { params }) {
+export async function POST(req, context) {
+  const params = await Promise.resolve(context?.params);
   const token = String(params?.token || '').trim();
   if (!token) {
     return json({ success: false, message: 'Missing review token.' }, 400);
