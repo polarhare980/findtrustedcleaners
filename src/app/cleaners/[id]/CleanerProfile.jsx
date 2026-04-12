@@ -265,6 +265,7 @@ export default function CleanerProfile() {
     .filter(([, count]) => Number(count) > 0)
     .sort((a, b) => Number(b[1]) - Number(a[1]))
     .slice(0, 4);
+  const featuredReview = (reviewData?.data || []).find((item) => String(item?.text || '').trim()) || reviewData?.data?.[0] || null;
   const isTopRated = siteReviewCount >= 5 && siteReviewAverage >= 4.5;
 
   // ---- Availability for the selected week (matches Dashboard precedence) ----
@@ -408,6 +409,25 @@ export default function CleanerProfile() {
           {hourlyRate && (
             <div className="text-slate-800 text-lg font-semibold mt-3">£{hourlyRate}/hour</div>
           )}
+
+          {featuredReview ? (
+            <div className="mt-4 rounded-2xl border border-slate-200 bg-white/85 p-4 shadow-sm">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Latest customer review</div>
+                <div className="flex items-center gap-2 text-sm text-slate-700">
+                  <RatingStars value={Number(featuredReview?.rating || 0)} count={0} size={14} />
+                  <span className="text-xs font-semibold text-slate-500">{Number(featuredReview?.rating || 0).toFixed(1)}/5</span>
+                </div>
+              </div>
+              <p className="mt-3 text-sm leading-6 text-slate-700">
+                {featuredReview?.text ? `“${featuredReview.text}”` : 'This customer left a rating but no written review yet.'}
+              </p>
+              <div className="mt-2 text-xs text-slate-500">
+                {featuredReview?.serviceName || 'Cleaning service'}
+                {featuredReview?.createdAt ? ` • ${new Date(featuredReview.createdAt).toLocaleDateString('en-GB')}` : ''}
+              </div>
+            </div>
+          ) : null}
         </div>
 
         {/* CTA (scrolls to availability; keeps contact gated) */}
@@ -761,6 +781,7 @@ export default function CleanerProfile() {
                       <div>
                         <div className="flex items-center gap-2 flex-wrap">
                           <RatingStars value={Number(review.rating || 0)} count={0} size={15} />
+                          <span className="text-sm font-semibold text-slate-700">{Number(review.rating || 0).toFixed(1)}/5</span>
                           {review.verifiedBooking ? (
                             <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">Verified booking</span>
                           ) : null}

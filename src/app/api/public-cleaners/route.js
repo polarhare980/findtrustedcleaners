@@ -33,7 +33,7 @@ export async function GET() {
   try {
     await connectToDatabase();
     const raw = await Cleaner.find({})
-      .select(['realName','companyName','rates','services','servicesDetailed','image','profileImage','photos','isPremium','businessInsurance','dbsChecked','googleReviewRating','googleReviewCount','availability','availabilityOverrides','address'].join(' '))
+      .select(['realName','companyName','rates','services','servicesDetailed','image','profileImage','photos','isPremium','businessInsurance','dbsChecked','googleReviewRating','googleReviewCount','rating','ratingCount','availability','availabilityOverrides','address'].join(' '))
       .lean();
 
     const cleaners = raw.map((c) => ({
