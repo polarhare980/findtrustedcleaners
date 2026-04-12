@@ -13,10 +13,8 @@ function bookingUrlForClient(cleanerId) {
 
 function reviewUrlForPurchase(purchase) {
   const token = safe(purchase?.reviewToken);
-  if (token) return new URL(`/review/${token}`, SITE_URL).toString();
-  const url = new URL(bookingUrlForClient(purchase?.cleanerId));
-  if (purchase?._id) url.searchParams.set('review', purchase._id);
-  return url.toString();
+  if (!token) return '';
+  return new URL(`/review/${token}`, SITE_URL).toString();
 }
 
 function dashboardUrlForCleaner() {
@@ -106,6 +104,10 @@ export async function sendBookingAcceptedEmail({ to, recipientName, cleanerName,
   if (!to) return { skipped: true, reason: 'missing_client_email' };
   const detailsUrl = bookingUrlForClient(purchase?.cleanerId);
   const reviewUrl = reviewUrlForPurchase(purchase);
+  const reviewTextLine = reviewUrl ? `Leave a review after the appointment: ${reviewUrl}` : 'We will send your review link separately after the appointment.';
+  const reviewHtmlBlock = reviewUrl
+    ? `<p style="margin-top:14px;"><a href="${reviewUrl}" style="display:inline-block;background:#ffffff;color:#0f766e;padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:600;border:1px solid #0f766e;">Leave a review later</a></p>`
+    : `<p style="margin-top:14px;color:#475569;">We will send your review link separately after the appointment.</p>`;
   return sendEmail({
     to,
     subject: 'Your cleaning request has been accepted',
@@ -115,7 +117,7 @@ export async function sendBookingAcceptedEmail({ to, recipientName, cleanerName,
       `${safe(cleanerName || 'Your cleaner')} has accepted your booking request.`,
       ...bookingSummaryLines({ purchase, cleanerName, includeClient: false }),
       `View details: ${detailsUrl}`,
-      `Leave a review after the appointment: ${reviewUrl}`,
+      reviewTextLine,
     ].filter(Boolean).join('\n'),
     html: `<div style="font-family:Arial,sans-serif;line-height:1.6;color:#1f2937;max-width:640px;margin:0 auto;padding:24px;">
       <h2 style="color:#0f766e;margin:0 0 16px;">Booking accepted</h2>
@@ -123,7 +125,7 @@ export async function sendBookingAcceptedEmail({ to, recipientName, cleanerName,
       <p><strong>${safe(cleanerName || 'Your cleaner')}</strong> has accepted your booking request.</p>
       <ul style="padding-left:18px;">${bookingSummaryItems({ purchase, cleanerName, includeClient: false })}</ul>
       <p><a href="${detailsUrl}" style="display:inline-block;background:#0f766e;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:600;">Open booking details</a></p>
-      <p style="margin-top:14px;"><a href="${reviewUrl}" style="display:inline-block;background:#ffffff;color:#0f766e;padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:600;border:1px solid #0f766e;">Leave a review later</a></p>
+      ${reviewHtmlBlock}
     </div>`,
   });
 }
@@ -203,6 +205,10 @@ export async function sendBookingReminderEmail({ to, recipientName, cleanerName,
 export async function sendReviewRequestEmail({ to, recipientName, cleanerName, purchase }) {
   if (!to) return { skipped: true, reason: 'missing_email' };
   const reviewUrl = reviewUrlForPurchase(purchase);
+  if (!reviewUrl) {
+    return { skipped: true, reason: 'missing_review_token' };
+  }
+
   return sendEmail({
     to,
     subject: 'How did your cleaning appointment go?',

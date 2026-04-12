@@ -4,7 +4,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import PurchaseButton from '@/components/PurchaseButton';
-import ReviewFormClient from '@/components/ReviewFormClient';
 import RatingStars from '@/components/RatingStars';
 import Link from 'next/link';
 
@@ -809,7 +808,9 @@ export default function CleanerProfile() {
       <section id="leave-review-section" className="mt-8">
         <h2 className="text-xl font-bold text-teal-900 mb-3">Leave a Review</h2>
         <div className="rounded-2xl p-5 bg-white/70 border border-slate-100 shadow">
-          <ReviewFormClient cleanerId={String(cleaner._id)} />
+          <p className="text-sm leading-7 text-slate-600">
+            Reviews can only be submitted through the private email link sent after a real booking. Public visitors can read reviews here, but review submission is not exposed on the public profile.
+          </p>
         </div>
       </section>
 
