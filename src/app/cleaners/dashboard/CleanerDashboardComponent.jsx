@@ -656,17 +656,17 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
   if (loading || !formData) return <LoadingSpinner />;
 
   return (
-    <div className="min-h-screen bg-white py-6 px-4">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(13,148,136,0.14),_transparent_34%),linear-gradient(180deg,#f8fffe_0%,#f2f7f6_50%,#edf4f3_100%)] py-8 px-4 sm:px-6">
       <div className="max-w-7xl mx-auto">
 
         {/* Header */}
-          <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl mb-6 p-6">
+          <div className="rounded-[28px] border border-teal-100 bg-white/88 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] ring-1 ring-white mb-6">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between">
               <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent mb-2">
+                <h1 className="text-4xl font-semibold tracking-tight text-slate-900 mb-2">
             Cleaner Dashboard
                 </h1>
-                <p className="text-gray-600">Manage your cleaning services and availability</p>
+                <p className="text-slate-500">Manage your cleaning services and availability</p>
               </div>
 
             <div className="flex flex-wrap items-center gap-3 mt-4 md:mt-0">
@@ -675,24 +675,24 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
                   ✅ DBS Checked
                 </span>
               )}
-              <button onClick={() => router.push('/')} className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg font-medium transition-all duration-300">
+              <button onClick={() => router.push('/')} className="px-4 py-2 rounded-2xl border border-slate-900 bg-slate-900 text-white font-semibold shadow-sm transition-all duration-300 hover:bg-slate-800">
                 🏠 Home
               </button>
-              <button onClick={async () => { try { await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }); } finally { router.push('/login'); } }} className="px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white rounded-lg font-medium transition-all duration-300">
+              <button onClick={async () => { try { await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }); } finally { router.push('/login'); } }} className="px-4 py-2 rounded-2xl border border-red-600 bg-red-600 text-white font-semibold shadow-sm transition-all duration-300 hover:bg-red-700">
                 🔐 Logout
               </button>
-              <button onClick={handleEditToggle} className="px-4 py-2 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white rounded-lg font-medium transition-all duration-300">
+              <button onClick={handleEditToggle} className="px-4 py-2 rounded-2xl border border-teal-600 bg-teal-600 text-white font-semibold shadow-[0_12px_28px_rgba(13,148,136,0.24)] transition-all duration-300 hover:bg-teal-700">
                 {editMode ? '✕ Cancel Edit' : '✏️ Edit Profile'}
               </button>
-              <button onClick={() => document.getElementById('services-editor')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} className="px-4 py-2 bg-white border border-teal-300 text-teal-800 rounded-lg font-medium transition-all duration-300">
+              <button onClick={() => document.getElementById('services-editor')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} className="px-4 py-2 rounded-2xl border border-slate-200 bg-white text-slate-800 font-semibold shadow-sm transition-all duration-300 hover:border-teal-200 hover:bg-slate-50">
                 🧹 Edit Services
               </button>
               {editMode && (
-                <button onClick={handleEditSave} disabled={saving} className="px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-lg font-medium disabled:opacity-50 transition-all duration-300">
+                <button onClick={handleEditSave} disabled={saving} className="px-4 py-2 rounded-2xl border border-emerald-600 bg-emerald-600 text-white font-semibold shadow-[0_12px_28px_rgba(5,150,105,0.22)] disabled:opacity-50 transition-all duration-300 hover:bg-emerald-700">
                   {saving ? '⏳ Saving...' : '💾 Save Profile'}
                 </button>
               )}
-              <button onClick={() => setShowDeleteModal(true)} className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg font-medium transition-all duration-300">
+              <button onClick={() => setShowDeleteModal(true)} className="px-4 py-2 rounded-2xl border border-red-200 bg-red-50 text-red-700 font-semibold shadow-sm transition-all duration-300 hover:bg-red-100">
                 🗑️ Delete Profile
               </button>
             </div>
@@ -701,22 +701,22 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
 
         {/* Delete Modal */}
         {showDeleteModal && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white/90 backdrop-blur-md border border-white/20 rounded-2xl shadow-2xl max-w-md w-full p-6">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm">
+            <div className="w-full max-w-md rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.18)]">
               <h3 className="text-2xl font-bold text-red-600 mb-4">⚠️ Delete Profile</h3>
-              <p className="text-gray-700 mb-4">This action cannot be undone.</p>
-              <p className="text-gray-700 mb-4">Type <strong>DELETE</strong> to confirm:</p>
+              <p className="text-slate-600 mb-4">This action cannot be undone.</p>
+              <p className="text-slate-600 mb-4">Type <strong>DELETE</strong> to confirm:</p>
               <input
                 type="text"
                 value={deleteConfirmText}
                 onChange={(e) => setDeleteConfirmText(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 mb-4"
+                className="mb-4 w-full rounded-2xl border border-slate-200 px-4 py-3 focus:border-red-500 focus:ring-4 focus:ring-red-100"
                 placeholder="Type DELETE"
               />
               <div className="flex gap-3">
                 <button
                   onClick={() => { setShowDeleteModal(false); setDeleteConfirmText(''); }}
-                  className="flex-1 px-4 py-2 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-lg"
+                  className="flex-1 px-4 py-2 rounded-2xl border border-slate-200 bg-slate-100 text-slate-800 font-semibold"
                 >
                   Cancel
                 </button>
@@ -742,7 +742,7 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
                     }
                   }}
                   disabled={deleteConfirmText !== 'DELETE' || deleting}
-                  className="flex-1 px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg disabled:opacity-50"
+                  className="flex-1 px-4 py-2 rounded-2xl border border-red-600 bg-red-600 text-white font-semibold disabled:opacity-50"
                 >
                   {deleting ? '🗑️ Deleting...' : '🗑️ Delete Profile'}
                 </button>
@@ -753,14 +753,14 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
 
         {/* Flash message */}
         {message && (
-          <div className={`mb-6 text-center text-white py-3 px-4 rounded-lg font-medium backdrop-blur-md border border-white/20 ${message.includes('✅') ? 'bg-green-500/80' : 'bg-red-500/80'}`}>
+          <div className={`mb-6 rounded-2xl border px-5 py-3 text-center font-medium shadow-sm ${message.includes('✅') ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-red-200 bg-red-50 text-red-700'}`}>
             {message}
           </div>
         )}
 
         {/* Premium upsell/status */}
 {!formData?.isPremium ? (
-  <div className="bg-gradient-to-r from-amber-400/20 to-amber-500/20 backdrop-blur-md border border-amber-400/30 text-amber-800 px-4 py-3 rounded-lg mb-6">
+  <div className="mb-6 rounded-[26px] border border-amber-200 bg-[linear-gradient(135deg,rgba(255,251,235,0.98),rgba(255,255,255,0.98))] px-5 py-4 text-amber-900 shadow-sm">
     <p className="mb-2 font-semibold">✨ You are using a Free Account</p>
     <p className="text-sm mb-3">
       Upgrade to set your diary up to <strong>{(Number(formData?.premiumWeeksAhead ?? 3) + 1)}</strong> weeks ahead, show a gallery, and support the platform.
@@ -781,13 +781,13 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
           alert('Something went wrong while starting your upgrade.');
         }
       }}
-      className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-6 py-2 rounded-lg"
+      className="rounded-2xl border border-amber-500 bg-amber-500 px-6 py-2.5 font-semibold text-white shadow-sm hover:bg-amber-600"
     >
       💎 Upgrade to Premium (£7.99/year)
     </button>
   </div>
 ) : (
-  <div className="bg-gradient-to-r from-green-400/20 to-green-500/20 backdrop-blur-md border border-green-400/30 text-green-800 px-4 py-3 rounded-lg mb-6">
+  <div className="mb-6 rounded-[26px] border border-emerald-200 bg-[linear-gradient(135deg,rgba(236,253,245,0.98),rgba(255,255,255,0.98))] px-5 py-4 text-emerald-900 shadow-sm">
     <div className="font-semibold mb-3">
       ✨ You are a Premium Cleaner! You can schedule up to{' '}
       <strong>{(Number(formData?.premiumWeeksAhead ?? 3) + 1)}</strong> weeks ahead.
@@ -813,7 +813,7 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
           alert('Something went wrong while opening the billing portal.');
         }
       }}
-      className="inline-flex items-center gap-2 bg-white/70 text-teal-800 border border-teal-300 px-4 py-2 rounded-lg hover:bg-white transition"
+      className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 font-semibold text-slate-800 shadow-sm transition hover:border-teal-200 hover:bg-slate-50"
     >
       🧾 Manage / Cancel Premium
     </button>
@@ -822,25 +822,25 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
 
 
         {/* Profile info */}
-        <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl mb-6 p-6">
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent mb-4">
+        <div className="rounded-[28px] border border-teal-100 bg-white/88 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] ring-1 ring-white mb-6">
+          <h2 className="text-2xl font-bold text-slate-900 mb-4">
             👤 Profile Information
           </h2>
 
           {/* Badges */}
           <div className="flex flex-wrap gap-2 mb-6">
             {formData.isPremium && (
-              <span className="inline-block text-xs font-semibold text-white px-3 py-1 rounded-full" style={{ background: 'linear-gradient(135deg,#F59E0B,#D97706)' }}>
+              <span className="inline-block text-xs font-semibold text-white px-3 py-1 rounded-full" style={{ background: 'linear-gradient(135deg,#f59e0b,#d97706)', boxShadow: '0 10px 24px rgba(245,158,11,0.18)' }}>
                 Premium Cleaner
               </span>
             )}
             {formData.businessInsurance && (
-              <span className="inline-block text-xs font-semibold text-white px-3 py-1 rounded-full" style={{ background: 'linear-gradient(135deg,#10B981,#059669)' }}>
+              <span className="inline-block text-xs font-semibold text-white px-3 py-1 rounded-full" style={{ background: 'linear-gradient(135deg,#10b981,#059669)', boxShadow: '0 10px 24px rgba(16,185,129,0.16)' }}>
                 ✔ Insured
               </span>
             )}
             {formData.dbsChecked && (
-              <span className="inline-block text-xs font-semibold text-white px-3 py-1 rounded-full" style={{ background: 'linear-gradient(135deg,#2563EB,#1D4ED8)' }}>
+              <span className="inline-block text-xs font-semibold text-white px-3 py-1 rounded-full" style={{ background: 'linear-gradient(135deg,#2563eb,#1d4ed8)', boxShadow: '0 10px 24px rgba(37,99,235,0.16)' }}>
                 ✔ DBS Checked
               </span>
             )}
@@ -849,74 +849,74 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <Field label="Real Name" editMode={editMode}>
               {editMode ? (
-                <input className="w-full p-3 bg-white/80 border rounded-lg" value={editData.realName || ''} onChange={(e) => handleInputChange('realName', e.target.value)} />
-              ) : <p className="text-gray-800 font-medium">{formData.realName || 'Not set'}</p>}
+                <input className="w-full p-3 rounded-2xl border border-slate-200 bg-white shadow-sm" value={editData.realName || ''} onChange={(e) => handleInputChange('realName', e.target.value)} />
+              ) : <p className="text-slate-800 font-medium">{formData.realName || 'Not set'}</p>}
             </Field>
 
             <Field label="⭐ Google Rating (0–5)" editMode={editMode}>
               {editMode ? (
-                <input type="number" step="0.1" min="0" max="5" className="w-full p-3 bg-white/80 border rounded-lg" value={editData.googleReviewRating || ''} onChange={(e) => handleInputChange('googleReviewRating', parseFloat(e.target.value))} />
-              ) : <p className="text-gray-800 font-medium">{formData.googleReviewRating ? `${formData.googleReviewRating} / 5` : 'Not set'}</p>}
+                <input type="number" step="0.1" min="0" max="5" className="w-full p-3 rounded-2xl border border-slate-200 bg-white shadow-sm" value={editData.googleReviewRating || ''} onChange={(e) => handleInputChange('googleReviewRating', parseFloat(e.target.value))} />
+              ) : <p className="text-slate-800 font-medium">{formData.googleReviewRating ? `${formData.googleReviewRating} / 5` : 'Not set'}</p>}
             </Field>
 
             <Field label="🧮 Review Count" editMode={editMode}>
               {editMode ? (
-                <input type="number" min="0" className="w-full p-3 bg-white/80 border rounded-lg" value={editData.googleReviewCount || ''} onChange={(e) => handleInputChange('googleReviewCount', parseInt(e.target.value))} />
-              ) : <p className="text-gray-800 font-medium">{formData.googleReviewCount ? `${formData.googleReviewCount} reviews` : 'Not set'}</p>}
+                <input type="number" min="0" className="w-full p-3 rounded-2xl border border-slate-200 bg-white shadow-sm" value={editData.googleReviewCount || ''} onChange={(e) => handleInputChange('googleReviewCount', parseInt(e.target.value))} />
+              ) : <p className="text-slate-800 font-medium">{formData.googleReviewCount ? `${formData.googleReviewCount} reviews` : 'Not set'}</p>}
             </Field>
 
             <Field wide label="🔗 Google Review Link" editMode={editMode}>
               {editMode ? (
-                <input type="url" className="w-full p-3 bg-white/80 border rounded-lg" value={editData.googleReviewUrl || ''} onChange={(e) => handleInputChange('googleReviewUrl', e.target.value)} placeholder="https://www.google.com/search?q=your+business" />
+                <input type="url" className="w-full p-3 rounded-2xl border border-slate-200 bg-white shadow-sm" value={editData.googleReviewUrl || ''} onChange={(e) => handleInputChange('googleReviewUrl', e.target.value)} placeholder="https://www.google.com/search?q=your+business" />
               ) : <p className="text-blue-600 underline break-words">{formData.googleReviewUrl || 'Not set'}</p>}
             </Field>
 
             <Field label="Company Name" editMode={editMode}>
               {editMode ? (
-                <input className="w-full p-3 bg-white/80 border rounded-lg" value={editData.companyName || ''} onChange={(e) => handleInputChange('companyName', e.target.value)} />
-              ) : <p className="text-gray-800 font-medium">{formData.companyName || 'Not set'}</p>}
+                <input className="w-full p-3 rounded-2xl border border-slate-200 bg-white shadow-sm" value={editData.companyName || ''} onChange={(e) => handleInputChange('companyName', e.target.value)} />
+              ) : <p className="text-slate-800 font-medium">{formData.companyName || 'Not set'}</p>}
             </Field>
 
             <Field label="Email" editMode={editMode}>
               {editMode ? (
-                <input type="email" className="w-full p-3 bg-white/80 border rounded-lg" value={editData.email || ''} onChange={(e) => handleInputChange('email', e.target.value)} />
-              ) : <p className="text-gray-800 font-medium">{formData.email || 'Not set'}</p>}
+                <input type="email" className="w-full p-3 rounded-2xl border border-slate-200 bg-white shadow-sm" value={editData.email || ''} onChange={(e) => handleInputChange('email', e.target.value)} />
+              ) : <p className="text-slate-800 font-medium">{formData.email || 'Not set'}</p>}
             </Field>
 
             <Field label="Phone" editMode={editMode}>
               {editMode ? (
-                <input type="tel" className="w-full p-3 bg-white/80 border rounded-lg" value={editData.phone || ''} onChange={(e) => handleInputChange('phone', e.target.value)} />
-              ) : <p className="text-gray-800 font-medium">{formData.phone || 'Not set'}</p>}
+                <input type="tel" className="w-full p-3 rounded-2xl border border-slate-200 bg-white shadow-sm" value={editData.phone || ''} onChange={(e) => handleInputChange('phone', e.target.value)} />
+              ) : <p className="text-slate-800 font-medium">{formData.phone || 'Not set'}</p>}
             </Field>
 
             <Field label="Hourly Rate (£)" editMode={editMode}>
               {editMode ? (
-                <input type="number" className="w-full p-3 bg-white/80 border rounded-lg" value={editData.rates || ''} onChange={(e) => handleInputChange('rates', e.target.value)} />
-              ) : <p className="text-gray-800 font-medium">£{formData.rates ?? '0'}</p>}
+                <input type="number" className="w-full p-3 rounded-2xl border border-slate-200 bg-white shadow-sm" value={editData.rates || ''} onChange={(e) => handleInputChange('rates', e.target.value)} />
+              ) : <p className="text-slate-800 font-medium">£{formData.rates ?? '0'}</p>}
             </Field>
 
             <Field label="Business Insurance" editMode={editMode}>
               {editMode ? (
-                <select className="w-full p-3 bg-white/80 border rounded-lg" value={editData.businessInsurance ? 'true' : 'false'} onChange={(e) => handleInputChange('businessInsurance', e.target.value === 'true')}>
+                <select className="w-full p-3 rounded-2xl border border-slate-200 bg-white shadow-sm" value={editData.businessInsurance ? 'true' : 'false'} onChange={(e) => handleInputChange('businessInsurance', e.target.value === 'true')}>
                   <option value="false">No</option>
                   <option value="true">Yes</option>
                 </select>
-              ) : <p className="text-gray-800 font-medium">{formData.businessInsurance ? 'Yes' : 'No'}</p>}
+              ) : <p className="text-slate-800 font-medium">{formData.businessInsurance ? 'Yes' : 'No'}</p>}
             </Field>
 
             <Field label="DBS Checked" editMode={editMode}>
               {editMode ? (
-                <select className="w-full p-3 bg-white/80 border rounded-lg" value={editData.dbsChecked ? 'true' : 'false'} onChange={(e) => handleInputChange('dbsChecked', e.target.value === 'true')}>
+                <select className="w-full p-3 rounded-2xl border border-slate-200 bg-white shadow-sm" value={editData.dbsChecked ? 'true' : 'false'} onChange={(e) => handleInputChange('dbsChecked', e.target.value === 'true')}>
                   <option value="false">No</option>
                   <option value="true">Yes</option>
                 </select>
-              ) : <p className="text-gray-800 font-medium">{formData.dbsChecked ? 'Yes' : 'No'}</p>}
+              ) : <p className="text-slate-800 font-medium">{formData.dbsChecked ? 'Yes' : 'No'}</p>}
             </Field>
 
             <Field wide label="Services Offered" editMode={editMode}>
               {editMode ? (
                 <input
-                  className="w-full p-3 bg-white/80 border rounded-lg"
+                  className="w-full p-3 rounded-2xl border border-slate-200 bg-white shadow-sm"
                   value={editData.services?.join(', ') || ''}
                   onChange={(e) => handleServicesChange(e.target.value)}
                   placeholder="e.g., Deep cleaning, Regular cleaning, Oven clean"
@@ -930,7 +930,7 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-800 font-medium">No services listed</p>
+                <p className="text-slate-800 font-medium">No services listed</p>
               )}
             </Field>
 
@@ -961,7 +961,7 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
                       const f = e.target.files?.[0];
                       if (f) { setSelectedFile(f); setImagePreview(URL.createObjectURL(f)); }
                     }}
-                    className="w-full p-3 bg-white/80 border rounded-lg"
+                    className="w-full p-3 rounded-2xl border border-slate-200 bg-white shadow-sm"
                   />
 
                   <div className="flex flex-wrap gap-3">
@@ -969,13 +969,13 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
                       {imageUploading ? '📤 Uploading...' : '📤 Upload New Picture'}
                     </button>
                     {imagePreview && (
-                      <button onClick={() => { setImagePreview(''); setSelectedFile(null); }} className="px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-lg">
+                      <button onClick={() => { setImagePreview(''); setSelectedFile(null); }} className="px-6 py-3 rounded-2xl border border-slate-200 bg-slate-100 text-slate-800 font-semibold">
                         🗑️ Cancel
                       </button>
                     )}
                   </div>
 
-                  <p className="text-sm text-gray-600">📝 Upload a professional headshot. Max 5MB.</p>
+                  <p className="text-sm text-slate-500">📝 Upload a professional headshot. Max 5MB.</p>
                 </div>
               </div>
             </Field>
@@ -985,14 +985,14 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
               {editMode ? (
                 <>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-                    <input className="w-full p-3 bg-white/80 border rounded-lg" placeholder="House/Number" value={editData.address?.houseNameNumber || ''} onChange={(e) => handleInputChange('address.houseNameNumber', e.target.value)} />
-                    <input className="w-full p-3 bg-white/80 border rounded-lg" placeholder="Street" value={editData.address?.street || ''} onChange={(e) => handleInputChange('address.street', e.target.value)} />
-                    <input className="w-full p-3 bg-white/80 border rounded-lg" placeholder="County" value={editData.address?.county || ''} onChange={(e) => handleInputChange('address.county', e.target.value)} />
-                    <input className="w-full p-3 bg-white/80 border rounded-lg" placeholder="Postcode" value={editData.address?.postcode || ''} onChange={(e) => handleInputChange('address.postcode', e.target.value)} />
+                    <input className="w-full p-3 rounded-2xl border border-slate-200 bg-white shadow-sm" placeholder="House/Number" value={editData.address?.houseNameNumber || ''} onChange={(e) => handleInputChange('address.houseNameNumber', e.target.value)} />
+                    <input className="w-full p-3 rounded-2xl border border-slate-200 bg-white shadow-sm" placeholder="Street" value={editData.address?.street || ''} onChange={(e) => handleInputChange('address.street', e.target.value)} />
+                    <input className="w-full p-3 rounded-2xl border border-slate-200 bg-white shadow-sm" placeholder="County" value={editData.address?.county || ''} onChange={(e) => handleInputChange('address.county', e.target.value)} />
+                    <input className="w-full p-3 rounded-2xl border border-slate-200 bg-white shadow-sm" placeholder="Postcode" value={editData.address?.postcode || ''} onChange={(e) => handleInputChange('address.postcode', e.target.value)} />
                   </div>
                 </>
               ) : (
-                <p className="text-gray-800 font-medium">
+                <p className="text-slate-800 font-medium">
                   {formData.address
                     ? `${formData.address.houseNameNumber || ''} ${formData.address.street || ''}, ${formData.address.county || ''} ${formData.address.postcode || ''}`.trim()
                     : 'Address not set'}
@@ -1006,13 +1006,13 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
                 <textarea
                   rows={4}
                   maxLength={1000}
-                  className="w-full p-3 bg-white/80 border rounded-lg resize-none"
+                  className="w-full p-3 rounded-2xl border border-slate-200 bg-white shadow-sm resize-none"
                   value={editData.bio || ''}
                   onChange={(e) => handleInputChange('bio', e.target.value)}
                   placeholder="Tell clients about your experience. Don’t include direct contact details."
                 />
               ) : (
-                <p className="text-gray-800 font-medium whitespace-pre-wrap">
+                <p className="text-slate-800 font-medium whitespace-pre-wrap">
                   {formData.bio || 'No public bio added yet.'}
                 </p>
               )}
@@ -1021,17 +1021,17 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
         </div>
 
         {/* Services summary */}
-        <div id="services-editor" className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl mb-6 p-6">
+        <div id="services-editor" className="rounded-[28px] border border-teal-100 bg-white/88 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] ring-1 ring-white mb-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-4">
             <div>
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent">
+              <h2 className="text-2xl font-bold text-slate-900">
                 🧹 Services
               </h2>
-              <p className="text-sm text-gray-600 mt-1">Your live service list. Use the dedicated services editor to change pricing, duration, and what is active.</p>
+              <p className="text-sm text-slate-500 mt-1">Your live service list. Use the dedicated services editor to change pricing, duration, and what is active.</p>
             </div>
             <button
               onClick={() => router.push('/cleaners/dashboard/services')}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-xl font-semibold transition-all"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-2xl border border-slate-200 bg-white text-slate-800 font-semibold shadow-sm transition-all hover:border-teal-200 hover:bg-slate-50"
             >
               <span>🧹</span>
               <span>Edit Services</span>
@@ -1043,21 +1043,21 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
               {formData.servicesDetailed.filter((s) => s.active !== false).map((svc, i) => (
                 <div key={i} className="rounded-xl border border-white/60 bg-white/70 p-4">
                   <div className="font-semibold text-gray-900">{svc.name || 'Untitled service'}</div>
-                  <div className="text-sm text-gray-600 mt-1">{svc.defaultDurationMins || 60} mins</div>
-                  <div className="text-sm text-gray-700 mt-1">{svc.price != null || svc.basePrice != null ? `£${svc.price ?? svc.basePrice}` : 'Price on request'}</div>
+                  <div className="text-sm text-slate-500 mt-1">{svc.defaultDurationMins || 60} mins</div>
+                  <div className="text-sm text-slate-600 mt-1">{svc.price != null || svc.basePrice != null ? `£${svc.price ?? svc.basePrice}` : 'Price on request'}</div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="rounded-xl border border-dashed border-gray-300 bg-white/60 p-5 text-gray-600">No active services listed yet.</div>
+            <div className="rounded-xl border border-dashed border-gray-300 bg-white/60 p-5 text-slate-500">No active services listed yet.</div>
           )}
         </div>
 
         {/* Gallery (Premium only) */}
         {formData.isPremium && (
-          <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl mb-6 p-6">
+          <div className="rounded-[28px] border border-teal-100 bg-white/88 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] ring-1 ring-white mb-6">
             <div className="flex items-center justify-between gap-3 mb-4">
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent">
+              <h2 className="text-2xl font-bold text-slate-900">
                 🖼️ Gallery (Premium)
               </h2>
 
@@ -1106,7 +1106,7 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
                 }}
                 className="border-2 border-dashed border-teal-300 rounded-xl p-6 text-center bg-white/60"
               >
-                <p className="text-gray-700 font-medium mb-1">Drag & drop photos here</p>
+                <p className="text-slate-600 font-medium mb-1">Drag & drop photos here</p>
                 <p className="text-sm text-gray-500">or click <span className="underline cursor-pointer" onClick={openFilePicker}>Insert picture</span></p>
 
                 {galleryUploading && (
@@ -1114,7 +1114,7 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
                     <div className="w-full h-3 bg-gray-200 rounded">
                       <div className="h-3 bg-teal-500 rounded" style={{ width: `${galleryProgress}%` }} />
                     </div>
-                    <p className="text-xs text-gray-600 mt-1">{galleryProgress}%</p>
+                    <p className="text-xs text-slate-500 mt-1">{galleryProgress}%</p>
                   </div>
                 )}
               </div>
@@ -1147,7 +1147,7 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
               {((editMode ? editData.photos : formData.photos) || []).length === 0 && (
                 <div className="col-span-full">
                   <div className="rounded-xl border border-dashed border-gray-300 p-8 text-center bg-white/60">
-                    <p className="text-gray-700 font-medium">No photos yet</p>
+                    <p className="text-slate-600 font-medium">No photos yet</p>
                     {editMode && (
                       <button
                         onClick={openFilePicker}
@@ -1169,19 +1169,19 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
 
 
         {/* Pending requests */}
-        <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl mb-6 p-6">
+        <div className="rounded-[28px] border border-teal-100 bg-white/88 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] ring-1 ring-white mb-6">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mb-4">
             <div>
               <h2 className="text-2xl font-bold bg-gradient-to-r from-amber-600 to-orange-700 bg-clip-text text-transparent">
                 ⏳ Pending booking requests
               </h2>
-              <p className="text-gray-600 mt-1">
+              <p className="text-slate-500 mt-1">
                 Client pays first, request stays pending, then you accept to capture payment or decline to release it.
               </p>
             </div>
             <button
               onClick={() => router.push('/cleaners/dashboard/services')}
-              className="flex items-center justify-center gap-3 px-5 py-4 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-xl font-semibold transition-all"
+              className="flex items-center justify-center gap-3 px-5 py-4 rounded-2xl border border-slate-200 bg-white text-slate-800 font-semibold shadow-sm transition-all hover:border-teal-200 hover:bg-slate-50"
             >
               <span className="text-xl">🧹</span>
               <span>Edit Services</span>
@@ -1201,18 +1201,18 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
           ) : (
             <div className="space-y-3">
               {pendingRequests.map((req) => (
-                <div key={req._id} className="rounded-xl bg-white/70 border border-white/60 p-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div key={req._id} className="rounded-xl rounded-2xl border border-slate-100 bg-slate-50/85 p-4 shadow-sm flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                   <div>
                     <div className="font-semibold text-gray-900">
                       {req.day} • {req.time || `${String(req.hour || '').padStart(2, '0')}:00`}
                     </div>
-                    <div className="text-sm text-gray-600 mt-1">
+                    <div className="text-sm text-slate-500 mt-1">
                       {req.serviceName || req.serviceKey || 'Cleaning request'}
                       {typeof req.amount === 'number' ? ` • £${Number(req.amount).toFixed(2)}` : ''}
                       {req.span ? ` • ${req.span} hr block` : ''}
                     </div>
                     {(req.customer?.name || req.customer?.phone || req.customer?.email) && (
-                      <div className="text-sm text-gray-600 mt-1 space-y-1">
+                      <div className="text-sm text-slate-500 mt-1 space-y-1">
                         <div>Customer: {req.customer?.name || 'Unknown'}</div>
                         {(req.customer?.phone || req.customer?.email) && (
                           <div>
@@ -1266,10 +1266,10 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
         </div>
 
         {/* Availability grid — honours overrides; week-0 override toggle */}
-        <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl mb-6 p-6">
+        <div className="rounded-[28px] border border-teal-100 bg-white/88 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] ring-1 ring-white mb-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-4">
             <div className="flex items-center gap-3">
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent">
+              <h2 className="text-2xl font-bold text-slate-900">
                 🗓️ Availability Management
               </h2>
               {formData?.dbsChecked && (
@@ -1325,11 +1325,11 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
             <div className="min-w-[820px]">
               {/* Header row with dates */}
               <div className="grid grid-cols-8 gap-2 mb-4">
-                <div className="font-semibold text-gray-700 text-center py-2">Time</div>
+                <div className="font-semibold text-slate-600 text-center py-2">Time</div>
                 {DAYS.map((d, idx) => {
                   const dateForDay = addDays(mondaySelected, idx);
                   return (
-                    <div key={d} className="font-semibold text-gray-700 text-center py-2 text-sm">
+                    <div key={d} className="font-semibold text-slate-600 text-center py-2 text-sm">
                       <div>{d.slice(0, 3)}</div>
                       <div className="text-xs text-gray-500">{fmtShort(dateForDay)}</div>
                     </div>
@@ -1339,7 +1339,7 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
 
               {HOURS.map((h) => (
                 <div key={h} className="grid grid-cols-8 gap-2 mb-2">
-                  <div className="font-medium text-gray-700 text-center py-3 bg-white/40 rounded-lg">{hourLabel(h)}</div>
+                  <div className="font-medium text-slate-600 text-center py-3 rounded-2xl border border-slate-100 bg-slate-50/85">{hourLabel(h)}</div>
                   {DAYS.map((day) => {
                     const slot = displayAvailability?.[day]?.[String(h)];
                     const statusVal = typeof slot === 'object' ? slot?.status : slot;
@@ -1363,8 +1363,8 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
                               : isAvailable
                               ? 'bg-green-100 text-green-800 border-green-300'                 // editable
                               : isUnavailable
-                              ? 'bg-gray-100 text-gray-600 border-gray-300'                    // editable
-                              : 'bg-gray-100 text-gray-600 border-gray-300'                    // not set
+                              ? 'bg-gray-100 text-slate-500 border-gray-300'                    // editable
+                              : 'bg-gray-100 text-slate-500 border-gray-300'                    // not set
                           }`}
                           title={
                             isPending ? 'Pending request'
@@ -1407,8 +1407,8 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
           </div>
 
           {/* Legend */}
-          <div className="mt-6 p-4 bg-white/40 rounded-lg">
-            <h3 className="font-semibold text-gray-700 mb-3">Legend:</h3>
+          <div className="mt-6 p-4 rounded-2xl border border-slate-100 bg-slate-50/85">
+            <h3 className="font-semibold text-slate-600 mb-3">Legend:</h3>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
               <Legend swatchClass="bg-green-100 border-green-300" label="Available" />
               <Legend swatchClass="bg-yellow-100 border-yellow-300" label="Pending" />
@@ -1427,30 +1427,30 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
           <StatCard icon="💎" title="Account Status" value={formData.isPremium ? '✨ Premium' : '🆓 Free'} />
         </div>
 
-        <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl mb-6 p-6">
+        <div className="rounded-[28px] border border-teal-100 bg-white/88 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] ring-1 ring-white mb-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-5">
             <div>
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent">⭐ Ratings & Reviews</h2>
-              <p className="text-sm text-gray-600 mt-1">This section reflects real reviews left through your booking flow.</p>
+              <h2 className="text-2xl font-bold text-slate-900">⭐ Ratings & Reviews</h2>
+              <p className="text-sm text-slate-500 mt-1">This section reflects real reviews left through your booking flow.</p>
             </div>
             <button
               onClick={() => router.push(`/cleaners/${formData._id}`)}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-white/70 border rounded-xl font-medium hover:bg-white"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 font-semibold text-slate-800 shadow-sm hover:border-teal-200 hover:bg-slate-50"
             >
               <span>View public profile</span>
             </button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
-            <div className="rounded-xl bg-white/70 border border-white/60 p-4">
+            <div className="rounded-xl rounded-2xl border border-slate-100 bg-slate-50/85 p-4 shadow-sm">
               <div className="text-sm text-gray-500">Average rating</div>
               <div className="text-3xl font-bold text-gray-900 mt-1">{reviewsSummary.count ? Number(reviewsSummary.average || 0).toFixed(1) : '—'}</div>
             </div>
-            <div className="rounded-xl bg-white/70 border border-white/60 p-4">
+            <div className="rounded-xl rounded-2xl border border-slate-100 bg-slate-50/85 p-4 shadow-sm">
               <div className="text-sm text-gray-500">Verified reviews</div>
               <div className="text-3xl font-bold text-gray-900 mt-1">{reviewsSummary.count || 0}</div>
             </div>
-            <div className="rounded-xl bg-white/70 border border-white/60 p-4">
+            <div className="rounded-xl rounded-2xl border border-slate-100 bg-slate-50/85 p-4 shadow-sm">
               <div className="text-sm text-gray-500">5 star reviews</div>
               <div className="text-3xl font-bold text-gray-900 mt-1">{Number(reviewsSummary.breakdown?.[5] || 0)}</div>
             </div>
@@ -1459,13 +1459,13 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
           {recentReviews.length ? (
             <div className="space-y-3">
               {recentReviews.map((review) => (
-                <div key={review._id} className="rounded-xl bg-white/70 border border-white/60 p-4">
+                <div key={review._id} className="rounded-xl rounded-2xl border border-slate-100 bg-slate-50/85 p-4 shadow-sm">
                   <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                     <div className="font-semibold text-gray-900">{'★'.repeat(Number(review.rating || 0))}{'☆'.repeat(Math.max(0, 5 - Number(review.rating || 0)))}</div>
                     <div className="text-sm text-gray-500">{review.createdAt ? new Date(review.createdAt).toLocaleDateString('en-GB') : ''}</div>
                   </div>
                   {review.serviceName ? <div className="text-sm text-teal-700 mt-1">{review.serviceName}</div> : null}
-                  <div className="text-sm text-gray-700 mt-2 whitespace-pre-wrap">{review.text || 'No written comment left.'}</div>
+                  <div className="text-sm text-slate-600 mt-2 whitespace-pre-wrap">{review.text || 'No written comment left.'}</div>
                   {Array.isArray(review.highlights) && review.highlights.length ? (
                     <div className="flex flex-wrap gap-2 mt-3">
                       {review.highlights.map((tag) => (
@@ -1477,40 +1477,40 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
               ))}
             </div>
           ) : (
-            <div className="rounded-xl border border-dashed border-gray-300 bg-white/60 p-5 text-gray-600">No verified reviews yet. Once a client leaves a review, it will appear here automatically.</div>
+            <div className="rounded-xl border border-dashed border-gray-300 bg-white/60 p-5 text-slate-500">No verified reviews yet. Once a client leaves a review, it will appear here automatically.</div>
           )}
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-XL p-6 mt-10">
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent mb-6">
+        <div className="rounded-[28px] border border-teal-100 bg-white/88 shadow-[0_20px_60px_rgba(15,23,42,0.08)] ring-1 ring-white p-6 mt-10">
+          <h2 className="text-2xl font-bold text-slate-900 mb-6">
             ⚡ Quick Actions
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <button
   onClick={() => router.push('/coming-soon?feature=Export%20My%20Data')}
-  className="flex items-center justify-center gap-3 px-5 py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl font-semibold transition-all"
+  className="flex items-center justify-center gap-3 px-5 py-4 rounded-2xl border border-slate-900 bg-slate-900 text-white font-semibold transition-all hover:bg-slate-800"
 >
   <span className="text-xl">📄</span>
   <span>Export My Data</span>
 </button>
             <button
               onClick={() => router.push('/cleaners/dashboard/services')}
-              className="flex items-center justify-center gap-3 px-5 py-4 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-xl font-semibold transition-all"
+              className="flex items-center justify-center gap-3 px-5 py-4 rounded-2xl border border-slate-200 bg-white text-slate-800 font-semibold shadow-sm transition-all hover:border-teal-200 hover:bg-slate-50"
             >
               <span className="text-xl">🧹</span>
               <span>Edit Services</span>
             </button>
             <button
               onClick={() => router.push('/cleaners/bookings')}
-              className="flex items-center justify-center gap-3 px-5 py-4 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-xl font-semibold transition-all"
+              className="flex items-center justify-center gap-3 px-5 py-4 rounded-2xl border border-emerald-600 bg-emerald-600 text-white font-semibold shadow-sm transition-all hover:bg-emerald-700"
             >
               <span className="text-xl">📋</span>
               <span>View All Bookings</span>
             </button>
             <button
               onClick={() => router.push('/cleaners/earnings')}
-              className="flex items-center justify-center gap-3 px-5 py-4 bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-700 hover:to-yellow-800 text-white rounded-xl font-semibold transition-all"
+              className="flex items-center justify-center gap-3 px-5 py-4 rounded-2xl border border-amber-200 bg-amber-50 text-amber-900 font-semibold shadow-sm transition-all hover:bg-amber-100"
             >
               <span className="text-xl">💰</span>
               <span>Check Earnings</span>
@@ -1528,7 +1528,7 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
 function Field({ label, children, wide, editMode }) {
   return (
     <div className={wide ? 'space-y-2 md:col-span-2 lg:col-span-3' : 'space-y-2'}>
-      <label className="text-sm font-medium text-gray-600">{label}</label>
+      <label className="text-sm font-medium text-slate-500">{label}</label>
       {children}
     </div>
   );
@@ -1536,12 +1536,12 @@ function Field({ label, children, wide, editMode }) {
 
 function StatCard({ icon, title, value, onClick, helpText = '' }) {
   return (
-    <button type="button" onClick={onClick} className="w-full bg-white/25 backdrop-blur-md border border-white/20 rounded-2xl shadow-2xl p-6 text-center hover:-translate-y-1 transition-all">
+    <button type="button" onClick={onClick} className="w-full w-full rounded-[24px] border border-teal-100 bg-white/88 p-6 text-center shadow-[0_18px_48px_rgba(15,23,42,0.08)] ring-1 ring-white transition-all hover:-translate-y-1 hover:shadow-[0_22px_54px_rgba(15,23,42,0.1)]">
       <div className="text-3xl mb-2">{icon}</div>
-      <h3 className="text-xl font-bold bg-gradient-to-r from-teal-600 to-teal-800 bg-clip-text text-transparent">
+      <h3 className="text-xl font-bold text-slate-900">
         {title}
       </h3>
-      <p className="text-2xl font-bold text-gray-800 mt-2">{value}</p>
+      <p className="text-2xl font-bold text-slate-800 mt-2">{value}</p>
       {helpText ? <p className="text-xs text-gray-500 mt-2">{helpText}</p> : null}
     </button>
   );
@@ -1551,7 +1551,7 @@ function Legend({ swatchClass, label }) {
   return (
     <div className="flex items-center gap-2">
       <div className={`w-4 h-4 rounded border ${swatchClass}`}></div>
-      <span className="text-gray-700">{label}</span>
+      <span className="text-slate-600">{label}</span>
     </div>
   );
 }

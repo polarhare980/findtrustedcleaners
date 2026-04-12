@@ -33,7 +33,7 @@ export default function CleanerDashboard() {
   if (loading) return <div className="p-6">Loading…</div>;
 
   return (
-    <main className="max-w-5xl mx-auto p-4">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(13,148,136,0.12),_transparent_34%),linear-gradient(180deg,#f8fffe_0%,#f2f7f6_100%)]"><div className="max-w-5xl mx-auto p-6">
       <h1 className="text-2xl font-bold mb-4">Cleaner Dashboard</h1>
       <section>
         <h2 className="font-semibold mb-3">Pending bookings</h2>
@@ -42,17 +42,17 @@ export default function CleanerDashboard() {
         ) : (
           <ul className="space-y-2">
             {pending.map(p => (
-              <li key={p._id} className="p-3 bg-white/70 rounded-xl border flex items-center justify-between">
+              <li key={p._id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm flex items-center justify-between">
                 <div>
                   <div className="font-medium">{p.day} at {String(p.hour).padStart(2,'0')}:00</div>
                   <div className="text-sm opacity-80">Client: {p.clientId}</div>
                 </div>
                 <div className="flex gap-2">
                   <form action={`/api/bookings/accept-order/${p._id}`} method="post">
-                    <button className="px-3 py-1 rounded-lg bg-green-600 text-white">Accept</button>
+                    <button className="px-3 py-1.5 rounded-xl border border-emerald-600 bg-emerald-600 text-white font-semibold">Accept</button>
                   </form>
                   <form action={`/api/bookings/accept-order/decline-order/${p._id}`} method="post">
-                    <button className="px-3 py-1 rounded-lg bg-red-600 text-white">Decline</button>
+                    <button className="px-3 py-1.5 rounded-xl border border-red-600 bg-red-600 text-white font-semibold">Decline</button>
                   </form>
                 </div>
               </li>
@@ -60,6 +60,6 @@ export default function CleanerDashboard() {
           </ul>
         )}
       </section>
-    </main>
+    </div></main>
   );
 }
