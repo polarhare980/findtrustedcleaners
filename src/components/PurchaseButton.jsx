@@ -182,9 +182,16 @@ export default function PurchaseButton({
       </button>
 
       {showPopup && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4" onClick={(e) => e.target === e.currentTarget && !loading && handleCancel()}>
-          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <div className="p-6 space-y-4">
+        <div
+          className="fixed inset-0 z-[9999] overflow-y-auto bg-black/50 p-4 backdrop-blur-sm"
+          onClick={(e) => e.target === e.currentTarget && !loading && handleCancel()}
+        >
+          <div className="flex min-h-full items-start justify-center py-4 sm:items-center">
+            <div
+              className="max-h-[calc(100dvh-2rem)] w-full max-w-lg overflow-y-auto overscroll-contain rounded-2xl bg-white shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="p-6 space-y-4">
               <div className="flex justify-between items-start gap-4">
                 <div>
                   <h2 className="text-2xl font-bold text-gray-800">Send booking request</h2>
@@ -243,6 +250,7 @@ export default function PurchaseButton({
                   </div>
                 </>
               )}
+              </div>
             </div>
           </div>
         </div>
