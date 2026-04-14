@@ -20,6 +20,7 @@ export default function BookingRequestPage() {
   const [customerName, setCustomerName] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
+  const [customerAddress, setCustomerAddress] = useState('');
   const [notes, setNotes] = useState('');
 
   const secureFetch = async (url, init) => {
@@ -66,6 +67,7 @@ export default function BookingRequestPage() {
           setCustomerName((prev) => prev || authData.user.fullName || authData.user.name || '');
           setCustomerEmail((prev) => prev || authData.user.email || '');
           setCustomerPhone((prev) => prev || authData.user.phone || '');
+          setCustomerAddress((prev) => prev || [authData.user?.address?.houseNameNumber, authData.user?.address?.street, authData.user?.address?.town, authData.user?.address?.county, authData.user?.address?.postcode].filter(Boolean).join(', '));
         } else {
           setViewerType('guest');
         }
@@ -143,6 +145,7 @@ export default function BookingRequestPage() {
           customerName,
           customerEmail,
           customerPhone,
+          customerAddress,
           notes,
         }),
       });
@@ -227,6 +230,16 @@ export default function BookingRequestPage() {
                     <input
                       value={customerPhone}
                       onChange={(e) => setCustomerPhone(e.target.value)}
+                      className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="mb-1.5 block text-sm font-medium text-slate-700">Address</label>
+                    <textarea
+                      value={customerAddress}
+                      onChange={(e) => setCustomerAddress(e.target.value)}
+                      rows={3}
+                      placeholder="House number, street, town, postcode"
                       className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none transition focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
                     />
                   </div>

@@ -51,7 +51,9 @@ export async function GET(req) {
           name: p?.clientId?.fullName || p?.guestName || '',
           email: p?.clientId?.email || p?.guestEmail || '',
           phone: p?.clientId?.phone || p?.guestPhone || '',
+          address: p?.serviceAddress || '',
         },
+        serviceAddress: p?.serviceAddress || '',
         notes: p?.notes || '',
         durationMins: Number(p?.durationMins || 0) || null,
       };

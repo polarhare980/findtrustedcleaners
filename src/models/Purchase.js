@@ -13,6 +13,7 @@ const PurchaseSchema = new mongoose.Schema(
     guestName: { type: String, trim: true },
     guestEmail: { type: String, trim: true, lowercase: true },
     guestPhone: { type: String, trim: true },
+    serviceAddress: { type: String, trim: true },
     cleanerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Cleaner', required: true, index: true },
 
     // Stripe refs (manual-capture flow)

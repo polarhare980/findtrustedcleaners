@@ -1221,6 +1221,7 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
                             {req.customer?.email ? `Email: ${req.customer.email}` : ''}
                           </div>
                         )}
+                        {req.customer?.address ? <div>Address: {req.customer.address}</div> : null}
                         {req.notes ? <div>Notes: {req.notes}</div> : null}
                       </div>
                     )}

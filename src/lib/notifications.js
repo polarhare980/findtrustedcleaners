@@ -25,6 +25,7 @@ function dashboardUrlForCleaner() {
 function bookingSummaryItems({ purchase, cleanerName, clientName, includeCleaner = true, includeClient = true }) {
   return [
     purchase?.serviceName ? `<li><strong>Service:</strong> ${purchase.serviceName}</li>` : '',
+    purchase?.serviceAddress ? `<li><strong>Address:</strong> ${purchase.serviceAddress}</li>` : '',
     purchase?.isoDate ? `<li><strong>Date:</strong> ${purchase.isoDate}</li>` : purchase?.day ? `<li><strong>Day:</strong> ${purchase.day}</li>` : '',
     purchase?.hour ? `<li><strong>Time:</strong> ${String(purchase.hour).padStart(2, '0')}:00</li>` : '',
     includeCleaner && cleanerName ? `<li><strong>Cleaner:</strong> ${cleanerName}</li>` : '',
@@ -35,6 +36,7 @@ function bookingSummaryItems({ purchase, cleanerName, clientName, includeCleaner
 function bookingSummaryLines({ purchase, cleanerName, clientName, includeCleaner = true, includeClient = true }) {
   return [
     purchase?.serviceName ? `Service: ${purchase.serviceName}` : null,
+    purchase?.serviceAddress ? `Address: ${purchase.serviceAddress}` : null,
     purchase?.isoDate ? `Date: ${purchase.isoDate}` : purchase?.day ? `Day: ${purchase.day}` : null,
     purchase?.hour ? `Time: ${String(purchase.hour).padStart(2, '0')}:00` : null,
     includeCleaner && cleanerName ? `Cleaner: ${cleanerName}` : null,

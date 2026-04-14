@@ -135,6 +135,7 @@ export async function POST(req) {
     customerName,
     customerEmail,
     customerPhone,
+    customerAddress,
     isoDate,
     serviceKey,
   } = body || {};
@@ -145,6 +146,7 @@ export async function POST(req) {
   const guestName = String(customerName || '').trim();
   const guestEmail = String(customerEmail || '').trim().toLowerCase();
   const guestPhone = String(customerPhone || '').trim();
+  const serviceAddress = String(customerAddress || '').trim();
 
   if (!isClientUser) {
     if (!guestName) return json({ success: false, message: 'Please enter your name.' }, 400);
@@ -213,6 +215,7 @@ export async function POST(req) {
     guestName: isClientUser ? (user.fullName || user.name || guestName || undefined) : guestName,
     guestEmail: isClientUser ? (user.email || guestEmail || undefined) : guestEmail,
     guestPhone: isClientUser ? (user.phone || guestPhone || undefined) : guestPhone,
+    serviceAddress: serviceAddress || (isClientUser ? [user?.address?.houseNameNumber, user?.address?.street, user?.address?.town, user?.address?.county, user?.address?.postcode].filter(Boolean).join(', ') || undefined : undefined),
     day,
     hour: startHourStr,
     isoDate: typeof isoDate === 'string' ? isoDate : undefined,

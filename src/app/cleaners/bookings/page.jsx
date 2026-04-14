@@ -144,10 +144,11 @@ export default function CleanerBookingsPage() {
 
                       <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                         <div className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Client</div>
-                        <div className="mt-2 text-sm font-semibold text-slate-900">{b.clientId?.fullName || 'Not available'}</div>
+                        <div className="mt-2 text-sm font-semibold text-slate-900">{b.customer?.name || 'Not available'}</div>
                         <div className="mt-1 space-y-1 text-sm text-slate-600">
-                          {b.clientId?.email ? <div>{b.clientId.email}</div> : null}
-                          {b.clientId?.phone ? <div>{b.clientId.phone}</div> : null}
+                          {b.customer?.email ? <div>{b.customer.email}</div> : null}
+                          {b.customer?.phone ? <div>{b.customer.phone}</div> : null}
+                          {b.customer?.address ? <div>{b.customer.address}</div> : null}
                         </div>
                       </div>
                     </div>

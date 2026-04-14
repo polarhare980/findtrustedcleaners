@@ -166,6 +166,7 @@ export async function PUT(req, context) {
         span: purchase.span,
         serviceKey: purchase.serviceKey,
         serviceName: purchase.serviceName || '',
+        serviceAddress: purchase.serviceAddress || '',
         durationMins: purchase.durationMins,
         bufferBeforeMins: purchase.bufferBeforeMins || 0,
         bufferAfterMins: purchase.bufferAfterMins || 0,
