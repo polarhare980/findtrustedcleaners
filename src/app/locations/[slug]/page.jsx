@@ -4,6 +4,79 @@ import Cleaner from '@/models/Cleaner';
 import CleanerProfile from '@/app/cleaners/[id]/CleanerProfile';
 import { buildServiceMarket } from '@/lib/serviceMarketplace';
 
+const CORE_LOCATIONS = {
+  worthing: {
+    name: 'Worthing',
+    nearby: ['Lancing', 'Shoreham-by-Sea', 'Littlehampton', 'Angmering'],
+    intro:
+      'FindTrustedCleaners.com helps you find cleaners in Worthing without the usual back-and-forth. You can check cleaner profiles, see live availability, and book cleaners near you for the jobs that matter most.',
+  },
+  lancing: {
+    name: 'Lancing',
+    nearby: ['Worthing', 'Shoreham-by-Sea', 'Littlehampton', 'Angmering'],
+    intro:
+      'If you need cleaners in Lancing, FindTrustedCleaners.com makes the process simpler. Compare local cleaner profiles, see who is available, and book cleaners near you without waiting around for quotes.',
+  },
+  'shoreham-by-sea': {
+    name: 'Shoreham-by-Sea',
+    nearby: ['Lancing', 'Worthing', 'Littlehampton', 'Angmering'],
+    intro:
+      'Looking for cleaners in Shoreham-by-Sea? FindTrustedCleaners.com lets you view cleaner profiles instantly, check real-time availability, and book cleaners near you in a faster, clearer way.',
+  },
+};
+
+const SERVICE_SECTIONS = [
+  {
+    key: 'end-of-tenancy-cleaning',
+    title: 'End of tenancy cleaning',
+    searchLabel: 'End of Tenancy',
+    description: (locationName) =>
+      `If you need end of tenancy cleaning in ${locationName}, you can compare local cleaners who handle full-property cleans before a move-out, handover, or tenancy check. It is a practical way to find reliable help quickly without chasing multiple companies for separate quotes.`,
+  },
+  {
+    key: 'deep-cleaning',
+    title: 'Deep cleaning',
+    searchLabel: 'Deep Cleaning',
+    description: (locationName) =>
+      `Deep cleaning in ${locationName} is ideal when your home needs more than a routine tidy-up. From kitchens and bathrooms to neglected high-touch areas, local cleaners can list one-off deep cleaning services clearly on their profile so you can compare the right fit.`,
+  },
+  {
+    key: 'regular-cleaning',
+    title: 'Regular domestic cleaning',
+    searchLabel: 'Domestic Cleaning',
+    description: (locationName) =>
+      `For regular domestic cleaning in ${locationName}, FindTrustedCleaners.com helps you browse house cleaners who suit your schedule. Whether you need weekly help, fortnightly visits, or ongoing support around work and family life, you can view availability before you book.`,
+  },
+  {
+    key: 'oven-cleaning',
+    title: 'Oven cleaning',
+    searchLabel: 'Oven Cleaning',
+    description: (locationName) =>
+      `Oven cleaning in ${locationName} is also covered, making it easier to find specialist help for one of the jobs people often put off. You can compare local cleaners and specialists who offer oven cleaning alongside broader household services.`,
+  },
+];
+
+const EXTRA_SERVICES = [
+  'Spring Cleaning',
+  'After-party Cleaning',
+  'Holiday Let Cleaning',
+  'Specialist Cleaning',
+  'Carpet Cleaning',
+  'Upholstery Cleaning',
+  'Mattress Cleaning',
+  'Curtain Cleaning',
+  'Mould Removal',
+  'Window Cleaning',
+  'Gutter Cleaning',
+  'Roof Cleaning',
+  'Pressure Washing',
+  'Car Valeting',
+  'Fleet Cleaning',
+  'Office Cleaning',
+  'Retail Cleaning',
+  'Gym Cleaning',
+];
+
 function isObjectIdLike(value = '') {
   return /^[a-f\d]{24}$/i.test(String(value || ''));
 }
@@ -21,6 +94,25 @@ function slugify(value = '') {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
+}
+
+function toDisplayLocation(slug) {
+  return CORE_LOCATIONS[slug]?.name || titleCase(slug);
+}
+
+function getLocationConfig(slug) {
+  const displayName = toDisplayLocation(slug);
+  const fallbackNearby = ['Worthing', 'Lancing', 'Shoreham-by-Sea', 'Littlehampton', 'Angmering'].filter(
+    (place) => slugify(place) !== slug
+  );
+
+  return {
+    name: displayName,
+    nearby: CORE_LOCATIONS[slug]?.nearby || fallbackNearby,
+    intro:
+      CORE_LOCATIONS[slug]?.intro ||
+      `FindTrustedCleaners.com helps you compare cleaners in ${displayName}, view profiles instantly, and book cleaners near you without waiting around for quotes.`,
+  };
 }
 
 async function getLocationData(slug) {
@@ -62,23 +154,12 @@ async function getLocationData(slug) {
 
 function buildFaqs(locationName, cleaners = []) {
   const count = cleaners.length;
-  const allServiceNames = Array.from(
-    new Set(
-      cleaners.flatMap((c) => [
-        ...(c.services || []),
-        ...((c.servicesDetailed || []).map((s) => s?.name).filter(Boolean)),
-      ])
-    )
-  ).slice(0, 8);
-
   const hourlyRates = cleaners
     .map((c) => Number(c?.rates))
     .filter((n) => Number.isFinite(n) && n > 0);
 
   const fromRate = hourlyRates.length ? Math.min(...hourlyRates) : null;
-
   const vettedCount = cleaners.filter((c) => c?.dbsChecked || c?.businessInsurance).length;
-
   const availableToday = cleaners.filter((c) => {
     const todayName = new Date().toLocaleDateString('en-GB', { weekday: 'long' });
     const day = c?.availability?.[todayName] || {};
@@ -87,62 +168,61 @@ function buildFaqs(locationName, cleaners = []) {
 
   return [
     {
-      question: `How much does a cleaner cost in ${locationName}?`,
+      question: `How much do cleaners cost in ${locationName}?`,
       answer:
         fromRate != null
-          ? `Some cleaners in ${locationName} list hourly prices from £${fromRate}. Others price by service, so check each profile for fixed-price options.`
-          : `Pricing in ${locationName} varies by cleaner and service type. Many cleaners use per-service pricing, so check each listing for the clearest quote.`,
+          ? `Some cleaners in ${locationName} list prices from £${fromRate} per hour, while others price by service. The easiest way to compare costs is to view each cleaner profile and check what is included.`
+          : `Cleaner pricing in ${locationName} depends on the service, property size, and whether the job is regular or one-off. Profiles on FindTrustedCleaners.com help you compare options more clearly before booking.`,
     },
     {
-      question: `How many cleaners are available in ${locationName}?`,
-      answer: `Currently, there ${count === 1 ? 'is 1 cleaner' : `are ${count} cleaners`} listed in ${locationName} on Find Trusted Cleaners.`,
-    },
-    {
-      question: `Can I book a cleaner in ${locationName} today?`,
+      question: 'Can I book a cleaner the same day?',
       answer:
         availableToday > 0
-          ? `Yes. ${availableToday} cleaner${availableToday === 1 ? '' : 's'} in ${locationName} currently show availability in their weekly schedule.`
-          : `Possibly, but live availability changes quickly. Check the latest profile calendars for ${locationName} before sending a request.`,
+          ? `Yes, same-day bookings may be possible when cleaners show open slots in their live availability. At the moment, ${availableToday} cleaner${availableToday === 1 ? '' : 's'} in ${locationName} currently show availability today.`
+          : `Possibly. Availability changes throughout the week, so the best approach is to check live cleaner calendars for ${locationName} and book as soon as you see a suitable slot.`,
     },
     {
       question: `Are cleaners in ${locationName} vetted?`,
       answer:
         vettedCount > 0
-          ? `${vettedCount} cleaner${vettedCount === 1 ? '' : 's'} in ${locationName} currently show DBS or insurance information on their public profile.`
-          : `Some cleaners add DBS and insurance details to their profile. Review each ${locationName} listing before booking.`,
+          ? `Some are. ${vettedCount} cleaner${vettedCount === 1 ? '' : 's'} in ${locationName} currently show DBS or insurance details on their public profile, helping you make a more informed choice.`
+          : `Cleaner profiles can show details such as reviews, insurance, and service information. It is always worth checking the individual profile before you book.`,
     },
     {
-      question: `What cleaning services are available in ${locationName}?`,
+      question: 'Do I need to get quotes?',
       answer:
-        allServiceNames.length
-          ? `Cleaners in ${locationName} currently offer services including ${allServiceNames.join(', ')}.`
-          : `Service availability in ${locationName} depends on the cleaners currently listed. Open each profile to see what they cover.`,
+        'No. One of the main benefits of FindTrustedCleaners.com is that you can view cleaner profiles, services, and availability directly instead of waiting for multiple quotes to come back.',
     },
     {
-      question: `How quickly can I find a cleaner in ${locationName}?`,
-      answer: `You can browse ${locationName} cleaners straight away, compare services, and send a booking request from the platform.`,
+      question: `What types of cleaning can I book in ${locationName}?`,
+      answer:
+        `You can find support for regular domestic cleaning, deep cleaning, end of tenancy cleaning, oven cleaning, and a wider range of specialist services depending on the cleaners currently listed in ${locationName}.`,
     },
     {
-      question: `Do cleaners bring their own supplies in ${locationName}?`,
-      answer: `That depends on the cleaner and the service type. Ask the cleaner directly through their profile before confirming a job in ${locationName}.`,
-    },
-    {
-      question: `How do I choose a cleaner in ${locationName}?`,
-      answer: `Compare service lists, availability, reviews, and vetting details. Then choose the ${locationName} cleaner whose pricing and schedule best fit your job.`,
+      question: `How do I choose a reliable cleaner in ${locationName}?`,
+      answer:
+        `Compare cleaner profiles carefully, including availability, reviews, services, and any vetting details shown. That gives you a clearer picture than a basic directory listing alone.`,
     },
   ];
 }
 
-function getNearbyLinks(locationSlug, cleaners = []) {
-  const allSlugs = Array.from(
+function getNearbyLinks(locationSlug) {
+  return ['worthing', 'lancing', 'shoreham-by-sea', 'littlehampton', 'angmering']
+    .filter((slug) => slug !== locationSlug)
+    .slice(0, 5);
+}
+
+function getCleanerServiceHighlights(cleaners = []) {
+  const names = Array.from(
     new Set(
-      cleaners
-        .map((c) => slugify(c?.address?.town || c?.address?.county || ''))
-        .filter(Boolean)
+      cleaners.flatMap((c) => [
+        ...(c.services || []),
+        ...((c.servicesDetailed || []).map((s) => s?.name).filter(Boolean)),
+      ])
     )
   );
 
-  return allSlugs.filter((s) => s && s !== locationSlug).slice(0, 6);
+  return names.slice(0, 12);
 }
 
 export async function generateMetadata({ params }) {
@@ -156,10 +236,15 @@ export async function generateMetadata({ params }) {
     };
   }
 
-  const locationName = titleCase(routeParam);
+  const locationSlug = slugify(routeParam);
+  const locationName = toDisplayLocation(locationSlug);
+
   return {
-    title: `Find Cleaners in ${locationName} | Find Trusted Cleaners`,
-    description: `Browse trusted cleaners in ${locationName}, compare services, and check availability.`,
+    title: `Cleaners in ${locationName} | Find Trusted Cleaners`,
+    description: `Find cleaners in ${locationName}. View live availability, compare profiles, and book instantly with no waiting for quotes.`,
+    alternates: {
+      canonical: `/locations/${locationSlug}`,
+    },
     robots: 'index,follow',
   };
 }
@@ -173,26 +258,13 @@ export default async function Page({ params }) {
   }
 
   const locationSlug = slugify(routeParam);
-  const locationName = titleCase(locationSlug);
+  const location = getLocationConfig(locationSlug);
+  const locationName = location.name;
   const cleaners = await getLocationData(locationSlug);
-
-  if (!cleaners.length) {
-    return (
-      <main className="max-w-4xl mx-auto px-6 py-12">
-        <h1 className="text-3xl font-bold text-teal-900 mb-4">
-          No cleaners found in {locationName}
-        </h1>
-        <p className="text-slate-700">
-          This location page is only published when real cleaner supply exists.
-        </p>
-      </main>
-    );
-  }
-
   const faqItems = buildFaqs(locationName, cleaners);
   const serviceMarket = buildServiceMarket(cleaners, 10);
-  const nearbyLinks = getNearbyLinks(locationSlug, cleaners);
-  const shouldNoindex = cleaners.length < 2;
+  const nearbyLinks = getNearbyLinks(locationSlug);
+  const serviceHighlights = getCleanerServiceHighlights(cleaners);
 
   const faqSchema = {
     '@context': 'https://schema.org',
@@ -207,88 +279,234 @@ export default async function Page({ params }) {
     })),
   };
 
+  const localBusinessSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'LocalBusiness',
+    name: `Find Trusted Cleaners ${locationName}`,
+    url: `https://www.findtrustedcleaners.com/locations/${locationSlug}`,
+    image: 'https://www.findtrustedcleaners.com/og-image.jpg',
+    areaServed: [
+      locationName,
+      ...location.nearby,
+    ].map((place) => ({
+      '@type': 'City',
+      name: place,
+    })),
+    brand: {
+      '@type': 'Brand',
+      name: 'FindTrustedCleaners.com',
+    },
+    serviceType: [
+      'End of tenancy cleaning',
+      'Deep cleaning',
+      'Regular domestic cleaning',
+      'Oven cleaning',
+    ],
+  };
+
   return (
     <main className="max-w-6xl mx-auto px-6 py-10">
-      {shouldNoindex ? <meta name="robots" content="noindex,follow" /> : null}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }}
+      />
 
-      <header className="mb-8">
-        <h1 className="text-4xl font-bold text-teal-900 mb-3">
-          Find cleaners in {locationName}
-        </h1>
-        <p className="text-slate-700 max-w-3xl">
-          Browse real cleaner supply in {locationName}. Compare services, pricing style,
-          and weekly availability before sending a booking request.
+      <header className="mb-8 rounded-3xl border border-teal-100 bg-white p-8 shadow-sm">
+        <p className="mb-3 text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">
+          Local cleaners with availability
         </p>
+        <h1 className="mb-4 text-4xl font-bold text-teal-900">
+          Find Trusted Cleaners in {locationName}
+        </h1>
+        <p className="max-w-3xl text-slate-700">
+          {location.intro}
+        </p>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Link
+            href={`/cleaners?postcode=${encodeURIComponent(locationName)}`}
+            className="inline-flex rounded-xl bg-teal-600 px-5 py-3 font-semibold text-white"
+          >
+            View available cleaners
+          </Link>
+          <Link
+            href={`/cleaners?postcode=${encodeURIComponent(locationName)}`}
+            className="inline-flex rounded-xl border border-teal-200 bg-white px-5 py-3 font-semibold text-teal-700"
+          >
+            Book instantly
+          </Link>
+        </div>
       </header>
 
-      <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-10">
-        {cleaners.map((cleaner) => (
-          <article
-            key={cleaner._id}
-            className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
-          >
-            <div className="flex items-start justify-between gap-3 mb-3">
-              <div>
-                <h2 className="text-lg font-semibold text-slate-900">
-                  {cleaner.companyName || cleaner.realName}
-                </h2>
-                <p className="text-sm text-slate-500">
-                  {cleaner.address?.town ||
-                    cleaner.address?.county ||
-                    cleaner.address?.postcode ||
-                    'Location not set'}
-                </p>
-              </div>
-              {cleaner.isPremium ? (
-                <span className="text-xs rounded-full bg-amber-100 text-amber-800 px-2 py-1">
-                  Premium
-                </span>
-              ) : null}
-            </div>
-
-            {cleaner.rates ? (
-              <p className="text-sm text-slate-700 mb-2">
-                <strong>Hourly rate:</strong> £{cleaner.rates}
-              </p>
-            ) : null}
-
-            {cleaner.servicesDetailed?.length ? (
-              <ul className="text-sm text-slate-700 space-y-1 mb-4">
-                {cleaner.servicesDetailed.slice(0, 4).map((svc) => (
-                  <li key={svc.key || svc.name}>
-                    {svc.name} · {svc.defaultDurationMins || 60} mins
-                    {svc.price != null ? ` · £${svc.price}` : ''}
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-
-            <Link
-              href={`/cleaners/${cleaner._id}`}
-              className="inline-flex rounded-xl bg-teal-600 text-white px-4 py-2 font-medium"
-            >
-              View profile
-            </Link>
-          </article>
-        ))}
+      <section className="mb-10 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+        <h2 className="mb-4 text-2xl font-bold text-teal-900">Why choose FindTrustedCleaners.com in {locationName}?</h2>
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="rounded-2xl bg-slate-50 p-5">
+            <h3 className="mb-2 text-lg font-semibold text-slate-900">Real-time cleaner availability</h3>
+            <p className="text-slate-700">See which local cleaners in {locationName} are actually available before you enquire, helping you move faster when you need domestic cleaning, deep cleaning, or end of tenancy cleaning.</p>
+          </div>
+          <div className="rounded-2xl bg-slate-50 p-5">
+            <h3 className="mb-2 text-lg font-semibold text-slate-900">No waiting for quotes</h3>
+            <p className="text-slate-700">Instead of filling out forms and waiting around, you can compare cleaners directly and choose the right fit for your property, schedule, and budget.</p>
+          </div>
+          <div className="rounded-2xl bg-slate-50 p-5">
+            <h3 className="mb-2 text-lg font-semibold text-slate-900">Transparent cleaner profiles</h3>
+            <p className="text-slate-700">Profiles make it easier to compare services, ratings, prices, and availability. That means fewer surprises and a clearer path to booking cleaners near you.</p>
+          </div>
+          <div className="rounded-2xl bg-slate-50 p-5">
+            <h3 className="mb-2 text-lg font-semibold text-slate-900">Local trusted cleaners</h3>
+            <p className="text-slate-700">Whether you are in {locationName} itself or nearby, the platform helps connect you with local cleaners who cover the surrounding area and show their services clearly.</p>
+          </div>
+        </div>
       </section>
 
-      {serviceMarket.length ? (
+      <section className="mb-10 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+        <h2 className="mb-6 text-2xl font-bold text-teal-900">Cleaning services available in {locationName}</h2>
+        <div className="grid gap-6 md:grid-cols-2">
+          {SERVICE_SECTIONS.map((service) => (
+            <div key={service.key} className="rounded-2xl border border-slate-200 p-5">
+              <h3 className="mb-2 text-xl font-semibold text-slate-900">{service.title}</h3>
+              <p className="mb-4 text-slate-700">{service.description(locationName)}</p>
+              <Link
+                href={`/services/${service.key}`}
+                className="font-medium text-teal-700 underline underline-offset-4"
+              >
+                Learn more about {service.title.toLowerCase()}
+              </Link>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-8 rounded-2xl bg-slate-50 p-5">
+          <h3 className="mb-2 text-lg font-semibold text-slate-900">More services listed by cleaners on the platform</h3>
+          <p className="text-slate-700">
+            Depending on the cleaner, you may also find services such as {EXTRA_SERVICES.join(', ')}.
+            {serviceHighlights.length
+              ? ` Current cleaner profiles in ${locationName} also mention ${serviceHighlights.join(', ')}.`
+              : ''}
+          </p>
+        </div>
+      </section>
+
+      <section className="mb-10 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+        <h2 className="mb-6 text-2xl font-bold text-teal-900">How it works</h2>
+        <div className="grid gap-4 md:grid-cols-3">
+          {[
+            {
+              title: '1. Search your area',
+              text: `Start with ${locationName} and look for cleaners covering your postcode or nearby streets.`,
+            },
+            {
+              title: '2. View cleaner availability',
+              text: 'Check live availability, compare profiles, and see which cleaners match your timing and service needs.',
+            },
+            {
+              title: '3. Book instantly',
+              text: 'Choose the cleaner that fits and move ahead without the usual delay of quote chasing.',
+            },
+          ].map((step) => (
+            <div key={step.title} className="rounded-2xl bg-slate-50 p-5">
+              <h3 className="mb-2 text-lg font-semibold text-slate-900">{step.title}</h3>
+              <p className="text-slate-700">{step.text}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="mb-10 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+        <h2 className="mb-4 text-2xl font-bold text-teal-900">Local cleaning coverage around {locationName}</h2>
+        <p className="text-slate-700">
+          This page is designed for people searching for reliable cleaners in {locationName}, but it also supports nearby demand across {location.nearby.join(', ')}. That local relevance matters when you want affordable cleaning services nearby and need to see local cleaners with availability rather than broad, generic directory listings.
+        </p>
+        <p className="mt-4 text-slate-700">
+          You can also browse nearby location pages for <Link href="/locations/worthing" className="text-teal-700 underline underline-offset-4">Worthing</Link>, <Link href="/locations/lancing" className="text-teal-700 underline underline-offset-4">Lancing</Link>, <Link href="/locations/shoreham-by-sea" className="text-teal-700 underline underline-offset-4">Shoreham-by-Sea</Link>, <Link href="/locations/littlehampton" className="text-teal-700 underline underline-offset-4">Littlehampton</Link>, and <Link href="/locations/angmering" className="text-teal-700 underline underline-offset-4">Angmering</Link>.
+        </p>
+      </section>
+
+      {cleaners.length ? (
         <section className="mb-10">
           <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">Popular service options in {locationName}</p>
-              <h2 className="text-2xl font-bold text-teal-900">Quick compare cards for fixed-price and specialist work</h2>
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">Live marketplace listings</p>
+              <h2 className="text-2xl font-bold text-teal-900">Cleaner profiles currently visible in {locationName}</h2>
             </div>
             <Link
               href={`/cleaners?postcode=${encodeURIComponent(locationName)}`}
               className="inline-flex rounded-xl border border-teal-200 bg-white px-4 py-2 font-medium text-teal-700"
             >
-              View all local cleaners
+              View available cleaners
+            </Link>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {cleaners.map((cleaner) => (
+              <article
+                key={cleaner._id}
+                className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+              >
+                <div className="mb-3 flex items-start justify-between gap-3">
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900">
+                      {cleaner.companyName || cleaner.realName}
+                    </h3>
+                    <p className="text-sm text-slate-500">
+                      {cleaner.address?.town ||
+                        cleaner.address?.county ||
+                        cleaner.address?.postcode ||
+                        'Location not set'}
+                    </p>
+                  </div>
+                  {cleaner.isPremium ? (
+                    <span className="rounded-full bg-amber-100 px-2 py-1 text-xs text-amber-800">
+                      Premium
+                    </span>
+                  ) : null}
+                </div>
+
+                {cleaner.rates ? (
+                  <p className="mb-2 text-sm text-slate-700">
+                    <strong>Hourly rate:</strong> £{cleaner.rates}
+                  </p>
+                ) : null}
+
+                {cleaner.servicesDetailed?.length ? (
+                  <ul className="mb-4 space-y-1 text-sm text-slate-700">
+                    {cleaner.servicesDetailed.slice(0, 4).map((svc) => (
+                      <li key={svc.key || svc.name}>
+                        {svc.name}
+                        {svc.price != null ? ` · £${svc.price}` : ''}
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+
+                <Link
+                  href={`/cleaners/${cleaner._id}`}
+                  className="inline-flex rounded-xl bg-teal-600 px-4 py-2 font-medium text-white"
+                >
+                  View profile
+                </Link>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {serviceMarket.length ? (
+        <section className="mb-10 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">Popular local service options</p>
+              <h2 className="text-2xl font-bold text-teal-900">Quick compare cards for {locationName}</h2>
+            </div>
+            <Link
+              href="/blog/how-to-hire-a-cleaner"
+              className="inline-flex rounded-xl border border-slate-200 bg-white px-4 py-2 font-medium text-teal-700"
+            >
+              Read our cleaner hiring guide
             </Link>
           </div>
 
@@ -299,30 +517,28 @@ export default async function Page({ params }) {
                 href={`/cleaners?postcode=${encodeURIComponent(locationName)}&service=${encodeURIComponent(service.label)}`}
                 className="min-w-[240px] rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:border-teal-200"
               >
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-teal-700">{service.cleanerCount} cleaner{service.cleanerCount === 1 ? '' : 's'}</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-teal-700">
+                  {service.cleanerCount} cleaner{service.cleanerCount === 1 ? '' : 's'}
+                </p>
                 <h3 className="mt-2 text-lg font-semibold text-slate-900">{service.label}</h3>
-                <div className="mt-4 text-3xl font-bold text-slate-900">{service.minPrice != null ? `£${service.minPrice}` : 'Quote'}</div>
-                <p className="mt-1 text-sm text-slate-500">{service.minPrice != null ? 'from listed profile prices' : 'pricing shown on profile'}</p>
-                {service.avgDurationMins ? (
-                  <p className="mt-3 text-sm text-slate-600">Typical duration around {service.avgDurationMins} minutes</p>
-                ) : null}
+                <div className="mt-4 text-3xl font-bold text-slate-900">
+                  {service.minPrice != null ? `£${service.minPrice}` : 'Profile pricing'}
+                </div>
+                <p className="mt-1 text-sm text-slate-500">
+                  {service.minPrice != null ? 'from listed profile prices' : 'check cleaner profile for pricing'}
+                </p>
               </Link>
             ))}
           </div>
         </section>
       ) : null}
 
-      <section className="mb-10">
-        <h2 className="text-2xl font-bold text-teal-900 mb-4">
-          Frequently Asked Questions About Cleaners in {locationName}
-        </h2>
+      <section className="mb-10 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+        <h2 className="mb-4 text-2xl font-bold text-teal-900">Frequently asked questions about cleaners in {locationName}</h2>
         <div className="space-y-4">
           {faqItems.map((item) => (
-            <div
-              key={item.question}
-              className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
-            >
-              <h3 className="font-semibold text-slate-900 mb-2">{item.question}</h3>
+            <div key={item.question} className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+              <h3 className="mb-2 font-semibold text-slate-900">{item.question}</h3>
               <p className="text-slate-700">{item.answer}</p>
             </div>
           ))}
@@ -330,8 +546,8 @@ export default async function Page({ params }) {
       </section>
 
       {nearbyLinks.length ? (
-        <section>
-          <h2 className="text-2xl font-bold text-teal-900 mb-4">Nearby areas</h2>
+        <section className="mb-10 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+          <h2 className="mb-4 text-2xl font-bold text-teal-900">Explore nearby areas</h2>
           <div className="flex flex-wrap gap-3">
             {nearbyLinks.map((slug) => (
               <Link
@@ -339,12 +555,33 @@ export default async function Page({ params }) {
                 href={`/locations/${slug}`}
                 className="rounded-full border border-slate-300 bg-white px-4 py-2 text-slate-700"
               >
-                Also find cleaners in {titleCase(slug)}
+                Cleaners in {toDisplayLocation(slug)}
               </Link>
             ))}
           </div>
         </section>
       ) : null}
+
+      <section className="rounded-3xl border border-teal-100 bg-teal-50 p-8 shadow-sm">
+        <h2 className="mb-3 text-2xl font-bold text-teal-900">Ready to book a cleaner in {locationName}?</h2>
+        <p className="max-w-3xl text-slate-700">
+          Skip the waiting, compare local cleaner profiles, and use FindTrustedCleaners.com to move straight to the next step with more confidence.
+        </p>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Link
+            href={`/cleaners?postcode=${encodeURIComponent(locationName)}`}
+            className="inline-flex rounded-xl bg-teal-600 px-5 py-3 font-semibold text-white"
+          >
+            View available cleaners
+          </Link>
+          <Link
+            href={`/cleaners?postcode=${encodeURIComponent(locationName)}`}
+            className="inline-flex rounded-xl border border-teal-200 bg-white px-5 py-3 font-semibold text-teal-700"
+          >
+            Book instantly
+          </Link>
+        </div>
+      </section>
     </main>
   );
 }

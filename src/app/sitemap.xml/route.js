@@ -12,6 +12,9 @@ export async function GET() {
     `${BASE}/contact`,
     `${BASE}/privacy`,
     `${BASE}/terms`,
+    `${BASE}/locations/worthing`,
+    `${BASE}/locations/lancing`,
+    `${BASE}/locations/shoreham-by-sea`,
   ];
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
