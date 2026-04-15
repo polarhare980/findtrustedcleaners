@@ -4,6 +4,32 @@ export async function GET() {
   const BASE =
     process.env.NEXT_PUBLIC_SITE_URL || "https://www.findtrustedcleaners.com";
 
+  const serviceUrls = [
+    'regular-house-cleaning',
+    'regular-cleaning',
+    'deep-cleaning',
+    'spring-cleaning',
+    'end-of-tenancy',
+    'end-of-tenancy-cleaning',
+    'after-party-cleaning',
+    'holiday-let-cleaning',
+    'oven-cleaning',
+    'carpet-cleaning',
+    'upholstery-cleaning',
+    'mattress-cleaning',
+    'curtain-cleaning',
+    'mould-removal',
+    'window-cleaning',
+    'gutter-cleaning',
+    'roof-cleaning',
+    'pressure-washing',
+    'car-valeting',
+    'fleet-cleaning',
+    'office-cleaning',
+    'retail-cleaning',
+    'gym-cleaning',
+  ].map((slug) => `${BASE}/services/${slug}`);
+
   const urls = [
     `${BASE}/`,
     `${BASE}/cleaners`,
@@ -12,9 +38,11 @@ export async function GET() {
     `${BASE}/contact`,
     `${BASE}/privacy`,
     `${BASE}/terms`,
+    `${BASE}/services`,
     `${BASE}/locations/worthing`,
     `${BASE}/locations/lancing`,
     `${BASE}/locations/shoreham-by-sea`,
+    ...serviceUrls,
   ];
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
