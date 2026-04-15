@@ -5,6 +5,12 @@ import { ALL_SERVICE_OPTIONS, SERVICE_CATEGORIES } from '@/lib/serviceOptions';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.findtrustedcleaners.com';
 
+const CORE_LOCATION_LINKS = [
+  { href: '/locations/worthing', label: 'Worthing' },
+  { href: '/locations/lancing', label: 'Lancing' },
+  { href: '/locations/shoreham-by-sea', label: 'Shoreham-by-Sea' },
+];
+
 const SERVICE_ALIASES = {
   'regular-cleaning': 'Regular House Cleaning',
   'regular-house-cleaning': 'Regular House Cleaning',
@@ -390,7 +396,18 @@ export default async function ServicePage({ params }) {
           <div className="rounded-[32px] border border-white/70 bg-white/90 p-8 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
             <h2 className="mb-4 text-2xl font-bold tracking-tight text-teal-900">Service coverage and local support</h2>
             <p className="text-slate-700">This service is available across multiple areas including Worthing, Lancing, Shoreham-by-Sea, Littlehampton and surrounding locations. That helps this page support local intent as well as broader UK searches for {serviceLower}.</p>
-            <p className="mt-4 text-slate-700">You can also explore nearby location pages for <Link href="/locations/worthing" className="text-teal-700 underline underline-offset-4">Worthing</Link>, <Link href="/locations/lancing" className="text-teal-700 underline underline-offset-4">Lancing</Link>, and <Link href="/locations/shoreham-by-sea" className="text-teal-700 underline underline-offset-4">Shoreham-by-Sea</Link> if you want cleaners with more local relevance.</p>
+            <p className="mt-4 text-slate-700">{formatServiceLocationIntro(serviceName)}</p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              {CORE_LOCATION_LINKS.map((location) => (
+                <Link
+                  key={location.href}
+                  href={location.href}
+                  className="rounded-full border border-teal-200 bg-teal-50 px-4 py-2 font-medium text-teal-800 transition hover:border-teal-300 hover:bg-white"
+                >
+                  {serviceName} in {location.label}
+                </Link>
+              ))}
+            </div>
           </div>
 
           <aside className="rounded-[32px] border border-white/70 bg-white/90 p-8 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">

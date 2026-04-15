@@ -25,6 +25,13 @@ const CORE_LOCATIONS = {
   },
 };
 
+const CORE_SERVICE_LINKS = [
+  { href: '/services/end-of-tenancy-cleaning', label: 'End of tenancy cleaning' },
+  { href: '/services/deep-cleaning', label: 'Deep cleaning' },
+  { href: '/services/regular-cleaning', label: 'Regular cleaning' },
+  { href: '/services/oven-cleaning', label: 'Oven cleaning' },
+];
+
 const SERVICE_SECTIONS = [
   {
     key: 'end-of-tenancy-cleaning',
@@ -249,6 +256,10 @@ export async function generateMetadata({ params }) {
   };
 }
 
+function formatLocationServiceIntro(locationName) {
+  return `Popular cleaning services in ${locationName} include end of tenancy cleaning, deep cleaning, regular cleaning and oven cleaning. You can explore each service page to compare what is available before choosing a cleaner.`;
+}
+
 export default async function Page({ params }) {
   const resolvedParams = await params;
   const routeParam = decodeURIComponent(resolvedParams?.slug || '');
@@ -424,6 +435,22 @@ export default async function Page({ params }) {
         <p className="mt-4 text-slate-700">
           You can also browse nearby location pages for <Link href="/locations/worthing" className="text-teal-700 underline underline-offset-4">Worthing</Link>, <Link href="/locations/lancing" className="text-teal-700 underline underline-offset-4">Lancing</Link>, <Link href="/locations/shoreham-by-sea" className="text-teal-700 underline underline-offset-4">Shoreham-by-Sea</Link>, <Link href="/locations/littlehampton" className="text-teal-700 underline underline-offset-4">Littlehampton</Link>, and <Link href="/locations/angmering" className="text-teal-700 underline underline-offset-4">Angmering</Link>.
         </p>
+      </section>
+
+      <section className="mb-10 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+        <h2 className="mb-4 text-2xl font-bold text-teal-900">Popular cleaning services in {locationName}</h2>
+        <p className="text-slate-700">{formatLocationServiceIntro(locationName)}</p>
+        <div className="mt-6 flex flex-wrap gap-3">
+          {CORE_SERVICE_LINKS.map((service) => (
+            <Link
+              key={service.href}
+              href={service.href}
+              className="rounded-full border border-teal-200 bg-teal-50 px-4 py-2 font-medium text-teal-800 transition hover:border-teal-300 hover:bg-white"
+            >
+              {service.label}
+            </Link>
+          ))}
+        </div>
       </section>
 
       {cleaners.length ? (
