@@ -174,7 +174,15 @@ export default function HomeClient() {
                 <span className="ftc-chip">Cleaner approval before payment</span>
               </div>
             </div>
-            <button onClick={() => router.push(`/cleaners?postcode=${encodeURIComponent(postcode)}${serviceType ? `&service=${encodeURIComponent(serviceType)}` : ''}`)} className="ftc-button-primary w-full lg:w-auto">Search now</button>
+            <div className="flex w-full flex-col gap-3 lg:w-auto">
+              <button onClick={() => router.push(`/cleaners?postcode=${encodeURIComponent(postcode)}${serviceType ? `&service=${encodeURIComponent(serviceType)}` : ''}`)} className="ftc-button-primary w-full lg:w-auto">Search now</button>
+              <Link
+                href="/services"
+                className="inline-flex items-center justify-center rounded-2xl border border-teal-200 bg-teal-50/80 px-4 py-3 text-sm font-semibold text-teal-800 shadow-sm transition hover:-translate-y-0.5 hover:border-teal-300 hover:bg-white"
+              >
+                Browse cleaning services
+              </Link>
+            </div>
           </div>
         </div>
       </section>
@@ -190,8 +198,6 @@ export default function HomeClient() {
           </>
         )}
       />
-
-      
 
       <section className="site-section pb-8">
         <div className="overflow-hidden rounded-[34px] border border-white/70 bg-white/90 shadow-[0_22px_70px_rgba(15,23,42,0.08)] backdrop-blur-xl">
@@ -320,7 +326,6 @@ export default function HomeClient() {
           ))}
         </div>
       </section>
-
 
       <section className="site-section py-8">
         <div className="surface-muted p-8">

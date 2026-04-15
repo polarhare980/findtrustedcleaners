@@ -48,6 +48,7 @@ export default function PublicHeader() {
     () => [
       { href: '/', label: 'Home' },
       { href: '/cleaners', label: 'Find a cleaner' },
+      { href: '/services', label: 'Cleaning services' },
       { href: '/register/cleaners', label: 'List your business' },
       { href: '/register/client', label: 'Register as client' },
       { href: '/how-it-works', label: 'How it works' },
