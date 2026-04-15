@@ -42,6 +42,11 @@ export async function GET() {
     `${BASE}/locations/worthing`,
     `${BASE}/locations/lancing`,
     `${BASE}/locations/shoreham-by-sea`,
+    `${BASE}/locations/littlehampton`,
+    `${BASE}/locations/angmering`,
+    `${BASE}/locations/rustington`,
+    `${BASE}/locations/bognor-regis`,
+    `${BASE}/locations/chichester`,
     ...serviceUrls,
   ];
 

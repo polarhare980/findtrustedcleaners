@@ -4,10 +4,12 @@ import Cleaner from '@/models/Cleaner';
 import CleanerProfile from '@/app/cleaners/[id]/CleanerProfile';
 import { buildServiceMarket } from '@/lib/serviceMarketplace';
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.findtrustedcleaners.com';
+
 const CORE_LOCATIONS = {
   worthing: {
     name: 'Worthing',
-    nearby: ['Lancing', 'Shoreham-by-Sea', 'Littlehampton', 'Angmering'],
+    nearby: ['Lancing', 'Shoreham-by-Sea', 'Littlehampton', 'Angmering', 'Rustington'],
     intro:
       'FindTrustedCleaners.com helps you find cleaners in Worthing without the usual back-and-forth. You can check cleaner profiles, see live availability, and book cleaners near you for the jobs that matter most.',
   },
@@ -19,9 +21,39 @@ const CORE_LOCATIONS = {
   },
   'shoreham-by-sea': {
     name: 'Shoreham-by-Sea',
-    nearby: ['Lancing', 'Worthing', 'Littlehampton', 'Angmering'],
+    nearby: ['Lancing', 'Worthing', 'Littlehampton', 'Angmering', 'Chichester'],
     intro:
       'Looking for cleaners in Shoreham-by-Sea? FindTrustedCleaners.com lets you view cleaner profiles instantly, check real-time availability, and book cleaners near you in a faster, clearer way.',
+  },
+  littlehampton: {
+    name: 'Littlehampton',
+    nearby: ['Angmering', 'Rustington', 'Worthing', 'Bognor Regis'],
+    intro:
+      'Looking for cleaners in Littlehampton? FindTrustedCleaners.com helps you compare local cleaner profiles, check real-time availability, and book with less delay when you need reliable domestic help.',
+  },
+  angmering: {
+    name: 'Angmering',
+    nearby: ['Rustington', 'Littlehampton', 'Worthing', 'Lancing'],
+    intro:
+      'If you need cleaners in Angmering, FindTrustedCleaners.com gives you a simpler way to compare trusted local options, view availability, and move straight to booking without the usual quote chasing.',
+  },
+  rustington: {
+    name: 'Rustington',
+    nearby: ['Littlehampton', 'Angmering', 'Worthing', 'Bognor Regis'],
+    intro:
+      'FindTrustedCleaners.com makes it easier to find cleaners in Rustington, compare local profiles, and book with confidence when you want clear availability and a more direct route to trusted help.',
+  },
+  'bognor-regis': {
+    name: 'Bognor Regis',
+    nearby: ['Chichester', 'Littlehampton', 'Rustington', 'Worthing'],
+    intro:
+      'Searching for cleaners in Bognor Regis? FindTrustedCleaners.com helps you check profiles, compare services, and book cleaners near you with live availability shown up front.',
+  },
+  chichester: {
+    name: 'Chichester',
+    nearby: ['Bognor Regis', 'Shoreham-by-Sea', 'Littlehampton', 'Worthing'],
+    intro:
+      'FindTrustedCleaners.com helps you find cleaners in Chichester with a clearer booking journey, giving you local profiles, real-time availability, and a faster way to compare trusted providers.',
   },
 };
 
@@ -107,11 +139,14 @@ function toDisplayLocation(slug) {
   return CORE_LOCATIONS[slug]?.name || titleCase(slug);
 }
 
+const ALL_LOCATION_SLUGS = Object.keys(CORE_LOCATIONS);
+
 function getLocationConfig(slug) {
   const displayName = toDisplayLocation(slug);
-  const fallbackNearby = ['Worthing', 'Lancing', 'Shoreham-by-Sea', 'Littlehampton', 'Angmering'].filter(
-    (place) => slugify(place) !== slug
-  );
+  const fallbackNearby = ALL_LOCATION_SLUGS
+    .filter((placeSlug) => placeSlug !== slug)
+    .slice(0, 5)
+    .map((placeSlug) => CORE_LOCATIONS[placeSlug]?.name || titleCase(placeSlug));
 
   return {
     name: displayName,
@@ -214,9 +249,13 @@ function buildFaqs(locationName, cleaners = []) {
 }
 
 function getNearbyLinks(locationSlug) {
-  return ['worthing', 'lancing', 'shoreham-by-sea', 'littlehampton', 'angmering']
-    .filter((slug) => slug !== locationSlug)
-    .slice(0, 5);
+  const configuredNearby = (CORE_LOCATIONS[locationSlug]?.nearby || [])
+    .map((place) => slugify(place))
+    .filter((slug) => slug && slug !== locationSlug);
+
+  const fallbackNearby = ALL_LOCATION_SLUGS.filter((slug) => slug !== locationSlug);
+
+  return Array.from(new Set([...configuredNearby, ...fallbackNearby])).slice(0, 5);
 }
 
 function getCleanerServiceHighlights(cleaners = []) {
@@ -230,6 +269,11 @@ function getCleanerServiceHighlights(cleaners = []) {
   );
 
   return names.slice(0, 12);
+}
+
+
+export function generateStaticParams() {
+  return ALL_LOCATION_SLUGS.map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({ params }) {
@@ -247,8 +291,8 @@ export async function generateMetadata({ params }) {
   const locationName = toDisplayLocation(locationSlug);
 
   return {
-    title: `Cleaners in ${locationName} | Find Trusted Cleaners`,
-    description: `Find cleaners in ${locationName}. View live availability, compare profiles, and book instantly with no waiting for quotes.`,
+    title: `Find Trusted Cleaners in ${locationName}`,
+    description: `Find trusted cleaners in ${locationName}. View live availability, compare local profiles, and book online without waiting for quotes.`,
     alternates: {
       canonical: `/locations/${locationSlug}`,
     },
@@ -294,8 +338,8 @@ export default async function Page({ params }) {
     '@context': 'https://schema.org',
     '@type': 'LocalBusiness',
     name: `Find Trusted Cleaners ${locationName}`,
-    url: `https://www.findtrustedcleaners.com/locations/${locationSlug}`,
-    image: 'https://www.findtrustedcleaners.com/og-image.jpg',
+    url: `${SITE_URL}/locations/${locationSlug}`,
+    image: `${SITE_URL}/og-image.jpg`,
     areaServed: [
       locationName,
       ...location.nearby,
@@ -433,7 +477,15 @@ export default async function Page({ params }) {
           This page is designed for people searching for reliable cleaners in {locationName}, but it also supports nearby demand across {location.nearby.join(', ')}. That local relevance matters when you want affordable cleaning services nearby and need to see local cleaners with availability rather than broad, generic directory listings.
         </p>
         <p className="mt-4 text-slate-700">
-          You can also browse nearby location pages for <Link href="/locations/worthing" className="text-teal-700 underline underline-offset-4">Worthing</Link>, <Link href="/locations/lancing" className="text-teal-700 underline underline-offset-4">Lancing</Link>, <Link href="/locations/shoreham-by-sea" className="text-teal-700 underline underline-offset-4">Shoreham-by-Sea</Link>, <Link href="/locations/littlehampton" className="text-teal-700 underline underline-offset-4">Littlehampton</Link>, and <Link href="/locations/angmering" className="text-teal-700 underline underline-offset-4">Angmering</Link>.
+          You can also browse nearby location pages for{' '}
+          {nearbyLinks.map((slug, index) => (
+            <span key={slug}>
+              <Link href={`/locations/${slug}`} className="text-teal-700 underline underline-offset-4">
+                {toDisplayLocation(slug)}
+              </Link>
+              {index < nearbyLinks.length - 2 ? ', ' : index === nearbyLinks.length - 2 ? ' and ' : ''}
+            </span>
+          ))}.
         </p>
       </section>
 
