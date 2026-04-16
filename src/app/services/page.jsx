@@ -36,6 +36,19 @@ export default function ServicesIndexPage() {
       </section>
 
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className="mb-8 rounded-[32px] border border-white/70 bg-white/90 p-8 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">Core local pages</p>
+          <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">Browse these services in our lead coverage areas</h2>
+          <p className="mt-3 max-w-3xl text-slate-600">We are building the strongest internal link loop around Worthing, Lancing, Shoreham-by-Sea and nearby towns so these service pages support local intent as well as wider UK searches.</p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link href="/locations/worthing" className="rounded-full border border-teal-200 bg-teal-50 px-4 py-2 font-medium text-teal-800 transition hover:border-teal-300 hover:bg-white">Worthing</Link>
+            <Link href="/locations/lancing" className="rounded-full border border-teal-200 bg-teal-50 px-4 py-2 font-medium text-teal-800 transition hover:border-teal-300 hover:bg-white">Lancing</Link>
+            <Link href="/locations/shoreham-by-sea" className="rounded-full border border-teal-200 bg-teal-50 px-4 py-2 font-medium text-teal-800 transition hover:border-teal-300 hover:bg-white">Shoreham-by-Sea</Link>
+            <Link href="/locations/littlehampton" className="rounded-full border border-teal-200 bg-teal-50 px-4 py-2 font-medium text-teal-800 transition hover:border-teal-300 hover:bg-white">Littlehampton</Link>
+            <Link href="/locations/angmering" className="rounded-full border border-teal-200 bg-teal-50 px-4 py-2 font-medium text-teal-800 transition hover:border-teal-300 hover:bg-white">Angmering</Link>
+          </div>
+        </div>
+
         <div className="grid gap-6">
           {Object.entries(SERVICE_CATEGORIES).map(([category, services]) => (
             <section key={category} className="rounded-[32px] border border-white/70 bg-white/90 p-8 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">

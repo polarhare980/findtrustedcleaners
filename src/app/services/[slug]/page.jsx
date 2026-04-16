@@ -392,6 +392,28 @@ export default async function ServicePage({ params }) {
           </div>
         </section>
 
+        <section className="mb-10 rounded-[32px] border border-teal-100 bg-teal-50/80 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.06)]">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-3xl">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">Internal link hub</p>
+              <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">Use this page to jump into our lead local areas</h2>
+              <p className="mt-3 text-slate-700">Looking for {serviceLower} in Worthing, Lancing, Shoreham-by-Sea or nearby towns? Use the location pages below to see local cleaner coverage and move into live profiles faster.</p>
+            </div>
+            <Link href="/services" className="inline-flex rounded-xl border border-teal-200 bg-white px-5 py-3 font-semibold text-teal-700">Browse all services</Link>
+          </div>
+          <div className="mt-6 flex flex-wrap gap-3">
+            {[...CORE_LOCATION_LINKS, { href: '/locations/littlehampton', label: 'Littlehampton' }, { href: '/locations/angmering', label: 'Angmering' }, { href: '/locations/rustington', label: 'Rustington' }].map((location) => (
+              <Link
+                key={location.href}
+                href={location.href}
+                className="rounded-full border border-teal-200 bg-white px-4 py-2 font-medium text-teal-800 transition hover:border-teal-300 hover:bg-teal-50"
+              >
+                {serviceName} in {location.label}
+              </Link>
+            ))}
+          </div>
+        </section>
+
         <section className="mb-10 grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
           <div className="rounded-[32px] border border-white/70 bg-white/90 p-8 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
             <h2 className="mb-4 text-2xl font-bold tracking-tight text-teal-900">Service coverage and local support</h2>

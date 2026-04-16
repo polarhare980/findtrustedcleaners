@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import PublicHeader from '@/components/PublicHeader';
+import PublicFooter from '@/components/PublicFooter';
 import { connectToDatabase } from '@/lib/db';
 import Cleaner from '@/models/Cleaner';
 import CleanerProfile from '@/app/cleaners/[id]/CleanerProfile';
@@ -258,6 +260,23 @@ function getNearbyLinks(locationSlug) {
   return Array.from(new Set([...configuredNearby, ...fallbackNearby])).slice(0, 5);
 }
 
+
+function getTodayAvailabilityCount(cleaners = []) {
+  const todayName = new Date().toLocaleDateString('en-GB', { weekday: 'long' });
+  return cleaners.filter((c) => Object.values(c?.availability?.[todayName] || {}).some((v) => v === true)).length;
+}
+
+function getThisWeekAvailabilityCount(cleaners = []) {
+  return cleaners.filter((c) =>
+    Object.values(c?.availability || {}).some((day) => Object.values(day || {}).some((value) => value === true))
+  ).length;
+}
+
+function getFromRate(cleaners = []) {
+  const hourlyRates = cleaners.map((c) => Number(c?.rates)).filter((n) => Number.isFinite(n) && n > 0);
+  return hourlyRates.length ? Math.min(...hourlyRates) : null;
+}
+
 function getCleanerServiceHighlights(cleaners = []) {
   const names = Array.from(
     new Set(
@@ -320,6 +339,10 @@ export default async function Page({ params }) {
   const serviceMarket = buildServiceMarket(cleaners, 10);
   const nearbyLinks = getNearbyLinks(locationSlug);
   const serviceHighlights = getCleanerServiceHighlights(cleaners);
+  const liveTodayCount = getTodayAvailabilityCount(cleaners);
+  const liveThisWeekCount = getThisWeekAvailabilityCount(cleaners);
+  const fromRate = getFromRate(cleaners);
+  const worthingFlagship = locationSlug === 'worthing';
 
   const faqSchema = {
     '@context': 'https://schema.org',
@@ -360,7 +383,9 @@ export default async function Page({ params }) {
   };
 
   return (
-    <main className="max-w-6xl mx-auto px-6 py-10">
+    <main className="min-h-screen bg-[linear-gradient(180deg,#f7fbfb_0%,#f8fafc_42%,#f8fafc_100%)] text-slate-900">
+      <PublicHeader />
+      <div className="max-w-6xl mx-auto px-6 py-10">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
@@ -371,6 +396,9 @@ export default async function Page({ params }) {
       />
 
       <header className="mb-8 rounded-3xl border border-teal-100 bg-white p-8 shadow-sm">
+        {worthingFlagship ? (
+          <div className="mb-5 inline-flex rounded-full border border-teal-200 bg-teal-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-teal-800">Worthing flagship location page</div>
+        ) : null}
         <p className="mb-3 text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">
           Local cleaners with availability
         </p>
@@ -397,6 +425,24 @@ export default async function Page({ params }) {
       </header>
 
       <section className="mb-10 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+        <div className="mb-6 grid gap-4 md:grid-cols-3">
+          <div className="rounded-2xl border border-teal-100 bg-teal-50/80 p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-teal-700">Available today</p>
+            <div className="mt-2 text-3xl font-bold text-slate-900">{liveTodayCount}</div>
+            <p className="mt-2 text-sm text-slate-600">Cleaner{liveTodayCount === 1 ? '' : 's'} currently showing an open slot today in {locationName}.</p>
+          </div>
+          <div className="rounded-2xl border border-teal-100 bg-teal-50/80 p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-teal-700">Available this week</p>
+            <div className="mt-2 text-3xl font-bold text-slate-900">{liveThisWeekCount}</div>
+            <p className="mt-2 text-sm text-slate-600">Cleaner{liveThisWeekCount === 1 ? '' : 's'} with at least one visible slot this week.</p>
+          </div>
+          <div className="rounded-2xl border border-teal-100 bg-teal-50/80 p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-teal-700">From hourly rate</p>
+            <div className="mt-2 text-3xl font-bold text-slate-900">{fromRate != null ? `£${fromRate}` : 'Profile pricing'}</div>
+            <p className="mt-2 text-sm text-slate-600">Based on visible cleaner pricing currently listed for {locationName}.</p>
+          </div>
+        </div>
+
         <h2 className="mb-4 text-2xl font-bold text-teal-900">Why choose FindTrustedCleaners.com in {locationName}?</h2>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="rounded-2xl bg-slate-50 p-5">
@@ -467,6 +513,28 @@ export default async function Page({ params }) {
               <h3 className="mb-2 text-lg font-semibold text-slate-900">{step.title}</h3>
               <p className="text-slate-700">{step.text}</p>
             </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="mb-10 rounded-3xl border border-teal-100 bg-teal-50/80 p-8 shadow-sm">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-3xl">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">Internal link loop</p>
+            <h2 className="mt-2 text-2xl font-bold text-teal-900">Jump from {locationName} into the core service pages</h2>
+            <p className="mt-3 text-slate-700">This location page links directly into the four service pages we want ranking hardest, while those service pages link back into key local areas such as {locationName}, Worthing, Lancing, and Shoreham-by-Sea.</p>
+          </div>
+          <Link href="/services" className="inline-flex rounded-xl border border-teal-200 bg-white px-5 py-3 font-semibold text-teal-700">Browse all services</Link>
+        </div>
+        <div className="mt-6 flex flex-wrap gap-3">
+          {CORE_SERVICE_LINKS.map((service) => (
+            <Link
+              key={service.href}
+              href={service.href}
+              className="rounded-full border border-teal-200 bg-white px-4 py-2 font-medium text-teal-800 transition hover:border-teal-300 hover:bg-teal-50"
+            >
+              {service.label}
+            </Link>
           ))}
         </div>
       </section>
@@ -661,6 +729,8 @@ export default async function Page({ params }) {
           </Link>
         </div>
       </section>
+      </div>
+      <PublicFooter />
     </main>
   );
 }

@@ -12,24 +12,33 @@ export default function PublicFooter() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-8 text-sm sm:grid-cols-3">
+          <div className="grid grid-cols-2 gap-8 text-sm sm:grid-cols-4">
             <FooterGroup title="Browse" links={[
               ['Find a cleaner', '/cleaners'],
+              ['Cleaning services', '/services'],
               ['How it works', '/how-it-works'],
-              ['FAQ', '/faq'],
               ['Contact', '/contact'],
             ]} />
-            <FooterGroup title="Account" links={[
+            <FooterGroup title="Popular locations" links={[
+              ['Worthing', '/locations/worthing'],
+              ['Lancing', '/locations/lancing'],
+              ['Shoreham-by-Sea', '/locations/shoreham-by-sea'],
+              ['Littlehampton', '/locations/littlehampton'],
+            ]} />
+            <FooterGroup title="Core services" links={[
+              ['End of tenancy cleaning', '/services/end-of-tenancy-cleaning'],
+              ['Deep cleaning', '/services/deep-cleaning'],
+              ['Regular cleaning', '/services/regular-cleaning'],
+              ['Oven cleaning', '/services/oven-cleaning'],
+            ]} />
+            <FooterGroup title="Account & legal" links={[
               ['Login', '/login'],
               ['Register as client', '/register/client'],
               ['Register as cleaner', '/register/cleaners'],
-              ['Blog', '/blog'],
-            ]} />
-            <FooterGroup title="Legal" links={[
               ['Privacy policy', '/privacy-policy'],
               ['Cookie policy', '/cookie-policy'],
               ['Terms', '/terms'],
-              ['Sitemap', '/sitemap'],
+              ['Blog', '/blog'],
             ]} />
           </div>
         </div>

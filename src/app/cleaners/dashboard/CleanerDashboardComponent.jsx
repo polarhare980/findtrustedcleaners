@@ -783,7 +783,7 @@ const maxAhead = formData?.isPremium ? Number(formData?.premiumWeeksAhead ?? 3) 
       }}
       className="rounded-2xl border border-amber-500 bg-amber-500 px-6 py-2.5 font-semibold text-white shadow-sm hover:bg-amber-600"
     >
-      💎 Upgrade to Premium (£7.99/year)
+      💎 Upgrade to Premium (£7.99/per month)
     </button>
   </div>
 ) : (

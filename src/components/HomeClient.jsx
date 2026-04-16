@@ -17,6 +17,25 @@ const PURCHASES_API = (id) => `/api/public/purchases/cleaners/${id}`;
 const HOURS = Array.from({ length: 13 }, (_, i) => String(7 + i));
 const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 
+const CORE_LOCATION_LINKS = [
+  { href: '/locations/worthing', label: 'Worthing' },
+  { href: '/locations/lancing', label: 'Lancing' },
+  { href: '/locations/shoreham-by-sea', label: 'Shoreham-by-Sea' },
+  { href: '/locations/littlehampton', label: 'Littlehampton' },
+  { href: '/locations/angmering', label: 'Angmering' },
+  { href: '/locations/rustington', label: 'Rustington' },
+  { href: '/locations/bognor-regis', label: 'Bognor Regis' },
+  { href: '/locations/chichester', label: 'Chichester' },
+];
+
+const CORE_SERVICE_LINKS = [
+  { href: '/services/end-of-tenancy-cleaning', label: 'End of tenancy cleaning' },
+  { href: '/services/deep-cleaning', label: 'Deep cleaning' },
+  { href: '/services/regular-cleaning', label: 'Regular cleaning' },
+  { href: '/services/oven-cleaning', label: 'Oven cleaning' },
+];
+
+
 function getMonday(d = new Date()) {
   const date = new Date(d);
   const day = date.getDay();
@@ -353,6 +372,58 @@ export default function HomeClient() {
         onToggleFavourite={handleToggleFavourite}
         onBookingRequest={handleBookingRequest}
       />
+
+
+      <section className="site-section py-8">
+        <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+          <section className="rounded-[32px] border border-white/70 bg-white/90 p-8 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">Double down on local intent</p>
+            <h2 className="mt-2 text-3xl font-bold text-slate-900">Start with the areas we are building out hardest</h2>
+            <p className="mt-4 max-w-3xl text-slate-600">Our core location pages are designed to support local search intent and help you jump straight into the strongest live marketplace areas first.</p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              {CORE_LOCATION_LINKS.map((location) => (
+                <Link
+                  key={location.href}
+                  href={location.href}
+                  className="rounded-full border border-teal-200 bg-teal-50 px-4 py-2 text-sm font-semibold text-teal-800 transition hover:-translate-y-0.5 hover:border-teal-300 hover:bg-white"
+                >
+                  Cleaners in {location.label}
+                </Link>
+              ))}
+            </div>
+          </section>
+
+          <section className="rounded-[32px] border border-white/70 bg-white/90 p-8 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">Core services</p>
+            <h2 className="mt-2 text-3xl font-bold text-slate-900">Browse the main booking pages</h2>
+            <p className="mt-4 text-slate-600">These are the four service pages we want Google and visitors reaching quickly from all over the site.</p>
+            <div className="mt-6 grid gap-3">
+              {CORE_SERVICE_LINKS.map((service) => (
+                <Link
+                  key={service.href}
+                  href={service.href}
+                  className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-800 transition hover:-translate-y-0.5 hover:border-teal-200 hover:bg-white hover:text-teal-800"
+                >
+                  {service.label}
+                </Link>
+              ))}
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section className="site-section py-8">
+        <div className="rounded-[32px] border border-white/70 bg-white/90 p-8 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-3xl">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">Worthing flagship page</p>
+              <h2 className="mt-2 text-3xl font-bold text-slate-900">See the strongest local marketplace page in action</h2>
+              <p className="mt-4 text-slate-600">Worthing is being treated as the lead local page, with service links, live cleaner visibility, nearby area support, and a stronger route into bookable profiles.</p>
+            </div>
+            <Link href="/locations/worthing" className="ftc-button-primary">View cleaners in Worthing</Link>
+          </div>
+        </div>
+      </section>
 
       <section className="site-section py-12">
         <div className="rounded-[32px] border border-white/70 bg-white/88 p-8 text-center shadow-[0_24px_70px_rgba(15,23,42,0.09)] backdrop-blur-xl sm:p-10">
