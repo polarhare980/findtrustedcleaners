@@ -377,9 +377,9 @@ export default function HomeClient() {
       <section className="site-section py-8">
         <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
           <section className="rounded-[32px] border border-white/70 bg-white/90 p-8 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">Double down on local intent</p>
-            <h2 className="mt-2 text-3xl font-bold text-slate-900">Start with the areas we are building out hardest</h2>
-            <p className="mt-4 max-w-3xl text-slate-600">Our core location pages are designed to support local search intent and help you jump straight into the strongest live marketplace areas first.</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">Find Trusted Cleaners Near You</p>
+            <h2 className="mt-2 text-3xl font-bold text-slate-900">Find cleaners in your area</h2>
+            <p className="mt-4 max-w-3xl text-slate-600">We currently have the strongest availability in Worthing, Lancing and Shoreham-by-Sea, making it easier to find trusted cleaners and book quickly.</p>
             <div className="mt-6 flex flex-wrap gap-3">
               {CORE_LOCATION_LINKS.map((location) => (
                 <Link
