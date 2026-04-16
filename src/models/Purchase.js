@@ -65,7 +65,7 @@ const PurchaseSchema = new mongoose.Schema(
     reviewRequestSentAt: { type: Date, default: null },
     reviewSubmittedAt: { type: Date, default: null },
     completedAt: { type: Date, default: null },
-    expiresAt: { type: Date, default: null, index: true },
+    expiresAt: { type: Date, default: null },
   },
   { timestamps: true }
 );

@@ -136,6 +136,27 @@ const SERVICE_COPY = {
   },
 };
 
+
+function formatServiceLocationIntro(serviceName) {
+  const serviceLower = serviceName.toLowerCase();
+
+  const intros = {
+    'Regular House Cleaning':
+      'If you are looking for regular house cleaning in Worthing, Lancing or Shoreham-by-Sea, our local pages make it easier to find cleaners with live availability and compare profiles before booking.',
+    'Deep Cleaning':
+      'If you need deep cleaning in Worthing, Lancing or Shoreham-by-Sea, you can use our location pages to find local cleaners, compare profiles, and check availability before you book.',
+    'End of Tenancy':
+      'If you are moving out in Worthing, Lancing or Shoreham-by-Sea, our location pages help you find end of tenancy cleaners faster and compare available providers in your area.',
+    'Oven Cleaning':
+      'If you need oven cleaning in Worthing, Lancing or Shoreham-by-Sea, our local pages help you discover cleaners offering the service and book based on live availability.',
+  };
+
+  return (
+    intros[serviceName] ||
+    `If you are looking for ${serviceLower} in Worthing, Lancing or Shoreham-by-Sea, our location pages help you find local cleaners, compare profiles, and check live availability before booking.`
+  );
+}
+
 function slugify(value = '') {
   return String(value || '')
     .trim()

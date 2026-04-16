@@ -24,8 +24,6 @@ export async function connectToDatabase() {
   if (!cached.promise) {
     cached.promise = mongoose.connect(MONGODB_URI, {
       dbName: 'cleanmatch',
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
     }).then((mongoose) => mongoose)
       .catch((err) => {
         console.error('❌ MongoDB connection error:', err);

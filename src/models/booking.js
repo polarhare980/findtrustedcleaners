@@ -31,7 +31,7 @@ const BookingSchema = new mongoose.Schema(
     paymentIntentId:  { type: String },
     stripeSessionId:  { type: String },
 
-    expiresAt: { type: Date, default: null, index: true },
+    expiresAt: { type: Date, default: null },
   },
   { timestamps: true }
 );
