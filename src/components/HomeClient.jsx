@@ -395,8 +395,8 @@ export default function HomeClient() {
 
           <section className="rounded-[32px] border border-white/70 bg-white/90 p-8 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">Core services</p>
-            <h2 className="mt-2 text-3xl font-bold text-slate-900">Browse the main booking pages</h2>
-            <p className="mt-4 text-slate-600">These are the four service pages we want Google and visitors reaching quickly from all over the site.</p>
+            <h2 className="mt-2 text-3xl font-bold text-slate-900">Browse cleaning services</h2>
+            <p className="mt-4 text-slate-600">Choose the type of cleaning you need and find available cleaners near you.</p>
             <div className="mt-6 grid gap-3">
               {CORE_SERVICE_LINKS.map((service) => (
                 <Link
