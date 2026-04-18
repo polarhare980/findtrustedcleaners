@@ -59,6 +59,7 @@ export async function POST(req) {
       mode: 'subscription',
       ...(cleaner.stripeCustomerId ? { customer: cleaner.stripeCustomerId } : cleaner.email ? { customer_email: cleaner.email } : {}),
       line_items: [{ price: priceId, quantity: 1 }],
+      allow_promotion_codes: true,
       metadata: {
         cleanerId: String(cleaner._id),
         planType: 'premium_yearly',
