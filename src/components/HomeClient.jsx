@@ -18,6 +18,7 @@ const HOURS = Array.from({ length: 13 }, (_, i) => String(7 + i));
 const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 
 const CORE_LOCATION_LINKS = [
+  { href: '/locations/west-sussex', label: 'West Sussex' },
   { href: '/locations/worthing', label: 'Worthing' },
   { href: '/locations/lancing', label: 'Lancing' },
   { href: '/locations/shoreham-by-sea', label: 'Shoreham-by-Sea' },

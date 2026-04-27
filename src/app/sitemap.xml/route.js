@@ -39,6 +39,7 @@ export async function GET() {
     `${BASE}/privacy`,
     `${BASE}/terms`,
     `${BASE}/services`,
+    `${BASE}/locations/west-sussex`,
     `${BASE}/locations/worthing`,
     `${BASE}/locations/lancing`,
     `${BASE}/locations/shoreham-by-sea`,

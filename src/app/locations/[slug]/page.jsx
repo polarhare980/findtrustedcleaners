@@ -9,6 +9,12 @@ import { buildServiceMarket } from '@/lib/serviceMarketplace';
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.findtrustedcleaners.com';
 
 const CORE_LOCATIONS = {
+  'west-sussex': {
+    name: 'West Sussex',
+    nearby: ['Worthing', 'Lancing', 'Shoreham-by-Sea', 'Littlehampton', 'Angmering', 'Rustington', 'Bognor Regis', 'Chichester'],
+    intro:
+      'Looking for cleaning companies in West Sussex? FindTrustedCleaners.com helps households and businesses compare trusted local cleaners across the county, view profiles, check availability, and find the right provider for domestic, deep, end of tenancy, oven, carpet, upholstery and commercial cleaning.',
+  },
   worthing: {
     name: 'Worthing',
     nearby: ['Lancing', 'Shoreham-by-Sea', 'Littlehampton', 'Angmering', 'Rustington'],
@@ -309,9 +315,15 @@ export async function generateMetadata({ params }) {
   const locationSlug = slugify(routeParam);
   const locationName = toDisplayLocation(locationSlug);
 
+  const isWestSussex = locationSlug === 'west-sussex';
+
   return {
-    title: `Find Trusted Cleaners in ${locationName}`,
-    description: `Find trusted cleaners in ${locationName}. View live availability, compare local profiles, and book online without waiting for quotes.`,
+    title: isWestSussex
+      ? 'Cleaning Companies West Sussex | Trusted Local Cleaners'
+      : `Find Trusted Cleaners in ${locationName}`,
+    description: isWestSussex
+      ? 'Compare cleaning companies in West Sussex. Find trusted local cleaners for homes, offices, deep cleans, end of tenancy cleaning and more.'
+      : `Find trusted cleaners in ${locationName}. View live availability, compare local profiles, and book online without waiting for quotes.`,
     alternates: {
       canonical: `/locations/${locationSlug}`,
     },
@@ -403,7 +415,7 @@ export default async function Page({ params }) {
           Local cleaners with availability
         </p>
         <h1 className="mb-4 text-4xl font-bold text-teal-900">
-          Find Trusted Cleaners in {locationName}
+          {locationSlug === 'west-sussex' ? 'Cleaning Companies West Sussex' : `Find Trusted Cleaners in ${locationName}`}
         </h1>
         <p className="max-w-3xl text-slate-700">
           {location.intro}
@@ -463,6 +475,29 @@ export default async function Page({ params }) {
           </div>
         </div>
       </section>
+
+      {locationSlug === 'west-sussex' ? (
+        <section className="mb-10 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+          <h2 className="mb-4 text-2xl font-bold text-teal-900">Compare cleaning companies across West Sussex</h2>
+          <p className="text-slate-700">
+            West Sussex covers a wide mix of homes, flats, offices, holiday lets and rental properties, so the right cleaner depends on location, availability and the type of job. FindTrustedCleaners.com is designed to help people compare cleaning companies and independent cleaners across the county without relying on one generic directory listing.
+          </p>
+          <p className="mt-4 text-slate-700">
+            Whether you need a regular house cleaner in Worthing, end of tenancy cleaning near Chichester, carpet cleaning around Littlehampton, or commercial cleaning support in Bognor Regis, this county page links together the main West Sussex cleaning areas and services.
+          </p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            {['worthing', 'lancing', 'shoreham-by-sea', 'littlehampton', 'angmering', 'rustington', 'bognor-regis', 'chichester'].map((slug) => (
+              <Link
+                key={slug}
+                href={`/locations/${slug}`}
+                className="rounded-full border border-teal-200 bg-teal-50 px-4 py-2 font-medium text-teal-800 transition hover:border-teal-300 hover:bg-white"
+              >
+                Cleaners in {toDisplayLocation(slug)}
+              </Link>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <section className="mb-10 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
         <h2 className="mb-6 text-2xl font-bold text-teal-900">Cleaning services available in {locationName}</h2>

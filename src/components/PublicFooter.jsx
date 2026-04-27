@@ -20,6 +20,7 @@ export default function PublicFooter() {
               ['Contact', '/contact'],
             ]} />
             <FooterGroup title="Popular locations" links={[
+              ['West Sussex', '/locations/west-sussex'],
               ['Worthing', '/locations/worthing'],
               ['Lancing', '/locations/lancing'],
               ['Shoreham-by-Sea', '/locations/shoreham-by-sea'],

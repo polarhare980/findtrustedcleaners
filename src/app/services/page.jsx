@@ -41,6 +41,7 @@ export default function ServicesIndexPage() {
           <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">Browse these services in our lead coverage areas</h2>
           <p className="mt-3 max-w-3xl text-slate-600">We are building the strongest internal link loop around Worthing, Lancing, Shoreham-by-Sea and nearby towns so these service pages support local intent as well as wider UK searches.</p>
           <div className="mt-6 flex flex-wrap gap-3">
+            <Link href="/locations/west-sussex" className="rounded-full border border-teal-200 bg-teal-50 px-4 py-2 font-medium text-teal-800 transition hover:border-teal-300 hover:bg-white">West Sussex</Link>
             <Link href="/locations/worthing" className="rounded-full border border-teal-200 bg-teal-50 px-4 py-2 font-medium text-teal-800 transition hover:border-teal-300 hover:bg-white">Worthing</Link>
             <Link href="/locations/lancing" className="rounded-full border border-teal-200 bg-teal-50 px-4 py-2 font-medium text-teal-800 transition hover:border-teal-300 hover:bg-white">Lancing</Link>
             <Link href="/locations/shoreham-by-sea" className="rounded-full border border-teal-200 bg-teal-50 px-4 py-2 font-medium text-teal-800 transition hover:border-teal-300 hover:bg-white">Shoreham-by-Sea</Link>
