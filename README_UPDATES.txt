@@ -8,7 +8,7 @@ Key production fixes applied on 2025-08-27:
 6) BookingPaymentForm now uses NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY consistently.
 7) SEO & Social: layout.js includes complete metadata (Open Graph + Twitter). Added app/sitemap.js and renamed public/roots.txt -> robots.txt.
 8) Blog pages simplified: /blog (index) and /blog/[slug] with AdSense slots and server-side fetch of /api/blogs.
-9) Security: scrubbed scripts/test-db.js which contained a hard-coded Mongo URI placeholder.
+9) Security: scrubbed scripts/test-db.js whch contained a hard-coded Mongo URI placeholder.
 10) Sitemaps now generated dynamically from app/sitemap.js using NEXT_PUBLIC_SITE_URL (default https://www.findtrustedcleaners.com).
 
 Follow-ups you should do:
