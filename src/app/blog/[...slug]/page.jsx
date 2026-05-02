@@ -93,6 +93,59 @@ export async function generateMetadata({ params }) {
   };
 }
 
+
+const LITTLEHAMPTON_RELATED_GUIDES_HTML = `
+<section class="related-guides">
+  <h2>Related Guides</h2>
+  <ul>
+    <li><a href="https://www.findtrustedcleaners.com/blog/cleaners-littlehampton-prices">Cleaner prices in Littlehampton</a></li>
+    <li><a href="https://www.findtrustedcleaners.com/blog/reliable-cleaner-littlehampton">How to find a reliable cleaner in Littlehampton</a></li>
+    <li><a href="https://www.findtrustedcleaners.com/blog/what-do-cleaners-do-littlehampton">What do cleaners do in Littlehampton?</a></li>
+  </ul>
+</section>`;
+
+function insertAfterFirstParagraph(html = "", addition = "") {
+  if (!addition) return html;
+  const content = String(html || "");
+  const firstParagraphEnd = content.search(/<\/p>/i);
+  if (firstParagraphEnd === -1) return `${addition}\n${content}`;
+  const end = firstParagraphEnd + content.match(/<\/p>/i)[0].length;
+  return `${content.slice(0, end)}\n${addition}\n${content.slice(end)}`;
+}
+
+function enhanceLittlehamptonBlogContent(html = "", slug = "") {
+  const content = String(html || "");
+  const isLittlehamptonBlog = String(slug || "").toLowerCase().includes("littlehampton");
+  if (!isLittlehamptonBlog) return content;
+
+  let enhanced = content;
+
+  if (!/href=["']\/locations\/littlehampton["']/i.test(enhanced)) {
+    enhanced = insertAfterFirstParagraph(
+      enhanced,
+      `<p>If you are comparing options locally, you can browse <a href="/locations/littlehampton">trusted cleaners in Littlehampton</a> and check which cleaners cover the services you need.</p>`
+    );
+  }
+
+  const serviceIntroNeeded = !/href=["']\/services\/(domestic-cleaning|deep-cleaning|end-of-tenancy-cleaning|oven-cleaning|carpet-cleaning|window-cleaning|gutter-cleaning|pressure-washing)["']/i.test(enhanced);
+  if (serviceIntroNeeded) {
+    enhanced = insertAfterFirstParagraph(
+      enhanced,
+      `<p>Common local requests include <a href="/services/domestic-cleaning">domestic cleaning in Littlehampton</a>, <a href="/services/deep-cleaning">deep cleaning in Littlehampton</a>, <a href="/services/end-of-tenancy-cleaning">end of tenancy cleaning in Littlehampton</a>, and <a href="/services/oven-cleaning">oven cleaning in Littlehampton</a>.</p>`
+    );
+  }
+
+  if (!/find cleaners in Littlehampton/i.test(enhanced)) {
+    enhanced += `\n<p>When you are ready to compare local options, you can <a href="/locations/littlehampton">find cleaners in Littlehampton</a> and review profiles before making an enquiry.</p>`;
+  }
+
+  if (!/Related Guides/i.test(enhanced)) {
+    enhanced += `\n${LITTLEHAMPTON_RELATED_GUIDES_HTML}`;
+  }
+
+  return enhanced;
+}
+
 function safeDate(value) {
   const d = value ? new Date(value) : null;
   return d && !Number.isNaN(d.getTime()) ? d : null;
@@ -292,7 +345,7 @@ export default async function BlogPostPage({ params }) {
             <div
               className="prose prose-lg max-w-none prose-headings:font-bold prose-headings:text-slate-900 prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4 prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3 prose-p:text-slate-700 prose-p:leading-relaxed prose-p:mb-5 prose-a:text-teal-700 prose-a:underline hover:prose-a:text-teal-900 prose-strong:text-slate-900 prose-ul:list-disc prose-ul:pl-6 prose-ul:mb-5 prose-ol:list-decimal prose-ol:pl-6 prose-ol:mb-5 prose-li:mb-2 prose-li:text-slate-700 prose-img:rounded-2xl prose-img:shadow-md prose-img:my-8 prose-blockquote:border-l-4 prose-blockquote:border-teal-500 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-slate-600 prose-code:bg-slate-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm"
             >
-              {renderHtmlWithAdMarkers(post.content || '', slots)}
+              {renderHtmlWithAdMarkers(enhanceLittlehamptonBlogContent(post.content || '', slug), slots)}
             </div>
 
             {slots.bottom ? (
