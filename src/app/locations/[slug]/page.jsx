@@ -11,65 +11,76 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.findtrustedcle
 const CORE_LOCATIONS = {
   'west-sussex': {
     name: 'West Sussex',
-    nearby: ['Worthing', 'Lancing', 'Shoreham-by-Sea', 'Littlehampton', 'Angmering', 'Rustington', 'Bognor Regis', 'Chichester'],
+    nearby: ['Worthing', 'Lancing', 'Shoreham-by-Sea', 'Littlehampton', 'Angmering', 'Rustington', 'Bognor Regis', 'Chichester', 'Crawley', 'Horsham', 'Burgess Hill', 'Haywards Heath'],
     intro:
-      'Looking for cleaning companies in West Sussex? FindTrustedCleaners.com helps households and businesses compare trusted local cleaners across the county, view profiles, check availability, and find the right provider for domestic, deep, end of tenancy, oven, carpet, upholstery and commercial cleaning.',
+      'Looking for cleaning companies in West Sussex? FindTrustedCleaners.com helps households and businesses compare trusted local cleaners across the county, view profiles, check availability, and find the right provider for domestic cleaning, deep cleaning, end of tenancy cleaning, oven cleaning, carpet cleaning, window cleaning, gutter cleaning and pressure washing.',
   },
-  worthing: {
-    name: 'Worthing',
-    nearby: ['Lancing', 'Shoreham-by-Sea', 'Littlehampton', 'Angmering', 'Rustington'],
-    intro:
-      'FindTrustedCleaners.com helps you find cleaners in Worthing without the usual back-and-forth. You can check cleaner profiles, see live availability, and book cleaners near you for the jobs that matter most.',
-  },
-  lancing: {
-    name: 'Lancing',
-    nearby: ['Worthing', 'Shoreham-by-Sea', 'Littlehampton', 'Angmering'],
-    intro:
-      'If you need cleaners in Lancing, FindTrustedCleaners.com makes the process simpler. Compare local cleaner profiles, see who is available, and book cleaners near you without waiting around for quotes.',
-  },
-  'shoreham-by-sea': {
-    name: 'Shoreham-by-Sea',
-    nearby: ['Lancing', 'Worthing', 'Littlehampton', 'Angmering', 'Chichester'],
-    intro:
-      'Looking for cleaners in Shoreham-by-Sea? FindTrustedCleaners.com lets you view cleaner profiles instantly, check real-time availability, and book cleaners near you in a faster, clearer way.',
-  },
-  littlehampton: {
-    name: 'Littlehampton',
-    nearby: ['Angmering', 'Rustington', 'Worthing', 'Bognor Regis'],
-    intro:
-      'Looking for cleaners in Littlehampton? FindTrustedCleaners.com helps you compare local cleaner profiles, check real-time availability, and book with less delay when you need reliable domestic help.',
-  },
-  angmering: {
-    name: 'Angmering',
-    nearby: ['Rustington', 'Littlehampton', 'Worthing', 'Lancing'],
-    intro:
-      'If you need cleaners in Angmering, FindTrustedCleaners.com gives you a simpler way to compare trusted local options, view availability, and move straight to booking without the usual quote chasing.',
-  },
-  rustington: {
-    name: 'Rustington',
-    nearby: ['Littlehampton', 'Angmering', 'Worthing', 'Bognor Regis'],
-    intro:
-      'FindTrustedCleaners.com makes it easier to find cleaners in Rustington, compare local profiles, and book with confidence when you want clear availability and a more direct route to trusted help.',
-  },
-  'bognor-regis': {
-    name: 'Bognor Regis',
-    nearby: ['Chichester', 'Littlehampton', 'Rustington', 'Worthing'],
-    intro:
-      'Searching for cleaners in Bognor Regis? FindTrustedCleaners.com helps you check profiles, compare services, and book cleaners near you with live availability shown up front.',
-  },
-  chichester: {
-    name: 'Chichester',
-    nearby: ['Bognor Regis', 'Shoreham-by-Sea', 'Littlehampton', 'Worthing'],
-    intro:
-      'FindTrustedCleaners.com helps you find cleaners in Chichester with a clearer booking journey, giving you local profiles, real-time availability, and a faster way to compare trusted providers.',
-  },
+  worthing: { name: 'Worthing', nearby: ['Goring-by-Sea', 'Durrington', 'Tarring', 'Broadwater', 'Findon', 'Lancing'], intro: 'FindTrustedCleaners.com helps you find cleaners in Worthing without the usual back-and-forth. You can check cleaner profiles, see live availability, and book cleaners near you for the jobs that matter most.' },
+  lancing: { name: 'Lancing', nearby: ['Worthing', 'Shoreham-by-Sea', 'Sompting', 'Southwick'], intro: 'If you need cleaners in Lancing, FindTrustedCleaners.com makes the process simpler. Compare local cleaner profiles, see who is available, and book cleaners near you without waiting around for quotes.' },
+  'shoreham-by-sea': { name: 'Shoreham-by-Sea', nearby: ['Lancing', 'Southwick', 'Worthing', 'Portslade'], intro: 'Looking for cleaners in Shoreham-by-Sea? FindTrustedCleaners.com lets you view cleaner profiles instantly, check real-time availability, and book cleaners near you in a faster, clearer way.' },
+  southwick: { name: 'Southwick', nearby: ['Shoreham-by-Sea', 'Lancing', 'Fishersgate', 'Portslade'], intro: 'Find cleaners in Southwick for regular home cleaning, one-off deep cleans, window cleaning, gutter cleaning and other local cleaning services with clearer availability before you book.' },
+  sompting: { name: 'Sompting', nearby: ['Lancing', 'Worthing', 'Shoreham-by-Sea'], intro: 'Compare cleaners in Sompting and nearby areas, view services, check availability, and find local help for domestic cleaning, deep cleaning, windows, carpets, ovens and exterior cleaning jobs.' },
+  'goring-by-sea': { name: 'Goring-by-Sea', nearby: ['Worthing', 'Ferring', 'Durrington', 'Angmering'], intro: 'Find local cleaners in Goring-by-Sea for domestic cleaning, deep cleaning, oven cleaning, carpet cleaning, window cleaning and more, with simple access to nearby Worthing coverage.' },
+  durrington: { name: 'Durrington', nearby: ['Worthing', 'Goring-by-Sea', 'Tarring', 'Findon'], intro: 'FindTrustedCleaners.com helps households in Durrington compare cleaner profiles and services across Worthing and nearby areas before booking.' },
+  tarring: { name: 'Tarring', nearby: ['Worthing', 'Durrington', 'Broadwater', 'Findon'], intro: 'Compare cleaners in Tarring for regular domestic cleaning, deep cleans, ovens, carpets, windows, gutters and pressure washing, using local profiles and availability.' },
+  broadwater: { name: 'Broadwater', nearby: ['Worthing', 'Tarring', 'Durrington', 'Lancing'], intro: 'Find cleaners in Broadwater and the wider Worthing area for home cleaning, specialist cleaning and exterior jobs with clearer profile information before booking.' },
+  findon: { name: 'Findon', nearby: ['Worthing', 'Durrington', 'Angmering', 'Storrington'], intro: 'FindTrustedCleaners.com helps people in Findon compare local cleaners and nearby Worthing-area providers for domestic, deep, end of tenancy, oven, carpet, window and gutter cleaning.' },
+  littlehampton: { name: 'Littlehampton', nearby: ['Rustington', 'Angmering', 'Arundel', 'East Preston', 'Bognor Regis'], intro: 'Looking for cleaners in Littlehampton? FindTrustedCleaners.com helps you compare local cleaner profiles, check real-time availability, and book with less delay when you need reliable domestic help.' },
+  angmering: { name: 'Angmering', nearby: ['Rustington', 'Littlehampton', 'East Preston', 'Ferring', 'Worthing'], intro: 'If you need cleaners in Angmering, FindTrustedCleaners.com gives you a simpler way to compare trusted local options, view availability, and move straight to booking without the usual quote chasing.' },
+  rustington: { name: 'Rustington', nearby: ['Littlehampton', 'Angmering', 'East Preston', 'Ferring'], intro: 'FindTrustedCleaners.com makes it easier to find cleaners in Rustington, compare local profiles, and book with confidence when you want clear availability and a more direct route to trusted help.' },
+  'east-preston': { name: 'East Preston', nearby: ['Rustington', 'Angmering', 'Ferring', 'Littlehampton'], intro: 'Find cleaners in East Preston for regular house cleaning, deep cleaning, end of tenancy cleaning, oven cleaning, carpet cleaning, window cleaning, gutter cleaning and pressure washing.' },
+  ferring: { name: 'Ferring', nearby: ['Goring-by-Sea', 'East Preston', 'Angmering', 'Worthing'], intro: 'Compare cleaners in Ferring and nearby coastal areas for domestic cleaning, specialist cleaning and exterior cleaning services with availability shown up front.' },
+  arundel: { name: 'Arundel', nearby: ['Littlehampton', 'Angmering', 'Barnham', 'Ford'], intro: 'FindTrustedCleaners.com helps people in Arundel compare local cleaners for homes, rental properties, windows, gutters, carpets, ovens and pressure washing.' },
+  'bognor-regis': { name: 'Bognor Regis', nearby: ['Felpham', 'Aldwick', 'Barnham', 'Chichester', 'Littlehampton'], intro: 'Searching for cleaners in Bognor Regis? FindTrustedCleaners.com helps you check profiles, compare services, and book cleaners near you with live availability shown up front.' },
+  felpham: { name: 'Felpham', nearby: ['Bognor Regis', 'Aldwick', 'Barnham'], intro: 'Find cleaners in Felpham for domestic cleaning, deep cleaning, end of tenancy cleaning, oven cleaning, carpet cleaning, window cleaning, gutter cleaning and pressure washing.' },
+  aldwick: { name: 'Aldwick', nearby: ['Bognor Regis', 'Felpham', 'Chichester'], intro: 'Compare cleaners in Aldwick and nearby Bognor Regis areas for home cleaning, specialist cleaning and exterior jobs with clearer availability before you book.' },
+  barnham: { name: 'Barnham', nearby: ['Bognor Regis', 'Arundel', 'Yapton', 'Chichester'], intro: 'Find local cleaners in Barnham for regular home cleans, deep cleans, end of tenancy cleaning, ovens, carpets, windows, gutters and pressure washing.' },
+  yapton: { name: 'Yapton', nearby: ['Barnham', 'Littlehampton', 'Arundel', 'Bognor Regis'], intro: 'FindTrustedCleaners.com helps households in Yapton compare local cleaners and nearby providers for domestic cleaning, window cleaning and wider specialist cleaning services.' },
+  chichester: { name: 'Chichester', nearby: ['Bognor Regis', 'Selsey', 'Bosham', 'Midhurst', 'Petworth'], intro: 'FindTrustedCleaners.com helps you find cleaners in Chichester with a clearer booking journey, giving you local profiles, real-time availability, and a faster way to compare trusted providers.' },
+  selsey: { name: 'Selsey', nearby: ['Chichester', 'East Wittering', 'West Wittering', 'Bognor Regis'], intro: 'Find cleaners in Selsey for domestic cleaning, deep cleaning, end of tenancy cleaning, ovens, carpets, windows, gutters and exterior cleaning jobs.' },
+  bosham: { name: 'Bosham', nearby: ['Chichester', 'Southbourne', 'Emsworth'], intro: 'Compare cleaners in Bosham and nearby Chichester villages for home cleaning, specialist cleaning and exterior services with local availability in mind.' },
+  emsworth: { name: 'Emsworth', nearby: ['Southbourne', 'Bosham', 'Chichester'], intro: 'FindTrustedCleaners.com helps people in Emsworth compare local cleaners for domestic cleaning, deep cleaning, end of tenancy cleans, window cleaning, gutter cleaning and pressure washing.' },
+  southbourne: { name: 'Southbourne', nearby: ['Emsworth', 'Bosham', 'Chichester'], intro: 'Find cleaners in Southbourne for home cleaning, specialist cleaning and exterior services including windows, gutters and pressure washing.' },
+  'east-wittering': { name: 'East Wittering', nearby: ['West Wittering', 'Selsey', 'Chichester'], intro: 'Compare cleaners in East Wittering for regular cleaning, deep cleaning, holiday lets, ovens, carpets, windows, gutters and pressure washing.' },
+  'west-wittering': { name: 'West Wittering', nearby: ['East Wittering', 'Selsey', 'Chichester'], intro: 'Find local cleaners in West Wittering for domestic cleaning, holiday let cleaning, window cleaning, gutter cleaning and other specialist services.' },
+  midhurst: { name: 'Midhurst', nearby: ['Petworth', 'Chichester', 'Pulborough'], intro: 'Find cleaners in Midhurst for home cleaning, deep cleaning, end of tenancy cleaning, ovens, carpets, windows, gutters and pressure washing.' },
+  petworth: { name: 'Petworth', nearby: ['Midhurst', 'Pulborough', 'Storrington'], intro: 'Compare cleaners in Petworth and nearby villages for domestic cleaning, specialist cleaning and exterior services with cleaner profiles and availability.' },
+  crawley: { name: 'Crawley', nearby: ['Gatwick', 'Ifield', 'Three Bridges', 'Pound Hill', 'Maidenbower', 'Tilgate'], intro: 'Find cleaners in Crawley for homes, flats, rental properties and businesses. Compare local profiles, check availability and book domestic cleaning, deep cleaning, end of tenancy cleaning, window cleaning and more.' },
+  gatwick: { name: 'Gatwick', nearby: ['Crawley', 'Horley', 'Three Bridges'], intro: 'Find cleaning services around Gatwick for homes, rentals, offices and commercial spaces, including domestic cleaning, deep cleaning, windows and specialist services.' },
+  ifield: { name: 'Ifield', nearby: ['Crawley', 'Bewbush', 'Three Bridges'], intro: 'Compare cleaners in Ifield and nearby Crawley neighbourhoods for domestic cleaning, end of tenancy cleaning, windows, gutters and more.' },
+  'three-bridges': { name: 'Three Bridges', nearby: ['Crawley', 'Pound Hill', 'Maidenbower', 'Gatwick'], intro: 'Find cleaners in Three Bridges for regular cleaning, deep cleaning, end of tenancy cleans, carpet cleaning, window cleaning and exterior services.' },
+  'pound-hill': { name: 'Pound Hill', nearby: ['Three Bridges', 'Maidenbower', 'Crawley'], intro: 'FindTrustedCleaners.com helps households in Pound Hill compare local cleaners and services before booking.' },
+  maidenbower: { name: 'Maidenbower', nearby: ['Pound Hill', 'Three Bridges', 'Crawley'], intro: 'Compare cleaners in Maidenbower for domestic cleaning, deep cleaning, end of tenancy, windows, gutters and pressure washing.' },
+  tilgate: { name: 'Tilgate', nearby: ['Crawley', 'Maidenbower', 'Ifield'], intro: 'Find cleaners in Tilgate and the wider Crawley area for home cleaning, specialist cleaning and exterior jobs.' },
+  bewbush: { name: 'Bewbush', nearby: ['Ifield', 'Crawley', 'Tilgate'], intro: 'Find local cleaners in Bewbush for routine house cleaning, one-off deep cleans, windows, carpets, ovens and exterior cleaning.' },
+  horsham: { name: 'Horsham', nearby: ['Southwater', 'Billingshurst', 'Pulborough', 'Storrington', 'Henfield'], intro: 'Find cleaners in Horsham for domestic cleaning, deep cleaning, end of tenancy cleaning, office cleaning, window cleaning, gutter cleaning and pressure washing, with local profiles and availability.' },
+  southwater: { name: 'Southwater', nearby: ['Horsham', 'Billingshurst', 'Pulborough'], intro: 'Compare cleaners in Southwater for regular cleaning, deep cleaning, end of tenancy cleans, ovens, carpets, windows and gutter cleaning.' },
+  billingshurst: { name: 'Billingshurst', nearby: ['Horsham', 'Pulborough', 'Storrington'], intro: 'FindTrustedCleaners.com helps people in Billingshurst compare local cleaners for domestic cleaning, specialist services and exterior cleaning jobs.' },
+  pulborough: { name: 'Pulborough', nearby: ['Billingshurst', 'Storrington', 'Petworth', 'Midhurst'], intro: 'Find cleaners in Pulborough for home cleaning, deep cleaning, end of tenancy, carpet cleaning, window cleaning, gutter cleaning and pressure washing.' },
+  storrington: { name: 'Storrington', nearby: ['Pulborough', 'Billingshurst', 'Steyning', 'Ashington'], intro: 'Compare cleaners in Storrington for domestic cleaning, specialist cleaning and exterior jobs including windows, gutters and pressure washing.' },
+  steyning: { name: 'Steyning', nearby: ['Henfield', 'Storrington', 'Shoreham-by-Sea', 'Ashurst'], intro: 'Find local cleaners in Steyning for regular house cleaning, deep cleaning, windows, carpets, ovens, gutters and pressure washing.' },
+  henfield: { name: 'Henfield', nearby: ['Steyning', 'Hurstpierpoint', 'Horsham', 'Cowfold'], intro: 'FindTrustedCleaners.com helps households in Henfield compare local cleaner profiles for domestic cleaning and specialist cleaning services.' },
+  ashington: { name: 'Ashington', nearby: ['Storrington', 'Pulborough', 'Horsham'], intro: 'Compare cleaners in Ashington for home cleaning, deep cleaning, end of tenancy cleaning, window cleaning, gutter cleaning and pressure washing.' },
+  'burgess-hill': { name: 'Burgess Hill', nearby: ['Haywards Heath', 'Hassocks', 'Hurstpierpoint', 'Cuckfield'], intro: 'Find cleaners in Burgess Hill for domestic cleaning, deep cleaning, end of tenancy cleans, office cleaning, window cleaning, gutter cleaning and pressure washing.' },
+  'haywards-heath': { name: 'Haywards Heath', nearby: ['Burgess Hill', 'Cuckfield', 'Lindfield', 'Hassocks'], intro: 'FindTrustedCleaners.com helps you compare cleaners in Haywards Heath, check availability, and book local cleaning services without waiting for quote forms.' },
+  'east-grinstead': { name: 'East Grinstead', nearby: ['Crawley', 'Haywards Heath', 'Forest Row'], intro: 'Find cleaners in East Grinstead for domestic cleaning, deep cleaning, end of tenancy cleaning, carpets, ovens, windows, gutters and pressure washing.' },
+  hassocks: { name: 'Hassocks', nearby: ['Burgess Hill', 'Hurstpierpoint', 'Haywards Heath'], intro: 'Compare cleaners in Hassocks for regular house cleaning, deep cleans, windows, carpets, ovens and exterior services.' },
+  hurstpierpoint: { name: 'Hurstpierpoint', nearby: ['Hassocks', 'Burgess Hill', 'Henfield'], intro: 'Find cleaners in Hurstpierpoint for domestic cleaning, deep cleaning, end of tenancy, window cleaning, gutter cleaning and pressure washing.' },
+  cuckfield: { name: 'Cuckfield', nearby: ['Haywards Heath', 'Lindfield', 'Burgess Hill'], intro: 'FindTrustedCleaners.com helps people in Cuckfield compare cleaner profiles and services across Mid Sussex.' },
+  lindfield: { name: 'Lindfield', nearby: ['Haywards Heath', 'Cuckfield', 'Burgess Hill'], intro: 'Compare cleaners in Lindfield for domestic cleaning, deep cleaning, carpets, ovens, windows, gutters and pressure washing.' },
+  bolney: { name: 'Bolney', nearby: ['Burgess Hill', 'Haywards Heath', 'Cowfold', 'Hickstead'], intro: 'Find cleaners in Bolney for regular domestic cleaning, deep cleaning, specialist services and exterior cleaning jobs.' },
+  handcross: { name: 'Handcross', nearby: ['Crawley', 'Haywards Heath', 'Horsham'], intro: 'FindTrustedCleaners.com helps households in Handcross compare cleaners for domestic cleaning, deep cleaning, windows, gutters and pressure washing.' },
 };
 
 const CORE_SERVICE_LINKS = [
-  { href: '/services/end-of-tenancy-cleaning', label: 'End of tenancy cleaning' },
+  { href: '/services/regular-cleaning', label: 'Domestic cleaning' },
   { href: '/services/deep-cleaning', label: 'Deep cleaning' },
-  { href: '/services/regular-cleaning', label: 'Regular cleaning' },
+  { href: '/services/end-of-tenancy-cleaning', label: 'End of tenancy cleaning' },
   { href: '/services/oven-cleaning', label: 'Oven cleaning' },
+  { href: '/services/carpet-cleaning', label: 'Carpet cleaning' },
+  { href: '/services/window-cleaning', label: 'Window cleaning' },
+  { href: '/services/gutter-cleaning', label: 'Gutter cleaning' },
+  { href: '/services/pressure-washing', label: 'Pressure washing' },
 ];
 
 const LOCAL_GUIDES = {
@@ -117,11 +128,11 @@ const LOCAL_GUIDES = {
 
 const SERVICE_SECTIONS = [
   {
-    key: 'end-of-tenancy-cleaning',
-    title: 'End of tenancy cleaning',
-    searchLabel: 'End of Tenancy',
+    key: 'regular-cleaning',
+    title: 'Domestic cleaning',
+    searchLabel: 'Domestic Cleaning',
     description: (locationName) =>
-      `If you need end of tenancy cleaning in ${locationName}, you can compare local cleaners who handle full-property cleans before a move-out, handover, or tenancy check. It is a practical way to find reliable help quickly without chasing multiple companies for separate quotes.`,
+      `For domestic cleaning in ${locationName}, FindTrustedCleaners.com helps you browse local house cleaners who suit your schedule. Whether you need weekly help, fortnightly visits, or one-off home support, you can view availability before you book.`,
   },
   {
     key: 'deep-cleaning',
@@ -131,11 +142,11 @@ const SERVICE_SECTIONS = [
       `Deep cleaning in ${locationName} is ideal when your home needs more than a routine tidy-up. From kitchens and bathrooms to neglected high-touch areas, local cleaners can list one-off deep cleaning services clearly on their profile so you can compare the right fit.`,
   },
   {
-    key: 'regular-cleaning',
-    title: 'Regular domestic cleaning',
-    searchLabel: 'Domestic Cleaning',
+    key: 'end-of-tenancy-cleaning',
+    title: 'End of tenancy cleaning',
+    searchLabel: 'End of Tenancy',
     description: (locationName) =>
-      `For regular domestic cleaning in ${locationName}, FindTrustedCleaners.com helps you browse house cleaners who suit your schedule. Whether you need weekly help, fortnightly visits, or ongoing support around work and family life, you can view availability before you book.`,
+      `If you need end of tenancy cleaning in ${locationName}, you can compare local cleaners who handle full-property cleans before a move-out, handover, or tenancy check. It is a practical way to find reliable help quickly without chasing multiple companies for separate quotes.`,
   },
   {
     key: 'oven-cleaning',
@@ -143,6 +154,34 @@ const SERVICE_SECTIONS = [
     searchLabel: 'Oven Cleaning',
     description: (locationName) =>
       `Oven cleaning in ${locationName} is also covered, making it easier to find specialist help for one of the jobs people often put off. You can compare local cleaners and specialists who offer oven cleaning alongside broader household services.`,
+  },
+  {
+    key: 'carpet-cleaning',
+    title: 'Carpet cleaning',
+    searchLabel: 'Carpet Cleaning',
+    description: (locationName) =>
+      `Carpet cleaning in ${locationName} can help with tired carpets, stains, odours, pet marks and general freshening up. Compare local cleaners who list carpet cleaning as a standalone service or as an add-on to a deeper home clean.`,
+  },
+  {
+    key: 'window-cleaning',
+    title: 'Window cleaning',
+    searchLabel: 'Window Cleaning',
+    description: (locationName) =>
+      `Window cleaning in ${locationName} is a high-intent local service. From regular exterior glass cleaning to conservatories, frames and sills, you can compare trusted window cleaners and book based on availability.`,
+  },
+  {
+    key: 'gutter-cleaning',
+    title: 'Gutter cleaning',
+    searchLabel: 'Gutter Cleaning',
+    description: (locationName) =>
+      `Gutter cleaning in ${locationName} helps prevent overflowing gutters, damp issues and blocked downpipes. Find local cleaners offering gutter clearance alongside window cleaning or wider exterior cleaning work.`,
+  },
+  {
+    key: 'pressure-washing',
+    title: 'Pressure washing',
+    searchLabel: 'Pressure Washing',
+    description: (locationName) =>
+      `Pressure washing in ${locationName} is useful for patios, driveways, paths and exterior surfaces that need a visible refresh. Compare local providers and choose the cleaner whose profile best fits the job.`,
   },
 ];
 
@@ -289,7 +328,7 @@ function buildFaqs(locationName, cleaners = []) {
     {
       question: `What types of cleaning can I book in ${locationName}?`,
       answer:
-        `You can find support for regular domestic cleaning, deep cleaning, end of tenancy cleaning, oven cleaning, and a wider range of specialist services depending on the cleaners currently listed in ${locationName}.`,
+        `You can find support for domestic cleaning, deep cleaning, end of tenancy cleaning, oven cleaning, carpet cleaning, window cleaning, gutter cleaning, pressure washing and other specialist services depending on the cleaners currently listed in ${locationName}.`,
     },
     {
       question: `How do I choose a reliable cleaner in ${locationName}?`,
@@ -375,7 +414,7 @@ export async function generateMetadata({ params }) {
 }
 
 function formatLocationServiceIntro(locationName) {
-  return `Popular cleaning services in ${locationName} include end of tenancy cleaning, deep cleaning, regular cleaning and oven cleaning. You can explore each service page to compare what is available before choosing a cleaner.`;
+  return `Popular cleaning services in ${locationName} include domestic cleaning, deep cleaning, end of tenancy cleaning, oven cleaning, carpet cleaning, window cleaning, gutter cleaning and pressure washing. You can explore each service page to compare what is available before choosing a cleaner.`;
 }
 
 export default async function Page({ params }) {
@@ -430,10 +469,14 @@ export default async function Page({ params }) {
       name: 'FindTrustedCleaners.com',
     },
     serviceType: [
-      'End of tenancy cleaning',
+      'Domestic cleaning',
       'Deep cleaning',
-      'Regular domestic cleaning',
+      'End of tenancy cleaning',
       'Oven cleaning',
+      'Carpet cleaning',
+      'Window cleaning',
+      'Gutter cleaning',
+      'Pressure washing',
     ],
   };
 
@@ -529,7 +572,7 @@ export default async function Page({ params }) {
             Whether you need a regular house cleaner in Worthing, end of tenancy cleaning near Chichester, carpet cleaning around Littlehampton, or commercial cleaning support in Bognor Regis, this county page links together the main West Sussex cleaning areas and services.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
-            {['worthing', 'lancing', 'shoreham-by-sea', 'littlehampton', 'angmering', 'rustington', 'bognor-regis', 'chichester'].map((slug) => (
+            {ALL_LOCATION_SLUGS.filter((slug) => slug !== 'west-sussex').map((slug) => (
               <Link
                 key={slug}
                 href={`/locations/${slug}`}
@@ -557,6 +600,24 @@ export default async function Page({ params }) {
               </Link>
             </div>
           ))}
+        </div>
+
+        <div className="mt-8 rounded-2xl border border-teal-100 bg-teal-50/80 p-5">
+          <h3 className="mb-2 text-xl font-semibold text-teal-900">Window cleaning in {locationName}</h3>
+          <p className="text-slate-700">
+            If you are looking for window cleaning in {locationName}, you can compare local professionals offering regular and one-off services. This includes exterior windows, conservatory glass, frames, sills, and modern pure water pole cleaning where listed by the cleaner.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Link href="/services/window-cleaning" className="rounded-full border border-teal-200 bg-white px-4 py-2 font-medium text-teal-800 transition hover:border-teal-300 hover:bg-teal-50">
+              Window cleaning in {locationName}
+            </Link>
+            <Link href="/services/gutter-cleaning" className="rounded-full border border-teal-200 bg-white px-4 py-2 font-medium text-teal-800 transition hover:border-teal-300 hover:bg-teal-50">
+              Gutter cleaning in {locationName}
+            </Link>
+            <Link href="/services/pressure-washing" className="rounded-full border border-teal-200 bg-white px-4 py-2 font-medium text-teal-800 transition hover:border-teal-300 hover:bg-teal-50">
+              Pressure washing in {locationName}
+            </Link>
+          </div>
         </div>
 
         <div className="mt-8 rounded-2xl bg-slate-50 p-5">
@@ -600,7 +661,7 @@ export default async function Page({ params }) {
           <div className="max-w-3xl">
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">Internal link loop</p>
             <h2 className="mt-2 text-2xl font-bold text-teal-900">Jump from {locationName} into the core service pages</h2>
-            <p className="mt-3 text-slate-700">This location page links directly into the four service pages we want ranking hardest, while those service pages link back into key local areas such as {locationName}, Worthing, Lancing, and Shoreham-by-Sea.</p>
+            <p className="mt-3 text-slate-700">This location page links directly into the core service pages we want ranking hardest, while those service pages link back into key local areas across West Sussex, including {locationName}, Worthing, Littlehampton, Crawley, Horsham and Chichester.</p>
           </div>
           <Link href="/services" className="inline-flex rounded-xl border border-teal-200 bg-white px-5 py-3 font-semibold text-teal-700">Browse all services</Link>
         </div>

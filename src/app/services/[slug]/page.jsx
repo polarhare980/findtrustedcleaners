@@ -7,8 +7,18 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.findtrustedcle
 
 const CORE_LOCATION_LINKS = [
   { href: '/locations/worthing', label: 'Worthing' },
+  { href: '/locations/littlehampton', label: 'Littlehampton' },
+  { href: '/locations/bognor-regis', label: 'Bognor Regis' },
+  { href: '/locations/chichester', label: 'Chichester' },
+  { href: '/locations/crawley', label: 'Crawley' },
+  { href: '/locations/horsham', label: 'Horsham' },
   { href: '/locations/lancing', label: 'Lancing' },
   { href: '/locations/shoreham-by-sea', label: 'Shoreham-by-Sea' },
+  { href: '/locations/rustington', label: 'Rustington' },
+  { href: '/locations/angmering', label: 'Angmering' },
+  { href: '/locations/haywards-heath', label: 'Haywards Heath' },
+  { href: '/locations/east-grinstead', label: 'East Grinstead' },
+  { href: '/locations/burgess-hill', label: 'Burgess Hill' },
 ];
 
 const SERVICE_ALIASES = {
@@ -134,6 +144,29 @@ const SERVICE_COPY = {
       ['Can I compare oven cleaning providers before booking?', 'Yes. Profiles help you compare availability and decide who looks right for the job before you book.'],
     ],
   },
+
+  'Window Cleaning': {
+    intro:
+      'Looking for window cleaning near me? FindTrustedCleaners.com helps you compare window cleaning services across West Sussex, check local availability, and find cleaners for exterior windows, conservatories, frames, sills and related exterior cleaning work.',
+    included: [
+      'Exterior window cleaning for homes, flats, rental properties and small businesses where listed by the cleaner.',
+      'Regular or one-off window cleaning options depending on local cleaner availability.',
+      'Useful add-ons such as frames, sills, conservatory glass, gutter cleaning, fascia cleaning or pressure washing where offered.',
+      'Cleaner profiles that make it easier to compare availability, service details and trust signals before booking.',
+    ],
+    cleanerProvides: [
+      'Traditional window cleaning or water-fed pole cleaning depending on the cleaner\'s method and access requirements.',
+      'Window cleaning appointments scheduled around the cleaner\'s listed availability.',
+      'Optional exterior cleaning services such as gutters, fascias, soffits and pressure washing where available.',
+    ],
+    faqs: [
+      ['How much does window cleaning cost in West Sussex?', 'Window cleaning prices vary based on property size, number of windows, access, frequency and whether extras such as conservatory glass, frames or sills are included.'],
+      ['Can I book regular window cleaning?', 'Yes, where cleaners list recurring availability. Some may offer monthly, six-weekly or one-off window cleaning depending on their route and schedule.'],
+      ['Do window cleaners clean frames and sills?', 'Some do, but it depends on the cleaner and the service listed on their profile. Check the service details before booking.'],
+      ['Can I combine window cleaning with gutter cleaning?', 'Often yes. Many exterior cleaners offer related services such as gutter cleaning, fascia cleaning or pressure washing, depending on equipment and availability.'],
+      ['Can I compare window cleaners before booking?', 'Yes. You can view cleaner profiles, check availability and compare service details before choosing who looks right for the job.'],
+    ],
+  },
 };
 
 
@@ -142,18 +175,18 @@ function formatServiceLocationIntro(serviceName) {
 
   const intros = {
     'Regular House Cleaning':
-      'If you are looking for regular house cleaning in Worthing, Lancing or Shoreham-by-Sea, our local pages make it easier to find cleaners with live availability and compare profiles before booking.',
+      'If you are looking for regular house cleaning in Worthing, Littlehampton, Crawley, Horsham, Chichester or nearby West Sussex towns, our local pages make it easier to find cleaners with live availability and compare profiles before booking.',
     'Deep Cleaning':
-      'If you need deep cleaning in Worthing, Lancing or Shoreham-by-Sea, you can use our location pages to find local cleaners, compare profiles, and check availability before you book.',
+      'If you need deep cleaning in Worthing, Littlehampton, Crawley, Horsham, Chichester or nearby West Sussex towns, you can use our location pages to find local cleaners, compare profiles, and check availability before you book.',
     'End of Tenancy':
-      'If you are moving out in Worthing, Lancing or Shoreham-by-Sea, our location pages help you find end of tenancy cleaners faster and compare available providers in your area.',
+      'If you are moving out in Worthing, Littlehampton, Crawley, Horsham, Chichester or nearby West Sussex towns, our location pages help you find end of tenancy cleaners faster and compare available providers in your area.',
     'Oven Cleaning':
-      'If you need oven cleaning in Worthing, Lancing or Shoreham-by-Sea, our local pages help you discover cleaners offering the service and book based on live availability.',
+      'If you need oven cleaning in Worthing, Littlehampton, Crawley, Horsham, Chichester or nearby West Sussex towns, our local pages help you discover cleaners offering the service and book based on live availability.',
   };
 
   return (
     intros[serviceName] ||
-    `If you are looking for ${serviceLower} in Worthing, Lancing or Shoreham-by-Sea, our location pages help you find local cleaners, compare profiles, and check live availability before booking.`
+    `If you are looking for ${serviceLower} in Worthing, Littlehampton, Crawley, Horsham, Chichester or nearby West Sussex towns, our location pages help you find local cleaners, compare profiles, and check live availability before booking.`
   );
 }
 
@@ -418,12 +451,12 @@ export default async function ServicePage({ params }) {
             <div className="max-w-3xl">
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">Internal link hub</p>
               <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">Use this page to jump into our lead local areas</h2>
-              <p className="mt-3 text-slate-700">Looking for {serviceLower} in Worthing, Lancing, Shoreham-by-Sea or nearby towns? Use the location pages below to see local cleaner coverage and move into live profiles faster.</p>
+              <p className="mt-3 text-slate-700">Looking for {serviceLower} in Worthing, Littlehampton, Crawley, Horsham, Chichester or nearby West Sussex towns? Use the location pages below to see local cleaner coverage and move into live profiles faster.</p>
             </div>
             <Link href="/services" className="inline-flex rounded-xl border border-teal-200 bg-white px-5 py-3 font-semibold text-teal-700">Browse all services</Link>
           </div>
           <div className="mt-6 flex flex-wrap gap-3">
-            {[...CORE_LOCATION_LINKS, { href: '/locations/littlehampton', label: 'Littlehampton' }, { href: '/locations/angmering', label: 'Angmering' }, { href: '/locations/rustington', label: 'Rustington' }].map((location) => (
+            {CORE_LOCATION_LINKS.map((location) => (
               <Link
                 key={location.href}
                 href={location.href}
@@ -438,7 +471,7 @@ export default async function ServicePage({ params }) {
         <section className="mb-10 grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
           <div className="rounded-[32px] border border-white/70 bg-white/90 p-8 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
             <h2 className="mb-4 text-2xl font-bold tracking-tight text-teal-900">Service coverage and local support</h2>
-            <p className="text-slate-700">This service is available across multiple areas including Worthing, Lancing, Shoreham-by-Sea, Littlehampton and surrounding locations. That helps this page support local intent as well as broader UK searches for {serviceLower}.</p>
+            <p className="text-slate-700">This service is available across multiple areas including Worthing, Littlehampton, Bognor Regis, Chichester, Crawley, Horsham, Lancing, Shoreham-by-Sea, Rustington, Angmering, Haywards Heath, East Grinstead and Burgess Hill. That helps this page support local intent as well as broader UK searches for {serviceLower}.</p>
             <p className="mt-4 text-slate-700">{formatServiceLocationIntro(serviceName)}</p>
             <div className="mt-6 flex flex-wrap gap-3">
               {CORE_LOCATION_LINKS.map((location) => (
