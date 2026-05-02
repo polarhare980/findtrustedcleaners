@@ -73,6 +73,32 @@ const CORE_SERVICE_LINKS = [
 ];
 
 const LOCAL_GUIDES = {
+  worthing: [
+    {
+      href: '/blog/home-cleaning-services-worthing',
+      title: 'Home Cleaning Services Worthing',
+      description:
+        'A local guide for Worthing residents comparing home cleaning options, regular cleaning help, and what to expect from local domestic cleaners.',
+    },
+    {
+      href: '/blog/cleaning-services-worthing',
+      title: 'Cleaning Services Worthing',
+      description:
+        'A wider Worthing cleaning guide covering common local services, when to book them, and how to compare cleaners before choosing.',
+    },
+    {
+      href: '/blog/carpet-cleaning-in-worthing-trusted-local-companies-west-sussex',
+      title: 'Carpet Cleaning in Worthing',
+      description:
+        'A focused carpet cleaning guide for Worthing and West Sussex, including local company options, stain removal, and professional cleaning expectations.',
+    },
+    {
+      href: '/blog/how-to-find-a-reliable-cleaner-in-worthing',
+      title: 'How to Find a Reliable Cleaner in Worthing',
+      description:
+        'Practical advice for choosing a reliable cleaner in Worthing, checking trust signals, and avoiding the usual booking headaches.',
+    },
+  ],
   'shoreham-by-sea': [
     {
       href: '/blog/oven-cleaning-shoreham-by-sea',
@@ -737,7 +763,7 @@ export default async function Page({ params }) {
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">Local cleaning guides</p>
           <h2 className="mt-2 text-2xl font-bold text-teal-900">Helpful cleaning guides for {locationName}</h2>
           <p className="mt-3 max-w-3xl text-slate-700">
-            These guides support local searches and help visitors move between Shoreham cleaning advice, service pages, and the main Shoreham-by-Sea cleaner listings.
+            These guides support local searches and help visitors move between local cleaning advice, service pages, and the main cleaner listings for this area.
           </p>
           <div className="mt-6 grid gap-4 md:grid-cols-2">
             {LOCAL_GUIDES[locationSlug].map((guide) => (

@@ -33,6 +33,10 @@ export async function GET() {
   const blogUrls = [
     'oven-cleaning-shoreham-by-sea',
     'mattress-cleaning-shoreham',
+    'home-cleaning-services-worthing',
+    'cleaning-services-worthing',
+    'carpet-cleaning-in-worthing-trusted-local-companies-west-sussex',
+    'how-to-find-a-reliable-cleaner-in-worthing',
   ].map((slug) => `${BASE}/blog/${slug}`);
 
   const urls = [
