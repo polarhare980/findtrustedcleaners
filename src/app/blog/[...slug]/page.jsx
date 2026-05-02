@@ -36,6 +36,41 @@ function normaliseSlug(slug) {
     .toLowerCase();
 }
 
+
+
+const BLOG_LOCATION_LINKS = [
+  { match: ["shoreham-by-sea", "shoreham"], href: "/locations/shoreham-by-sea" },
+  { match: ["littlehampton"], href: "/locations/littlehampton" },
+  { match: ["worthing"], href: "/locations/worthing" },
+  { match: ["lancing"], href: "/locations/lancing" },
+  { match: ["angmering"], href: "/locations/angmering" },
+  { match: ["rustington"], href: "/locations/rustington" },
+  { match: ["bognor-regis", "bognor"], href: "/locations/bognor-regis" },
+  { match: ["chichester"], href: "/locations/chichester" },
+];
+
+function getBlogCardLinks(slug = "", title = "") {
+  const haystack = `${slug} ${title}`.toLowerCase();
+  const location = BLOG_LOCATION_LINKS.find((item) =>
+    item.match.some((term) => haystack.includes(term))
+  );
+
+  return [
+    {
+      label: "Practical hiring advice",
+      href: "/blog/how-to-find-a-reliable-cleaner-uk",
+    },
+    {
+      label: "Cleaner booking tips",
+      href: location?.href || "/locations",
+    },
+    {
+      label: "Cleaning guides",
+      href: "/blog",
+    },
+  ];
+}
+
 function escapeRegex(s = "") {
   return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -331,14 +366,14 @@ export default async function BlogPostPage({ params }) {
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div className="min-w-0 rounded-[32px] border border-white/70 bg-white/88 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.10)] backdrop-blur-xl sm:p-8">
             <div className="mb-8 grid gap-3 sm:grid-cols-3">
-              {[
-                'Practical hiring advice',
-                'Cleaner booking tips',
-                'Clearer, easier articles',
-              ].map((item) => (
-                <div key={item} className="rounded-2xl border border-teal-100 bg-teal-50/80 px-4 py-3 text-sm font-medium text-teal-900">
-                  {item}
-                </div>
+              {getBlogCardLinks(slug, post.title).map((item) => (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className="rounded-2xl border border-teal-100 bg-teal-50/80 px-4 py-3 text-sm font-medium text-teal-900 transition hover:-translate-y-0.5 hover:border-teal-200 hover:bg-teal-100/80 hover:shadow-sm"
+                >
+                  {item.label}
+                </Link>
               ))}
             </div>
 
