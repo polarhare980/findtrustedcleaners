@@ -30,6 +30,11 @@ export async function GET() {
     'gym-cleaning',
   ].map((slug) => `${BASE}/services/${slug}`);
 
+  const blogUrls = [
+    'oven-cleaning-shoreham-by-sea',
+    'mattress-cleaning-shoreham',
+  ].map((slug) => `${BASE}/blog/${slug}`);
+
   const urls = [
     `${BASE}/`,
     `${BASE}/cleaners`,
@@ -49,6 +54,7 @@ export async function GET() {
     `${BASE}/locations/bognor-regis`,
     `${BASE}/locations/chichester`,
     ...serviceUrls,
+    ...blogUrls,
   ];
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>

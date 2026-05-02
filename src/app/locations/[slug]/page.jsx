@@ -72,6 +72,23 @@ const CORE_SERVICE_LINKS = [
   { href: '/services/oven-cleaning', label: 'Oven cleaning' },
 ];
 
+const LOCAL_GUIDES = {
+  'shoreham-by-sea': [
+    {
+      href: '/blog/oven-cleaning-shoreham-by-sea',
+      title: 'Oven Cleaning Shoreham-by-Sea',
+      description:
+        'A local guide covering oven cleaning costs, what is usually included, and when to book a professional oven cleaner in Shoreham-by-Sea.',
+    },
+    {
+      href: '/blog/mattress-cleaning-shoreham',
+      title: 'Mattress Cleaning Shoreham',
+      description:
+        'A practical guide to mattress cleaning in Shoreham, including signs your mattress needs cleaning and what a professional clean may include.',
+    },
+  ],
+};
+
 const SERVICE_SECTIONS = [
   {
     key: 'end-of-tenancy-cleaning',
@@ -709,6 +726,31 @@ export default async function Page({ params }) {
                 <p className="mt-1 text-sm text-slate-500">
                   {service.minPrice != null ? 'from listed profile prices' : 'check cleaner profile for pricing'}
                 </p>
+              </Link>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {LOCAL_GUIDES[locationSlug]?.length ? (
+        <section className="mb-10 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">Local cleaning guides</p>
+          <h2 className="mt-2 text-2xl font-bold text-teal-900">Helpful cleaning guides for {locationName}</h2>
+          <p className="mt-3 max-w-3xl text-slate-700">
+            These guides support local searches and help visitors move between Shoreham cleaning advice, service pages, and the main Shoreham-by-Sea cleaner listings.
+          </p>
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
+            {LOCAL_GUIDES[locationSlug].map((guide) => (
+              <Link
+                key={guide.href}
+                href={guide.href}
+                className="rounded-2xl border border-teal-100 bg-teal-50/60 p-5 transition hover:-translate-y-1 hover:border-teal-200 hover:bg-white"
+              >
+                <h3 className="text-lg font-semibold text-slate-900">{guide.title}</h3>
+                <p className="mt-2 text-sm text-slate-700">{guide.description}</p>
+                <span className="mt-4 inline-flex font-semibold text-teal-700 underline underline-offset-4">
+                  Read the guide
+                </span>
               </Link>
             ))}
           </div>
