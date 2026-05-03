@@ -3,7 +3,6 @@
 import PremiumBenefits from '@/components/PremiumBenefits'
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Head from 'next/head';
 import Link from 'next/link';
 import PublicHeader from '@/components/PublicHeader';
 import PublicFooter from '@/components/PublicFooter';
@@ -44,11 +43,7 @@ export default function LoginPage() {
 
   return (
     <>
-      <Head>
-        <title>Login | Find Trusted Cleaners</title>
-        <meta name="description" content="Login to your Find Trusted Cleaners account as a client or cleaner." />
-      </Head>
-      <main className="min-h-screen bg-slate-50">
+<main className="min-h-screen bg-slate-50">
         <PublicHeader />
         <PageHero eyebrow="Account access" title="Login to your account" description="Choose whether you are signing in as a cleaner or a client." />
 

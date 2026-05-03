@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Head from 'next/head';
 import Link from 'next/link';
 import PublicHeader from '@/components/PublicHeader';
 
@@ -36,12 +35,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <>
-      <Head>
-        <title>Forgot Password | FindTrustedCleaners</title>
-        <meta name="description" content="Reset your FindTrustedCleaners password securely." />
-      </Head>
-
-      <main className="min-h-screen bg-gradient-to-br from-teal-900/20 to-teal-700/10 text-gray-700 relative">
+<main className="min-h-screen bg-gradient-to-br from-teal-900/20 to-teal-700/10 text-gray-700 relative">
         <div className="absolute inset-0 bg-gradient-to-br from-teal-900/20 to-teal-700/10"></div>
 
         <PublicHeader />

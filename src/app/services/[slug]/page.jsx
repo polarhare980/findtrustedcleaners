@@ -315,7 +315,7 @@ export async function generateMetadata({ params }) {
     title,
     description,
     alternates: { canonical },
-    robots: 'index,follow',
+    robots: { index: true, follow: true },
   };
 }
 

@@ -77,6 +77,7 @@ export async function generateMetadata({ params }) {
     return {
       title: meta?.title || "Blog post",
       description: meta?.description || "",
+      alternates: { canonical: `https://www.findtrustedcleaners.com/blog/${slug}` },
       robots: { index: true, follow: true },
     };
   }
@@ -89,10 +90,24 @@ export async function generateMetadata({ params }) {
     title: post.title || "Blog post",
     description: post.excerpt || "",
     openGraph: post.coverImage ? { images: [post.coverImage] } : undefined,
+    alternates: { canonical: `https://www.findtrustedcleaners.com/blog/${slug}` },
     robots: { index: true, follow: true },
   };
 }
 
+
+const GENERAL_RELATED_LINKS = `
+<section class="related-guides">
+  <h2>Useful cleaning links</h2>
+  <ul>
+    <li><a href="/cleaners">Find trusted cleaners near you</a></li>
+    <li><a href="/services/domestic-cleaning">Domestic cleaning services</a></li>
+    <li><a href="/services/deep-cleaning">Deep cleaning services</a></li>
+    <li><a href="/services/end-of-tenancy-cleaning">End of tenancy cleaning</a></li>
+    <li><a href="/locations/worthing">Cleaners in Worthing</a></li>
+    <li><a href="/locations/littlehampton">Cleaners in Littlehampton</a></li>
+  </ul>
+</section>`;
 
 const LITTLEHAMPTON_RELATED_GUIDES_HTML = `
 <section class="related-guides">
@@ -144,6 +159,13 @@ function enhanceLittlehamptonBlogContent(html = "", slug = "") {
   }
 
   return enhanced;
+}
+
+function ensureBlogInternalLinks(html = "", slug = "") {
+  const enhanced = enhanceLittlehamptonBlogContent(html, slug);
+  if (/Useful cleaning links|Related Guides/i.test(enhanced)) return enhanced;
+  return `${enhanced}
+${GENERAL_RELATED_LINKS}`;
 }
 
 function safeDate(value) {
@@ -345,7 +367,7 @@ export default async function BlogPostPage({ params }) {
             <div
               className="prose prose-lg max-w-none prose-headings:font-bold prose-headings:text-slate-900 prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4 prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3 prose-p:text-slate-700 prose-p:leading-relaxed prose-p:mb-5 prose-a:text-teal-700 prose-a:underline hover:prose-a:text-teal-900 prose-strong:text-slate-900 prose-ul:list-disc prose-ul:pl-6 prose-ul:mb-5 prose-ol:list-decimal prose-ol:pl-6 prose-ol:mb-5 prose-li:mb-2 prose-li:text-slate-700 prose-img:rounded-2xl prose-img:shadow-md prose-img:my-8 prose-blockquote:border-l-4 prose-blockquote:border-teal-500 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-slate-600 prose-code:bg-slate-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm"
             >
-              {renderHtmlWithAdMarkers(enhanceLittlehamptonBlogContent(post.content || '', slug), slots)}
+              {renderHtmlWithAdMarkers(ensureBlogInternalLinks(post.content || '', slug), slots)}
             </div>
 
             {slots.bottom ? (

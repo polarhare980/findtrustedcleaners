@@ -254,6 +254,18 @@ export default function BlogListClient({ initialTag = '' }) {
             </div>
           )}
 
+          <div className="mb-8 rounded-[20px] border border-white/20 bg-white/40 p-5 text-sm text-slate-700 backdrop-blur-[20px]">
+            <p className="mb-3 font-semibold text-teal-800">Popular cleaning links</p>
+            <div className="flex flex-wrap gap-2">
+              <Link href="/cleaners" className="rounded-full border border-teal-100 bg-white/70 px-3 py-2 hover:text-teal-800">Find trusted cleaners</Link>
+              <Link href="/services/domestic-cleaning" className="rounded-full border border-teal-100 bg-white/70 px-3 py-2 hover:text-teal-800">Domestic cleaning services</Link>
+              <Link href="/services/deep-cleaning" className="rounded-full border border-teal-100 bg-white/70 px-3 py-2 hover:text-teal-800">Deep cleaning services</Link>
+              <Link href="/services/end-of-tenancy-cleaning" className="rounded-full border border-teal-100 bg-white/70 px-3 py-2 hover:text-teal-800">End of tenancy cleaning</Link>
+              <Link href="/locations/worthing" className="rounded-full border border-teal-100 bg-white/70 px-3 py-2 hover:text-teal-800">Cleaners in Worthing</Link>
+              <Link href="/locations/littlehampton" className="rounded-full border border-teal-100 bg-white/70 px-3 py-2 hover:text-teal-800">Cleaners in Littlehampton</Link>
+            </div>
+          </div>
+
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 mb-6">
               {error}

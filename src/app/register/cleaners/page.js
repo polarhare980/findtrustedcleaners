@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Head from 'next/head';
 import Link from 'next/link';
 import React from 'react';
 import PublicHeader from '@/components/PublicHeader';
@@ -163,11 +162,7 @@ export default function CleanerRegister() {
 
   return (
     <>
-      <Head>
-        <title>Register as a Cleaner | Find Trusted Cleaners</title>
-      </Head>
-
-      <main className="min-h-screen relative overflow-hidden bg-slate-50 text-slate-800">
+<main className="min-h-screen relative overflow-hidden bg-slate-50 text-slate-800">
         <div className="absolute inset-0 -z-10">
           <img src="/background.jpg" alt="" className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(20,184,166,0.16),transparent_38%),linear-gradient(180deg,rgba(248,250,252,0.90),rgba(240,253,250,0.82),rgba(248,250,252,0.96))]" />

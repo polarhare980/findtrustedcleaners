@@ -355,7 +355,7 @@ export default function CleanerProfile() {
           <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
             <div className="max-w-3xl">
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">Cleaner profile</p>
-              <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">{cleaner.companyName || cleaner.realName || 'Cleaner'}</h1>
+              <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">{cleaner.companyName || cleaner.realName || 'Cleaner'} – {(cleaner.servicesDetailed?.find((s) => s?.active)?.name || cleaner.services?.[0] || 'Cleaning services')} in {cleaner.address?.town || cleaner.address?.county || cleaner.address?.postcode || 'your area'}</h1>
               <p className="mt-3 text-base leading-7 text-slate-600">View trust signals, service pricing, recent reviews and live availability in one place before you book.</p>
             </div>
             <div className="rounded-2xl border border-teal-100 bg-teal-50/70 px-4 py-3 text-sm text-teal-900">Public profile with live availability and booking request flow.</div>
@@ -387,9 +387,9 @@ export default function CleanerProfile() {
         {/* Title & meta */}
         <div className="flex-1">
           <div className="flex flex-wrap items-center gap-3 mb-2">
-            <h1 className="text-2xl md:text-3xl font-extrabold text-teal-800">
+            <h2 className="text-2xl md:text-3xl font-extrabold text-teal-800">
               {cleaner.companyName || cleaner.realName || 'Cleaner'}
-            </h1>
+            </h2>
             <div className="flex flex-wrap gap-2">
               {badges.map((b) => (
                 <span

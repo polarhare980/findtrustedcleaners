@@ -158,6 +158,23 @@ export default function AboutPage() {
         </div>
       </section>
 
+      <section className="site-section pb-10">
+        <div className="surface-card p-8">
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">Useful links</p>
+          <h2 className="mt-3 text-3xl font-bold text-slate-900">Explore cleaners, services and local guides.</h2>
+          <div className="mt-6 grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
+            <Link href="/cleaners" className="rounded-2xl border border-slate-200 bg-white p-4 font-semibold text-teal-800 hover:border-teal-200">Find trusted cleaners near you</Link>
+            <Link href="/services/domestic-cleaning" className="rounded-2xl border border-slate-200 bg-white p-4 font-semibold text-teal-800 hover:border-teal-200">Domestic cleaning services</Link>
+            <Link href="/services/end-of-tenancy-cleaning" className="rounded-2xl border border-slate-200 bg-white p-4 font-semibold text-teal-800 hover:border-teal-200">End of tenancy cleaning</Link>
+            <Link href="/services/oven-cleaning" className="rounded-2xl border border-slate-200 bg-white p-4 font-semibold text-teal-800 hover:border-teal-200">Oven cleaning services</Link>
+            <Link href="/locations/worthing" className="rounded-2xl border border-slate-200 bg-white p-4 font-semibold text-teal-800 hover:border-teal-200">Cleaners in Worthing</Link>
+            <Link href="/locations/littlehampton" className="rounded-2xl border border-slate-200 bg-white p-4 font-semibold text-teal-800 hover:border-teal-200">Cleaners in Littlehampton</Link>
+            <Link href="/blog/how-to-hire-a-cleaner" className="rounded-2xl border border-slate-200 bg-white p-4 font-semibold text-teal-800 hover:border-teal-200">How to hire a cleaner</Link>
+            <Link href="/blog/end-of-tenancy-cleaning-checklist" className="rounded-2xl border border-slate-200 bg-white p-4 font-semibold text-teal-800 hover:border-teal-200">End of tenancy checklist</Link>
+          </div>
+        </div>
+      </section>
+
       <PublicFooter />
     </main>
   );

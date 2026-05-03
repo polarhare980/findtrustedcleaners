@@ -433,7 +433,7 @@ export default function HomeClient() {
           <p className="mx-auto mt-4 max-w-2xl text-slate-600">Join the marketplace for free, set your availability, and start getting discovered. Upgrade to premium when you want stronger visibility and a more powerful profile presence.</p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Link href="/register/cleaners" className="ftc-button-primary">Create cleaner profile</Link>
-            <Link href="/how-it-works" className="ftc-button-secondary">See how it works</Link>
+            <Link href="/about" className="ftc-button-secondary">About FindTrustedCleaners</Link>
           </div>
         </div>
       </section>

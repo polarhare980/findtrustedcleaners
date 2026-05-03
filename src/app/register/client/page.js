@@ -2,7 +2,6 @@
 
 import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Head from 'next/head';
 import Link from 'next/link';
 import PublicHeader from '@/components/PublicHeader';
 import PublicFooter from '@/components/PublicFooter';
@@ -61,10 +60,9 @@ function ClientRegisterPage() {
 
   return (
     <>
-      <Head><title>Register as a Client | Find Trusted Cleaners</title></Head>
-      <main className="min-h-screen bg-slate-50">
+<main className="min-h-screen bg-slate-50">
         <PublicHeader />
-        <PageHero eyebrow="Client registration" title="Create your client account" description="Set up your details once so you can save favourites, request bookings, and manage appointments more easily." />
+        <PageHero eyebrow="Client registration" title="Register as a Client" description="Set up your details once so you can save favourites, request bookings, and manage appointments more easily." />
         <section className="site-section py-10">
           <div className="mx-auto max-w-3xl surface-card p-6 sm:p-8">
             <form onSubmit={handleSubmit} className="space-y-8">

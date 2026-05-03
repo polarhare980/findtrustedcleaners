@@ -148,6 +148,12 @@ export default function ContactFormComponent() {
         </div>
       </section>
 
+      <section className="site-section pb-10">
+        <p className="text-center text-sm text-slate-600">
+          Want to know who built the platform? Read more <a href="/about" className="font-semibold text-teal-700 underline">about FindTrustedCleaners</a>.
+        </p>
+      </section>
+
       <PremiumBenefits />
       <PublicFooter />
     </main>

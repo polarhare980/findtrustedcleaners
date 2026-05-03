@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Head from 'next/head';
 import { fetchClient } from '@/lib/fetchClient';
 import AccountShell from '@/components/AccountShell';
 
@@ -39,8 +38,7 @@ export default function ClientAccountPage() {
 
   return (
     <>
-      <Head><title>Client Account | Find Trusted Cleaners</title></Head>
-      <AccountShell title="Client account" description="Manage your profile details and account settings." backHref="/clients/dashboard" backLabel="Back to dashboard">
+<AccountShell title="Client account" description="Manage your profile details and account settings." backHref="/clients/dashboard" backLabel="Back to dashboard">
         {client ? (
           <div className="space-y-8">
             <div className="grid gap-4 md:grid-cols-2">

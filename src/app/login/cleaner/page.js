@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import Head from 'next/head';
 import Link from 'next/link';
 import Image from 'next/image';
 import { secureFetch } from '@/lib/secureFetch';
@@ -95,12 +94,7 @@ const res = await secureFetch('/api/auth/me');
 
   return (
     <>
-      <Head>
-        <title>{cleaner.realName}&#39;s Profile | Find Trusted Cleaners</title>
-        <meta name="description" content="View and manage your cleaner profile." />
-      </Head>
-
-      <main className="min-h-screen bg-white text-gray-800">
+<main className="min-h-screen bg-white text-gray-800">
         <header className="flex items-center justify-between px-6 py-4 bg-[#0D9488] text-white">
           <Link href="/">
             <Image src="/findtrusted-logo.png" alt="Logo" className="w-32 h-auto" width={128} height={40} />

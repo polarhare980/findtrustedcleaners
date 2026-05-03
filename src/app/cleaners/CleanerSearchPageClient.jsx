@@ -110,7 +110,7 @@ export default function CleanerSearchPage() {
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-2xl">
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">Trusted cleaner marketplace</p>
-              <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">Find a cleaner</h1>
+              <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">Find Trusted Cleaners Near You</h1>
               <p className="mt-3 text-base leading-7 text-slate-600 sm:text-lg">
                 Search by postcode, refine by service, and browse cleaner profiles with availability, reviews and trust signals in one place.
               </p>
@@ -215,7 +215,7 @@ export default function CleanerSearchPage() {
           <div className="mt-4 grid gap-5 text-sm leading-7 text-slate-600 md:grid-cols-3">
             <p>Use FindTrustedCleaners.com to search for domestic cleaners, deep cleaning, end of tenancy cleaning, oven cleaning, carpet cleaning and other local cleaning services.</p>
             <p>Cleaner profiles can show service details, availability, reviews, photos, insurance badges and useful trust signals so you can make a more informed choice.</p>
-            <p>Start with your postcode, choose the service you need, then compare nearby cleaners without relying on random social media posts or endless quote chasing.</p>
+            <p>Start with your postcode, choose the service you need, then compare nearby cleaners without relying on random social media posts or endless quote chasing. Explore <a href="/services/domestic-cleaning" className="font-semibold text-teal-700 underline">domestic cleaning</a>, <a href="/services/deep-cleaning" className="font-semibold text-teal-700 underline">deep cleaning</a>, <a href="/services/end-of-tenancy-cleaning" className="font-semibold text-teal-700 underline">end of tenancy cleaning</a>, or browse popular areas such as <a href="/locations/worthing" className="font-semibold text-teal-700 underline">Worthing</a> and <a href="/locations/littlehampton" className="font-semibold text-teal-700 underline">Littlehampton</a>.</p>
           </div>
         </div>
       </section>

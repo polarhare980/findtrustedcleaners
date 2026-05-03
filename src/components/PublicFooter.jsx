@@ -17,6 +17,7 @@ export default function PublicFooter() {
               ['Find a cleaner', '/cleaners'],
               ['Cleaning services', '/services'],
               ['How it works', '/how-it-works'],
+              ['About us', '/about'],
               ['Contact', '/contact'],
             ]} />
             <FooterGroup title="Popular locations" links={[
