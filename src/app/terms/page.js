@@ -6,11 +6,11 @@ export const metadata = {
   openGraph: {
     title: 'Terms & Conditions | FindTrustedCleaners',
     description: 'Terms and conditions for using the FindTrustedCleaners marketplace.',
-    url: 'https://www.findtrustedcleaners.co.uk/terms',
+    url: 'https://www.findtrustedcleaners.com/terms',
     siteName: 'FindTrustedCleaners',
     images: [
       {
-        url: 'https://www.findtrustedcleaners.co.uk/og-image.jpg',
+        url: 'https://www.findtrustedcleaners.com/og-image.jpg',
         width: 1200,
         height: 630,
         alt: 'Terms & Conditions - FindTrustedCleaners',
@@ -18,6 +18,10 @@ export const metadata = {
     ],
     type: 'website',
   },
+  alternates: {
+    canonical: '/terms',
+  },
+  robots: { index: true, follow: true },
 };
 
 const supportEmail = 'findtrustedcleaners@gmail.com';

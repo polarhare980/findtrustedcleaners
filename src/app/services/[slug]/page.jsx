@@ -303,7 +303,11 @@ export async function generateMetadata({ params }) {
   }
 
   const serviceLower = serviceName.toLowerCase();
-  const canonical = `/services/${slugify(serviceName)}`;
+  const canonical = serviceName === 'End of Tenancy'
+    ? '/services/end-of-tenancy-cleaning'
+    : serviceName === 'Regular House Cleaning'
+      ? '/services/regular-cleaning'
+      : `/services/${slugify(serviceName)}`;
   const title = `${serviceName} Near You | Book Online`;
   const description = `Find ${serviceLower} near you. View live cleaner availability, compare profiles, and book instantly with FindTrustedCleaners.com.`;
 
@@ -345,7 +349,11 @@ export default async function ServicePage({ params }) {
   const category = getCategory(serviceName);
   const relatedServices = getRelatedServices(serviceName);
   const blogLinks = BLOG_LINKS[serviceName] || BLOG_LINKS.default;
-  const canonicalPath = `/services/${slugify(serviceName)}`;
+  const canonicalPath = serviceName === 'End of Tenancy'
+    ? '/services/end-of-tenancy-cleaning'
+    : serviceName === 'Regular House Cleaning'
+      ? '/services/regular-cleaning'
+      : `/services/${slugify(serviceName)}`;
   const absoluteUrl = `${SITE_URL.replace(/\/$/, '')}${canonicalPath}`;
   const faqSchema = buildFaqSchema(serviceName, copy.faqs, absoluteUrl);
   const serviceSchema = buildServiceSchema(serviceName, absoluteUrl);

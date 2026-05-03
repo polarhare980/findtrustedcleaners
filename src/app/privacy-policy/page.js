@@ -7,11 +7,11 @@ export const metadata = {
   openGraph: {
     title: 'Privacy Policy | FindTrustedCleaners',
     description: 'How we collect, use, and protect personal data at FindTrustedCleaners.',
-    url: 'https://www.findtrustedcleaners.co.uk/privacy-policy',
+    url: 'https://www.findtrustedcleaners.com/privacy-policy',
     siteName: 'FindTrustedCleaners',
     images: [
       {
-        url: 'https://www.findtrustedcleaners.co.uk/og-image.jpg',
+        url: 'https://www.findtrustedcleaners.com/og-image.jpg',
         width: 1200,
         height: 630,
         alt: 'Privacy Policy - FindTrustedCleaners',
@@ -19,7 +19,10 @@ export const metadata = {
     ],
     type: 'website',
   },
-  robots: 'index, follow',
+  alternates: {
+    canonical: '/privacy-policy',
+  },
+  robots: { index: true, follow: true },
 };
 
 export default function PrivacyPolicyPage() {

@@ -6,11 +6,11 @@ export const metadata = {
   openGraph: {
     title: 'Cookie Policy | FindTrustedCleaners',
     description: 'How FindTrustedCleaners uses cookies and similar technologies.',
-    url: 'https://www.findtrustedcleaners.co.uk/cookie-policy',
+    url: 'https://www.findtrustedcleaners.com/cookie-policy',
     siteName: 'FindTrustedCleaners',
     images: [
       {
-        url: 'https://www.findtrustedcleaners.co.uk/og-image.jpg',
+        url: 'https://www.findtrustedcleaners.com/og-image.jpg',
         width: 1200,
         height: 630,
         alt: 'Cookie Policy - FindTrustedCleaners',

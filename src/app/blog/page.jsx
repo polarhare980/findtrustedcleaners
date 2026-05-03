@@ -14,6 +14,13 @@ export const metadata = {
   title: "Blog | Find Trusted Cleaners",
   description:
     "Cleaning tips, guides and advice from the Find Trusted Cleaners team.",
+  alternates: {
+    canonical: '/blog',
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 const STATIC_META = [

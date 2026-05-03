@@ -9,11 +9,11 @@ export const metadata = {
   openGraph: {
     title: 'Booking Confirmed | FindTrustedCleaners',
     description: 'Your booking was successful. View your client dashboard or return to the homepage.',
-    url: 'https://www.findtrustedcleaners.co.uk/booking-confirmation',
+    url: 'https://www.findtrustedcleaners.com/booking-confirmation',
     siteName: 'FindTrustedCleaners',
     images: [
       {
-        url: 'https://www.findtrustedcleaners.co.uk/og-image.jpg',
+        url: 'https://www.findtrustedcleaners.com/og-image.jpg',
         width: 1200,
         height: 630,
         alt: 'Booking Confirmed - FindTrustedCleaners',

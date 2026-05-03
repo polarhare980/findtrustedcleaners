@@ -12,11 +12,11 @@ export const metadata = {
     title: 'About Us | FindTrustedCleaners',
     description:
       'Family-run and practical, FindTrustedCleaners was built to make it easier for households to find trusted local cleaners and for cleaners to be discovered fairly.',
-    url: 'https://www.findtrustedcleaners.co.uk/about',
+    url: 'https://www.findtrustedcleaners.com/about',
     siteName: 'FindTrustedCleaners',
     images: [
       {
-        url: 'https://www.findtrustedcleaners.co.uk/og-image.jpg',
+        url: 'https://www.findtrustedcleaners.com/og-image.jpg',
         width: 1200,
         height: 630,
         alt: 'FindTrustedCleaners About Us',
@@ -24,6 +24,10 @@ export const metadata = {
     ],
     type: 'website',
   },
+  alternates: {
+    canonical: '/about',
+  },
+  robots: { index: true, follow: true },
 };
 
 const values = [

@@ -5,11 +5,9 @@ export async function GET() {
     process.env.NEXT_PUBLIC_SITE_URL || "https://www.findtrustedcleaners.com";
 
   const serviceUrls = [
-    'regular-house-cleaning',
     'regular-cleaning',
     'deep-cleaning',
     'spring-cleaning',
-    'end-of-tenancy',
     'end-of-tenancy-cleaning',
     'after-party-cleaning',
     'holiday-let-cleaning',
@@ -104,7 +102,7 @@ export async function GET() {
     `${BASE}/blog`,
     `${BASE}/about`,
     `${BASE}/contact`,
-    `${BASE}/privacy`,
+    `${BASE}/privacy-policy`,
     `${BASE}/terms`,
     `${BASE}/services`,
     ...locationUrls,

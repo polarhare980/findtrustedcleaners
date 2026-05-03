@@ -38,9 +38,6 @@ export const metadata = {
     description: SITE_DESC,
     images: ["/og-image.jpg"],
   },
-  alternates: {
-    canonical: SITE_URL,
-  },
 };
 
 export default function RootLayout({ children }) {
