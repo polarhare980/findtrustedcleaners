@@ -96,6 +96,46 @@ export async function generateMetadata({ params }) {
 }
 
 
+
+const LOCAL_CLUSTER_LINKS = {
+  "worthing": [
+    { href: "/blog/deep-cleaning-worthing-whats-included-costs", label: "Deep Cleaning in Worthing" },
+    { href: "/blog/end-of-tenancy-cleaning-worthing-guide", label: "End of Tenancy Cleaning in Worthing" },
+    { href: "/blog/weekly-cleaners-in-worthing-is-it-worth-it", label: "Weekly Cleaners in Worthing" },
+    { href: "/blog/one-off-cleaning-services-worthing-explained", label: "One-Off Cleaning Services in Worthing" },
+  ],
+  "shoreham": [
+    { href: "/blog/end-of-tenancy-cleaning-in-shoreham-by-sea", label: "End of Tenancy Cleaning in Shoreham-by-Sea" },
+    { href: "/blog/deep-cleaning-in-shoreham-by-sea", label: "Deep Cleaning in Shoreham-by-Sea" },
+    { href: "/blog/domestic-cleaning-services-in-shoreham-by-sea", label: "Domestic Cleaning Services in Shoreham-by-Sea" },
+  ],
+  "lancing": [
+    { href: "/blog/weekly-cleaner-services-in-lancing", label: "Weekly Cleaner Services in Lancing" },
+    { href: "/blog/deep-cleaning-in-lancing-local-guide", label: "Deep Cleaning in Lancing" },
+    { href: "/blog/domestic-cleaning-services-in-lancing", label: "Domestic Cleaning Services in Lancing" },
+  ],
+  "chichester": [
+    { href: "/blog/deep-cleaning-in-chichester-when-do-you-need-it", label: "Deep Cleaning in Chichester" },
+    { href: "/blog/end-of-tenancy-cleaning-in-chichester-costs-checklist", label: "End of Tenancy Cleaning in Chichester" },
+    { href: "/blog/domestic-cleaning-services-in-chichester", label: "Domestic Cleaning Services in Chichester" },
+  ]
+};
+
+function buildLocalClusterLinks(slug = "") {
+  const lower = String(slug || '').toLowerCase();
+  const matched = Object.entries(LOCAL_CLUSTER_LINKS).find(([key]) => lower.includes(key));
+  if (!matched) return '';
+
+  const [, links] = matched;
+  return `
+<section class="related-guides">
+  <h2>Related Local Cleaning Guides</h2>
+  <ul>
+    ${links.map(link => `<li><a href="${link.href}">${link.label}</a></li>`).join('')}
+  </ul>
+</section>`;
+}
+
 const GENERAL_RELATED_LINKS = `
 <section class="related-guides">
   <h2>Useful cleaning links</h2>
@@ -165,6 +205,7 @@ function ensureBlogInternalLinks(html = "", slug = "") {
   const enhanced = enhanceLittlehamptonBlogContent(html, slug);
   if (/Useful cleaning links|Related Guides/i.test(enhanced)) return enhanced;
   return `${enhanced}
+${buildLocalClusterLinks(slug)}
 ${GENERAL_RELATED_LINKS}`;
 }
 
