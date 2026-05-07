@@ -235,6 +235,48 @@ function getServiceCopy(serviceName) {
   };
 }
 
+
+function buildEnhancedServiceFaqs(serviceName, baseFaqs = []) {
+  const lower = serviceName.toLowerCase();
+  const unique = [];
+  const seen = new Set();
+  const add = (question, answer) => {
+    const key = String(question || '').trim().toLowerCase();
+    if (!key || seen.has(key)) return;
+    seen.add(key);
+    unique.push([question, answer]);
+  };
+
+  baseFaqs.forEach(([question, answer]) => add(question, answer));
+  add(`How do I know which ${lower} provider to choose?`, `Look at the cleaner profile rather than price alone. Check the services listed, live availability, reviews, photos, insurance or DBS details where shown, and whether the cleaner regularly handles this type of job. FindTrustedCleaners.com is built to help you compare those trust signals before you book.`);
+  add(`Do cleaners bring their own products for ${lower}?`, `It depends on the cleaner and the service type. Some cleaners bring products and equipment, while others may ask to use what is already at the property. Always check the cleaner profile and booking notes before confirming, especially for specialist jobs such as oven, carpet, mould, gutter or pressure washing services.`);
+  add(`Is ${lower} suitable for landlords, tenants or agents?`, `Yes, many one-off cleaning services are useful for tenants, landlords and letting agents, especially before viewings, handovers or inventory checks. For move-out jobs, compare end of tenancy cleaning, oven cleaning and carpet cleaning options together so the property is ready for inspection.`);
+  add(`Can I compare ${lower} with other cleaning services?`, `Yes. If the job is bigger than one service, compare related options such as domestic cleaning, deep cleaning, end of tenancy cleaning, oven cleaning, carpet cleaning, window cleaning and pressure washing. This helps you choose the right cleaner for the full job instead of booking a service that is too narrow.`);
+  add(`Are local ${lower} slots available at weekends?`, `Weekend availability depends on the cleaners listed in your area. Some cleaners offer Saturdays or occasional weekend slots, while others focus on weekday work. Use the live availability shown on cleaner profiles to avoid sending enquiries to cleaners who cannot fit the job in.`);
+
+  return unique.slice(0, 9);
+}
+
+function getFaqInternalLinks(serviceName, question = '') {
+  const lowerQuestion = question.toLowerCase();
+  const links = [];
+  const add = (href, label) => {
+    if (!links.some((link) => link.href === href)) links.push({ href, label });
+  };
+
+  add('/cleaners', 'compare available cleaners');
+  add('/blog/how-to-hire-a-cleaner', 'how to hire a cleaner');
+  if (lowerQuestion.includes('cost') || lowerQuestion.includes('price')) add('/blog/average-cleaner-prices-across-west-sussex-2026-guide', 'cleaner prices in West Sussex');
+  if (lowerQuestion.includes('landlord') || lowerQuestion.includes('tenant') || lowerQuestion.includes('agent')) add('/services/end-of-tenancy-cleaning', 'end of tenancy cleaning');
+  if (lowerQuestion.includes('compare') || lowerQuestion.includes('other')) {
+    add('/services/deep-cleaning', 'deep cleaning services');
+    add('/services/domestic-cleaning', 'domestic cleaning');
+  }
+  if (serviceName !== 'Oven Cleaning') add('/services/oven-cleaning', 'oven cleaning');
+  if (serviceName !== 'Carpet Cleaning') add('/services/carpet-cleaning', 'carpet cleaning');
+  return links.slice(0, 3);
+}
+
 function getRelatedServices(serviceName) {
   const category = getCategory(serviceName);
   const sameCategory = SERVICE_CATEGORIES[category] || [];
@@ -355,7 +397,8 @@ export default async function ServicePage({ params }) {
       ? '/services/regular-cleaning'
       : `/services/${slugify(serviceName)}`;
   const absoluteUrl = `${SITE_URL.replace(/\/$/, '')}${canonicalPath}`;
-  const faqSchema = buildFaqSchema(serviceName, copy.faqs, absoluteUrl);
+  const faqItems = buildEnhancedServiceFaqs(serviceName, copy.faqs);
+  const faqSchema = buildFaqSchema(serviceName, faqItems, absoluteUrl);
   const serviceSchema = buildServiceSchema(serviceName, absoluteUrl);
 
   return (
@@ -515,10 +558,17 @@ export default async function ServicePage({ params }) {
         <section className="mb-10 rounded-[32px] border border-white/70 bg-white/90 p-8 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
           <h2 className="mb-6 text-2xl font-bold tracking-tight text-teal-900">Frequently asked questions</h2>
           <div className="grid gap-4 md:grid-cols-2">
-            {copy.faqs.map(([question, answer]) => (
+            {faqItems.map(([question, answer]) => (
               <div key={question} className="rounded-2xl bg-slate-50 p-5">
                 <h3 className="mb-2 text-lg font-semibold text-slate-900">{question}</h3>
                 <p className="text-slate-700">{answer}</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {getFaqInternalLinks(serviceName, question).map((link) => (
+                    <Link key={link.href} href={link.href} className="rounded-full border border-teal-200 bg-white px-3 py-1 text-sm font-medium text-teal-700 hover:bg-teal-50">
+                      {link.label}
+                    </Link>
+                  ))}
+                </div>
               </div>
             ))}
           </div>
