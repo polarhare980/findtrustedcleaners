@@ -5,6 +5,10 @@ import { connectToDatabase } from '@/lib/db';
 import Cleaner from '@/models/Cleaner';
 import CleanerProfile from '@/app/cleaners/[id]/CleanerProfile';
 import { buildServiceMarket } from '@/lib/serviceMarketplace';
+import FreshnessPanel from '@/components/seo/FreshnessPanel';
+import RegionalSeoMesh from '@/components/seo/RegionalSeoMesh';
+import AuthorityTrustPanel from '@/components/seo/AuthorityTrustPanel';
+import { buildBreadcrumbSchema } from '@/lib/seo/regionalSeoData';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.findtrustedcleaners.com';
 
@@ -480,6 +484,12 @@ export default async function Page({ params }) {
     ],
   };
 
+  const breadcrumbSchema = buildBreadcrumbSchema([
+    { name: 'Home', href: '/' },
+    { name: 'Locations', href: '/locations' },
+    { name: locationName, href: `/locations/${locationSlug}` },
+  ]);
+
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,#f7fbfb_0%,#f8fafc_42%,#f8fafc_100%)] text-slate-900">
       <PublicHeader />
@@ -491,6 +501,10 @@ export default async function Page({ params }) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
 
       <header className="mb-8 rounded-3xl border border-teal-100 bg-white p-8 shadow-sm">
@@ -711,6 +725,15 @@ export default async function Page({ params }) {
           ))}
         </div>
       </section>
+
+      <FreshnessPanel cleaners={cleaners} title={`Fresh cleaner profile signals in ${locationName}`} />
+
+      <RegionalSeoMesh locationName={locationName} compact={locationSlug !== 'west-sussex'} />
+
+      <AuthorityTrustPanel
+        title={`Trust signals for cleaners in ${locationName}`}
+        intro={`Profiles in ${locationName} can show services, availability, prices, reviews and verification-style details, giving visitors more context before they enquire.`}
+      />
 
       {cleaners.length ? (
         <section className="mb-10">

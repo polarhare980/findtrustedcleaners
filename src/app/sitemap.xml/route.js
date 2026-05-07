@@ -28,7 +28,7 @@ function xmlEscape(value = '') {
 
 export async function GET() {
   const urls = new Set([
-    `${BASE}/`, `${BASE}/cleaners`, `${BASE}/blog`, `${BASE}/about`, `${BASE}/contact`, `${BASE}/privacy-policy`, `${BASE}/terms`, `${BASE}/services`, `${BASE}/faq`, `${BASE}/how-it-works`, `${BASE}/cookie-policy`,
+    `${BASE}/`, `${BASE}/cleaners`, `${BASE}/blog`, `${BASE}/about`, `${BASE}/contact`, `${BASE}/privacy-policy`, `${BASE}/terms`, `${BASE}/services`, `${BASE}/locations`, `${BASE}/faq`, `${BASE}/how-it-works`, `${BASE}/cookie-policy`,
     ...SERVICES.map((slug) => `${BASE}/services/${slug}`),
     ...LOCATIONS.map((slug) => `${BASE}/locations/${slug}`),
     ...STATIC_BLOGS.map((slug) => `${BASE}/blog/${slug}`),

@@ -10,6 +10,8 @@ import PublicFooter from '@/components/PublicFooter';
 import PageHero from '@/components/PageHero';
 import { injectPendingFromPurchases } from '@/lib/availability';
 import { ALL_SERVICE_OPTIONS } from '@/lib/serviceOptions';
+import RegionalSeoMesh from '@/components/seo/RegionalSeoMesh';
+import AuthorityTrustPanel from '@/components/seo/AuthorityTrustPanel';
 
 const fetcher = (url) => fetch(url, { credentials: 'include' }).then((r) => r.json());
 const CLEANERS_API = '/api/public-cleaners';
@@ -412,6 +414,13 @@ export default function HomeClient() {
           </section>
         </div>
       </section>
+
+      <RegionalSeoMesh locationName="West Sussex" compact />
+
+      <AuthorityTrustPanel
+        title="A stronger local alternative to national cleaning directories"
+        intro="The West Sussex patch links county coverage, town pages, services, guides and cleaner profiles together so the site can build authority before expanding into East Sussex."
+      />
 
       <section className="site-section py-8">
         <div className="rounded-[32px] border border-white/70 bg-white/90 p-8 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">

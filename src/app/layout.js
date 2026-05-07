@@ -1,6 +1,8 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import CookieConsent from "@/components/CookieConsent";
+import JsonLd from "@/components/seo/JsonLd";
+import { buildOrganisationSchema, buildWebSiteSchema } from "@/lib/seo/regionalSeoData";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -54,6 +56,8 @@ export default function RootLayout({ children }) {
         )}
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <JsonLd data={buildOrganisationSchema()} />
+        <JsonLd data={buildWebSiteSchema()} />
         {children}
         <CookieConsent />
       </body>
