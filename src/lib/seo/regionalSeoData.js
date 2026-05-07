@@ -14,7 +14,25 @@ export const CORE_SERVICE_LINKS = [
 ];
 
 export const SUPPORTING_GUIDES = [
-  ['How to hire a cleaner', '/blog/how-to-hire-a-cleaner'], ['End of tenancy cleaning checklist', '/blog/end-of-tenancy-cleaning-checklist'], ['Cleaner prices in Littlehampton', '/blog/cleaners-littlehampton-prices'], ['Reliable cleaners in Littlehampton', '/blog/reliable-cleaner-littlehampton'], ['Cleaner prices in Crawley', '/blog/cleaner-prices-crawley'], ['Cleaners in Horsham guide', '/blog/cleaners-in-horsham-guide'], ['Find a reliable cleaner in Worthing', '/blog/how-to-find-a-reliable-cleaner-in-worthing'],
+  ['Best places to find cleaners in West Sussex', '/blog/best-places-to-find-cleaners-in-west-sussex'],
+  ['Average cleaner prices across West Sussex', '/blog/average-cleaner-prices-across-west-sussex-2026-guide'],
+  ['Domestic cleaning services in West Sussex', '/blog/domestic-cleaning-services-in-west-sussex-explained'],
+  ['Deep cleaning services in West Sussex', '/blog/deep-cleaning-services-in-west-sussex-complete-guide'],
+  ['End of tenancy cleaning in West Sussex', '/blog/end-of-tenancy-cleaning-in-west-sussex-what-landlords-expect'],
+  ['How often should you hire a cleaner?', '/blog/how-often-should-you-hire-a-cleaner-west-sussex-guide'],
+  ['How to find a reliable cleaner in Horsham', '/blog/how-to-find-a-reliable-cleaner-in-horsham'],
+  ['Domestic cleaning services in Horsham', '/blog/domestic-cleaning-services-in-horsham'],
+  ['Deep cleaning services in Horsham', '/blog/deep-cleaning-services-in-horsham'],
+  ['How to find a reliable cleaner in Crawley', '/blog/how-to-find-a-reliable-cleaner-in-crawley'],
+  ['Domestic cleaning services in Crawley', '/blog/domestic-cleaning-services-in-crawley'],
+  ['Deep cleaning in Crawley', '/blog/deep-cleaning-in-crawley'],
+  ['End of tenancy cleaning in Crawley', '/blog/end-of-tenancy-cleaning-in-crawley'],
+  ['How to find a reliable cleaner in Bognor Regis', '/blog/how-to-find-a-reliable-cleaner-in-bognor-regis'],
+  ['Domestic cleaning services in Bognor Regis', '/blog/domestic-cleaning-services-in-bognor-regis'],
+  ['Deep cleaning services in Bognor Regis', '/blog/deep-cleaning-services-in-bognor-regis'],
+  ['How to hire a cleaner', '/blog/how-to-hire-a-cleaner'],
+  ['End of tenancy cleaning checklist', '/blog/end-of-tenancy-cleaning-checklist'],
+  ['Find a reliable cleaner in Worthing', '/blog/how-to-find-a-reliable-cleaner-in-worthing'],
 ];
 
 export const TRUST_SIGNALS = [

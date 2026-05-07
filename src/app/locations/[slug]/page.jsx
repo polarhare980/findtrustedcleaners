@@ -88,44 +88,195 @@ const CORE_SERVICE_LINKS = [
 ];
 
 const LOCAL_GUIDES = {
+  'west-sussex': [
+    {
+      href: '/blog/best-places-to-find-cleaners-in-west-sussex',
+      title: 'Best Places to Find Cleaners in West Sussex',
+      description: 'A county-level guide that helps users compare the strongest local cleaner search areas across West Sussex.',
+    },
+    {
+      href: '/blog/average-cleaner-prices-across-west-sussex-2026-guide',
+      title: 'Average Cleaner Prices Across West Sussex',
+      description: 'A wider price guide for domestic cleaning, one-off cleans, deep cleans and end of tenancy work across the county.',
+    },
+    {
+      href: '/blog/domestic-cleaning-services-in-west-sussex-explained',
+      title: 'Domestic Cleaning Services in West Sussex',
+      description: 'Explains regular domestic cleaning, weekly cleaning, fortnightly help and one-off home cleaning across West Sussex.',
+    },
+    {
+      href: '/blog/deep-cleaning-services-in-west-sussex-complete-guide',
+      title: 'Deep Cleaning Services in West Sussex',
+      description: 'A complete county guide covering when deep cleaning is worth booking and what local cleaners usually include.',
+    },
+    {
+      href: '/blog/end-of-tenancy-cleaning-in-west-sussex-what-landlords-expect',
+      title: 'End of Tenancy Cleaning in West Sussex',
+      description: 'A landlord and tenant focused guide covering end of tenancy cleaning expectations across West Sussex.',
+    },
+    {
+      href: '/blog/how-often-should-you-hire-a-cleaner-west-sussex-guide',
+      title: 'How Often Should You Hire a Cleaner?',
+      description: 'A practical West Sussex guide for choosing between weekly, fortnightly, monthly and one-off cleaning support.',
+    },
+  ],
   worthing: [
     {
-      href: '/blog/home-cleaning-services-worthing',
-      title: 'Home Cleaning Services Worthing',
-      description:
-        'A local guide for Worthing residents comparing home cleaning options, regular cleaning help, and what to expect from local domestic cleaners.',
+      href: '/blog/deep-cleaning-worthing-whats-included-costs',
+      title: 'Deep Cleaning in Worthing',
+      description: 'A local Worthing guide covering what deep cleaning includes, when to book it, and what costs to expect.',
     },
     {
-      href: '/blog/cleaning-services-worthing',
-      title: 'Cleaning Services Worthing',
-      description:
-        'A wider Worthing cleaning guide covering common local services, when to book them, and how to compare cleaners before choosing.',
+      href: '/blog/end-of-tenancy-cleaning-worthing-guide',
+      title: 'End of Tenancy Cleaning in Worthing',
+      description: 'A complete Worthing guide for tenants and landlords preparing a property for handover.',
     },
     {
-      href: '/blog/carpet-cleaning-in-worthing-trusted-local-companies-west-sussex',
-      title: 'Carpet Cleaning in Worthing',
-      description:
-        'A focused carpet cleaning guide for Worthing and West Sussex, including local company options, stain removal, and professional cleaning expectations.',
+      href: '/blog/weekly-cleaners-in-worthing-is-it-worth-it',
+      title: 'Weekly Cleaners in Worthing',
+      description: 'Helps Worthing households decide whether weekly, fortnightly or occasional cleaning support makes sense.',
+    },
+    {
+      href: '/blog/one-off-cleaning-services-worthing-explained',
+      title: 'One-Off Cleaning Services in Worthing',
+      description: 'Explains one-off cleaning in Worthing, including when it is useful and how it differs from regular cleaning.',
+    },
+    {
+      href: '/blog/domestic-cleaning-in-worthing-how-local-services-work',
+      title: 'Domestic Cleaning in Worthing',
+      description: 'Explains how local domestic cleaning services work in Worthing and how to compare available cleaners.',
     },
     {
       href: '/blog/how-to-find-a-reliable-cleaner-in-worthing',
       title: 'How to Find a Reliable Cleaner in Worthing',
-      description:
-        'Practical advice for choosing a reliable cleaner in Worthing, checking trust signals, and avoiding the usual booking headaches.',
+      description: 'Practical advice for choosing a reliable cleaner in Worthing, checking trust signals, and avoiding the usual booking headaches.',
     },
   ],
   'shoreham-by-sea': [
     {
-      href: '/blog/oven-cleaning-shoreham-by-sea',
-      title: 'Oven Cleaning Shoreham-by-Sea',
-      description:
-        'A local guide covering oven cleaning costs, what is usually included, and when to book a professional oven cleaner in Shoreham-by-Sea.',
+      href: '/blog/how-to-find-a-reliable-cleaner-in-shoreham-by-sea',
+      title: 'How to Find a Reliable Cleaner in Shoreham-by-Sea',
+      description: 'A local trust guide for comparing cleaner profiles, availability and reliability in Shoreham-by-Sea.',
     },
     {
-      href: '/blog/mattress-cleaning-shoreham',
-      title: 'Mattress Cleaning Shoreham',
-      description:
-        'A practical guide to mattress cleaning in Shoreham, including signs your mattress needs cleaning and what a professional clean may include.',
+      href: '/blog/domestic-cleaning-services-in-shoreham-by-sea',
+      title: 'Domestic Cleaning Services in Shoreham-by-Sea',
+      description: 'Explains weekly, fortnightly and one-off domestic cleaning options for Shoreham households.',
+    },
+    {
+      href: '/blog/deep-cleaning-in-shoreham-by-sea',
+      title: 'Deep Cleaning in Shoreham-by-Sea',
+      description: 'Covers when deep cleaning is useful, what is normally included and how Shoreham residents can compare cleaners.',
+    },
+    {
+      href: '/blog/end-of-tenancy-cleaning-in-shoreham-by-sea',
+      title: 'End of Tenancy Cleaning in Shoreham-by-Sea',
+      description: 'A local moving-out guide for tenants, landlords and agents arranging end of tenancy cleaning in Shoreham.',
+    },
+    {
+      href: '/blog/oven-cleaning-shoreham-by-sea',
+      title: 'Oven Cleaning Shoreham-by-Sea',
+      description: 'A local guide covering oven cleaning costs, what is usually included, and when to book a professional oven cleaner in Shoreham-by-Sea.',
+    },
+  ],
+  lancing: [
+    {
+      href: '/blog/how-to-find-a-reliable-cleaner-in-lancing',
+      title: 'How to Find a Reliable Cleaner in Lancing',
+      description: 'A practical guide for comparing cleaner profiles, reviews, services and availability in Lancing.',
+    },
+    {
+      href: '/blog/domestic-cleaning-services-in-lancing',
+      title: 'Domestic Cleaning Services in Lancing',
+      description: 'Explains regular house cleaning, one-off cleaning and domestic cleaning support available in Lancing.',
+    },
+    {
+      href: '/blog/deep-cleaning-in-lancing-local-guide',
+      title: 'Deep Cleaning in Lancing',
+      description: 'A local guide to one-off deep cleaning in Lancing, including what is included and when it is worth booking.',
+    },
+    {
+      href: '/blog/weekly-cleaner-services-in-lancing',
+      title: 'Weekly Cleaner Services in Lancing',
+      description: 'Helps Lancing households decide whether weekly cleaner support is worth it and what to expect.',
+    },
+  ],
+  chichester: [
+    {
+      href: '/blog/how-to-find-a-reliable-cleaner-in-chichester',
+      title: 'How to Find a Reliable Cleaner in Chichester',
+      description: 'A trust-led guide for choosing a cleaner in Chichester using profiles, reviews, services and availability.',
+    },
+    {
+      href: '/blog/domestic-cleaning-services-in-chichester',
+      title: 'Domestic Cleaning Services in Chichester',
+      description: 'Explains local domestic cleaning in Chichester, including regular, one-off and household cleaning support.',
+    },
+    {
+      href: '/blog/end-of-tenancy-cleaning-in-chichester-costs-checklist',
+      title: 'End of Tenancy Cleaning in Chichester',
+      description: 'A checklist and cost guide for Chichester tenants, landlords and agents arranging move-out cleaning.',
+    },
+    {
+      href: '/blog/deep-cleaning-in-chichester-when-do-you-need-it',
+      title: 'Deep Cleaning in Chichester',
+      description: 'Explains when Chichester homes need a deep clean and how to compare local cleaning services.',
+    },
+  ],
+  'bognor-regis': [
+    {
+      href: '/blog/how-to-find-a-reliable-cleaner-in-bognor-regis',
+      title: 'How to Find a Reliable Cleaner in Bognor Regis',
+      description: 'A local guide for checking reliability, services, availability and cleaner profiles in Bognor Regis.',
+    },
+    {
+      href: '/blog/domestic-cleaning-services-in-bognor-regis',
+      title: 'Domestic Cleaning Services in Bognor Regis',
+      description: 'Explains domestic cleaning options in Bognor Regis, from regular household cleaning to one-off support.',
+    },
+    {
+      href: '/blog/deep-cleaning-services-in-bognor-regis',
+      title: 'Deep Cleaning Services in Bognor Regis',
+      description: 'A Bognor Regis guide to deep cleaning, what is usually included, and when it is worth booking.',
+    },
+  ],
+  crawley: [
+    {
+      href: '/blog/how-to-find-a-reliable-cleaner-in-crawley',
+      title: 'How to Find a Reliable Cleaner in Crawley',
+      description: 'A local trust guide for comparing cleaners in Crawley by services, profile detail and availability.',
+    },
+    {
+      href: '/blog/domestic-cleaning-services-in-crawley',
+      title: 'Domestic Cleaning Services in Crawley',
+      description: 'Explains domestic cleaning services in Crawley for flats, houses, family homes and regular weekly help.',
+    },
+    {
+      href: '/blog/deep-cleaning-in-crawley',
+      title: 'Deep Cleaning in Crawley',
+      description: 'A Crawley guide to booking deep cleaning for tired homes, rentals, kitchens, bathrooms and one-off resets.',
+    },
+    {
+      href: '/blog/end-of-tenancy-cleaning-in-crawley',
+      title: 'End of Tenancy Cleaning in Crawley',
+      description: 'A local moving-out guide for Crawley tenants, landlords and agents arranging end of tenancy cleaning.',
+    },
+  ],
+  horsham: [
+    {
+      href: '/blog/how-to-find-a-reliable-cleaner-in-horsham',
+      title: 'How to Find a Reliable Cleaner in Horsham',
+      description: 'A practical Horsham guide for choosing reliable cleaners and checking profile details before enquiring.',
+    },
+    {
+      href: '/blog/domestic-cleaning-services-in-horsham',
+      title: 'Domestic Cleaning Services in Horsham',
+      description: 'Explains domestic cleaning in Horsham, including regular home cleaning, one-off help and household support.',
+    },
+    {
+      href: '/blog/deep-cleaning-services-in-horsham',
+      title: 'Deep Cleaning Services in Horsham',
+      description: 'A Horsham guide to deep cleaning, when to book it, and what local cleaners may include.',
     },
   ],
 };

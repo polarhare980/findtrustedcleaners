@@ -20,7 +20,7 @@ export default function PublicFooter() {
             <FooterGroup title="Popular locations" links={WEST_SUSSEX_AREAS.slice(0, 8)} />
             <FooterGroup title="More West Sussex" links={WEST_SUSSEX_AREAS.slice(8, 13)} />
             <FooterGroup title="Core services" links={CORE_SERVICE_LINKS.slice(0, 8)} />
-            <FooterGroup title="Guides & legal" links={[...SUPPORTING_GUIDES.slice(0, 3), ["Blog", "/blog"], ["Privacy policy", "/privacy-policy"], ["Cookie policy", "/cookie-policy"], ["Terms", "/terms"]]} />
+            <FooterGroup title="West Sussex guides" links={SUPPORTING_GUIDES.slice(0, 6)} />
           </div>
         </div>
         <div className="mt-8 rounded-3xl border border-slate-200 bg-slate-50 p-5">
@@ -28,6 +28,10 @@ export default function PublicFooter() {
           <div className="mt-4 flex flex-wrap gap-2 text-sm">
             {[["Cleaners Worthing", "/locations/worthing"], ["Domestic cleaning Worthing", "/services/domestic-cleaning"], ["Window cleaning Littlehampton", "/services/window-cleaning"], ["Deep cleaning Crawley", "/services/deep-cleaning"], ["End of tenancy cleaning Chichester", "/services/end-of-tenancy-cleaning"], ["Cleaners West Sussex", "/locations/west-sussex"]].map(([label, href]) => <Link key={label} href={href} className="rounded-full border border-slate-200 bg-white px-3 py-2 font-medium text-slate-700 transition hover:border-teal-200 hover:text-teal-800">{label}</Link>)}
           </div>
+        </div>
+        <div className="mt-8 grid gap-6 rounded-3xl border border-teal-100 bg-teal-50/60 p-5 md:grid-cols-2">
+          <FooterGroup title="Crawley, Horsham & Bognor guides" links={SUPPORTING_GUIDES.slice(6, 16)} />
+          <FooterGroup title="Useful links" links={[["Blog", "/blog"], ["Privacy policy", "/privacy-policy"], ["Cookie policy", "/cookie-policy"], ["Terms", "/terms"], ["Cleaner signup", "/register"], ["Find a cleaner", "/cleaners"]]} />
         </div>
         <div className="mt-8 border-t border-slate-200 pt-6 text-sm text-slate-500">© {new Date().getFullYear()} FindTrustedCleaners. All rights reserved.</div>
       </div>
