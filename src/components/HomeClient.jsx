@@ -7,7 +7,6 @@ import useSWR from 'swr';
 import CleanerCard from '@/components/CleanerCard';
 import PublicHeader from '@/components/PublicHeader';
 import PublicFooter from '@/components/PublicFooter';
-import PageHero from '@/components/PageHero';
 import PremiumMatchingHero from '@/components/ui/PremiumMatchingHero';
 import { injectPendingFromPurchases } from '@/lib/availability';
 import RegionalSeoMesh from '@/components/seo/RegionalSeoMesh';
@@ -205,106 +204,17 @@ export default function HomeClient() {
       <PublicHeader />
       <PremiumMatchingHero
         cleanerCount={cleanerCount}
-        onSearchClick={() => router.push(buildCleanerSearchUrl({ postcode, serviceType, cleaningPath, timePreference }))}
+        onSearchClick={() => router.push('/cleaners')}
       />
-      <section id="quick-search" className="site-section pt-10 pb-2">
-        <div className="overflow-hidden rounded-[34px] border border-white/70 bg-white/90 shadow-[0_24px_80px_rgba(15,23,42,0.10)] backdrop-blur-xl">
-          <div className="grid gap-0 lg:grid-cols-[0.95fr_1.05fr]">
-            <div className="border-b border-slate-100 bg-[radial-gradient(circle_at_top_left,_rgba(20,184,166,0.18),_transparent_34%),linear-gradient(180deg,#ffffff_0%,#f7fbfa_100%)] p-6 sm:p-8 lg:border-b-0 lg:border-r">
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#0C8FA3]">Search made simple</p>
-              <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">What do you need help with?</h2>
-              <p className="mt-4 max-w-xl text-base leading-7 text-slate-600">
-                Start broad. Choose the kind of cleaning help you need, then we’ll guide you towards suitable local cleaners without making you dig through a directory.
-              </p>
-              <div className="mt-6 grid gap-3">
-                {CLEANING_PATHS.map((path) => {
-                  const active = cleaningPath === path.id;
-                  return (
-                    <button
-                      key={path.id}
-                      type="button"
-                      onClick={() => {
-                        setCleaningPath(path.id);
-                        setServiceType('');
-                      }}
-                      className={`group rounded-[26px] border p-5 text-left transition duration-300 ${
-                        active
-                          ? 'border-[#21B6C7] bg-[#EAFBFB]/90 shadow-[0_18px_45px_rgba(12,143,163,0.16)]'
-                          : 'border-slate-200 bg-white/80 hover:-translate-y-0.5 hover:border-[#0C8FA3]/25 hover:bg-white'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <h3 className="text-xl font-bold text-slate-950">{path.label}</h3>
-                          <p className="mt-1 text-sm font-semibold text-[#076D7E]">{path.description}</p>
-                          <p className="mt-2 text-sm leading-6 text-slate-600">{path.detail}</p>
-                        </div>
-                        <span className={`mt-1 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border text-sm font-bold ${active ? 'border-[#21B6C7] bg-white text-[#076D7E]' : 'border-slate-200 bg-slate-50 text-slate-500 group-hover:text-[#0C8FA3]'}`}>
-                          {active ? '✓' : '→'}
-                        </span>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="p-6 sm:p-8">
-              <div className="rounded-[28px] border border-slate-200 bg-slate-50/70 p-5">
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Next step</p>
-                <h3 className="mt-2 text-2xl font-bold text-slate-950">Tell us the basics</h3>
-                <div className="mt-5 grid gap-4">
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-700">Postcode</label>
-                    <input value={postcode} onChange={(e) => setPostcode(e.target.value)} placeholder="Enter your postcode" className="ftc-input bg-white" />
-                  </div>
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-700">Preferred time</label>
-                    <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-                      {TIME_PREFERENCES.map((time) => (
-                        <button key={time} type="button" onClick={() => setTimePreference(time)} className={`whitespace-nowrap rounded-full border px-4 py-2 text-sm font-semibold transition ${timePreference === time ? 'border-[#21B6C7] bg-[#0C8FA3] text-white shadow-sm' : 'border-slate-200 bg-white text-slate-700 hover:border-[#0C8FA3]/25 hover:text-[#076D7E]'}`}>
-                          {time}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-700">Specific job</label>
-                    <div className="grid gap-2 sm:grid-cols-2">
-                      {(CLEANING_PATHS.find((path) => path.id === cleaningPath)?.services || []).map((service) => (
-                        <button key={service} type="button" onClick={() => setServiceType(serviceType === service ? '' : service)} className={`rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition ${serviceType === service ? 'border-[#21B6C7] bg-white text-[#064C59] shadow-sm' : 'border-slate-200 bg-white/80 text-slate-700 hover:border-[#0C8FA3]/25 hover:text-[#076D7E]'}`}>
-                          {service}
-                        </button>
-                      ))}
-                    </div>
-                    <p className="mt-3 text-sm text-slate-500">Not sure? Leave this blank and start with {CLEANING_PATHS.find((path) => path.id === cleaningPath)?.label.toLowerCase()}.</p>
-                  </div>
-                </div>
-                <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                  <button onClick={() => router.push(buildCleanerSearchUrl({ postcode, serviceType, cleaningPath, timePreference }))} className="ftc-button-primary w-full sm:w-auto">Search cleaners</button>
-                  <Link href="/register/cleaners" className="ftc-button-secondary w-full text-center sm:w-auto">Register as cleaner</Link>
-                </div>
-              </div>
-              <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                {['Guided matching', 'Real local profiles', 'Cleaner approval first'].map((item) => (
-                  <div key={item} className="rounded-2xl border border-white bg-white/80 px-4 py-3 text-center text-sm font-semibold text-slate-700 shadow-sm">{item}</div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <PageHero
-        eyebrow="Trusted cleaner marketplace"
-        title="Find trusted cleaners near you"
-        description="Browse cleaner profiles for free, compare real availability, and send booking requests through a simpler, clearer marketplace."
-        actions={(
-          <>
-            <button onClick={() => router.push(buildCleanerSearchUrl({ postcode, serviceType, cleaningPath, timePreference }))} className="ftc-button-primary">Find a cleaner</button>
-            <Link href="/register/cleaners" className="ftc-button-secondary">Join as a cleaner</Link>
-          </>
-        )}
+      <CleanerSection
+        title="Featured local cleaners"
+        subtitle="Premium local cleaner profiles with stronger visibility, clear services and easier routes into booking."
+        isLoading={isLoading}
+        cleaners={premiumCleaners}
+        favouriteIds={favouriteIds}
+        onToggleFavourite={handleToggleFavourite}
+        onBookingRequest={handleBookingRequest}
+        premium
       />
 
       <section className="site-section pb-8">
@@ -324,7 +234,7 @@ export default function HomeClient() {
                 </div>
                 <h2 className="mt-4 text-3xl font-bold tracking-tight text-slate-900 sm:text-[2.15rem]">Popular services near you</h2>
                 <p className="mt-3 text-base leading-7 text-slate-600 sm:text-lg">
-                  These service links stay lower on the page for SEO and browsing, while the main journey stays focused on simple cleaner matching.
+                  Browse popular cleaning services and see matching local cleaner profiles by service and area.
                 </p>
               </div>
 
@@ -406,32 +316,6 @@ export default function HomeClient() {
               </div>
             )}
           </div>
-        </div>
-      </section>
-
-      <CleanerSection
-        title="Featured local cleaners"
-        isLoading={isLoading}
-        cleaners={premiumCleaners}
-        favouriteIds={favouriteIds}
-        onToggleFavourite={handleToggleFavourite}
-        onBookingRequest={handleBookingRequest}
-        premium
-      />
-
-      <section className="site-section pb-8">
-        <div className="grid gap-4 md:grid-cols-3">
-          {[
-            ['Choose the right path', 'Start with home cleaning or specialist cleaning. No jargon and no long filter forms.'],
-            ['See suitable local cleaners', 'Browse warm, visual cleaner profiles with the key trust signals brought forward.'],
-            ['Request one clear slot', 'Move from discovery to booking without exposing the platform mechanics underneath.'],
-          ].map(([title, text], index) => (
-            <div key={title} className="surface-card p-6">
-              <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#0C8FA3] text-sm font-bold text-white">{index + 1}</div>
-              <h2 className="text-xl font-semibold text-slate-900">{title}</h2>
-              <p className="mt-2 text-slate-600">{text}</p>
-            </div>
-          ))}
         </div>
       </section>
 
