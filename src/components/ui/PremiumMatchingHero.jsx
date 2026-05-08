@@ -5,7 +5,10 @@ import Link from 'next/link';
 import { Clock, MapPin, Search, ShieldCheck, Sparkles, UserRoundPlus } from 'lucide-react';
 import { AmbientLight, Color, InstancedMesh, MathUtils, MeshPhysicalMaterial, Object3D, PerspectiveCamera, PMREMGenerator, PointLight, Raycaster, Scene, SphereGeometry, SRGBColorSpace, Vector2, Vector3, WebGLRenderer, ACESFilmicToneMapping, Plane, Clock as ThreeClock } from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
-import { cn } from '@/lib/utils';
+
+function cn(...classes) {
+  return classes.filter(Boolean).join(' ');
+}
 
 const pointer = new Vector2(0.12, -0.08);
 const helperObject = new Object3D();
