@@ -74,7 +74,7 @@ export default function PublicHeader() {
             aria-expanded={isOpen}
             aria-label="Open menu"
             onClick={() => setIsOpen((open) => !open)}
-            className="inline-flex items-center justify-center rounded-2xl border border-teal-100 bg-white/85 p-3 text-slate-700 shadow-[0_10px_24px_rgba(13,148,136,0.12)] transition hover:-translate-y-0.5 hover:border-teal-200 hover:text-teal-800"
+            className="inline-flex items-center justify-center rounded-2xl border border-[#0C8FA3]/15 bg-white/85 p-3 text-slate-700 shadow-[0_10px_24px_rgba(13,148,136,0.12)] transition hover:-translate-y-0.5 hover:border-[#0C8FA3]/25 hover:text-[#076D7E]"
           >
             <span className="sr-only">Menu</span>
             <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -87,7 +87,7 @@ export default function PublicHeader() {
           {isOpen ? (
             <div className="absolute right-0 top-[calc(100%+0.75rem)] w-[min(88vw,320px)] overflow-hidden rounded-[28px] border border-white/70 bg-white/92 p-3 shadow-[0_22px_60px_rgba(15,23,42,0.16)] backdrop-blur-xl">
               <div className="mb-2 px-3 pt-2">
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-teal-700">FindTrustedCleaners</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#0C8FA3]">FindTrustedCleaners</p>
                 <p className="mt-1 text-sm text-slate-500">Everything in one place.</p>
               </div>
 
@@ -97,7 +97,7 @@ export default function PublicHeader() {
                     key={`${item.href}-${item.label}`}
                     href={item.href}
                     onClick={() => setIsOpen(false)}
-                    className="rounded-2xl px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-teal-50 hover:text-teal-800"
+                    className="rounded-2xl px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-[#EAFBFB] hover:text-[#076D7E]"
                   >
                     {item.label}
                   </Link>

@@ -149,7 +149,7 @@ export default function CleanerCard({ cleaner, isFavourite = false, onToggleFavo
 
             <div className="flex flex-wrap gap-2">
               {cleaner?.businessInsurance ? (
-                <span className={`rounded-full border px-3 py-1 text-[11px] font-semibold ${isPremium ? 'border-teal-200 bg-teal-50 text-teal-800' : 'border-teal-100 bg-teal-50/80 text-teal-700'}`}>
+                <span className={`rounded-full border px-3 py-1 text-[11px] font-semibold ${isPremium ? 'border-[#0C8FA3]/25 bg-[#EAFBFB] text-[#076D7E]' : 'border-[#0C8FA3]/15 bg-[#EAFBFB]/80 text-[#0C8FA3]'}`}>
                   Insured
                 </span>
               ) : null}
@@ -163,7 +163,7 @@ export default function CleanerCard({ cleaner, isFavourite = false, onToggleFavo
             <div className={`rounded-2xl border px-4 py-3 ${isPremium ? 'border-amber-100 bg-white/80' : 'border-slate-200 bg-slate-50/90'}`}>
               <div className="flex flex-wrap items-center justify-between gap-3">
                 {reviewSummary ? <RatingStars value={reviewSummary.value} count={reviewSummary.count} size={isPremium ? 17 : 15} /> : <span className="text-sm font-medium text-slate-500">New profile</span>}
-                <span className="text-xs font-semibold text-teal-700">{availabilityHint}</span>
+                <span className="text-xs font-semibold text-[#0C8FA3]">{availabilityHint}</span>
               </div>
             </div>
 
@@ -173,7 +173,7 @@ export default function CleanerCard({ cleaner, isFavourite = false, onToggleFavo
 
             <div className="flex items-center justify-between border-t border-slate-100 pt-3">
               <span className="text-sm font-semibold text-slate-700">Does this cleaner feel right?</span>
-              <span className="text-sm font-bold text-teal-700 transition group-hover:translate-x-1">View →</span>
+              <span className="text-sm font-bold text-[#0C8FA3] transition group-hover:translate-x-1">View →</span>
             </div>
           </div>
         </div>

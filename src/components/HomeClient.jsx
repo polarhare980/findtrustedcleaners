@@ -210,8 +210,8 @@ export default function HomeClient() {
       <section id="quick-search" className="site-section pt-10 pb-2">
         <div className="overflow-hidden rounded-[34px] border border-white/70 bg-white/90 shadow-[0_24px_80px_rgba(15,23,42,0.10)] backdrop-blur-xl">
           <div className="grid gap-0 lg:grid-cols-[0.95fr_1.05fr]">
-            <div className="border-b border-slate-100 bg-[radial-gradient(circle_at_top_left,_rgba(20,184,166,0.18),_transparent_34%),linear-gradient(180deg,#ffffff_0%,#f8fffe_100%)] p-6 sm:p-8 lg:border-b-0 lg:border-r">
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">Search made simple</p>
+            <div className="border-b border-slate-100 bg-[radial-gradient(circle_at_top_left,_rgba(20,184,166,0.18),_transparent_34%),linear-gradient(180deg,#ffffff_0%,#f7fbfa_100%)] p-6 sm:p-8 lg:border-b-0 lg:border-r">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#0C8FA3]">Search made simple</p>
               <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">What do you need help with?</h2>
               <p className="mt-4 max-w-xl text-base leading-7 text-slate-600">
                 Start broad. Choose the kind of cleaning help you need, then we’ll guide you towards suitable local cleaners without making you dig through a directory.
@@ -229,17 +229,17 @@ export default function HomeClient() {
                       }}
                       className={`group rounded-[26px] border p-5 text-left transition duration-300 ${
                         active
-                          ? 'border-teal-300 bg-teal-50/90 shadow-[0_18px_45px_rgba(20,184,166,0.16)]'
-                          : 'border-slate-200 bg-white/80 hover:-translate-y-0.5 hover:border-teal-200 hover:bg-white'
+                          ? 'border-[#21B6C7] bg-[#EAFBFB]/90 shadow-[0_18px_45px_rgba(12,143,163,0.16)]'
+                          : 'border-slate-200 bg-white/80 hover:-translate-y-0.5 hover:border-[#0C8FA3]/25 hover:bg-white'
                       }`}
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div>
                           <h3 className="text-xl font-bold text-slate-950">{path.label}</h3>
-                          <p className="mt-1 text-sm font-semibold text-teal-800">{path.description}</p>
+                          <p className="mt-1 text-sm font-semibold text-[#076D7E]">{path.description}</p>
                           <p className="mt-2 text-sm leading-6 text-slate-600">{path.detail}</p>
                         </div>
-                        <span className={`mt-1 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border text-sm font-bold ${active ? 'border-teal-300 bg-white text-teal-800' : 'border-slate-200 bg-slate-50 text-slate-500 group-hover:text-teal-700'}`}>
+                        <span className={`mt-1 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border text-sm font-bold ${active ? 'border-[#21B6C7] bg-white text-[#076D7E]' : 'border-slate-200 bg-slate-50 text-slate-500 group-hover:text-[#0C8FA3]'}`}>
                           {active ? '✓' : '→'}
                         </span>
                       </div>
@@ -262,7 +262,7 @@ export default function HomeClient() {
                     <label className="mb-2 block text-sm font-medium text-slate-700">Preferred time</label>
                     <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                       {TIME_PREFERENCES.map((time) => (
-                        <button key={time} type="button" onClick={() => setTimePreference(time)} className={`whitespace-nowrap rounded-full border px-4 py-2 text-sm font-semibold transition ${timePreference === time ? 'border-teal-300 bg-teal-700 text-white shadow-sm' : 'border-slate-200 bg-white text-slate-700 hover:border-teal-200 hover:text-teal-800'}`}>
+                        <button key={time} type="button" onClick={() => setTimePreference(time)} className={`whitespace-nowrap rounded-full border px-4 py-2 text-sm font-semibold transition ${timePreference === time ? 'border-[#21B6C7] bg-[#0C8FA3] text-white shadow-sm' : 'border-slate-200 bg-white text-slate-700 hover:border-[#0C8FA3]/25 hover:text-[#076D7E]'}`}>
                           {time}
                         </button>
                       ))}
@@ -272,7 +272,7 @@ export default function HomeClient() {
                     <label className="mb-2 block text-sm font-medium text-slate-700">Specific job</label>
                     <div className="grid gap-2 sm:grid-cols-2">
                       {(CLEANING_PATHS.find((path) => path.id === cleaningPath)?.services || []).map((service) => (
-                        <button key={service} type="button" onClick={() => setServiceType(serviceType === service ? '' : service)} className={`rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition ${serviceType === service ? 'border-teal-300 bg-white text-teal-900 shadow-sm' : 'border-slate-200 bg-white/80 text-slate-700 hover:border-teal-200 hover:text-teal-800'}`}>
+                        <button key={service} type="button" onClick={() => setServiceType(serviceType === service ? '' : service)} className={`rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition ${serviceType === service ? 'border-[#21B6C7] bg-white text-[#064C59] shadow-sm' : 'border-slate-200 bg-white/80 text-slate-700 hover:border-[#0C8FA3]/25 hover:text-[#076D7E]'}`}>
                           {service}
                         </button>
                       ))}
@@ -309,12 +309,12 @@ export default function HomeClient() {
 
       <section className="site-section pb-8">
         <div className="overflow-hidden rounded-[34px] border border-white/70 bg-white/90 shadow-[0_22px_70px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-          <div className="border-b border-teal-100 bg-[radial-gradient(circle_at_top_left,_rgba(20,184,166,0.22),_transparent_34%),linear-gradient(135deg,#f7fffe_0%,#ecfdfa_48%,#ffffff_100%)] p-6 sm:p-7">
+          <div className="border-b border-[#0C8FA3]/15 bg-[radial-gradient(circle_at_top_left,_rgba(12,143,163,0.18),_transparent_34%),linear-gradient(135deg,#f7fbfa_0%,#eafbfb_48%,#ffffff_100%)] p-6 sm:p-7">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-3xl">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-full bg-teal-700 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-white">Local price snapshots</span>
-                  <span className="rounded-full border border-teal-200 bg-white/80 px-3 py-1 text-xs font-semibold text-teal-800">
+                  <span className="rounded-full bg-[#0C8FA3] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-white">Local price snapshots</span>
+                  <span className="rounded-full border border-[#0C8FA3]/25 bg-white/80 px-3 py-1 text-xs font-semibold text-[#076D7E]">
                     {postcode
                       ? `Showing ${postcode.toUpperCase()}`
                       : serviceScope === 'local'
@@ -359,20 +359,20 @@ export default function HomeClient() {
                     <Link
                       key={service.key}
                       href={href}
-                      className="group relative min-w-[280px] max-w-[280px] snap-start overflow-hidden rounded-[30px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fffe_100%)] p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-teal-200 hover:shadow-[0_22px_60px_rgba(15,23,42,0.10)] sm:min-w-[320px] sm:max-w-[320px]"
+                      className="group relative min-w-[280px] max-w-[280px] snap-start overflow-hidden rounded-[30px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f7fbfa_100%)] p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-[#0C8FA3]/25 hover:shadow-[0_22px_60px_rgba(15,23,42,0.10)] sm:min-w-[320px] sm:max-w-[320px]"
                     >
-                      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-teal-500 via-cyan-400 to-teal-700" />
+                      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#0C8FA3] via-[#21B6C7] to-[#076D7E]" />
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-teal-700">Service</p>
+                          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#0C8FA3]">Service</p>
                           <h3 className="mt-3 text-2xl font-bold leading-tight text-slate-900">{service.label}</h3>
                         </div>
-                        <span className="shrink-0 rounded-full bg-teal-50 px-3 py-2 text-center text-xs font-semibold text-teal-900 shadow-sm">
+                        <span className="shrink-0 rounded-full bg-[#EAFBFB] px-3 py-2 text-center text-xs font-semibold text-[#064C59] shadow-sm">
                           {service.cleanerCount} cleaner{service.cleanerCount === 1 ? '' : 's'}
                         </span>
                       </div>
 
-                      <div className="mt-5 rounded-[24px] border border-teal-100 bg-teal-50/70 p-4">
+                      <div className="mt-5 rounded-[24px] border border-[#0C8FA3]/15 bg-[#EAFBFB]/70 p-4">
                         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">From price</p>
                         <div className="mt-2 flex items-end gap-2">
                           <span className="text-4xl font-black tracking-tight text-slate-900">
@@ -396,7 +396,7 @@ export default function HomeClient() {
                         </span>
                       </div>
 
-                      <div className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-teal-700">
+                      <div className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[#0C8FA3]">
                         View matching cleaners
                         <span aria-hidden="true" className="transition-transform duration-300 group-hover:translate-x-1">→</span>
                       </div>
@@ -427,7 +427,7 @@ export default function HomeClient() {
             ['Request one clear slot', 'Move from discovery to booking without exposing the platform mechanics underneath.'],
           ].map(([title, text], index) => (
             <div key={title} className="surface-card p-6">
-              <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-teal-700 text-sm font-bold text-white">{index + 1}</div>
+              <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#0C8FA3] text-sm font-bold text-white">{index + 1}</div>
               <h2 className="text-xl font-semibold text-slate-900">{title}</h2>
               <p className="mt-2 text-slate-600">{text}</p>
             </div>
@@ -439,7 +439,7 @@ export default function HomeClient() {
         <div className="surface-muted p-8">
           <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">Why choose us</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#0C8FA3]">Why choose us</p>
               <h2 className="mt-2 text-3xl font-bold text-slate-900">A simpler way to book cleaning services</h2>
               <p className="mt-4 text-slate-600">Large marketplaces can rely on brand recognition and hard sell tactics. We focus on clarity instead: free browsing for clients, free basic listings for cleaners, and an optional premium upgrade for businesses that want stronger visibility.</p>
             </div>
@@ -466,7 +466,7 @@ export default function HomeClient() {
       <section className="site-section py-8">
         <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
           <section className="rounded-[32px] border border-white/70 bg-white/90 p-8 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">Find Trusted Cleaners Near You</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#0C8FA3]">Find Trusted Cleaners Near You</p>
             <h2 className="mt-2 text-3xl font-bold text-slate-900">Find cleaners in your area</h2>
             <p className="mt-4 max-w-3xl text-slate-600">We currently have the strongest availability in Worthing, Lancing and Shoreham-by-Sea, making it easier to find trusted cleaners and book quickly.</p>
             <div className="mt-6 flex flex-wrap gap-3">
@@ -474,7 +474,7 @@ export default function HomeClient() {
                 <Link
                   key={location.href}
                   href={location.href}
-                  className="rounded-full border border-teal-200 bg-teal-50 px-4 py-2 text-sm font-semibold text-teal-800 transition hover:-translate-y-0.5 hover:border-teal-300 hover:bg-white"
+                  className="rounded-full border border-[#0C8FA3]/25 bg-[#EAFBFB] px-4 py-2 text-sm font-semibold text-[#076D7E] transition hover:-translate-y-0.5 hover:border-[#21B6C7] hover:bg-white"
                 >
                   Cleaners in {location.label}
                 </Link>
@@ -483,7 +483,7 @@ export default function HomeClient() {
           </section>
 
           <section className="rounded-[32px] border border-white/70 bg-white/90 p-8 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">Core services</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#0C8FA3]">Core services</p>
             <h2 className="mt-2 text-3xl font-bold text-slate-900">Browse cleaning services</h2>
             <p className="mt-4 text-slate-600">Choose the type of cleaning you need and find available cleaners near you.</p>
             <div className="mt-6 grid gap-3">
@@ -491,7 +491,7 @@ export default function HomeClient() {
                 <Link
                   key={service.href}
                   href={service.href}
-                  className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-800 transition hover:-translate-y-0.5 hover:border-teal-200 hover:bg-white hover:text-teal-800"
+                  className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-800 transition hover:-translate-y-0.5 hover:border-[#0C8FA3]/25 hover:bg-white hover:text-[#076D7E]"
                 >
                   {service.label}
                 </Link>
@@ -512,7 +512,7 @@ export default function HomeClient() {
         <div className="rounded-[32px] border border-white/70 bg-white/90 p-8 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl">
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">Worthing flagship page</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#0C8FA3]">Worthing flagship page</p>
               <h2 className="mt-2 text-3xl font-bold text-slate-900">See the strongest local marketplace page in action</h2>
               <p className="mt-4 text-slate-600">Worthing is being treated as the lead local page, with service links, live cleaner visibility, nearby area support, and a stronger route into bookable profiles.</p>
             </div>
@@ -523,7 +523,7 @@ export default function HomeClient() {
 
       <section className="site-section py-12">
         <div className="rounded-[32px] border border-white/70 bg-white/88 p-8 text-center shadow-[0_24px_70px_rgba(15,23,42,0.09)] backdrop-blur-xl sm:p-10">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">For cleaners</p>
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#0C8FA3]">For cleaners</p>
           <h2 className="mt-2 text-3xl font-bold text-slate-900">Want to win more direct booking requests?</h2>
           <p className="mx-auto mt-4 max-w-2xl text-slate-600">Join the marketplace for free, set your availability, and start getting discovered. Upgrade to premium when you want stronger visibility and a more powerful profile presence.</p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
@@ -563,7 +563,7 @@ function CleanerSection({ title, subtitle, cleaners, isLoading, favouriteIds, on
                 type="button"
                 onClick={() => scrollRail('left')}
                 aria-label="Scroll premium cleaners left"
-                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-teal-200 hover:text-teal-700"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-[#0C8FA3]/25 hover:text-[#0C8FA3]"
               >
                 ←
               </button>
@@ -571,7 +571,7 @@ function CleanerSection({ title, subtitle, cleaners, isLoading, favouriteIds, on
                 type="button"
                 onClick={() => scrollRail('right')}
                 aria-label="Scroll premium cleaners right"
-                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-teal-200 hover:text-teal-700"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-[#0C8FA3]/25 hover:text-[#0C8FA3]"
               >
                 →
               </button>

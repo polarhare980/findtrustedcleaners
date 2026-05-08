@@ -1,45 +1,113 @@
 'use client';
 
-import React, { useEffect, useMemo, useRef } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import { GlowCard } from '@/components/ui/spotlight-card';
 import { Clock, MapPin, Search, ShieldCheck, Sparkles, UserRoundPlus } from 'lucide-react';
-import { AmbientLight, Color, InstancedMesh, MathUtils, MeshPhysicalMaterial, Object3D, PerspectiveCamera, PMREMGenerator, PointLight, Raycaster, Scene, SphereGeometry, SRGBColorSpace, Vector2, Vector3, WebGLRenderer, ACESFilmicToneMapping, Plane, Clock as ThreeClock } from 'three';
-import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 
 function cn(...classes) {
   return classes.filter(Boolean).join(' ');
 }
 
-const pointer = new Vector2(0.12, -0.08);
-const helperObject = new Object3D();
-function onPointerMove(event) { pointer.set((event.clientX / window.innerWidth) * 2 - 1, -(event.clientY / window.innerHeight) * 2 + 1); }
 
-class HeroStage {
-  #config; #resizeObserver; #intersectionObserver; #resizeTimer; #animationFrameId = 0; #clock = new ThreeClock(); #animationState = { elapsed: 0, delta: 0 }; #isAnimating = false; #isVisible = false;
-  constructor(config) { this.#config = config; this.canvas = config.canvas; this.camera = new PerspectiveCamera(50, 1, 0.1, 100); this.scene = new Scene(); this.renderer = new WebGLRenderer({ canvas: this.canvas, powerPreference: 'high-performance', alpha: true, antialias: true, ...config.rendererOptions }); this.renderer.outputColorSpace = SRGBColorSpace; this.size = { width: 0, height: 0, wWidth: 0, wHeight: 0, ratio: 0 }; this.onBeforeRender = () => {}; this.onAfterResize = () => {}; this.canvas.style.display = 'block'; this.#initObservers(); this.resize(); }
-  #initObservers() { const parent = this.#config.size === 'parent' ? this.canvas.parentNode : null; if (parent) { this.#resizeObserver = new ResizeObserver(this.#onResize); this.#resizeObserver.observe(parent); } else window.addEventListener('resize', this.#onResize); this.#intersectionObserver = new IntersectionObserver(this.#onIntersection, { threshold: 0 }); this.#intersectionObserver.observe(this.canvas); document.addEventListener('visibilitychange', this.#onVisibilityChange); }
-  #onResize = () => { if (this.#resizeTimer) clearTimeout(this.#resizeTimer); this.#resizeTimer = window.setTimeout(() => this.resize(), 100); };
-  #onIntersection = (entries) => { this.#isAnimating = entries[0]?.isIntersecting; this.#isAnimating ? this.#startAnimation() : this.#stopAnimation(); };
-  #onVisibilityChange = () => { if (!this.#isAnimating) return; document.hidden ? this.#stopAnimation() : this.#startAnimation(); };
-  resize() { const parent = this.#config.size === 'parent' ? this.canvas.parentNode : null; const width = parent ? parent.offsetWidth : window.innerWidth; const height = parent ? parent.offsetHeight : window.innerHeight; this.size.width = width; this.size.height = height; this.size.ratio = width / height; this.camera.aspect = this.size.ratio; this.camera.updateProjectionMatrix(); const fovRad = (this.camera.fov * Math.PI) / 180; this.size.wHeight = 2 * Math.tan(fovRad / 2) * this.camera.position.z; this.size.wWidth = this.size.wHeight * this.camera.aspect; this.renderer.setSize(width, height); this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2)); this.onAfterResize(this.size); }
-  #startAnimation() { if (this.#isVisible) return; this.#isVisible = true; this.#clock.start(); const frame = () => { this.#animationFrameId = requestAnimationFrame(frame); this.#animationState.delta = this.#clock.getDelta(); this.#animationState.elapsed += this.#animationState.delta; this.onBeforeRender(this.#animationState); this.renderer.render(this.scene, this.camera); }; frame(); }
-  #stopAnimation() { if (!this.#isVisible) return; cancelAnimationFrame(this.#animationFrameId); this.#isVisible = false; this.#clock.stop(); }
-  dispose() { this.#stopAnimation(); this.#resizeObserver?.disconnect(); this.#intersectionObserver?.disconnect(); window.removeEventListener('resize', this.#onResize); document.removeEventListener('visibilitychange', this.#onVisibilityChange); this.scene.clear(); this.renderer.dispose(); }
-}
+export default function PremiumMatchingHero({
+  className,
+  searchHref = '/cleaners',
+  registerHref = '/register/cleaners',
+  onSearchClick,
+  cleanerCount,
+}) {
+  const primaryButtonClass = 'inline-flex items-center justify-center gap-2 rounded-full bg-[#0C8FA3] px-7 py-4 text-base font-semibold text-white shadow-xl shadow-[#0C8FA3]/20 transition hover:-translate-y-0.5 hover:bg-[#087C8E]';
 
-class SoftBubblePhysics {
-  constructor(config) { this.config = config; this.positionData = new Float32Array(3 * config.count); this.velocityData = new Float32Array(3 * config.count); this.sizeData = new Float32Array(config.count); this.center = new Vector3(); this.#initialisePositions(); this.#setSizes(); }
-  #initialisePositions() { const { count, maxX, maxY, maxZ } = this.config; this.center.toArray(this.positionData, 0); for (let i = 1; i < count; i++) { const index = 3 * i; this.positionData[index] = MathUtils.randFloatSpread(2 * maxX); this.positionData[index + 1] = MathUtils.randFloatSpread(2 * maxY); this.positionData[index + 2] = MathUtils.randFloatSpread(2 * maxZ); } }
-  #setSizes() { const { count, minSize, maxSize, size0 } = this.config; this.sizeData[0] = size0; for (let i = 1; i < count; i++) this.sizeData[i] = MathUtils.randFloat(minSize, maxSize); }
-  update({ delta }) { const { config, center, positionData, sizeData, velocityData } = this; const startIndex = config.controlSphere0 ? 1 : 0; if (config.controlSphere0) { new Vector3().fromArray(positionData, 0).lerp(center, 0.055).toArray(positionData, 0); new Vector3(0, 0, 0).toArray(velocityData, 0); } for (let i = startIndex; i < config.count; i++) { const base = 3 * i; const pos = new Vector3().fromArray(positionData, base); const vel = new Vector3().fromArray(velocityData, base); vel.y -= delta * config.gravity * sizeData[i]; vel.x += Math.sin((pos.y + i) * 0.18) * delta * config.drift; vel.multiplyScalar(config.friction); vel.clampLength(0, config.maxVelocity); pos.add(vel); for (let j = i + 1; j < config.count; j++) { const otherBase = 3 * j; const otherPos = new Vector3().fromArray(positionData, otherBase); const diff = new Vector3().subVectors(otherPos, pos); const distance = diff.length(); const sumRadius = sizeData[i] + sizeData[j]; if (distance < sumRadius) { const overlap = (sumRadius - distance) * 0.5; diff.normalize(); pos.addScaledVector(diff, -overlap); otherPos.addScaledVector(diff, overlap); pos.toArray(positionData, base); otherPos.toArray(positionData, otherBase); } } if (Math.abs(pos.x) + sizeData[i] > config.maxX) { pos.x = Math.sign(pos.x) * (config.maxX - sizeData[i]); vel.x *= -config.wallBounce; } if (pos.y - sizeData[i] < -config.maxY) { pos.y = -config.maxY + sizeData[i]; vel.y *= -config.wallBounce; } if (Math.abs(pos.z) + sizeData[i] > config.maxZ) { pos.z = Math.sign(pos.z) * (config.maxZ - sizeData[i]); vel.z *= -config.wallBounce; } pos.toArray(positionData, base); vel.toArray(velocityData, base); } }
-}
-class SoftBubbleMesh extends InstancedMesh { constructor(renderer, params) { const pmrem = new PMREMGenerator(renderer); const envTexture = pmrem.fromScene(new RoomEnvironment(renderer)).texture; pmrem.dispose(); const geometry = new SphereGeometry(1, 32, 32); const material = new MeshPhysicalMaterial({ envMap: envTexture, ...params.materialParams }); super(geometry, material, params.count); this.config = params; this.physics = new SoftBubblePhysics(params); this.ambientLight = new AmbientLight(0xffffff, params.ambientIntensity); this.light = new PointLight(0xffffff, params.lightIntensity, 100, 1); this.add(this.ambientLight); this.add(this.light); this.#setColors(params.colors); } #setColors(colors) { if (!Array.isArray(colors) || !colors.length) return; const colourObjects = colors.map((colour) => (colour instanceof Color ? colour : new Color(colour))); for (let i = 0; i < this.count; i++) this.setColorAt(i, colourObjects[i % colourObjects.length]); if (this.instanceColor) this.instanceColor.needsUpdate = true; } update(deltaInfo) { this.physics.update(deltaInfo); for (let i = 0; i < this.count; i++) { helperObject.position.fromArray(this.physics.positionData, 3 * i); helperObject.scale.setScalar(this.physics.sizeData[i]); helperObject.updateMatrix(); this.setMatrixAt(i, helperObject.matrix); } this.instanceMatrix.needsUpdate = true; if (this.config.controlSphere0) this.light.position.fromArray(this.physics.positionData, 0); } }
-const defaultBubbleConfig = { count: 48, materialParams: { metalness: 0.04, roughness: 0.16, clearcoat: 1, clearcoatRoughness: 0.08, transparent: true, opacity: 0.68 }, minSize: 0.16, maxSize: 0.54, size0: 0.85, gravity: 0.055, drift: 0.025, friction: 0.992, wallBounce: 0.06, maxVelocity: 0.026, maxX: 10, maxY: 10, maxZ: 10, controlSphere0: true, followCursor: true, lightIntensity: 2.1, ambientIntensity: 1.75, colors: ['#F8FAF8', '#EAF2F0', '#D8E7E4', '#CFEFED', '#BFDAD7'] };
+  const searchButton = onSearchClick ? (
+    <button type="button" onClick={onSearchClick} className={primaryButtonClass}>
+      <Search className="h-5 w-5" />
+      Search cleaners
+    </button>
+  ) : (
+    <Link href={searchHref} className={primaryButtonClass}>
+      <Search className="h-5 w-5" />
+      Search cleaners
+    </Link>
+  );
 
-export default function PremiumMatchingHero({ className, searchHref = '/cleaners', registerHref = '/register/cleaners', onSearchClick, cleanerCount, bubbleConfig = {} }) {
-  const canvasRef = useRef(null); const config = useMemo(() => ({ ...defaultBubbleConfig, ...bubbleConfig }), [bubbleConfig]);
-  useEffect(() => { const canvas = canvasRef.current; if (!canvas) return undefined; const stage = new HeroStage({ canvas, size: 'parent' }); stage.renderer.toneMapping = ACESFilmicToneMapping; stage.camera.position.set(0, 0, 20); const bubbles = new SoftBubbleMesh(stage.renderer, config); stage.scene.add(bubbles); const raycaster = new Raycaster(); const plane = new Plane(new Vector3(0, 0, 1), 0); const intersectionPoint = new Vector3(); if (config.followCursor) window.addEventListener('pointermove', onPointerMove); stage.onBeforeRender = (deltaInfo) => { if (config.followCursor) { raycaster.setFromCamera(pointer, stage.camera); if (raycaster.ray.intersectPlane(plane, intersectionPoint)) bubbles.physics.center.copy(intersectionPoint); } bubbles.update({ delta: Math.min(deltaInfo.delta, 0.018) }); }; stage.onAfterResize = (size) => { bubbles.physics.config.maxX = size.wWidth / 2; bubbles.physics.config.maxY = size.wHeight / 2; bubbles.physics.config.maxZ = size.wWidth / 5; }; return () => { if (config.followCursor) window.removeEventListener('pointermove', onPointerMove); stage.dispose(); }; }, [config]);
-  const searchButton = onSearchClick ? (<button type="button" onClick={onSearchClick} className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-7 py-4 text-base font-semibold text-white shadow-xl shadow-slate-950/10 transition hover:-translate-y-0.5 hover:bg-slate-800"><Search className="h-5 w-5" />Search cleaners</button>) : (<Link href={searchHref} className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-7 py-4 text-base font-semibold text-white shadow-xl shadow-slate-950/10 transition hover:-translate-y-0.5 hover:bg-slate-800"><Search className="h-5 w-5" />Search cleaners</Link>);
-  return (<section className={cn('relative isolate min-h-[88vh] overflow-hidden bg-[#f7f8f5] text-slate-950', className)}><div className="absolute inset-0 -z-20 bg-[radial-gradient(circle_at_top,#ffffff_0%,#edf4f1_36%,#dce9e5_100%)]" /><div className="absolute inset-0 -z-10 bg-[linear-gradient(105deg,rgba(255,255,255,0.84)_0%,rgba(255,255,255,0.63)_42%,rgba(255,255,255,0.12)_100%)]" /><div className="absolute right-[-18%] top-[8%] -z-10 h-[520px] w-[520px] rounded-full bg-teal-200/30 blur-3xl" /><div className="absolute bottom-[-18%] left-[-10%] -z-10 h-[420px] w-[420px] rounded-full bg-cyan-100/50 blur-3xl" /><canvas ref={canvasRef} className="absolute inset-0 z-0 h-full w-full opacity-75" /><div className="relative z-10 mx-auto flex min-h-[88vh] w-full max-w-7xl items-center px-5 py-16 sm:px-8 lg:py-20"><div className="grid w-full gap-10 lg:grid-cols-[1.04fr_0.96fr] lg:items-center"><div className="max-w-3xl"><div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/55 px-4 py-2 text-sm font-semibold text-teal-900 shadow-sm backdrop-blur-xl"><Sparkles className="h-4 w-4" />Local cleaners, real availability</div><h1 className="max-w-4xl text-5xl font-semibold tracking-[-0.055em] text-slate-950 sm:text-6xl md:text-7xl">Find trusted cleaners who are actually available</h1><p className="mt-6 max-w-2xl text-lg leading-8 text-slate-700 sm:text-xl">A calmer way to find a cleaner. Search by service and availability, then move through matched cleaner profiles without the usual directory overload.</p><div className="mt-9 flex flex-col gap-3 sm:flex-row">{searchButton}<Link href={registerHref} className="inline-flex items-center justify-center gap-2 rounded-full border border-white/80 bg-white/55 px-7 py-4 text-base font-semibold text-slate-950 shadow-sm backdrop-blur-xl transition hover:-translate-y-0.5 hover:bg-white/85"><UserRoundPlus className="h-5 w-5" />Register as cleaner</Link></div><div className="mt-8 flex flex-wrap items-center gap-4 text-sm font-medium text-slate-600"><span className="inline-flex items-center gap-2"><MapPin className="h-4 w-4" />West Sussex first</span><span className="inline-flex items-center gap-2"><ShieldCheck className="h-4 w-4" />Reviewed profiles</span><span className="inline-flex items-center gap-2"><Clock className="h-4 w-4" />Availability-led matching</span>{cleanerCount ? <span>{cleanerCount} cleaner profiles</span> : null}</div></div><div className="relative hidden lg:block"><div className="absolute -inset-8 rounded-[44px] bg-white/20 blur-2xl" /><GlowCard glowColor="green" customSize className="relative overflow-hidden rounded-[42px] border border-white/70 bg-white/58 p-5 shadow-[0_30px_90px_rgba(15,23,42,0.16)] backdrop-blur-2xl"><div className="rounded-[32px] bg-[linear-gradient(160deg,#0f172a_0%,#163b3a_48%,#effdfa_100%)] p-5 text-white shadow-inner"><div className="flex items-center justify-between"><p className="text-sm font-semibold uppercase tracking-[0.22em] text-teal-100">Matched cleaner</p><span className="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold backdrop-blur">Next available</span></div><div className="mt-24 rounded-[28px] border border-white/20 bg-white/13 p-5 backdrop-blur-xl"><div className="flex items-center gap-4"><div className="h-16 w-16 rounded-2xl bg-white/25" /><div><h2 className="text-2xl font-semibold tracking-tight">Trusted local cleaner</h2><p className="mt-1 text-sm text-teal-50">Domestic, deep cleaning and end of tenancy</p></div></div><div className="mt-5 grid grid-cols-3 gap-3 text-sm"><div className="rounded-2xl bg-white/14 p-3"><strong className="block text-lg">4.9</strong>reviews</div><div className="rounded-2xl bg-white/14 p-3"><strong className="block text-lg">Today</strong>slots</div><div className="rounded-2xl bg-white/14 p-3"><strong className="block text-lg">£</strong>from price</div></div></div></div><div className="mt-4 grid grid-cols-3 gap-3 text-sm font-semibold text-slate-700"><div className="rounded-2xl bg-white/70 p-4">Swipe-style browsing</div><div className="rounded-2xl bg-white/70 p-4">Cleaner approval</div><div className="rounded-2xl bg-white/70 p-4">Simple request flow</div></div></GlowCard></div></div></div></div></section>);
+  return (
+    <section className={cn('relative isolate min-h-[88vh] overflow-hidden bg-[#f7fbfa] text-slate-950', className)}>
+      <div className="absolute inset-0 -z-30 bg-[radial-gradient(circle_at_top,#ffffff_0%,#eef9f8_38%,#dff0ee_100%)]" />
+      <div className="absolute inset-0 -z-20 bg-[linear-gradient(105deg,rgba(255,255,255,0.9)_0%,rgba(255,255,255,0.68)_44%,rgba(255,255,255,0.2)_100%)]" />
+      <div className="absolute right-[-16%] top-[6%] -z-10 h-[540px] w-[540px] rounded-full bg-[#21B6C7]/24 blur-3xl" />
+      <div className="absolute bottom-[-18%] left-[-10%] -z-10 h-[440px] w-[440px] rounded-full bg-[#BCEFF0]/55 blur-3xl" />
+      <div className="absolute right-[8%] top-[20%] -z-10 hidden h-[360px] w-[360px] rounded-full border border-white/60 bg-white/28 shadow-[0_30px_120px_rgba(12,143,163,0.18)] backdrop-blur-2xl lg:block" />
+
+      <div className="relative z-10 mx-auto flex min-h-[88vh] w-full max-w-7xl items-center px-5 py-16 sm:px-8 lg:py-20">
+        <div className="grid w-full gap-10 lg:grid-cols-[1.04fr_0.96fr] lg:items-center">
+          <div className="max-w-3xl">
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/60 px-4 py-2 text-sm font-semibold text-[#076D7E] shadow-sm backdrop-blur-xl">
+              <Sparkles className="h-4 w-4" />
+              Local cleaners, real availability
+            </div>
+
+            <h1 className="max-w-4xl text-5xl font-semibold tracking-[-0.055em] text-slate-950 sm:text-6xl md:text-7xl">
+              Find trusted cleaners who are actually available
+            </h1>
+
+            <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-700 sm:text-xl">
+              A calmer way to find a cleaner. Search by service and availability, then move through matched cleaner profiles without the usual directory overload.
+            </p>
+
+            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+              {searchButton}
+              <Link
+                href={registerHref}
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-[#0C8FA3]/22 bg-white/62 px-7 py-4 text-base font-semibold text-[#075B6A] shadow-sm backdrop-blur-xl transition hover:-translate-y-0.5 hover:bg-white/88"
+              >
+                <UserRoundPlus className="h-5 w-5" />
+                Register as cleaner
+              </Link>
+            </div>
+
+            <div className="mt-8 flex flex-wrap items-center gap-4 text-sm font-medium text-slate-600">
+              <span className="inline-flex items-center gap-2"><MapPin className="h-4 w-4 text-[#0C8FA3]" />West Sussex first</span>
+              <span className="inline-flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-[#0C8FA3]" />Reviewed profiles</span>
+              <span className="inline-flex items-center gap-2"><Clock className="h-4 w-4 text-[#0C8FA3]" />Availability-led matching</span>
+              {cleanerCount ? <span>{cleanerCount} cleaner profiles</span> : null}
+            </div>
+          </div>
+
+          <div className="relative hidden lg:block">
+            <div className="absolute -inset-8 rounded-[44px] bg-white/26 blur-2xl" />
+            <div className="relative overflow-hidden rounded-[42px] border border-white/70 bg-white/62 p-5 shadow-[0_30px_90px_rgba(15,23,42,0.14)] backdrop-blur-2xl">
+              <div className="rounded-[32px] bg-[linear-gradient(160deg,#071D3A_0%,#0C8FA3_52%,#ECFEFF_100%)] p-5 text-white shadow-inner">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold uppercase tracking-[0.22em] text-cyan-50">Matched cleaner</p>
+                  <span className="rounded-full bg-white/18 px-3 py-1 text-xs font-semibold backdrop-blur">Next available</span>
+                </div>
+
+                <div className="mt-24 rounded-[28px] border border-white/24 bg-white/16 p-5 backdrop-blur-xl">
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/25 text-2xl font-bold">✓</div>
+                    <div>
+                      <h2 className="text-2xl font-semibold tracking-tight">Trusted local cleaner</h2>
+                      <p className="mt-1 text-sm text-cyan-50">Domestic, deep cleaning and end of tenancy</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 grid grid-cols-3 gap-3 text-sm">
+                    <div className="rounded-2xl bg-white/14 p-3"><strong className="block text-lg">4.9</strong>reviews</div>
+                    <div className="rounded-2xl bg-white/14 p-3"><strong className="block text-lg">Today</strong>slots</div>
+                    <div className="rounded-2xl bg-white/14 p-3"><strong className="block text-lg">£</strong>from price</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 grid grid-cols-3 gap-3 text-sm font-semibold text-slate-700">
+                <div className="rounded-2xl bg-white/72 p-4">Swipe-style browsing</div>
+                <div className="rounded-2xl bg-white/72 p-4">Cleaner approval</div>
+                <div className="rounded-2xl bg-white/72 p-4">Simple request flow</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
 }
