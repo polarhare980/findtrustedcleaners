@@ -8,6 +8,7 @@ import CleanerCard from '@/components/CleanerCard';
 import PublicHeader from '@/components/PublicHeader';
 import PublicFooter from '@/components/PublicFooter';
 import PageHero from '@/components/PageHero';
+import PremiumMatchingHero from '@/components/ui/PremiumMatchingHero';
 import { injectPendingFromPurchases } from '@/lib/availability';
 import { ALL_SERVICE_OPTIONS } from '@/lib/serviceOptions';
 import RegionalSeoMesh from '@/components/seo/RegionalSeoMesh';
@@ -172,7 +173,11 @@ export default function HomeClient() {
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,#f7fbfb_0%,#f8fafc_38%,#f8fafc_100%)] text-slate-900">
       <PublicHeader />
-      <section className="site-section pt-6 pb-2">
+      <PremiumMatchingHero
+        cleanerCount={cleanerCount}
+        onSearchClick={() => router.push(`/cleaners?postcode=${encodeURIComponent(postcode)}${serviceType ? `&service=${encodeURIComponent(serviceType)}` : ''}`)}
+      />
+      <section id="quick-search" className="site-section pt-10 pb-2">
         <div className="rounded-[30px] border border-white/70 bg-white/88 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.10)] backdrop-blur-xl sm:p-6">
           <div className="grid gap-4 lg:grid-cols-[1fr_1fr_1fr_auto] lg:items-end">
             <div>
@@ -189,7 +194,7 @@ export default function HomeClient() {
               <input value={postcode} onChange={(e) => setPostcode(e.target.value)} placeholder="Enter your postcode" className="ftc-input" />
             </div>
             <div>
-              <p className="mb-2 text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">Why people use FindTrustedCleaners</p>
+              <p className="mb-2 text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">Refine your cleaner search</p>
               <div className="flex flex-wrap gap-2">
                 <span className="ftc-chip">Verified cleaners</span>
                 <span className="ftc-chip">Real availability</span>
@@ -197,7 +202,7 @@ export default function HomeClient() {
               </div>
             </div>
             <div className="flex w-full flex-col gap-3 lg:w-auto">
-              <button onClick={() => router.push(`/cleaners?postcode=${encodeURIComponent(postcode)}${serviceType ? `&service=${encodeURIComponent(serviceType)}` : ''}`)} className="ftc-button-primary w-full lg:w-auto">Search now</button>
+              <button onClick={() => router.push(`/cleaners?postcode=${encodeURIComponent(postcode)}${serviceType ? `&service=${encodeURIComponent(serviceType)}` : ''}`)} className="ftc-button-primary w-full lg:w-auto">Search available cleaners</button>
               <Link
                 href="/services"
                 className="inline-flex items-center justify-center rounded-2xl border border-teal-200 bg-teal-50/80 px-4 py-3 text-sm font-semibold text-teal-800 shadow-sm transition hover:-translate-y-0.5 hover:border-teal-300 hover:bg-white"

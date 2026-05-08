@@ -440,6 +440,7 @@ async function getLocationData(slug) {
 }
 
 function buildFaqs(locationName, cleaners = []) {
+  const count = cleaners.length;
   const hourlyRates = cleaners
     .map((c) => Number(c?.rates))
     .filter((n) => Number.isFinite(n) && n > 0);
@@ -455,70 +456,43 @@ function buildFaqs(locationName, cleaners = []) {
   return [
     {
       question: `How much do cleaners cost in ${locationName}?`,
-      answer: fromRate != null
-        ? `Some cleaners in ${locationName} list prices from £${fromRate} per hour, while others price by service. Compare what is included before choosing, because a cheap hourly rate is not always the best value for deep cleaning, end of tenancy cleaning or specialist jobs.`
-        : `Cleaner pricing in ${locationName} depends on the service, property size, frequency and whether the job is domestic, specialist or exterior cleaning. Compare cleaner profiles to see what is included before booking.`,
-      links: [{ href: '/blog/average-cleaner-prices-across-west-sussex-2026-guide', label: 'West Sussex cleaner price guide' }],
+      answer:
+        fromRate != null
+          ? `Some cleaners in ${locationName} list prices from £${fromRate} per hour, while others price by service. The easiest way to compare costs is to view each cleaner profile and check what is included.`
+          : `Cleaner pricing in ${locationName} depends on the service, property size, and whether the job is regular or one-off. Profiles on FindTrustedCleaners.com help you compare options more clearly before booking.`,
     },
     {
-      question: `Can I book a cleaner in ${locationName} at short notice?`,
-      answer: availableToday > 0
-        ? `Yes, short-notice bookings may be possible when cleaners show open slots in their live availability. At the moment, ${availableToday} cleaner${availableToday === 1 ? '' : 's'} in ${locationName} currently show availability today.`
-        : `Possibly. Availability changes throughout the week, so it is best to check live cleaner calendars for ${locationName} and book as soon as you see a suitable slot.`,
-      links: [{ href: `/cleaners?postcode=${encodeURIComponent(locationName)}`, label: `available cleaners in ${locationName}` }],
+      question: 'Can I book a cleaner the same day?',
+      answer:
+        availableToday > 0
+          ? `Yes, same-day bookings may be possible when cleaners show open slots in their live availability. At the moment, ${availableToday} cleaner${availableToday === 1 ? '' : 's'} in ${locationName} currently show availability today.`
+          : `Possibly. Availability changes throughout the week, so the best approach is to check live cleaner calendars for ${locationName} and book as soon as you see a suitable slot.`,
     },
     {
-      question: `Are cleaners in ${locationName} insured or DBS checked?`,
-      answer: vettedCount > 0
-        ? `Some are. ${vettedCount} cleaner${vettedCount === 1 ? '' : 's'} in ${locationName} currently show DBS or insurance details on their public profile, helping you make a more informed choice before booking.`
-        : `Cleaner profiles can show reviews, insurance, DBS details, services and availability where the cleaner has added them. Always check the individual profile before booking and ask direct questions if anything is unclear.`,
-      links: [{ href: '/blog/how-to-hire-a-cleaner', label: 'how to hire a cleaner safely' }],
+      question: `Are cleaners in ${locationName} vetted?`,
+      answer:
+        vettedCount > 0
+          ? `Some are. ${vettedCount} cleaner${vettedCount === 1 ? '' : 's'} in ${locationName} currently show DBS or insurance details on their public profile, helping you make a more informed choice.`
+          : `Cleaner profiles can show details such as reviews, insurance, and service information. It is always worth checking the individual profile before you book.`,
     },
     {
-      question: `What cleaning services can I book in ${locationName}?`,
-      answer: `You can compare domestic cleaning, regular house cleaning, deep cleaning, end of tenancy cleaning, oven cleaning, carpet cleaning, window cleaning, gutter cleaning, pressure washing and other specialist services depending on the cleaners currently listed in ${locationName}.`,
-      links: [
-        { href: '/services/domestic-cleaning', label: `domestic cleaning in ${locationName}` },
-        { href: '/services/deep-cleaning', label: `deep cleaning in ${locationName}` },
-        { href: '/services/end-of-tenancy-cleaning', label: `end of tenancy cleaning in ${locationName}` },
-      ],
+      question: 'Do I need to get quotes?',
+      answer:
+        'No. One of the main benefits of FindTrustedCleaners.com is that you can view cleaner profiles, services, and availability directly instead of waiting for multiple quotes to come back.',
     },
     {
-      question: `Is weekly or fortnightly cleaning better in ${locationName}?`,
-      answer: `Weekly cleaning usually suits busy homes, families, pet owners and properties that need consistent upkeep. Fortnightly cleaning can work well for smaller households or people who keep on top of basics between visits. If the home needs a reset first, consider a one-off deep clean before moving to regular cleaning.`,
-      links: [
-        { href: '/services/regular-cleaning', label: `regular house cleaning in ${locationName}` },
-        { href: '/blog/how-often-should-you-hire-a-cleaner-west-sussex-guide', label: 'how often to hire a cleaner' },
-      ],
-    },
-    {
-      question: `Do cleaners in ${locationName} bring products and equipment?`,
-      answer: `That depends on the cleaner and service type. Many domestic cleaners use products at the property, while specialist cleaners may bring trade equipment for jobs such as oven cleaning, carpet cleaning, gutter cleaning or pressure washing. Check the cleaner profile and booking notes before confirming.`,
-      links: [
-        { href: '/services/oven-cleaning', label: `oven cleaning in ${locationName}` },
-        { href: '/services/carpet-cleaning', label: `carpet cleaning in ${locationName}` },
-      ],
+      question: `What types of cleaning can I book in ${locationName}?`,
+      answer:
+        `You can find support for domestic cleaning, deep cleaning, end of tenancy cleaning, oven cleaning, carpet cleaning, window cleaning, gutter cleaning, pressure washing and other specialist services depending on the cleaners currently listed in ${locationName}.`,
     },
     {
       question: `How do I choose a reliable cleaner in ${locationName}?`,
-      answer: `Compare profile detail, services offered, availability, reviews, photos, insurance or DBS details where shown, and whether the cleaner appears suited to the job. A fuller profile is usually more useful than a basic name and phone number in a directory.`,
-      links: [{ href: '/blog/how-to-hire-a-cleaner', label: 'cleaner hiring guide' }],
-    },
-    {
-      question: `Can landlords or tenants find move-out cleaners in ${locationName}?`,
-      answer: `Yes. Tenants, landlords and agents can compare end of tenancy cleaning, oven cleaning and carpet cleaning options for move-out cleans, pre-inspection work and handovers. Book early where possible because good local cleaners can fill their calendars quickly near month-end.`,
-      links: [
-        { href: '/services/end-of-tenancy-cleaning', label: `end of tenancy cleaning in ${locationName}` },
-        { href: '/blog/end-of-tenancy-cleaning-in-west-sussex-what-landlords-expect', label: 'what landlords expect' },
-      ],
-    },
-    {
-      question: `Why use FindTrustedCleaners.com instead of asking in local Facebook groups?`,
-      answer: `Local groups can be useful, but they often mean scrolling through old comments and chasing replies. FindTrustedCleaners.com gives you cleaner profiles, services, availability and trust signals in one place, which makes it easier to compare options without starting from scratch every time.`,
-      links: [{ href: '/cleaners', label: 'compare cleaner profiles' }],
+      answer:
+        `Compare cleaner profiles carefully, including availability, reviews, services, and any vetting details shown. That gives you a clearer picture than a basic directory listing alone.`,
     },
   ];
 }
+
 function getNearbyLinks(locationSlug) {
   const configuredNearby = (CORE_LOCATIONS[locationSlug]?.nearby || [])
     .map((place) => slugify(place))
@@ -1051,15 +1025,6 @@ export default async function Page({ params }) {
             <div key={item.question} className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
               <h3 className="mb-2 font-semibold text-slate-900">{item.question}</h3>
               <p className="text-slate-700">{item.answer}</p>
-              {item.links?.length ? (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {item.links.map((link) => (
-                    <Link key={link.href} href={link.href} className="rounded-full border border-teal-200 bg-white px-3 py-1 text-sm font-medium text-teal-700 hover:bg-teal-50">
-                      {link.label}
-                    </Link>
-                  ))}
-                </div>
-              ) : null}
             </div>
           ))}
         </div>
