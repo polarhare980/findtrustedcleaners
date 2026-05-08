@@ -5,7 +5,14 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import PublicHeader from '@/components/PublicHeader'
 import PublicFooter from '@/components/PublicFooter'
 import CleanerCard from '@/components/CleanerCard'
-import { ALL_SERVICE_OPTIONS } from '@/lib/serviceOptions'
+
+
+const CLEANING_PATHS = [
+  { id: 'home', label: 'Home Cleaning', description: 'Weekly, regular or one-off home cleaning.', services: ['Regular Cleaning', 'One-Off Deep Clean', 'End of Tenancy', 'Moving House Cleaning'] },
+  { id: 'specialist', label: 'Specialist Cleaning', description: 'Ovens, carpets, windows, gutters and more.', services: ['Oven Cleaning', 'Carpet Cleaning', 'Window Cleaning', 'Pressure Washing', 'Gutter Cleaning'] },
+]
+
+const TIME_PREFERENCES = ['Any time', 'Weekday morning', 'Weekday afternoon', 'Evening', 'Weekend']
 
 const fetchJson = async (url) => {
   const res = await fetch(url, { credentials: 'include' })
@@ -23,6 +30,8 @@ export default function CleanerSearchPage() {
 
   const [postcode, setPostcode] = useState('')
   const [serviceType, setServiceType] = useState('')
+  const [cleaningPath, setCleaningPath] = useState('home')
+  const [timePreference, setTimePreference] = useState('Any time')
   const [radius, setRadius] = useState('8')
   const [hydratedFromQuery, setHydratedFromQuery] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -36,9 +45,13 @@ export default function CleanerSearchPage() {
     const qpPostcode = searchParams.get('postcode') || ''
     const qpService = searchParams.get('service') || searchParams.get('serviceType') || ''
     const qpRadius = searchParams.get('radius') || '8'
+    const qpPath = searchParams.get('path') || 'home'
+    const qpTime = searchParams.get('time') || 'Any time'
 
     setPostcode(qpPostcode)
     setServiceType(qpService)
+    setCleaningPath(qpPath === 'specialist' ? 'specialist' : 'home')
+    setTimePreference(qpTime)
     setRadius(qpRadius)
     setHydratedFromQuery(true)
   }, [searchParams, hydratedFromQuery])
@@ -49,7 +62,7 @@ export default function CleanerSearchPage() {
     if (serviceType.trim()) params.set('serviceType', serviceType.trim())
     if (radius) params.set('radius', radius)
     return `/api/cleaners?${params.toString()}`
-  }, [postcode, serviceType, radius])
+  }, [postcode, serviceType, cleaningPath, timePreference, radius])
 
   useEffect(() => {
     if (!hydratedFromQuery) return
@@ -83,6 +96,8 @@ export default function CleanerSearchPage() {
     const params = new URLSearchParams()
     if (postcode.trim()) params.set('postcode', postcode.trim())
     if (serviceType.trim()) params.set('service', serviceType.trim())
+    if (cleaningPath) params.set('path', cleaningPath)
+    if (timePreference && timePreference !== 'Any time') params.set('time', timePreference)
     if (radius) params.set('radius', radius)
     router.replace(`/cleaners${params.toString() ? `?${params.toString()}` : ''}`)
   }
@@ -90,6 +105,8 @@ export default function CleanerSearchPage() {
   const handleClear = () => {
     setPostcode('')
     setServiceType('')
+    setCleaningPath('home')
+    setTimePreference('Any time')
     setRadius('8')
     router.replace('/cleaners')
   }
@@ -106,60 +123,81 @@ export default function CleanerSearchPage() {
       <PublicHeader />
 
       <section className="site-section pt-8 pb-4">
-        <div className="rounded-[30px] border border-white/70 bg-white/90 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.10)] backdrop-blur-xl sm:p-6">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-            <div className="max-w-2xl">
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">Trusted cleaner marketplace</p>
-              <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">Find Trusted Cleaners Near You</h1>
-              <p className="mt-3 text-base leading-7 text-slate-600 sm:text-lg">
-                Search by postcode, refine by service, and browse cleaner profiles with availability, reviews and trust signals in one place.
-              </p>
-            </div>
-            <div className="rounded-2xl border border-teal-100 bg-teal-50/70 px-4 py-3 text-sm text-teal-900">
-              {loading ? 'Loading results…' : `${cleaners.length} cleaner${cleaners.length === 1 ? '' : 's'} found for ${summary}.`}
+        <div className="overflow-hidden rounded-[34px] border border-white/70 bg-white/90 shadow-[0_24px_80px_rgba(15,23,42,0.10)] backdrop-blur-xl">
+          <div className="border-b border-slate-100 bg-[radial-gradient(circle_at_top_left,_rgba(20,184,166,0.16),_transparent_34%),linear-gradient(180deg,#ffffff_0%,#f8fffe_100%)] p-6 sm:p-8">
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+              <div className="max-w-3xl">
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">Cleaner matching</p>
+                <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-5xl">Find the right cleaner without the noise</h1>
+                <p className="mt-4 text-base leading-7 text-slate-600 sm:text-lg">Choose a simple path, add your postcode, then browse nearby cleaners in a calmer discovery flow.</p>
+              </div>
+              <div className="rounded-2xl border border-teal-100 bg-teal-50/70 px-4 py-3 text-sm font-semibold text-teal-900">
+                {loading ? 'Finding matches…' : `${cleaners.length} cleaner${cleaners.length === 1 ? '' : 's'} found for ${summary}.`}
+              </div>
             </div>
           </div>
-
-          <div className="mt-6 grid gap-4 lg:grid-cols-[1fr_1fr_180px_auto_auto] lg:items-end">
+          <div className="grid gap-6 p-6 sm:p-8 lg:grid-cols-[0.95fr_1.05fr]">
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">Service</label>
-              <select value={serviceType} onChange={(e) => setServiceType(e.target.value)} className="ftc-select">
-                <option value="">All cleaning services</option>
-                {ALL_SERVICE_OPTIONS.map((service) => (
-                  <option key={service} value={service}>{service}</option>
-                ))}
-              </select>
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Step 1</p>
+              <h2 className="mt-2 text-2xl font-bold text-slate-950">What do you need help with?</h2>
+              <div className="mt-4 grid gap-3">
+                {CLEANING_PATHS.map((path) => {
+                  const active = cleaningPath === path.id
+                  return (
+                    <button key={path.id} type="button" onClick={() => { setCleaningPath(path.id); setServiceType('') }} className={`rounded-[26px] border p-5 text-left transition ${active ? 'border-teal-300 bg-teal-50 shadow-[0_16px_40px_rgba(20,184,166,0.14)]' : 'border-slate-200 bg-white hover:-translate-y-0.5 hover:border-teal-200'}`}>
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <h3 className="text-xl font-bold text-slate-950">{path.label}</h3>
+                          <p className="mt-1 text-sm leading-6 text-slate-600">{path.description}</p>
+                        </div>
+                        <span className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border text-sm font-bold ${active ? 'border-teal-300 bg-white text-teal-800' : 'border-slate-200 bg-slate-50 text-slate-500'}`}>{active ? '✓' : '→'}</span>
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
             </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">Postcode</label>
-              <input
-                value={postcode}
-                onChange={(e) => setPostcode(e.target.value)}
-                placeholder="Enter your postcode"
-                className="ftc-input"
-              />
+            <div className="rounded-[28px] border border-slate-200 bg-slate-50/70 p-5">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Step 2</p>
+              <h2 className="mt-2 text-2xl font-bold text-slate-950">Add the basics</h2>
+              <div className="mt-5 grid gap-4">
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-700">Postcode</label>
+                  <input value={postcode} onChange={(e) => setPostcode(e.target.value)} placeholder="Enter your postcode" className="ftc-input bg-white" />
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-700">Preferred time</label>
+                  <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                    {TIME_PREFERENCES.map((time) => (
+                      <button key={time} type="button" onClick={() => setTimePreference(time)} className={`whitespace-nowrap rounded-full border px-4 py-2 text-sm font-semibold transition ${timePreference === time ? 'border-teal-300 bg-teal-700 text-white shadow-sm' : 'border-slate-200 bg-white text-slate-700 hover:border-teal-200 hover:text-teal-800'}`}>{time}</button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-700">Specific job</label>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {(CLEANING_PATHS.find((path) => path.id === cleaningPath)?.services || []).map((service) => (
+                      <button key={service} type="button" onClick={() => setServiceType(serviceType === service ? '' : service)} className={`rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition ${serviceType === service ? 'border-teal-300 bg-white text-teal-900 shadow-sm' : 'border-slate-200 bg-white/80 text-slate-700 hover:border-teal-200 hover:text-teal-800'}`}>{service}</button>
+                    ))}
+                  </div>
+                </div>
+                <details className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">
+                  <summary className="cursor-pointer font-semibold text-slate-800">Optional: widen distance</summary>
+                  <div className="mt-3">
+                    <label className="mb-2 block text-sm font-medium text-slate-700">Search distance</label>
+                    <select value={radius} onChange={(e) => setRadius(e.target.value)} className="ftc-select bg-white">
+                      <option value="5">5 miles</option><option value="8">8 miles</option><option value="12">12 miles</option><option value="15">15 miles</option>
+                    </select>
+                  </div>
+                </details>
+              </div>
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                <button onClick={handleSearch} className="ftc-button-primary w-full sm:w-auto">Show matching cleaners</button>
+                <button onClick={handleClear} className="ftc-button-secondary w-full sm:w-auto">Start again</button>
+              </div>
+              {searchMeta?.usedDistanceSearch && postcode ? (<p className="mt-4 text-sm text-slate-500">Showing cleaners within roughly {searchMeta?.radiusMiles || radius} miles of {postcode.toUpperCase()}.</p>) : null}
             </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">Radius</label>
-              <select value={radius} onChange={(e) => setRadius(e.target.value)} className="ftc-select">
-                <option value="5">5 miles</option>
-                <option value="8">8 miles</option>
-                <option value="12">12 miles</option>
-                <option value="15">15 miles</option>
-              </select>
-            </div>
-
-            <button onClick={handleSearch} className="ftc-button-primary w-full lg:w-auto">Search</button>
-            <button onClick={handleClear} className="ftc-button-secondary w-full lg:w-auto">Clear</button>
           </div>
-
-          {searchMeta?.usedDistanceSearch && postcode ? (
-            <p className="mt-4 text-sm text-slate-500">
-              Showing cleaners within roughly {searchMeta?.radiusMiles || radius} miles of {postcode.toUpperCase()}.
-            </p>
-          ) : null}
         </div>
       </section>
 

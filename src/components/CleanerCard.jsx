@@ -46,6 +46,18 @@ function getVisibleServices(cleaner = {}) {
   return []
 }
 
+function getAvailabilityHint(cleaner = {}) {
+  const availability = cleaner?.availabilityMerged || cleaner?.availability || {}
+  const days = Object.keys(availability || {})
+  let count = 0
+  days.forEach((day) => {
+    Object.values(availability?.[day] || {}).forEach((slot) => { if (slot === true) count += 1 })
+  })
+  if (count >= 8) return 'Good availability'
+  if (count > 0) return 'Limited availability'
+  return 'Check availability'
+}
+
 export default function CleanerCard({ cleaner, isFavourite = false, onToggleFavourite }) {
   const [liked, setLiked] = useState(Boolean(isFavourite))
 
@@ -57,6 +69,7 @@ export default function CleanerCard({ cleaner, isFavourite = false, onToggleFavo
   const services = useMemo(() => getVisibleServices(cleaner), [cleaner])
   const isPremium = Boolean(cleaner?.isPremium)
   const hourlyRate = Number(cleaner?.rates || cleaner?.hourlyRate || 0)
+  const availabilityHint = useMemo(() => getAvailabilityHint(cleaner), [cleaner])
 
   const handleFavourite = (e) => {
     e.preventDefault()
@@ -81,7 +94,7 @@ export default function CleanerCard({ cleaner, isFavourite = false, onToggleFavo
             <img
               src={(typeof cleaner.image === 'string' && cleaner.image.trim()) ? cleaner.image : FALLBACK_IMAGE}
               alt={cleaner.companyName || 'Cleaner profile'}
-              className={`w-full object-cover transition duration-500 group-hover:scale-[1.03] ${isPremium ? 'h-52' : 'h-44'}`}
+              className={`w-full object-cover transition duration-500 group-hover:scale-[1.03] ${isPremium ? 'h-64' : 'h-56'}`}
               onError={(e) => {
                 e.currentTarget.onerror = null
                 e.currentTarget.src = FALLBACK_IMAGE
@@ -108,6 +121,8 @@ export default function CleanerCard({ cleaner, isFavourite = false, onToggleFavo
                 </span>
               </div>
             ) : null}
+
+            <div className="absolute bottom-3 right-3 rounded-full border border-white/30 bg-white/92 px-3 py-1.5 text-xs font-semibold text-slate-800 shadow-sm backdrop-blur-sm">{availabilityHint}</div>
 
             {isPremium && reviewSummary ? (
               <div className="absolute bottom-3 left-3 rounded-2xl border border-white/20 bg-white/92 px-4 py-3 shadow-lg backdrop-blur-sm">
@@ -145,30 +160,21 @@ export default function CleanerCard({ cleaner, isFavourite = false, onToggleFavo
               ) : null}
             </div>
 
-            {services.length ? (
-              <div className={`rounded-2xl border px-4 py-3 ${isPremium ? 'border-amber-100 bg-white/80' : 'border-slate-200 bg-slate-50/90'}`}>
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Services</p>
-                <p className="mt-2 text-sm leading-6 text-slate-600 line-clamp-2">
-                  {services.slice(0, isPremium ? 4 : 3).join(', ')}
-                  {services.length > (isPremium ? 4 : 3) ? '…' : ''}
-                </p>
+            <div className={`rounded-2xl border px-4 py-3 ${isPremium ? 'border-amber-100 bg-white/80' : 'border-slate-200 bg-slate-50/90'}`}>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                {reviewSummary ? <RatingStars value={reviewSummary.value} count={reviewSummary.count} size={isPremium ? 17 : 15} /> : <span className="text-sm font-medium text-slate-500">New profile</span>}
+                <span className="text-xs font-semibold text-teal-700">{availabilityHint}</span>
               </div>
+            </div>
+
+            {services.length ? (
+              <p className="text-sm leading-6 text-slate-600 line-clamp-2">{services.slice(0, 3).join(', ')}{services.length > 3 ? '…' : ''}</p>
             ) : null}
 
-            {reviewSummary ? (
-              <div className={`rounded-2xl border px-4 py-3 ${isPremium ? 'border-amber-100 bg-amber-50/70' : 'border-slate-200 bg-slate-50/90'}`}>
-                <div className="flex items-center justify-between gap-3 flex-wrap">
-                  <RatingStars value={reviewSummary.value} count={reviewSummary.count} size={isPremium ? 17 : 15} />
-                  <span className={`text-xs font-semibold ${reviewSummary.accent}`}>
-                    {reviewSummary.source}
-                  </span>
-                </div>
-              </div>
-            ) : (
-              <div className={`rounded-2xl border px-4 py-3 text-sm text-slate-500 ${isPremium ? 'border-amber-100 bg-amber-50/50' : 'border-slate-200 bg-slate-50/90'}`}>
-                No reviews yet
-              </div>
-            )}
+            <div className="flex items-center justify-between border-t border-slate-100 pt-3">
+              <span className="text-sm font-semibold text-slate-700">Does this cleaner feel right?</span>
+              <span className="text-sm font-bold text-teal-700 transition group-hover:translate-x-1">View →</span>
+            </div>
           </div>
         </div>
       </article>
