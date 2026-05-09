@@ -2,7 +2,14 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Clock, MapPin, Search, ShieldCheck, Sparkles, UserRoundPlus } from 'lucide-react';
+import {
+  Clock,
+  MapPin,
+  Search,
+  ShieldCheck,
+  Sparkles,
+  UserRoundPlus,
+} from 'lucide-react';
 
 function cn(...classes) {
   return classes.filter(Boolean).join(' ');
@@ -38,7 +45,7 @@ export default function PremiumMatchingHero({
       )}
     >
       {/* HERO VIDEO */}
-      <div className="absolute inset-0 -z-40 overflow-hidden">
+      <div className="absolute inset-0 z-0 overflow-hidden">
         <video
           autoPlay
           muted
@@ -52,13 +59,13 @@ export default function PremiumMatchingHero({
       </div>
 
       {/* DARK BMW STYLE OVERLAY */}
-      <div className="absolute inset-0 -z-30 bg-gradient-to-r from-[#020617]/95 via-[#020617]/78 to-[#020617]/10" />
+      <div className="absolute inset-0 z-[1] bg-gradient-to-r from-[#020617]/95 via-[#020617]/75 to-[#020617]/15" />
 
       {/* DEPTH OVERLAY */}
-      <div className="absolute inset-0 -z-20 bg-[radial-gradient(circle_at_top_left,rgba(12,143,163,0.18),transparent_42%)]" />
+      <div className="absolute inset-0 z-[2] bg-[radial-gradient(circle_at_top_left,rgba(12,143,163,0.18),transparent_42%)]" />
 
       {/* FLOATING GLASS BUBBLES */}
-      <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+      <div className="pointer-events-none absolute inset-0 z-[3] overflow-hidden">
         <div className="absolute left-[8%] top-[10%] h-32 w-32 rounded-full border border-white/10 bg-white/5 backdrop-blur-2xl animate-pulse" />
         <div className="absolute left-[18%] top-[55%] h-16 w-16 rounded-full border border-white/10 bg-white/5 backdrop-blur-xl animate-pulse" />
         <div className="absolute left-[30%] top-[25%] h-24 w-24 rounded-full border border-white/10 bg-white/5 backdrop-blur-2xl animate-pulse" />
@@ -66,6 +73,7 @@ export default function PremiumMatchingHero({
         <div className="absolute right-[18%] bottom-[15%] h-28 w-28 rounded-full border border-white/10 bg-white/5 backdrop-blur-2xl animate-pulse" />
       </div>
 
+      {/* CONTENT */}
       <div className="relative z-10 mx-auto flex min-h-[92vh] w-full max-w-7xl items-center px-5 py-16 sm:px-8 lg:py-20">
         <div className="grid w-full gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
           <div className="max-w-3xl">
