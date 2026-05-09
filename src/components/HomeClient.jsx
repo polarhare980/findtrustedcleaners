@@ -547,11 +547,15 @@ export default function HomeClient() {
         <section className="relative z-10 -mt-px pb-14 sm:pb-18">
           <div className="mx-auto max-w-7xl bg-gradient-to-b from-[#e8f4f7] to-white/75 p-8 text-center shadow-none backdrop-blur-xl sm:rounded-t-[44px] sm:p-10">
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#0C8FA3]">For cleaners</p>
-            <h2 className="mt-2 text-3xl font-bold text-slate-900">Want to win more direct booking requests?</h2>
-            <p className="mx-auto mt-4 max-w-2xl text-slate-600">Join for free, set your availability, and get discovered by local households.</p>
-            <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <Link href="/register/cleaners" className="ftc-button-primary">Create cleaner profile</Link>
-              <Link href="/about" className="ftc-button-secondary">About FindTrustedCleaners</Link>
+            <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-900 sm:text-5xl">Grow your local cleaning business</h2>
+            <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-slate-600">Get discovered by local households with live availability and premium profiles.</p>
+            <div className="mt-8 flex flex-wrap justify-center gap-4">
+              <Link href="/register/cleaners" className="inline-flex items-center justify-center rounded-full bg-[#11B5C9] px-7 py-4 text-base font-semibold text-white shadow-[0_10px_40px_rgba(17,181,201,0.28)] transition hover:scale-[1.02] hover:bg-[#0ea5b7]">
+                Create cleaner profile <span className="ml-3">→</span>
+              </Link>
+              <Link href="/about" className="inline-flex items-center text-base font-medium text-slate-700 transition hover:text-slate-950">
+                Learn more <span className="ml-2">→</span>
+              </Link>
             </div>
           </div>
         </section>
