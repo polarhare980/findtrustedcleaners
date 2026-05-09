@@ -38,6 +38,30 @@ const CORE_SERVICE_LINKS = [
 ];
 
 
+
+const HOME_SERVICE_TILES = [
+  {
+    href: '/services/regular-cleaning',
+    label: 'Regular cleaning',
+    image: '/images/services/regular-cleaning.jpg',
+  },
+  {
+    href: '/services/end-of-tenancy-cleaning',
+    label: 'End of tenancy',
+    image: '/images/services/end-of-tenancy-cleaning.jpg',
+  },
+  {
+    href: '/services/oven-cleaning',
+    label: 'Oven cleaning',
+    image: '/images/services/oven-cleaning.jpg',
+  },
+  {
+    href: '/services/carpet-cleaning',
+    label: 'Carpet cleaning',
+    image: '/images/services/carpet-cleaning.jpg',
+  },
+];
+
 const CLEANING_PATHS = [
   {
     id: 'home',
@@ -401,6 +425,8 @@ export default function HomeClient() {
           </div>
         </section>
 
+        <div aria-hidden="true" className="relative z-20 h-3 bg-white sm:h-4" />
+
         <section className="relative z-10 -mt-px py-0">
           <div
             className="relative mx-auto max-w-7xl overflow-hidden rounded-none bg-slate-950 shadow-none sm:rounded-[44px] sm:shadow-[0_28px_85px_rgba(15,23,42,0.18)]"
@@ -431,29 +457,45 @@ export default function HomeClient() {
           </div>
         </section>
 
+        <div aria-hidden="true" className="relative z-20 h-3 bg-white sm:h-4" />
+
         <section className="relative z-10 -mt-px py-0">
-          <div className="mx-auto grid max-w-7xl gap-5 bg-gradient-to-b from-slate-950 via-slate-900 to-[#e8f4f7] px-5 py-14 sm:px-8 sm:py-18 lg:grid-cols-[0.72fr_1.28fr] lg:items-center lg:rounded-[44px] lg:px-10">
-            <div className="px-1 sm:px-3">
-              <p className="text-xs font-black uppercase tracking-[0.28em] text-[#30D5C8]">Services</p>
-              <h2 className="mt-4 text-4xl font-black tracking-tight text-white sm:text-5xl">Choose the cleaning service you need</h2>
-              <Link href="/services" className="mt-7 inline-flex min-h-[52px] items-center justify-center rounded-2xl bg-white px-6 text-sm font-black text-slate-950 shadow-[0_18px_44px_rgba(0,0,0,0.22)] transition hover:-translate-y-0.5 hover:bg-[#EAFBFB]">
+          <div className="mx-auto max-w-7xl bg-gradient-to-b from-slate-950 via-slate-900 to-[#e8f4f7] px-5 py-12 sm:px-8 sm:py-16 lg:rounded-[44px] lg:px-10">
+            <div className="mb-7 flex flex-col gap-5 px-1 sm:px-3 lg:flex-row lg:items-end lg:justify-between">
+              <div className="max-w-2xl">
+                <p className="text-xs font-black uppercase tracking-[0.28em] text-[#30D5C8]">Services</p>
+                <h2 className="mt-4 text-4xl font-black tracking-tight text-white sm:text-5xl">Choose the cleaning service you need</h2>
+              </div>
+              <Link href="/services" className="inline-flex min-h-[52px] w-fit items-center justify-center rounded-2xl bg-white px-6 text-sm font-black text-slate-950 shadow-[0_18px_44px_rgba(0,0,0,0.22)] transition hover:-translate-y-0.5 hover:bg-[#EAFBFB]">
                 Browse services →
               </Link>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              {CORE_SERVICE_LINKS.concat([{ href: '/services/carpet-cleaning', label: 'Carpet cleaning' }]).slice(0, 5).map((service) => (
+
+            <div className="-mx-5 flex gap-3 overflow-x-auto px-5 pb-2 [scrollbar-width:none] sm:-mx-8 sm:px-8 lg:mx-0 lg:grid lg:grid-cols-4 lg:overflow-visible lg:px-0">
+              {HOME_SERVICE_TILES.map((service) => (
                 <Link
                   key={service.href}
                   href={service.href}
-                  className="group flex min-h-[112px] items-end justify-between rounded-[28px] border border-white/12 bg-white/10 p-5 text-white shadow-[0_18px_55px_rgba(0,0,0,0.10)] backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:bg-white/16 hover:shadow-[0_24px_70px_rgba(0,0,0,0.18)]"
+                  className="group relative min-h-[230px] min-w-[78%] overflow-hidden rounded-[32px] bg-slate-800 text-white shadow-[0_20px_70px_rgba(0,0,0,0.18)] transition duration-500 hover:-translate-y-1 hover:shadow-[0_28px_90px_rgba(0,0,0,0.28)] sm:min-w-[42%] lg:min-w-0"
                 >
-                  <span className="text-xl font-black tracking-tight">{service.label.replace(' cleaning', '')}</span>
-                  <span className="grid h-9 w-9 place-items-center rounded-full bg-[#EAFBFB] text-[#0C8FA3] transition group-hover:translate-x-1">→</span>
+                  <div
+                    aria-hidden="true"
+                    className="absolute inset-0 bg-cover bg-center transition duration-700 group-hover:scale-105"
+                    style={{ backgroundImage: `url(${service.image})` }}
+                  />
+                  <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-slate-950/86 via-slate-950/28 to-slate-950/8" />
+                  <div aria-hidden="true" className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(48,213,200,0.20),transparent_16rem)] opacity-70" />
+                  <div className="relative flex h-full min-h-[230px] items-end justify-between p-5">
+                    <span className="max-w-[12rem] text-2xl font-black leading-tight tracking-tight">{service.label}</span>
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white text-[#0C8FA3] shadow-[0_12px_30px_rgba(0,0,0,0.18)] transition group-hover:translate-x-1">→</span>
+                  </div>
                 </Link>
               ))}
             </div>
           </div>
         </section>
+
+        <div aria-hidden="true" className="relative z-20 h-3 bg-white sm:h-4" />
 
         <section className="relative z-10 -mt-px py-0">
           <div className="mx-auto grid max-w-7xl gap-3 bg-slate-950/96 p-5 shadow-none backdrop-blur-xl sm:grid-cols-2 sm:p-6 lg:grid-cols-4 lg:rounded-[44px]">
@@ -470,6 +512,8 @@ export default function HomeClient() {
             ))}
           </div>
         </section>
+
+        <div aria-hidden="true" className="relative z-20 h-3 bg-white sm:h-4" />
 
         <section className="relative z-10 -mt-px py-0">
           <div className="relative mx-auto max-w-7xl overflow-hidden rounded-none border-0 bg-slate-950 shadow-none sm:rounded-[44px] sm:shadow-[0_28px_90px_rgba(15,23,42,0.20)]">
