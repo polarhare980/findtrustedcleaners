@@ -40,13 +40,15 @@ export default function PremiumMatchingHero({
     >
       {/* HERO IMAGE */}
       <div className="absolute inset-0 -z-40">
-        <Image
-          src="/images/homepage-hero.jpg"
-          alt="Luxury cleaner matching platform"
-          fill
-          priority
-          className="object-cover object-center"
-        />
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="h-full w-full object-cover object-center"
+        >
+          <source src="/videos/homepage-hero.mp4" type="video/mp4" />
+        </video>
       </div>
 
       {/* DARK BMW STYLE OVERLAY */}
@@ -73,11 +75,11 @@ export default function PremiumMatchingHero({
             </div>
 
             <h1 className="max-w-4xl text-5xl font-semibold tracking-[-0.055em] text-white sm:text-6xl md:text-7xl">
-              Find trusted cleaners without the directory chaos
+              Find trusted cleaners
             </h1>
 
             <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300 sm:text-xl">
-              Browse cleaner profiles by service, availability and location — from domestic cleaning to oven, carpet and window specialists.
+              Sparkling homes.
             </p>
 
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
