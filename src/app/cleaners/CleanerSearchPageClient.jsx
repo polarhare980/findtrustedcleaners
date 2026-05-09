@@ -6,13 +6,48 @@ import PublicHeader from '@/components/PublicHeader'
 import PublicFooter from '@/components/PublicFooter'
 import CleanerCard from '@/components/CleanerCard'
 
-
 const CLEANING_PATHS = [
-  { id: 'home', label: 'Home Cleaning', description: 'Weekly, regular or one-off home cleaning.', services: ['Regular Cleaning', 'One-Off Deep Clean', 'End of Tenancy', 'Moving House Cleaning'] },
-  { id: 'specialist', label: 'Specialist Cleaning', description: 'Ovens, carpets, windows, gutters and more.', services: ['Oven Cleaning', 'Carpet Cleaning', 'Window Cleaning', 'Pressure Washing', 'Gutter Cleaning'] },
+  {
+    id: 'home',
+    label: 'Domestic',
+    title: 'Home cleaning',
+    description: 'Regular, weekly or one-off help around the home.',
+    services: ['Regular Cleaning', 'One-Off Deep Clean', 'End of Tenancy', 'Moving House Cleaning'],
+  },
+  {
+    id: 'deep',
+    label: 'Deep clean',
+    title: 'Deep cleaning',
+    description: 'A stronger reset for kitchens, bathrooms and busy homes.',
+    services: ['One-Off Deep Clean', 'Spring Cleaning', 'After-party Cleaning'],
+  },
+  {
+    id: 'move',
+    label: 'Moving out',
+    title: 'End of tenancy',
+    description: 'Cleaning support before keys, deposits and inspections.',
+    services: ['End of Tenancy', 'Moving House Cleaning'],
+  },
+  {
+    id: 'specialist',
+    label: 'Specialist',
+    title: 'Specialist cleaning',
+    description: 'Ovens, carpets, windows, gutters and one-off jobs.',
+    services: ['Oven Cleaning', 'Carpet Cleaning', 'Window Cleaning', 'Pressure Washing', 'Gutter Cleaning'],
+  },
 ]
 
-const TIME_PREFERENCES = ['Any time', 'Weekday morning', 'Weekday afternoon', 'Evening', 'Weekend']
+const QUICK_SERVICES = ['Domestic', 'Deep clean', 'End of tenancy', 'Oven', 'Carpet', 'Windows']
+const TIME_PREFERENCES = ['Any time', 'Today', 'Tomorrow', 'This week', 'Weekend']
+
+const SERVICE_MAP = {
+  Domestic: { path: 'home', service: 'Regular Cleaning' },
+  'Deep clean': { path: 'deep', service: 'One-Off Deep Clean' },
+  'End of tenancy': { path: 'move', service: 'End of Tenancy' },
+  Oven: { path: 'specialist', service: 'Oven Cleaning' },
+  Carpet: { path: 'specialist', service: 'Carpet Cleaning' },
+  Windows: { path: 'specialist', service: 'Window Cleaning' },
+}
 
 const fetchJson = async (url) => {
   const res = await fetch(url, { credentials: 'include' })
@@ -22,6 +57,14 @@ const fetchJson = async (url) => {
     throw new Error(data?.message || 'Failed to load cleaners')
   }
   return data
+}
+
+function compactServiceLabel(serviceType = '') {
+  return serviceType
+    .replace('One-Off ', '')
+    .replace('Regular Cleaning', 'Domestic')
+    .replace('End of Tenancy', 'Moving out')
+    .replace('Window Cleaning', 'Windows')
 }
 
 export default function CleanerSearchPage() {
@@ -53,7 +96,7 @@ export default function CleanerSearchPage() {
 
     setPostcode(qpPostcode)
     setServiceType(qpService)
-    setCleaningPath(qpPath === 'specialist' ? 'specialist' : 'home')
+    setCleaningPath(CLEANING_PATHS.some((path) => path.id === qpPath) ? qpPath : 'home')
     setTimePreference(qpTime)
     setRadius(qpRadius)
     setHydratedFromQuery(true)
@@ -69,7 +112,7 @@ export default function CleanerSearchPage() {
     if (serviceType.trim()) params.set('serviceType', serviceType.trim())
     if (radius) params.set('radius', radius)
     return `/api/cleaners/matched?${params.toString()}`
-  }, [postcode, serviceType, cleaningPath, timePreference, radius, exactLocation])
+  }, [postcode, serviceType, radius, exactLocation])
 
   useEffect(() => {
     if (!hydratedFromQuery) return
@@ -98,7 +141,6 @@ export default function CleanerSearchPage() {
       active = false
     }
   }, [apiUrl, hydratedFromQuery])
-
 
   const handleUseExactLocation = () => {
     setLocationError('')
@@ -140,111 +182,235 @@ export default function CleanerSearchPage() {
     router.replace('/cleaners')
   }
 
+  const handleQuickService = (label) => {
+    const selected = SERVICE_MAP[label]
+    if (!selected) return
+    const isActive = serviceType === selected.service
+    setCleaningPath(selected.path)
+    setServiceType(isActive ? '' : selected.service)
+  }
+
+  const activePath = CLEANING_PATHS.find((path) => path.id === cleaningPath) || CLEANING_PATHS[0]
+  const locationLabel = postcode ? postcode.toUpperCase() : exactLocation ? 'your area' : 'near you'
+
   const summary = useMemo(() => {
     const parts = []
-    if (serviceType) parts.push(serviceType)
+    if (serviceType) parts.push(compactServiceLabel(serviceType))
     if (postcode) parts.push(`near ${postcode.toUpperCase()}`)
-    return parts.length ? parts.join(' ') : 'all available cleaners'
+    return parts.length ? parts.join(' ') : 'trusted local cleaners'
   }, [postcode, serviceType])
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,#f7fbfb_0%,#f8fafc_38%,#f8fafc_100%)] text-slate-900">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(12,143,163,0.14),transparent_32rem),radial-gradient(circle_at_88%_18%,rgba(15,23,42,0.08),transparent_28rem),linear-gradient(180deg,#f3f8fa_0%,#e8f1f5_44%,#dfeaf0_100%)] text-slate-900">
       <PublicHeader />
 
-      <section className="site-section pt-8 pb-4">
-        <div className="overflow-hidden rounded-[34px] border border-white/70 bg-white/90 shadow-[0_24px_80px_rgba(15,23,42,0.10)] backdrop-blur-xl">
-          <div className="border-b border-slate-100 bg-[radial-gradient(circle_at_top_left,_rgba(20,184,166,0.16),_transparent_34%),linear-gradient(180deg,#ffffff_0%,#f8fffe_100%)] p-6 sm:p-8">
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-              <div className="max-w-3xl">
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">Cleaner matching</p>
-                <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-5xl">Available cleaners today</h1>
-                <p className="mt-4 text-base leading-7 text-slate-600 sm:text-lg">Choose what you need, add a postcode if you want to tighten the match, then compare trusted cleaners with the soonest availability.</p>
+      <section className="site-section pt-7 pb-5 sm:pt-10">
+        <div className="relative isolate overflow-hidden rounded-[38px] border border-white/20 bg-slate-950 text-white shadow-[0_30px_100px_rgba(15,23,42,0.24)]">
+          <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(2,6,23,0.96)_0%,rgba(15,23,42,0.86)_48%,rgba(12,143,163,0.36)_100%)]" />
+          <div className="absolute -right-28 -top-28 h-72 w-72 rounded-full bg-[#0C8FA3]/35 blur-3xl" />
+          <div className="absolute bottom-0 left-1/3 h-52 w-52 rounded-full bg-cyan-200/10 blur-3xl" />
+
+          <div className="relative grid gap-8 p-5 sm:p-8 lg:grid-cols-[1.03fr_0.97fr] lg:p-10">
+            <div className="flex min-h-[420px] flex-col justify-between">
+              <div>
+                <span className="inline-flex rounded-full border border-white/[0.12] bg-white/[0.10] px-4 py-2 text-xs font-bold uppercase tracking-[0.22em] text-cyan-100 shadow-sm backdrop-blur-xl">
+                  Live cleaner discovery
+                </span>
+                <h1 className="mt-6 max-w-3xl text-5xl font-semibold tracking-[-0.055em] text-white sm:text-6xl lg:text-7xl">
+                  Available cleaners today
+                </h1>
+                <p className="mt-6 max-w-2xl text-xl font-medium leading-8 text-slate-200 sm:text-2xl">
+                  Trusted local cleaners with live availability {postcode || exactLocation ? `near ${locationLabel}` : 'near you'}.
+                </p>
               </div>
-              <div className="rounded-2xl border border-teal-100 bg-teal-50/70 px-4 py-3 text-sm font-semibold text-teal-900">
-                {loading ? 'Finding matches…' : `${cleaners.length} cleaner${cleaners.length === 1 ? '' : 's'} found for ${summary}.`}
+
+              <div className="mt-8">
+                <div className="flex gap-2 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                  {QUICK_SERVICES.map((label) => {
+                    const active = serviceType === SERVICE_MAP[label]?.service
+                    return (
+                      <button
+                        key={label}
+                        type="button"
+                        onClick={() => handleQuickService(label)}
+                        className={`whitespace-nowrap rounded-full border px-4 py-2.5 text-sm font-bold backdrop-blur-xl transition duration-300 hover:-translate-y-0.5 ${
+                          active
+                            ? 'border-cyan-200 bg-white text-slate-950 shadow-[0_14px_35px_rgba(255,255,255,0.18)]'
+                            : 'border-white/[0.14] bg-white/[0.10] text-white hover:bg-white/[0.18]'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    )
+                  })}
+                </div>
+
+                <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                  <div className="relative flex-1">
+                    <input
+                      value={postcode}
+                      onChange={(e) => setPostcode(e.target.value)}
+                      placeholder="Enter postcode"
+                      className="h-14 w-full rounded-full border border-white/[0.12] bg-white/[0.12] px-5 text-base font-semibold text-white outline-none backdrop-blur-xl placeholder:text-white/[0.52] transition focus:border-cyan-200/[0.70] focus:bg-white/[0.16]"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleSearch}
+                    className="inline-flex h-14 items-center justify-center rounded-full bg-[#0C8FA3] px-7 text-base font-bold text-white shadow-xl shadow-[#0C8FA3]/20 transition hover:-translate-y-0.5 hover:bg-[#087C8E]"
+                  >
+                    Show cleaners
+                  </button>
+                </div>
+
+                <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-slate-300">
+                  <button
+                    type="button"
+                    onClick={handleUseExactLocation}
+                    disabled={isLocating}
+                    className="font-bold text-cyan-100 transition hover:text-white disabled:cursor-wait disabled:opacity-70"
+                  >
+                    {isLocating ? 'Finding your area…' : 'Use my exact area'}
+                  </button>
+                  {locationError ? <span className="font-medium text-amber-200">{locationError}</span> : null}
+                </div>
               </div>
             </div>
-          </div>
-          <div className="grid gap-6 p-6 sm:p-8 lg:grid-cols-[0.95fr_1.05fr]">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Step 1</p>
-              <h2 className="mt-2 text-2xl font-bold text-slate-950">What do you need help with?</h2>
-              <div className="mt-4 grid gap-3">
-                {CLEANING_PATHS.map((path) => {
-                  const active = cleaningPath === path.id
-                  return (
-                    <button key={path.id} type="button" onClick={() => { setCleaningPath(path.id); setServiceType('') }} className={`rounded-[26px] border p-5 text-left transition ${active ? 'border-teal-300 bg-teal-50 shadow-[0_16px_40px_rgba(20,184,166,0.14)]' : 'border-slate-200 bg-white hover:-translate-y-0.5 hover:border-teal-200'}`}>
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <h3 className="text-xl font-bold text-slate-950">{path.label}</h3>
-                          <p className="mt-1 text-sm leading-6 text-slate-600">{path.description}</p>
-                        </div>
-                        <span className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border text-sm font-bold ${active ? 'border-teal-300 bg-white text-teal-800' : 'border-slate-200 bg-slate-50 text-slate-500'}`}>{active ? '✓' : '→'}</span>
-                      </div>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-            <div className="rounded-[28px] border border-slate-200 bg-slate-50/70 p-5">
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Step 2</p>
-              <h2 className="mt-2 text-2xl font-bold text-slate-950">Add the basics</h2>
-              <div className="mt-5 grid gap-4">
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-700">Postcode</label>
-                  <input value={postcode} onChange={(e) => setPostcode(e.target.value)} placeholder="Enter your postcode" className="ftc-input bg-white" />
-                  <div className="mt-2 flex flex-wrap items-center gap-2">
-                    <button type="button" onClick={handleUseExactLocation} disabled={isLocating} className="rounded-full border border-teal-200 bg-white px-3 py-2 text-xs font-bold text-teal-800 transition hover:bg-teal-50 disabled:cursor-wait disabled:opacity-70">
-                      {isLocating ? 'Finding your area…' : 'Use my exact area'}
-                    </button>
-                    {locationError ? <span className="text-xs font-medium text-amber-700">{locationError}</span> : null}
+
+            <div className="rounded-[34px] border border-white/[0.14] bg-white/[0.12] p-4 shadow-[0_24px_80px_rgba(0,0,0,0.16)] backdrop-blur-2xl sm:p-5">
+              <div className="rounded-[28px] border border-white/[0.12] bg-white/[0.10] p-5">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.22em] text-cyan-100/[0.80]">Refine</p>
+                    <h2 className="mt-2 text-2xl font-semibold tracking-tight text-white">{activePath.title}</h2>
+                  </div>
+                  <div className="rounded-full border border-white/[0.12] bg-white/[0.10] px-3 py-1.5 text-xs font-bold text-white/[0.80]">
+                    {loading ? 'Live' : `${cleaners.length} found`}
                   </div>
                 </div>
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-700">Preferred time</label>
+
+                <p className="mt-3 text-sm leading-6 text-slate-300">{activePath.description}</p>
+
+                <div className="mt-5 grid grid-cols-2 gap-2">
+                  {CLEANING_PATHS.map((path) => {
+                    const active = cleaningPath === path.id
+                    return (
+                      <button
+                        key={path.id}
+                        type="button"
+                        onClick={() => {
+                          setCleaningPath(path.id)
+                          setServiceType('')
+                        }}
+                        className={`rounded-2xl border px-4 py-3 text-left text-sm font-bold transition ${
+                          active
+                            ? 'border-cyan-200 bg-white text-slate-950'
+                            : 'border-white/[0.12] bg-white/[0.08] text-white/[0.78] hover:bg-white/[0.14] hover:text-white'
+                        }`}
+                      >
+                        {path.label}
+                      </button>
+                    )
+                  })}
+                </div>
+
+                <div className="mt-5">
+                  <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-white/[0.48]">Specific job</p>
+                  <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                    {activePath.services.map((service) => (
+                      <button
+                        key={service}
+                        type="button"
+                        onClick={() => setServiceType(serviceType === service ? '' : service)}
+                        className={`whitespace-nowrap rounded-full border px-4 py-2 text-sm font-bold transition ${
+                          serviceType === service
+                            ? 'border-cyan-200 bg-cyan-50 text-slate-950'
+                            : 'border-white/[0.12] bg-white/[0.08] text-white/[0.74] hover:bg-white/[0.14] hover:text-white'
+                        }`}
+                      >
+                        {compactServiceLabel(service)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mt-5">
+                  <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-white/[0.48]">Timing</p>
                   <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                     {TIME_PREFERENCES.map((time) => (
-                      <button key={time} type="button" onClick={() => setTimePreference(time)} className={`whitespace-nowrap rounded-full border px-4 py-2 text-sm font-semibold transition ${timePreference === time ? 'border-teal-300 bg-teal-700 text-white shadow-sm' : 'border-slate-200 bg-white text-slate-700 hover:border-teal-200 hover:text-teal-800'}`}>{time}</button>
+                      <button
+                        key={time}
+                        type="button"
+                        onClick={() => setTimePreference(time)}
+                        className={`whitespace-nowrap rounded-full border px-4 py-2 text-sm font-bold transition ${
+                          timePreference === time
+                            ? 'border-cyan-200 bg-white text-slate-950'
+                            : 'border-white/[0.12] bg-white/[0.08] text-white/[0.74] hover:bg-white/[0.14] hover:text-white'
+                        }`}
+                      >
+                        {time}
+                      </button>
                     ))}
                   </div>
                 </div>
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-700">Specific job</label>
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    {(CLEANING_PATHS.find((path) => path.id === cleaningPath)?.services || []).map((service) => (
-                      <button key={service} type="button" onClick={() => setServiceType(serviceType === service ? '' : service)} className={`rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition ${serviceType === service ? 'border-teal-300 bg-white text-teal-900 shadow-sm' : 'border-slate-200 bg-white/80 text-slate-700 hover:border-teal-200 hover:text-teal-800'}`}>{service}</button>
-                    ))}
-                  </div>
-                </div>
-                <details className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">
-                  <summary className="cursor-pointer font-semibold text-slate-800">Optional: widen distance</summary>
+
+                <details className="mt-5 rounded-2xl border border-white/[0.12] bg-white/[0.08] px-4 py-3 text-sm text-slate-200">
+                  <summary className="cursor-pointer font-bold text-white">Refine distance</summary>
                   <div className="mt-3">
-                    <label className="mb-2 block text-sm font-medium text-slate-700">Search distance</label>
-                    <select value={radius} onChange={(e) => setRadius(e.target.value)} className="ftc-select bg-white">
-                      <option value="5">5 miles</option><option value="8">8 miles</option><option value="12">12 miles</option><option value="15">15 miles</option>
+                    <select
+                      value={radius}
+                      onChange={(e) => setRadius(e.target.value)}
+                      className="w-full rounded-2xl border border-white/[0.12] bg-slate-950/60 px-4 py-3 text-white outline-none"
+                    >
+                      <option value="5">5 miles</option>
+                      <option value="8">8 miles</option>
+                      <option value="12">12 miles</option>
+                      <option value="15">15 miles</option>
                     </select>
                   </div>
                 </details>
+
+                <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                  <button onClick={handleSearch} className="inline-flex items-center justify-center rounded-full bg-white px-5 py-3 text-sm font-bold text-slate-950 shadow-sm transition hover:-translate-y-0.5 hover:bg-cyan-50">
+                    Update results
+                  </button>
+                  <button onClick={handleClear} className="inline-flex items-center justify-center rounded-full border border-white/[0.12] bg-white/[0.08] px-5 py-3 text-sm font-bold text-white transition hover:bg-white/[0.14]">
+                    Reset
+                  </button>
+                </div>
               </div>
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                <button onClick={handleSearch} className="ftc-button-primary w-full sm:w-auto">Show matching cleaners</button>
-                <button onClick={handleClear} className="ftc-button-secondary w-full sm:w-auto">Start again</button>
-              </div>
-              {searchMeta?.usedDistanceSearch ? (<p className="mt-4 text-sm text-slate-500">Best available cleaners are shown first.</p>) : null}
             </div>
           </div>
         </div>
       </section>
 
       <section className="site-section pb-12">
+        <div className="mb-5 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+          <div>
+            <p className="text-sm font-bold uppercase tracking-[0.22em] text-[#0C8FA3]">Live availability</p>
+            <h2 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-slate-950 sm:text-4xl">
+              Available {postcode || exactLocation ? `near ${locationLabel}` : 'near you'} today
+            </h2>
+          </div>
+          <p className="max-w-md text-sm font-medium leading-6 text-slate-600">
+            {loading ? 'Finding trusted local cleaners…' : `${cleaners.length} cleaner${cleaners.length === 1 ? '' : 's'} matched for ${summary}.`}
+          </p>
+        </div>
+
+        {searchMeta?.usedDistanceSearch ? (
+          <p className="mb-5 rounded-full border border-teal-100 bg-white/70 px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm backdrop-blur-xl">
+            Best available cleaners are shown first.
+          </p>
+        ) : null}
+
         {error ? (
           <div className="rounded-[28px] border border-rose-200 bg-rose-50 p-6 text-rose-700 shadow-sm">
             {error}
           </div>
         ) : loading ? (
-          <div className="rounded-[28px] border border-slate-200 bg-white/90 p-10 text-center shadow-sm">
-            <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-teal-600 border-t-transparent" />
-            <p className="text-base font-medium text-slate-700">Loading cleaners…</p>
+          <div className="rounded-[34px] border border-white/70 bg-white/90 p-12 text-center shadow-[0_20px_70px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+            <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-[#0C8FA3] border-t-transparent" />
+            <p className="text-base font-semibold text-slate-700">Loading available cleaners…</p>
           </div>
         ) : cleaners.length ? (
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
@@ -253,18 +419,18 @@ export default function CleanerSearchPage() {
             ))}
           </div>
         ) : (
-          <div className="rounded-[28px] border border-slate-200 bg-white/90 p-10 text-center shadow-sm">
+          <div className="relative overflow-hidden rounded-[34px] border border-white/70 bg-white/90 p-10 text-center shadow-[0_20px_70px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+            <div className="absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-[#0C8FA3]/40 to-transparent" />
             <div className="mx-auto flex max-w-3xl flex-col items-center">
-              <div className="mb-4 inline-flex rounded-full border border-teal-100 bg-teal-50 px-4 py-2 text-sm font-semibold text-teal-800">Search tips</div>
-              <h2 className="text-2xl font-semibold text-slate-900">No cleaners found yet</h2>
+              <div className="mb-4 inline-flex rounded-full border border-teal-100 bg-teal-50 px-4 py-2 text-sm font-bold text-teal-800">Expanding availability</div>
+              <h2 className="text-3xl font-semibold tracking-[-0.04em] text-slate-950">New cleaners coming soon</h2>
               <p className="mt-3 max-w-2xl text-slate-600">
-                There may not be a match for this exact search yet. Try broadening your radius, using a nearby postcode, or removing the service filter to see more local options.
+                We are currently onboarding trusted cleaners in this area. Try a wider distance or remove the service filter to see the nearest available matches.
               </p>
 
               <div className="mt-6 flex flex-wrap justify-center gap-3">
-                <button onClick={() => setRadius('12')} className="ftc-button-secondary">Broaden radius</button>
-                <button onClick={() => setPostcode('')} className="ftc-button-secondary">Try nearby postcode</button>
-                <button onClick={() => setServiceType('')} className="ftc-button-secondary">Remove service filter</button>
+                <button onClick={() => setRadius('12')} className="ftc-button-secondary">Widen distance</button>
+                <button onClick={() => setServiceType('')} className="ftc-button-secondary">Remove filter</button>
                 <button
                   onClick={() => {
                     setPostcode('')
@@ -282,15 +448,13 @@ export default function CleanerSearchPage() {
         )}
       </section>
 
-      <section className="site-section pb-12">
-        <div className="rounded-[28px] border border-white/70 bg-white/90 p-7 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-8">
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900">Compare trusted local cleaners before you book</h2>
-          <div className="mt-4 grid gap-5 text-sm leading-7 text-slate-600 md:grid-cols-3">
-            <p>Use FindTrustedCleaners.com to search for domestic cleaners, deep cleaning, end of tenancy cleaning, oven cleaning, carpet cleaning and other local cleaning services.</p>
-            <p>Cleaner profiles can show service details, availability, reviews, photos, insurance badges and useful trust signals so you can make a more informed choice.</p>
-            <p>Start with your postcode, choose the service you need, then compare nearby cleaners without relying on random social media posts or endless quote chasing. Explore <a href="/services/domestic-cleaning" className="font-semibold text-teal-700 underline">domestic cleaning</a>, <a href="/services/deep-cleaning" className="font-semibold text-teal-700 underline">deep cleaning</a>, <a href="/services/end-of-tenancy-cleaning" className="font-semibold text-teal-700 underline">end of tenancy cleaning</a>, or browse popular areas such as <a href="/locations/worthing" className="font-semibold text-teal-700 underline">Worthing</a> and <a href="/locations/littlehampton" className="font-semibold text-teal-700 underline">Littlehampton</a>.</p>
-          </div>
-        </div>
+      <section className="sr-only" aria-label="Cleaner search information">
+        <h2>Compare trusted local cleaners before you book</h2>
+        <p>Use FindTrustedCleaners.com to search for domestic cleaners, deep cleaning, end of tenancy cleaning, oven cleaning, carpet cleaning and other local cleaning services.</p>
+        <p>Cleaner profiles can show service details, availability, reviews, photos, insurance badges and useful trust signals so you can make a more informed choice.</p>
+        <p>
+          Start with your postcode, choose the service you need, then compare nearby cleaners. Explore domestic cleaning, deep cleaning, end of tenancy cleaning, Worthing cleaners and Littlehampton cleaners.
+        </p>
       </section>
 
       <PublicFooter />

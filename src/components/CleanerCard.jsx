@@ -4,36 +4,8 @@ import Link from 'next/link'
 import { Heart } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useEffect, useMemo, useState } from 'react'
-import RatingStars from '@/components/RatingStars'
 
 const FALLBACK_IMAGE = '/default-avatar.png'
-
-function getReviewSummary(cleaner = {}) {
-  const siteRating = Number(cleaner?.rating || 0)
-  const siteCount = Number(cleaner?.ratingCount || 0)
-  const googleRating = Number(cleaner?.googleReviewRating || 0)
-  const googleCount = Number(cleaner?.googleReviewCount || 0)
-
-  if (siteCount > 0 && siteRating > 0) {
-    return {
-      value: siteRating,
-      count: siteCount,
-      source: 'Verified reviews',
-      accent: 'text-emerald-700',
-    }
-  }
-
-  if (googleCount > 0 && googleRating > 0) {
-    return {
-      value: googleRating,
-      count: googleCount,
-      source: 'Google reviews',
-      accent: 'text-slate-600',
-    }
-  }
-
-  return null
-}
 
 function getVisibleServices(cleaner = {}) {
   const detailed = Array.isArray(cleaner?.servicesDetailed)
@@ -57,13 +29,27 @@ function getAvailabilityHint(cleaner = {}) {
     return Boolean(slot && typeof slot === 'object' && (slot.status === 'available' || slot.available === true))
   })
   if (availableToday) return 'Available today'
+
   const days = Object.keys(availability || {})
   let count = 0
   days.forEach((day) => {
-    Object.values(availability?.[day] || {}).forEach((slot) => { if (slot === true || slot === 'available') count += 1 })
+    Object.values(availability?.[day] || {}).forEach((slot) => {
+      if (slot === true || slot === 'available') count += 1
+    })
   })
-  if (count > 0) return 'Next availability on profile'
+  if (count > 0) return 'Next slot on profile'
   return 'Limited availability'
+}
+
+function getAvailabilityClasses(label = '') {
+  const lower = label.toLowerCase()
+  if (lower.includes('available today')) {
+    return 'border-emerald-200/80 bg-emerald-50 text-emerald-800'
+  }
+  if (lower.includes('next') || lower.includes('tomorrow')) {
+    return 'border-amber-200/80 bg-amber-50 text-amber-800'
+  }
+  return 'border-white/70 bg-white/90 text-slate-700'
 }
 
 export default function CleanerCard({ cleaner, isFavourite = false, onToggleFavourite, isPremium: forcedPremium = false }) {
@@ -75,7 +61,7 @@ export default function CleanerCard({ cleaner, isFavourite = false, onToggleFavo
 
   const services = useMemo(() => getVisibleServices(cleaner), [cleaner])
   const isPremium = Boolean(forcedPremium || cleaner?.isPremium)
-  const primaryService = services?.[0] || 'Cleaning'
+  const primaryService = services?.[0] || 'Home cleaning'
   const specialistLine = primaryService.toLowerCase().includes('clean')
     ? primaryService
     : `${primaryService} specialist`
@@ -89,33 +75,34 @@ export default function CleanerCard({ cleaner, isFavourite = false, onToggleFavo
   }
 
   return (
-    <Link href={`/cleaners/${cleaner._id}`} aria-label={cleaner.companyName || 'View cleaner profile'}>
+    <Link href={`/cleaners/${cleaner._id}`} aria-label={cleaner.companyName || 'View cleaner profile'} className="block h-full">
       <article
-        className={`group relative overflow-hidden rounded-[22px] border transition-all duration-300 hover:-translate-y-0.5 ${
+        className={`group relative h-full overflow-hidden rounded-[30px] border bg-white transition-all duration-500 hover:-translate-y-1 ${
           isPremium
-            ? 'border-amber-200/80 bg-white shadow-[0_16px_45px_rgba(217,119,6,0.13)] hover:shadow-[0_24px_70px_rgba(217,119,6,0.18)]'
-            : 'border-slate-200 bg-white shadow-[0_14px_40px_rgba(15,23,42,0.08)] hover:border-[#0C8FA3]/25 hover:shadow-[0_22px_60px_rgba(15,23,42,0.11)]'
+            ? 'border-amber-200/80 shadow-[0_22px_70px_rgba(217,119,6,0.14)] hover:shadow-[0_32px_90px_rgba(217,119,6,0.20)]'
+            : 'border-white/80 shadow-[0_20px_65px_rgba(15,23,42,0.10)] hover:border-[#0C8FA3]/25 hover:shadow-[0_30px_85px_rgba(15,23,42,0.14)]'
         }`}
       >
         {isPremium ? (
-          <div className="absolute inset-x-0 top-0 z-20 h-1.5 bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500" />
+          <div className="absolute inset-x-5 top-0 z-20 h-1 rounded-full bg-gradient-to-r from-amber-300 via-white to-amber-500" />
         ) : null}
 
-        <div className="relative h-[235px] overflow-hidden bg-slate-100 sm:h-[250px]">
+        <div className="relative h-[300px] overflow-hidden bg-[linear-gradient(135deg,#eef7f8,#dfeaf0)] sm:h-[325px]">
           <img
             src={(typeof cleaner.image === 'string' && cleaner.image.trim()) ? cleaner.image : FALLBACK_IMAGE}
             alt={cleaner.companyName || 'Cleaner profile'}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
             onError={(e) => {
               e.currentTarget.onerror = null
               e.currentTarget.src = FALLBACK_IMAGE
             }}
           />
 
-          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-slate-950/70 via-slate-950/20 to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-slate-950/82 via-slate-950/30 to-transparent" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.18),transparent_34%)] opacity-0 transition duration-500 group-hover:opacity-100" />
 
           {isPremium ? (
-            <span className="absolute left-4 top-4 rounded-full border border-amber-100/80 bg-[linear-gradient(135deg,#f5d76e,#e0b84f)] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-[#3b2d00] shadow-[0_2px_14px_rgba(224,184,79,0.35)]">
+            <span className="absolute left-4 top-4 rounded-full border border-amber-100/80 bg-[linear-gradient(135deg,#f7df8e,#e0b84f)] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-[#3b2d00] shadow-[0_10px_28px_rgba(224,184,79,0.28)]">
               Premium
             </span>
           ) : null}
@@ -123,8 +110,8 @@ export default function CleanerCard({ cleaner, isFavourite = false, onToggleFavo
           <Button
             variant="secondary"
             size="icon"
-            className={`absolute right-4 top-4 h-9 w-9 rounded-full border border-white/50 shadow-sm backdrop-blur-md transition-all duration-200 hover:scale-105 hover:bg-white ${
-              liked ? 'bg-[#0C8FA3] text-white hover:text-white' : 'bg-white/78 text-slate-700'
+            className={`absolute right-4 top-4 h-9 w-9 rounded-full border border-white/60 shadow-sm backdrop-blur-md transition-all duration-200 hover:scale-105 hover:bg-white ${
+              liked ? 'bg-[#0C8FA3] text-white hover:text-white' : 'bg-white/80 text-slate-700'
             }`}
             onClick={handleFavourite}
             aria-label={liked ? 'Remove from favourites' : 'Add to favourites'}
@@ -132,44 +119,48 @@ export default function CleanerCard({ cleaner, isFavourite = false, onToggleFavo
             <Heart size={16} className={liked ? 'fill-current' : ''} />
           </Button>
 
-          <span className={`absolute bottom-4 left-4 rounded-full border px-3 py-1.5 text-[11px] font-bold shadow-sm backdrop-blur-md ${
-            availabilityHint.toLowerCase().includes('available today')
-              ? 'border-emerald-100/80 bg-emerald-50/92 text-emerald-800'
-              : availabilityHint.toLowerCase().includes('next')
-                ? 'border-amber-100/80 bg-amber-50/92 text-amber-800'
-                : 'border-white/40 bg-white/82 text-slate-700'
-          }`}>
-            {availabilityHint}
-          </span>
+          <div className="absolute inset-x-4 bottom-4">
+            <div className="rounded-[24px] border border-white/20 bg-white/[0.14] p-4 text-white shadow-[0_16px_45px_rgba(0,0,0,0.18)] backdrop-blur-2xl">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h3 className="truncate text-xl font-semibold tracking-tight text-white">
+                    {cleaner.companyName || cleaner.name || 'Trusted cleaner'}
+                  </h3>
+                  <p className="mt-1 truncate text-sm font-medium text-white/[0.75]">
+                    {specialistLine}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-3 flex flex-wrap gap-2">
+                {cleaner?.businessInsurance ? (
+                  <span className="rounded-full border border-white/[0.18] bg-white/[0.14] px-3 py-1 text-[11px] font-bold text-white backdrop-blur-xl">
+                    Insured
+                  </span>
+                ) : null}
+                {cleaner?.dbsChecked ? (
+                  <span className="rounded-full border border-white/[0.18] bg-white/[0.14] px-3 py-1 text-[11px] font-bold text-white backdrop-blur-xl">
+                    DBS Checked
+                  </span>
+                ) : null}
+                {cleaner?.verified ? (
+                  <span className="rounded-full border border-white/[0.18] bg-white/[0.14] px-3 py-1 text-[11px] font-bold text-white backdrop-blur-xl">
+                    Verified
+                  </span>
+                ) : null}
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div className="space-y-3 p-4">
-          <div>
-            <h3 className="truncate text-lg font-bold leading-tight text-slate-950">
-              {cleaner.companyName}
-            </h3>
-            <p className="mt-1 truncate text-sm font-medium text-slate-500">
-              {specialistLine}
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            {cleaner?.businessInsurance ? (
-              <span className="rounded-full border border-[#0C8FA3]/15 bg-[#EAFBFB]/90 px-3 py-1 text-[11px] font-semibold text-[#076D7E]">
-                Insured
-              </span>
-            ) : null}
-            {cleaner?.dbsChecked ? (
-              <span className="rounded-full border border-blue-100 bg-blue-50/90 px-3 py-1 text-[11px] font-semibold text-blue-700">
-                DBS Checked
-              </span>
-            ) : null}
-            {cleaner?.verified ? (
-              <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-semibold text-slate-700">
-                Verified
-              </span>
-            ) : null}
-          </div>
+        <div className="flex items-center justify-between gap-3 p-4">
+          <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.12em] shadow-sm ${getAvailabilityClasses(availabilityHint)}`}>
+            <span className="h-2 w-2 rounded-full bg-current" />
+            {availabilityHint}
+          </span>
+          <span className="text-xs font-bold text-slate-400 transition group-hover:text-[#0C8FA3]">
+            View profile
+          </span>
         </div>
       </article>
     </Link>
