@@ -177,12 +177,19 @@ export default function HomeClient() {
 
   useEffect(() => {
     if (!data?.success || !Array.isArray(data.cleaners)) return;
-    const premium = data.cleaners.filter((c) => c.isPremium).slice(0, 6);
-    const standard = data.cleaners.filter((c) => !c.isPremium).slice(0, 6);
+
+    // The API already sorts by availability first, then locality, then trust signals.
+    // Keep the homepage feeling live: show the strongest matches first, regardless of account type.
+    const topMatches = data.cleaners.slice(0, 8);
+    const moreMatches = data.cleaners.slice(8, 14);
+
     (async () => {
-      const [p, f] = await Promise.all([hydrateCleanersWithPurchases(premium), hydrateCleanersWithPurchases(standard)]);
-      setPremiumCleaners(p);
-      setFreeCleaners(f);
+      const [top, more] = await Promise.all([
+        hydrateCleanersWithPurchases(topMatches),
+        hydrateCleanersWithPurchases(moreMatches),
+      ]);
+      setPremiumCleaners(top);
+      setFreeCleaners(more);
     })();
   }, [data]);
 
@@ -244,14 +251,6 @@ export default function HomeClient() {
     : serviceArea?.label || serviceArea?.outward || null;
 
 
-  const locationLabel = data?.location?.locationConfidence === 'exact'
-    ? 'Showing cleaners matched to your exact area'
-    : postcode
-      ? `Showing cleaners near ${postcode.toUpperCase()}`
-      : data?.location?.locationConfidence === 'approximate'
-        ? 'Showing cleaners matched to your approximate area'
-        : 'Showing available cleaners across West Sussex';
-
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,#f7fbfb_0%,#f8fafc_38%,#f8fafc_100%)] text-slate-900">
       <PublicHeader />
@@ -262,22 +261,12 @@ export default function HomeClient() {
       <CleanerSection
         eyebrow=""
         title="Available cleaners today"
-        subtitle={locationLabel}
+        subtitle=""
         locationError={locationError}
         locationAction={
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={requestExactLocation}
-              disabled={isLocating}
-              className="rounded-full border border-[#0C8FA3]/25 bg-white px-3 py-2 text-xs font-bold text-[#076D7E] shadow-sm transition hover:border-[#0C8FA3]/45 hover:bg-[#EAFBFB] disabled:cursor-wait disabled:opacity-70"
-            >
-              {isLocating ? 'Finding your area…' : 'Use my exact area'}
-            </button>
-            <Link href="/cleaners" className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 shadow-sm transition hover:border-[#0C8FA3]/25 hover:text-[#0C8FA3]">
-              Change location
-            </Link>
-          </div>
+          <Link href="/cleaners" className="whitespace-nowrap text-xs font-bold text-slate-500 transition hover:text-[#0C8FA3]">
+            Change location
+          </Link>
         }
         isLoading={isLoading}
         cleaners={premiumCleaners}
@@ -408,13 +397,9 @@ export default function HomeClient() {
       </section>
 
       <CleanerSection
-        eyebrow="More local options"
-        title="Browse more cleaners"
-        subtitle={
-          localAreaLabel
-            ? `See more cleaner profiles covering ${localAreaLabel}, including domestic cleaning, deep cleaning and specialist services.`
-            : `Browse ${cleanerCount || 'our'} cleaner profiles for domestic cleaning, deep cleaning and specialist services.`
-        }
+        eyebrow="More options"
+        title="More trusted cleaners"
+        subtitle=""
         isLoading={isLoading}
         cleaners={freeCleaners}
         favouriteIds={favouriteIds}
@@ -556,7 +541,7 @@ function CleanerSection({ eyebrow, title, subtitle, locationError, locationActio
               <CleanerCard
                 cleaner={cleaner}
                 handleBookingRequest={onBookingRequest}
-                isPremium={premium || cleaner.isPremium}
+                isPremium={cleaner.isPremium}
                 isFavourite={favouriteIds.includes(String(cleaner._id))}
                 onToggleFavourite={(id) => onToggleFavourite(String(id))}
               />

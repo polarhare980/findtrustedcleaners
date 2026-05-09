@@ -71,7 +71,7 @@ export function getCleanerAvailabilityLabel(cleaner = {}) {
     };
   }
 
-  return { availableToday: false, availabilityRank: 99, nextAvailableLabel: 'Unavailable today' };
+  return { availableToday: false, availabilityRank: 99, nextAvailableLabel: 'Limited availability' };
 }
 
 function cleanerPostcodes(cleaner = {}) {
@@ -204,9 +204,23 @@ export async function matchCleanersToLocation(cleaners = [], userLocation = {}, 
     const localTextScore = textLocationScore(userLocation, cleaner);
     const isWithinRadius = distanceMiles == null ? localTextScore > 0 : distanceMiles <= Math.max(allowedRadius, radiusMiles);
 
-    const distanceScore = distanceMiles == null ? localTextScore : Math.max(0, 80 - distanceMiles * 4);
-    const availabilityScore = availability.availableToday ? 28 : availability.availabilityRank < 7 ? 12 : 0;
-    const premiumScore = cleaner?.isPremium ? 7 : 0;
+    const distanceScore = distanceMiles == null
+      ? localTextScore
+      : distanceMiles <= 5
+        ? 40
+        : distanceMiles <= 10
+          ? 20
+          : Math.max(0, 18 - distanceMiles);
+
+    const availabilityScore = availability.availableToday
+      ? 100
+      : availability.availabilityRank === 1
+        ? 60
+        : availability.availabilityRank < 7
+          ? 30
+          : 0;
+
+    const premiumScore = cleaner?.isPremium ? 10 : 0;
     const reviewScore = Math.min(Number(cleaner?.googleReviewRating || cleaner?.rating || 0) * 2, 10);
 
     return {
@@ -224,9 +238,11 @@ export async function matchCleanersToLocation(cleaners = [], userLocation = {}, 
   const pool = local.length ? local : matched;
 
   return pool.sort((a, b) => {
-    if ((b.availableToday ? 1 : 0) !== (a.availableToday ? 1 : 0)) return (b.availableToday ? 1 : 0) - (a.availableToday ? 1 : 0);
-    if ((b.matchScore || 0) !== (a.matchScore || 0)) return (b.matchScore || 0) - (a.matchScore || 0);
+    const availabilityTierA = a.availableToday ? 0 : a.availabilityRank === 1 ? 1 : a.availabilityRank < 7 ? 2 : 3;
+    const availabilityTierB = b.availableToday ? 0 : b.availabilityRank === 1 ? 1 : b.availabilityRank < 7 ? 2 : 3;
+    if (availabilityTierA !== availabilityTierB) return availabilityTierA - availabilityTierB;
     if ((a.distanceMiles ?? Infinity) !== (b.distanceMiles ?? Infinity)) return (a.distanceMiles ?? Infinity) - (b.distanceMiles ?? Infinity);
+    if ((b.matchScore || 0) !== (a.matchScore || 0)) return (b.matchScore || 0) - (a.matchScore || 0);
     if (Number(b.isPremium) !== Number(a.isPremium)) return Number(b.isPremium) - Number(a.isPremium);
     return String(a.companyName || '').localeCompare(String(b.companyName || ''));
   });

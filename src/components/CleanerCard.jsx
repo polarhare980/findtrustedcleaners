@@ -63,7 +63,7 @@ function getAvailabilityHint(cleaner = {}) {
     Object.values(availability?.[day] || {}).forEach((slot) => { if (slot === true || slot === 'available') count += 1 })
   })
   if (count > 0) return 'Next availability on profile'
-  return 'Unavailable today'
+  return 'Limited availability'
 }
 
 export default function CleanerCard({ cleaner, isFavourite = false, onToggleFavourite, isPremium: forcedPremium = false }) {

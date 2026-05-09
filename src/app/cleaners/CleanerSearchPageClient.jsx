@@ -157,8 +157,8 @@ export default function CleanerSearchPage() {
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-3xl">
                 <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">Cleaner matching</p>
-                <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-5xl">Find the right cleaner without the noise</h1>
-                <p className="mt-4 text-base leading-7 text-slate-600 sm:text-lg">Choose a simple path, add your postcode, then browse nearby cleaners in a calmer discovery flow.</p>
+                <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-5xl">Available cleaners today</h1>
+                <p className="mt-4 text-base leading-7 text-slate-600 sm:text-lg">Choose what you need, add a postcode if you want to tighten the match, then compare trusted cleaners with the soonest availability.</p>
               </div>
               <div className="rounded-2xl border border-teal-100 bg-teal-50/70 px-4 py-3 text-sm font-semibold text-teal-900">
                 {loading ? 'Finding matches…' : `${cleaners.length} cleaner${cleaners.length === 1 ? '' : 's'} found for ${summary}.`}
@@ -230,7 +230,7 @@ export default function CleanerSearchPage() {
                 <button onClick={handleSearch} className="ftc-button-primary w-full sm:w-auto">Show matching cleaners</button>
                 <button onClick={handleClear} className="ftc-button-secondary w-full sm:w-auto">Start again</button>
               </div>
-              {searchMeta?.usedDistanceSearch ? (<p className="mt-4 text-sm text-slate-500">Showing cleaners matched to {postcode ? postcode.toUpperCase() : 'your area'} within roughly {searchMeta?.radiusMiles || radius} miles where possible.</p>) : null}
+              {searchMeta?.usedDistanceSearch ? (<p className="mt-4 text-sm text-slate-500">Best available cleaners are shown first.</p>) : null}
             </div>
           </div>
         </div>
