@@ -2,7 +2,6 @@
 
 import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { Clock, MapPin, Search, ShieldCheck, Sparkles, UserRoundPlus } from 'lucide-react';
 
 function cn(...classes) {
@@ -38,13 +37,14 @@ export default function PremiumMatchingHero({
         className
       )}
     >
-      {/* HERO IMAGE */}
-      <div className="absolute inset-0 -z-40">
+      {/* HERO VIDEO */}
+      <div className="absolute inset-0 -z-40 overflow-hidden">
         <video
           autoPlay
           muted
           loop
           playsInline
+          preload="auto"
           className="h-full w-full object-cover object-center"
         >
           <source src="/videos/homepage-hero.mp4" type="video/mp4" />
@@ -58,7 +58,7 @@ export default function PremiumMatchingHero({
       <div className="absolute inset-0 -z-20 bg-[radial-gradient(circle_at_top_left,rgba(12,143,163,0.18),transparent_42%)]" />
 
       {/* FLOATING GLASS BUBBLES */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+      <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
         <div className="absolute left-[8%] top-[10%] h-32 w-32 rounded-full border border-white/10 bg-white/5 backdrop-blur-2xl animate-pulse" />
         <div className="absolute left-[18%] top-[55%] h-16 w-16 rounded-full border border-white/10 bg-white/5 backdrop-blur-xl animate-pulse" />
         <div className="absolute left-[30%] top-[25%] h-24 w-24 rounded-full border border-white/10 bg-white/5 backdrop-blur-2xl animate-pulse" />
@@ -71,14 +71,14 @@ export default function PremiumMatchingHero({
           <div className="max-w-3xl">
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-sm font-semibold text-cyan-100 shadow-sm backdrop-blur-xl">
               <Sparkles className="h-4 w-4" />
-              Cleaner matching reimagined
+              Trusted local cleaners
             </div>
 
             <h1 className="max-w-4xl text-5xl font-semibold tracking-[-0.055em] text-white sm:text-6xl md:text-7xl">
               Find trusted cleaners
             </h1>
 
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300 sm:text-xl">
+            <p className="mt-6 max-w-2xl text-2xl font-medium leading-8 text-slate-200 sm:text-3xl">
               Sparkling homes.
             </p>
 
