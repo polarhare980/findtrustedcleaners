@@ -199,3 +199,30 @@ a {
     display: none;
   }
 }
+
+
+@keyframes trust-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.trust-marquee {
+  display: flex;
+  width: max-content;
+  animation: trust-marquee 34s linear infinite;
+  will-change: transform;
+}
+
+.trust-strip:hover .trust-marquee {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trust-marquee {
+    animation: none;
+  }
+}

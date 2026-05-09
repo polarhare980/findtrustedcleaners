@@ -386,22 +386,28 @@ export default function HomeClient() {
         </section>
 
         <section className="relative z-20 -mt-6 mb-0 px-4 sm:-mt-8 sm:px-6 lg:px-8" aria-label="Platform trust signals">
-          <div className="relative mx-auto max-w-5xl overflow-hidden rounded-full border border-white/24 bg-white/18 shadow-[0_18px_60px_rgba(15,23,42,0.10)] backdrop-blur-2xl">
+          <div className="trust-strip relative mx-auto max-w-5xl overflow-hidden rounded-full border border-white/24 bg-white/18 shadow-[0_18px_60px_rgba(15,23,42,0.10)] backdrop-blur-2xl">
             <div aria-hidden="true" className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-[#6EE7F2]/70 to-transparent" />
-            <div className="flex gap-2 overflow-x-auto px-3 py-2 [scrollbar-width:none] sm:grid sm:grid-cols-4 sm:overflow-visible sm:px-4">
+            <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-0 z-10 w-14 bg-gradient-to-r from-white/60 to-transparent" />
+            <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 z-10 w-14 bg-gradient-to-l from-white/60 to-transparent" />
+            <div className="trust-marquee gap-2 px-3 py-2">
               {[
+                'Verified cleaners',
+                'Live availability',
+                'Transparent pricing',
+                'UK-based platform',
                 'Verified cleaners',
                 'Live availability',
                 'Transparent pricing',
                 'UK-based platform',
               ].map((item, index) => (
                 <div
-                  key={item}
-                  className="flex min-w-max items-center justify-center gap-2 rounded-full px-3 py-2 text-[0.72rem] font-black uppercase tracking-[0.16em] text-slate-800 sm:min-w-0 sm:text-[0.68rem] lg:text-xs"
+                  key={`${item}-${index}`}
+                  className="flex min-w-max items-center justify-center gap-2 rounded-full px-4 py-2 text-[0.72rem] font-black uppercase tracking-[0.16em] text-slate-800 sm:text-[0.68rem] lg:text-xs"
                 >
                   <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#0C8FA3]/12 text-[#0C8FA3] ring-1 ring-[#0C8FA3]/18" aria-hidden="true">✓</span>
                   <span className="whitespace-nowrap">{item}</span>
-                  {index < 3 ? <span aria-hidden="true" className="ml-2 hidden h-4 w-px bg-slate-900/10 sm:inline-block" /> : null}
+                  <span aria-hidden="true" className="ml-2 h-4 w-px bg-slate-900/10" />
                 </div>
               ))}
             </div>
