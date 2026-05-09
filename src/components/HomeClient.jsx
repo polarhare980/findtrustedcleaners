@@ -276,20 +276,20 @@ export default function HomeClient() {
         premium
       />
 
-      <section className="site-section pb-8">
+      <section className="site-section -mt-6 pb-2 relative z-10">
         <div
-          className="relative overflow-hidden rounded-[34px] border border-white/20 bg-slate-950 shadow-[0_26px_90px_rgba(15,23,42,0.22)]"
+          className="relative overflow-hidden rounded-[40px] border border-white/10 bg-transparent shadow-none"
           style={{
             backgroundImage:
-              "linear-gradient(115deg, rgba(15,23,42,0.76) 0%, rgba(15,23,42,0.58) 48%, rgba(12,143,163,0.34) 100%), url('/images/service-cards-kitchen-bg.png')",
+              "linear-gradient(180deg, rgba(15,23,42,0.28) 0%, rgba(15,23,42,0.18) 40%, rgba(12,143,163,0.10) 100%), url('/images/service-cards-kitchen-bg.png')",
             backgroundSize: 'cover',
             backgroundPosition: 'center',
           }}
         >
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.22),transparent_28rem),radial-gradient(circle_at_80%_10%,rgba(33,182,199,0.24),transparent_22rem)]" />
-          <div className="relative p-6 sm:p-7">
+          <div className="relative px-1 py-6 sm:px-2 sm:py-8">
             <div className="mb-5 flex items-center justify-between gap-3">
-              <span className="rounded-full border border-white/20 bg-white/15 px-3 py-1 text-xs font-bold uppercase tracking-[0.22em] text-white shadow-sm backdrop-blur-md">
+              <span className="rounded-full border border-white/10 bg-white/10 backdrop-blur-2xl px-3 py-1 text-xs font-bold uppercase tracking-[0.22em] text-white shadow-sm backdrop-blur-md">
                 Local price snapshots
               </span>
               <Link href="/services" className="hidden text-sm font-bold text-white/80 transition hover:text-white sm:inline-flex">
@@ -315,7 +315,7 @@ export default function HomeClient() {
                     <Link
                       key={service.key}
                       href={href}
-                      className="group relative min-w-[245px] max-w-[245px] snap-start overflow-hidden rounded-[30px] border border-white/25 bg-white/18 p-5 text-white shadow-[0_18px_55px_rgba(0,0,0,0.18)] backdrop-blur-2xl transition duration-300 hover:-translate-y-1 hover:bg-white/24 hover:shadow-[0_24px_70px_rgba(0,0,0,0.26)] sm:min-w-[285px] sm:max-w-[285px]"
+                      className="group relative min-w-[245px] max-w-[245px] snap-start overflow-hidden rounded-[34px] border border-white/10 bg-white/10 p-5 text-white shadow-[0_12px_40px_rgba(0,0,0,0.12)] backdrop-blur-3xl transition duration-500 hover:-translate-y-1.5 hover:bg-white/14 hover:shadow-[0_18px_60px_rgba(0,0,0,0.18)] sm:min-w-[285px] sm:max-w-[285px]"
                     >
                       <div className="absolute inset-x-5 top-0 h-1 rounded-full bg-gradient-to-r from-[#6EE7F2] via-white/80 to-[#0C8FA3]" />
 
@@ -330,7 +330,7 @@ export default function HomeClient() {
                         </div>
 
                         <div>
-                          <div className="rounded-[24px] border border-white/22 bg-white/16 p-4 shadow-inner backdrop-blur-xl">
+                          <div className="rounded-[28px] border border-white/10 bg-white/10 p-4 backdrop-blur-2xl">
                             <p className="text-[0.66rem] font-bold uppercase tracking-[0.18em] text-white/62">From</p>
                             <div className="mt-1 flex items-end gap-2">
                               <span className="text-4xl font-black tracking-tight text-white">
