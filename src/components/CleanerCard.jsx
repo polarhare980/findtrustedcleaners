@@ -85,7 +85,7 @@ export default function CleanerCard({ cleaner, isFavourite = false, onToggleFavo
         className={`group relative block overflow-hidden rounded-[30px] border text-card-foreground transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-lg ${
           isPremium
             ? 'border-amber-200/80 bg-[linear-gradient(180deg,rgba(255,251,235,0.98)_0%,rgba(255,255,255,0.98)_55%,rgba(248,250,252,0.98)_100%)] shadow-[0_18px_60px_rgba(217,119,6,0.14)] hover:shadow-[0_30px_90px_rgba(217,119,6,0.20)]'
-            : 'border-slate-200 bg-white/95 shadow-sm hover:border-[#0C8FA3]/25 hover:shadow-[0_22px_60px_rgba(15,23,42,0.10)]'
+            : 'border-slate-200 bg-white/75 backdrop-blur-md/95 shadow-sm hover:border-[#0C8FA3]/25 hover:shadow-[0_22px_60px_rgba(15,23,42,0.10)]'
         }`}
       >
         {isPremium ? (
@@ -96,7 +96,7 @@ export default function CleanerCard({ cleaner, isFavourite = false, onToggleFavo
         ) : null}
 
         <div className="relative p-4">
-          <div className="h-[170px] w-full overflow-hidden rounded-t-2xl rounded-[24px] bg-slate-100">
+          <div className="h-[210px] w-full overflow-hidden rounded-t-2xl rounded-[24px] bg-slate-100">
             <img
               src={(typeof cleaner.image === 'string' && cleaner.image.trim()) ? cleaner.image : FALLBACK_IMAGE}
               alt={cleaner.companyName || 'Cleaner profile'}
@@ -170,7 +170,7 @@ export default function CleanerCard({ cleaner, isFavourite = false, onToggleFavo
 
           <div className={`mt-3 rounded-2xl border px-4 py-3 ${isPremium ? 'border-amber-100 bg-white/80' : 'border-slate-200 bg-slate-50/90'}`}>
             <div className="flex flex-wrap items-center justify-between gap-3">
-              {reviewSummary ? <RatingStars value={reviewSummary.value} count={reviewSummary.count} size={isPremium ? 17 : 15} /> : <span className="text-sm font-medium text-slate-500">Trusted local cleaner</span>}
+              {reviewSummary ? <RatingStars value={reviewSummary.value} count={reviewSummary.count} size={isPremium ? 17 : 15} /> : <span className="text-sm font-medium text-slate-500"></span>}
               <span className="text-xs font-semibold text-[#0C8FA3]">View profile</span>
             </div>
           </div>

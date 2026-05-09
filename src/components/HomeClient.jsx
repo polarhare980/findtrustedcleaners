@@ -212,11 +212,7 @@ export default function HomeClient() {
       <CleanerSection
         eyebrow="Local cleaners near you"
         title="Find your cleaner"
-        subtitle={
-          localAreaLabel
-            ? `Showing trusted cleaners covering ${localAreaLabel} and nearby areas, with services and availability based on your location.`
-            : 'Browse trusted domestic cleaners, oven cleaners, carpet cleaners and local cleaning services based on your area and availability.'
-        }
+        subtitle=""
         isLoading={isLoading}
         cleaners={premiumCleaners}
         favouriteIds={favouriteIds}
@@ -453,7 +449,7 @@ function CleanerSection({ eyebrow, title, subtitle, cleaners, isLoading, favouri
         <div>
           {eyebrow ? <p className="text-xs font-black uppercase tracking-[0.22em] text-[#0C8FA3]">{eyebrow}</p> : null}
           <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-900 sm:text-[2.15rem]">{title}</h2>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600/85 sm:text-base">{subtitle}</p>
+          {subtitle ? <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600/85 sm:text-base">{subtitle}</p> : null}
         </div>
         <div className="flex flex-wrap items-center gap-3">
           {premium ? (
@@ -462,7 +458,7 @@ function CleanerSection({ eyebrow, title, subtitle, cleaners, isLoading, favouri
                 type="button"
                 onClick={() => scrollRail('left')}
                 aria-label="Scroll premium cleaners left"
-                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-[#0C8FA3]/25 hover:text-[#0C8FA3]"
+                className="hidden md:inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white/90 text-slate-700 shadow-sm transition hover:border-[#0C8FA3]/25 hover:text-[#0C8FA3]"
               >
                 ←
               </button>
@@ -470,13 +466,13 @@ function CleanerSection({ eyebrow, title, subtitle, cleaners, isLoading, favouri
                 type="button"
                 onClick={() => scrollRail('right')}
                 aria-label="Scroll premium cleaners right"
-                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-[#0C8FA3]/25 hover:text-[#0C8FA3]"
+                className="hidden md:inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white/90 text-slate-700 shadow-sm transition hover:border-[#0C8FA3]/25 hover:text-[#0C8FA3]"
               >
                 →
               </button>
             </div>
           ) : null}
-          <Link href="/cleaners" className="ftc-button-secondary">View all cleaners</Link>
+          <Link href="/cleaners" className="text-sm font-medium text-slate-600 transition hover:text-[#0C8FA3]">Browse all →</Link>
         </div>
       </div>
 
