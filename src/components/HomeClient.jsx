@@ -258,225 +258,258 @@ export default function HomeClient() {
         cleanerCount={cleanerCount}
         onSearchClick={() => router.push('/cleaners')}
       />
-      <CleanerSection
-        eyebrow=""
-        title="Available cleaners today"
-        subtitle=""
-        locationError={locationError}
-        locationAction={
-          <Link href="/cleaners" className="whitespace-nowrap text-xs font-bold text-slate-500 transition hover:text-[#0C8FA3]">
-            Change location
-          </Link>
-        }
-        isLoading={isLoading}
-        cleaners={premiumCleaners}
-        favouriteIds={favouriteIds}
-        onToggleFavourite={handleToggleFavourite}
-        onBookingRequest={handleBookingRequest}
-        premium
-      />
+      <div className="relative overflow-hidden pb-14 sm:pb-18">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_8%,rgba(12,143,163,0.16),transparent_28rem),radial-gradient(circle_at_82%_34%,rgba(18,200,186,0.12),transparent_26rem),linear-gradient(180deg,rgba(255,255,255,0)_0%,rgba(255,255,255,0.44)_28%,rgba(226,241,246,0.42)_64%,rgba(15,23,42,0.08)_100%)]" />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-white/0 via-white/45 to-transparent" />
 
-      <section className="site-section -mt-6 pb-2 relative z-10">
-        <div
-          className="relative overflow-hidden rounded-[40px] border border-white/10 bg-transparent shadow-none"
-          style={{
-            backgroundImage:
-              "linear-gradient(180deg, rgba(15,23,42,0.28) 0%, rgba(15,23,42,0.18) 40%, rgba(12,143,163,0.10) 100%), url('/images/service-cards-kitchen-bg.png')",
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
-        >
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.22),transparent_28rem),radial-gradient(circle_at_80%_10%,rgba(33,182,199,0.24),transparent_22rem)]" />
-          <div className="relative px-1 py-6 sm:px-2 sm:py-8">
-            <div className="mb-5 flex items-center justify-between gap-3">
-              <span className="rounded-full border border-white/10 bg-white/10 backdrop-blur-2xl px-3 py-1 text-xs font-bold uppercase tracking-[0.22em] text-white shadow-sm backdrop-blur-md">
-                Local price snapshots
-              </span>
-              <Link href="/services" className="hidden text-sm font-bold text-white/80 transition hover:text-white sm:inline-flex">
-                View services →
-              </Link>
-            </div>
+        <CleanerSection
+          eyebrow=""
+          title="Available cleaners today"
+          subtitle=""
+          locationError={locationError}
+          locationAction={
+            <Link href="/cleaners" className="whitespace-nowrap text-xs font-bold text-slate-500 transition hover:text-[#0C8FA3]">
+              Change location
+            </Link>
+          }
+          isLoading={isLoading}
+          cleaners={premiumCleaners}
+          favouriteIds={favouriteIds}
+          onToggleFavourite={handleToggleFavourite}
+          onBookingRequest={handleBookingRequest}
+          premium
+        />
 
-            {isLoadingServiceMarket ? (
-              <div className="rounded-[28px] border border-white/20 bg-white/14 px-5 py-10 text-center text-sm text-white/80 shadow-sm backdrop-blur-xl">
-                Loading local service pricing…
+        <section className="site-section relative -mt-3 pb-8 sm:-mt-5 sm:pb-10">
+          <div
+            className="relative overflow-hidden rounded-[36px] border border-white/15 bg-slate-950 shadow-[0_28px_95px_rgba(15,23,42,0.18)]"
+            style={{
+              backgroundImage:
+                "linear-gradient(115deg, rgba(15,23,42,0.62) 0%, rgba(15,23,42,0.42) 46%, rgba(12,143,163,0.24) 100%), url('/images/service-cards-kitchen-bg.png')",
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }}
+          >
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.20),transparent_30rem),radial-gradient(circle_at_80%_10%,rgba(33,182,199,0.20),transparent_22rem)]" />
+            <div className="relative p-6 sm:p-8">
+              <div className="mb-5 flex items-center justify-between gap-3">
+                <span className="rounded-full border border-white/16 bg-white/12 px-3 py-1 text-[0.68rem] font-black uppercase tracking-[0.24em] text-white/86 shadow-sm backdrop-blur-md">
+                  Local price snapshots
+                </span>
+                <Link href="/services" className="hidden text-sm font-bold text-white/76 transition hover:text-white sm:inline-flex">
+                  View services →
+                </Link>
               </div>
-            ) : !serviceMarket.length ? (
-              <div className="rounded-[28px] border border-white/20 bg-white/14 px-5 py-10 text-center text-sm text-white/80 shadow-sm backdrop-blur-xl">
-                Service pricing cards will appear here automatically as cleaners add priced services to their profile.
-              </div>
-            ) : (
-              <div className="-mx-1 flex gap-4 overflow-x-auto px-1 pb-2 snap-x snap-mandatory [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-                {serviceMarket.map((service) => {
-                  const appliedPostcode = postcode || serviceArea?.outward || '';
-                  const href = `/cleaners?service=${encodeURIComponent(service.label)}${appliedPostcode ? `&postcode=${encodeURIComponent(appliedPostcode)}` : ''}`;
 
-                  return (
-                    <Link
-                      key={service.key}
-                      href={href}
-                      className="group relative min-w-[245px] max-w-[245px] snap-start overflow-hidden rounded-[34px] border border-white/10 bg-white/10 p-5 text-white shadow-[0_12px_40px_rgba(0,0,0,0.12)] backdrop-blur-3xl transition duration-500 hover:-translate-y-1.5 hover:bg-white/14 hover:shadow-[0_18px_60px_rgba(0,0,0,0.18)] sm:min-w-[285px] sm:max-w-[285px]"
-                    >
-                      <div className="absolute inset-x-5 top-0 h-1 rounded-full bg-gradient-to-r from-[#6EE7F2] via-white/80 to-[#0C8FA3]" />
+              {isLoadingServiceMarket ? (
+                <div className="rounded-[26px] border border-white/12 bg-white/10 px-5 py-10 text-center text-sm text-white/76 backdrop-blur-xl">
+                  Loading local service pricing…
+                </div>
+              ) : !serviceMarket.length ? (
+                <div className="rounded-[26px] border border-white/12 bg-white/10 px-5 py-10 text-center text-sm text-white/76 backdrop-blur-xl">
+                  Price snapshots will appear as more local cleaners add services.
+                </div>
+              ) : (
+                <div className="-mx-1 flex gap-4 overflow-x-auto px-1 pb-2 snap-x snap-mandatory [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                  {serviceMarket.map((service) => {
+                    const appliedPostcode = postcode || serviceArea?.outward || '';
+                    const href = `/cleaners?service=${encodeURIComponent(service.label)}${appliedPostcode ? `&postcode=${encodeURIComponent(appliedPostcode)}` : ''}`;
 
-                      <div className="relative flex min-h-[178px] flex-col justify-between">
-                        <div>
-                          <h3 className="max-w-[12rem] text-2xl font-black leading-tight tracking-tight text-white drop-shadow-sm">
-                            {service.label}
-                          </h3>
-                          <p className="mt-2 text-sm font-semibold text-white/70">
-                            {service.cleanerCount} cleaner{service.cleanerCount === 1 ? '' : 's'} nearby
-                          </p>
-                        </div>
+                    return (
+                      <Link
+                        key={service.key}
+                        href={href}
+                        className="group relative min-w-[245px] max-w-[245px] snap-start overflow-hidden rounded-[30px] border border-white/18 bg-white/14 p-5 text-white shadow-[0_18px_55px_rgba(0,0,0,0.14)] backdrop-blur-2xl transition duration-300 hover:-translate-y-1 hover:bg-white/20 hover:shadow-[0_24px_70px_rgba(0,0,0,0.22)] sm:min-w-[285px] sm:max-w-[285px]"
+                      >
+                        <div className="absolute inset-x-6 top-0 h-1 rounded-full bg-gradient-to-r from-[#6EE7F2]/80 via-white/70 to-[#0C8FA3]/80" />
+                        <div className="relative flex min-h-[174px] flex-col justify-between">
+                          <div>
+                            <h3 className="max-w-[12rem] text-2xl font-black leading-tight tracking-tight text-white drop-shadow-sm">
+                              {service.label}
+                            </h3>
+                            <p className="mt-2 text-sm font-semibold text-white/66">
+                              {service.cleanerCount} cleaner{service.cleanerCount === 1 ? '' : 's'} nearby
+                            </p>
+                          </div>
 
-                        <div>
-                          <div className="rounded-[28px] border border-white/10 bg-white/10 p-4 backdrop-blur-2xl">
-                            <p className="text-[0.66rem] font-bold uppercase tracking-[0.18em] text-white/62">From</p>
-                            <div className="mt-1 flex items-end gap-2">
-                              <span className="text-4xl font-black tracking-tight text-white">
-                                {service.minPrice != null ? `£${service.minPrice}` : 'Quote'}
-                              </span>
-                              <span className="pb-1 text-sm font-semibold text-white/65">
-                                {service.minPrice != null ? 'per clean' : 'on request'}
-                              </span>
+                          <div>
+                            <div className="rounded-[24px] border border-white/16 bg-white/14 p-4 shadow-inner backdrop-blur-xl">
+                              <p className="text-[0.66rem] font-bold uppercase tracking-[0.18em] text-white/56">From</p>
+                              <div className="mt-1 flex items-end gap-2">
+                                <span className="text-4xl font-black tracking-tight text-white">
+                                  {service.minPrice != null ? `£${service.minPrice}` : 'Quote'}
+                                </span>
+                                <span className="pb-1 text-sm font-semibold text-white/62">
+                                  {service.minPrice != null ? 'per clean' : 'on request'}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="mt-4 inline-flex items-center gap-2 text-sm font-black text-white">
+                              View cleaners
+                              <span aria-hidden="true" className="transition-transform duration-300 group-hover:translate-x-1">→</span>
                             </div>
                           </div>
-
-                          <div className="mt-4 inline-flex items-center gap-2 text-sm font-black text-white">
-                            View cleaners
-                            <span aria-hidden="true" className="transition-transform duration-300 group-hover:translate-x-1">→</span>
-                          </div>
                         </div>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="site-section py-8">
-        <div className="relative overflow-hidden rounded-[34px] bg-slate-950 shadow-[0_28px_80px_rgba(15,23,42,0.22)]">
+        <section className="site-section relative -mt-1 py-8 sm:py-10">
+          <div className="relative overflow-hidden rounded-[40px] bg-slate-950 shadow-[0_30px_90px_rgba(15,23,42,0.20)]">
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 bg-cover bg-center"
+              style={{ backgroundImage: "url('/images/why-choose-cleaners-bg.png')" }}
+            />
+            <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/60 to-slate-950/20" />
+            <div aria-hidden="true" className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-white/6 to-transparent" />
+            <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-slate-950/88 to-transparent" />
+
+            <div className="relative min-h-[480px] px-7 py-12 sm:px-10 lg:flex lg:min-h-[540px] lg:items-center lg:px-14">
+              <div className="max-w-xl">
+                <p className="text-xs font-black uppercase tracking-[0.28em] text-[#30D5C8]">Trusted local cleaners</p>
+                <h2 className="mt-5 text-4xl font-black leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-6xl">
+                  Booking a cleaner should feel simple.
+                </h2>
+                <p className="mt-5 max-w-lg text-base font-medium leading-7 text-white/76 sm:text-lg">
+                  Browse local cleaners with live availability, clear profiles and trusted reviews.
+                </p>
+
+                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                  <Link
+                    href="/cleaners"
+                    className="inline-flex min-h-[54px] items-center justify-center rounded-2xl bg-gradient-to-r from-[#0C8FA3] to-[#12C8BA] px-7 text-base font-black text-white shadow-[0_16px_36px_rgba(12,143,163,0.32)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_44px_rgba(12,143,163,0.42)]"
+                  >
+                    Find cleaners
+                  </Link>
+                  <Link
+                    href="/how-it-works"
+                    className="inline-flex min-h-[54px] items-center justify-center rounded-2xl border border-white/34 bg-white/8 px-7 text-base font-black text-white backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-white/14"
+                  >
+                    How it works
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="site-section relative py-8 sm:py-10">
           <div
-            aria-hidden="true"
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: "url('/images/why-choose-cleaners-bg.png')" }}
-          />
-          <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-r from-slate-950/92 via-slate-950/68 to-slate-950/24" />
-          <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-slate-950/88 to-transparent" />
-
-          <div className="relative min-h-[480px] px-7 py-12 sm:px-10 lg:flex lg:min-h-[540px] lg:items-center lg:px-14">
-            <div className="max-w-xl">
-              <p className="text-xs font-black uppercase tracking-[0.28em] text-[#30D5C8]">Trusted local cleaners</p>
-              <h2 className="mt-5 text-4xl font-black leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-6xl">
-                Booking a cleaner should feel simple.
-              </h2>
-              <p className="mt-5 max-w-lg text-base font-medium leading-7 text-white/78 sm:text-lg">
-                Browse local cleaners with live availability, clear profiles and trusted reviews.
-              </p>
-
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Link
-                  href="/cleaners"
-                  className="inline-flex min-h-[54px] items-center justify-center rounded-2xl bg-gradient-to-r from-[#0C8FA3] to-[#12C8BA] px-7 text-base font-black text-white shadow-[0_16px_36px_rgba(12,143,163,0.32)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_44px_rgba(12,143,163,0.42)]"
-                >
-                  Find cleaners
-                </Link>
-                <Link
-                  href="/how-it-works"
-                  className="inline-flex min-h-[54px] items-center justify-center rounded-2xl border border-white/42 bg-white/8 px-7 text-base font-black text-white backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-white/14"
-                >
-                  How it works
-                </Link>
+            className="relative overflow-hidden rounded-[40px] bg-slate-950 shadow-[0_28px_85px_rgba(15,23,42,0.18)]"
+            style={{
+              backgroundImage:
+                "linear-gradient(120deg, rgba(15,23,42,0.88), rgba(15,23,42,0.56), rgba(12,143,163,0.22)), url('/images/homepage-hero.jpg')",
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }}
+          >
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(48,213,200,0.18),transparent_22rem)]" />
+            <div className="relative max-w-2xl px-7 py-14 sm:px-10 lg:px-14 lg:py-20">
+              <p className="text-xs font-black uppercase tracking-[0.28em] text-[#30D5C8]">Local areas</p>
+              <h2 className="mt-4 text-4xl font-black tracking-tight text-white sm:text-5xl">Find cleaners near you</h2>
+              <p className="mt-4 text-base font-medium leading-7 text-white/75 sm:text-lg">Explore trusted local cleaners across West Sussex.</p>
+              <Link href="/locations" className="mt-8 inline-flex min-h-[52px] items-center justify-center rounded-2xl bg-white px-6 text-sm font-black text-slate-950 shadow-[0_18px_44px_rgba(0,0,0,0.22)] transition hover:-translate-y-0.5 hover:bg-[#EAFBFB]">
+                Explore areas →
+              </Link>
+              <div className="mt-7 flex flex-wrap gap-x-3 gap-y-2 text-sm font-bold text-white/62">
+                {CORE_LOCATION_LINKS.slice(1, 5).map((location, index) => (
+                  <React.Fragment key={location.href}>
+                    <Link href={location.href} className="transition hover:text-white">{location.label}</Link>
+                    {index < 3 ? <span aria-hidden="true">·</span> : null}
+                  </React.Fragment>
+                ))}
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <CleanerSection
-        eyebrow="More options"
-        title="More trusted cleaners"
-        subtitle=""
-        isLoading={isLoading}
-        cleaners={freeCleaners}
-        favouriteIds={favouriteIds}
-        onToggleFavourite={handleToggleFavourite}
-        onBookingRequest={handleBookingRequest}
-      />
-
-
-      <section className="site-section py-8">
-        <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-          <section className="rounded-[32px] border border-white/70 bg-white/90 p-8 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#0C8FA3]">Find Trusted Cleaners Near You</p>
-            <h2 className="mt-2 text-3xl font-bold text-slate-900">Find cleaners in your area</h2>
-            <p className="mt-4 max-w-3xl text-slate-600">We currently have the strongest availability in Worthing, Lancing and Shoreham-by-Sea, making it easier to find trusted cleaners and book quickly.</p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              {CORE_LOCATION_LINKS.map((location) => (
-                <Link
-                  key={location.href}
-                  href={location.href}
-                  className="rounded-full border border-[#0C8FA3]/25 bg-[#EAFBFB] px-4 py-2 text-sm font-semibold text-[#076D7E] transition hover:-translate-y-0.5 hover:border-[#21B6C7] hover:bg-white"
-                >
-                  Cleaners in {location.label}
-                </Link>
-              ))}
+        <section className="site-section relative py-8 sm:py-10">
+          <div className="grid gap-5 lg:grid-cols-[0.72fr_1.28fr] lg:items-center">
+            <div className="px-1 sm:px-3">
+              <p className="text-xs font-black uppercase tracking-[0.28em] text-[#0C8FA3]">Services</p>
+              <h2 className="mt-4 text-4xl font-black tracking-tight text-slate-950 sm:text-5xl">Choose the cleaning service you need</h2>
+              <Link href="/services" className="mt-7 inline-flex min-h-[52px] items-center justify-center rounded-2xl bg-slate-950 px-6 text-sm font-black text-white shadow-[0_18px_44px_rgba(15,23,42,0.18)] transition hover:-translate-y-0.5 hover:bg-[#0C8FA3]">
+                Browse services →
+              </Link>
             </div>
-          </section>
-
-          <section className="rounded-[32px] border border-white/70 bg-white/90 p-8 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#0C8FA3]">Core services</p>
-            <h2 className="mt-2 text-3xl font-bold text-slate-900">Browse cleaning services</h2>
-            <p className="mt-4 text-slate-600">Choose the type of cleaning you need and find available cleaners near you.</p>
-            <div className="mt-6 grid gap-3">
-              {CORE_SERVICE_LINKS.map((service) => (
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {CORE_SERVICE_LINKS.concat([{ href: '/services/carpet-cleaning', label: 'Carpet cleaning' }]).slice(0, 5).map((service) => (
                 <Link
                   key={service.href}
                   href={service.href}
-                  className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-800 transition hover:-translate-y-0.5 hover:border-[#0C8FA3]/25 hover:bg-white hover:text-[#076D7E]"
+                  className="group flex min-h-[112px] items-end justify-between rounded-[28px] border border-white/65 bg-white/58 p-5 text-slate-950 shadow-[0_18px_55px_rgba(15,23,42,0.07)] backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:bg-white/82 hover:shadow-[0_24px_70px_rgba(15,23,42,0.11)]"
                 >
-                  {service.label}
+                  <span className="text-xl font-black tracking-tight">{service.label.replace(' cleaning', '')}</span>
+                  <span className="grid h-9 w-9 place-items-center rounded-full bg-[#EAFBFB] text-[#0C8FA3] transition group-hover:translate-x-1">→</span>
                 </Link>
               ))}
             </div>
-          </section>
-        </div>
-      </section>
+          </div>
+        </section>
 
-      <RegionalSeoMesh locationName="West Sussex" compact />
+        <section className="site-section relative py-8 sm:py-10">
+          <div className="grid gap-3 rounded-[34px] border border-white/50 bg-slate-950/92 p-4 shadow-[0_24px_80px_rgba(15,23,42,0.18)] backdrop-blur-xl sm:grid-cols-2 sm:p-5 lg:grid-cols-4">
+            {[
+              'Verified cleaner profiles',
+              'Live availability',
+              'Transparent pricing',
+              'Built for UK households',
+            ].map((item) => (
+              <div key={item} className="rounded-[26px] border border-white/10 bg-white/8 p-5 text-white shadow-inner backdrop-blur-xl">
+                <div className="mb-4 h-1.5 w-10 rounded-full bg-gradient-to-r from-[#0C8FA3] to-[#30D5C8]" />
+                <p className="text-base font-black leading-snug">{item}</p>
+              </div>
+            ))}
+          </div>
+        </section>
 
-      <AuthorityTrustPanel
-        title="A stronger local alternative to national cleaning directories"
-        intro="The West Sussex patch links county coverage, town pages, services, guides and cleaner profiles together so the site can build authority before expanding into East Sussex."
-      />
-
-      <section className="site-section py-8">
-        <div className="rounded-[32px] border border-white/70 bg-white/90 p-8 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div className="max-w-3xl">
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#0C8FA3]">Worthing flagship page</p>
-              <h2 className="mt-2 text-3xl font-bold text-slate-900">See the strongest local marketplace page in action</h2>
-              <p className="mt-4 text-slate-600">Worthing is being treated as the lead local page, with service links, live cleaner visibility, nearby area support, and a stronger route into bookable profiles.</p>
+        <section className="site-section relative py-8 sm:py-10">
+          <div className="relative overflow-hidden rounded-[40px] border border-white/16 bg-slate-950 shadow-[0_28px_90px_rgba(15,23,42,0.20)]">
+            <div aria-hidden="true" className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(48,213,200,0.18),transparent_24rem),radial-gradient(circle_at_86%_28%,rgba(255,255,255,0.10),transparent_18rem)]" />
+            <div className="relative flex flex-col gap-7 px-7 py-12 sm:px-10 lg:flex-row lg:items-center lg:justify-between lg:px-14 lg:py-16">
+              <div className="max-w-2xl">
+                <p className="text-xs font-black uppercase tracking-[0.28em] text-[#30D5C8]">Worthing</p>
+                <h2 className="mt-4 text-4xl font-black tracking-tight text-white sm:text-5xl">Explore cleaners in Worthing</h2>
+                <p className="mt-4 text-base font-medium leading-7 text-white/72 sm:text-lg">See local cleaner availability, pricing and trusted profiles.</p>
+              </div>
+              <Link href="/locations/worthing" className="inline-flex min-h-[54px] items-center justify-center rounded-2xl bg-white px-7 text-sm font-black text-slate-950 shadow-[0_18px_44px_rgba(0,0,0,0.22)] transition hover:-translate-y-0.5 hover:bg-[#EAFBFB]">
+                View Worthing cleaners →
+              </Link>
             </div>
-            <Link href="/locations/worthing" className="ftc-button-primary">View cleaners in Worthing</Link>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="site-section py-12">
-        <div className="rounded-[32px] border border-white/70 bg-white/88 p-8 text-center shadow-[0_24px_70px_rgba(15,23,42,0.09)] backdrop-blur-xl sm:p-10">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#0C8FA3]">For cleaners</p>
-          <h2 className="mt-2 text-3xl font-bold text-slate-900">Want to win more direct booking requests?</h2>
-          <p className="mx-auto mt-4 max-w-2xl text-slate-600">Join the marketplace for free, set your availability, and start getting discovered. Upgrade to premium when you want stronger visibility and a more powerful profile presence.</p>
-          <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Link href="/register/cleaners" className="ftc-button-primary">Create cleaner profile</Link>
-            <Link href="/about" className="ftc-button-secondary">About FindTrustedCleaners</Link>
+        <section className="site-section relative py-10 sm:py-12">
+          <div className="rounded-[34px] border border-white/55 bg-white/62 p-8 text-center shadow-[0_24px_70px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-10">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#0C8FA3]">For cleaners</p>
+            <h2 className="mt-2 text-3xl font-bold text-slate-900">Want to win more direct booking requests?</h2>
+            <p className="mx-auto mt-4 max-w-2xl text-slate-600">Join for free, set your availability, and get discovered by local households.</p>
+            <div className="mt-8 flex flex-wrap justify-center gap-3">
+              <Link href="/register/cleaners" className="ftc-button-primary">Create cleaner profile</Link>
+              <Link href="/about" className="ftc-button-secondary">About FindTrustedCleaners</Link>
+            </div>
           </div>
+        </section>
+
+        <div className="sr-only" aria-hidden="true">
+          <nav aria-label="SEO location and service links">
+            {CORE_LOCATION_LINKS.map((location) => <Link key={location.href} href={location.href}>{location.label}</Link>)}
+            {CORE_SERVICE_LINKS.map((service) => <Link key={service.href} href={service.href}>{service.label}</Link>)}
+          </nav>
+          <RegionalSeoMesh locationName="West Sussex" compact />
+          <AuthorityTrustPanel
+            title="A stronger local alternative to national cleaning directories"
+            intro="The West Sussex patch links county coverage, town pages, services, guides and cleaner profiles together so the site can build authority before expanding into East Sussex."
+          />
         </div>
-      </section>
+      </div>
 
       <PublicFooter />
     </main>
@@ -495,8 +528,8 @@ function CleanerSection({ eyebrow, title, subtitle, locationError, locationActio
   };
 
   return (
-    <section className={premium ? "site-section py-8" : "site-section py-8"}>
-      <div className={premium ? "overflow-hidden rounded-[30px] border border-white/70 bg-[radial-gradient(circle_at_top_left,rgba(12,143,163,0.10),transparent_34%),linear-gradient(180deg,#f7ffff_0%,#ffffff_100%)] p-4 shadow-[0_18px_55px_rgba(15,23,42,0.07)] backdrop-blur-xl sm:p-5" : ""}>
+    <section className={premium ? "site-section relative pt-5 pb-8 sm:pt-8 sm:pb-10" : "site-section relative py-8"}>
+      <div className={premium ? "overflow-hidden rounded-[32px] border border-white/45 bg-white/42 p-4 shadow-[0_18px_55px_rgba(15,23,42,0.055)] backdrop-blur-xl sm:p-5" : ""}>
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
           {eyebrow ? <p className="text-xs font-black uppercase tracking-[0.22em] text-[#0C8FA3]">{eyebrow}</p> : null}
@@ -526,14 +559,14 @@ function CleanerSection({ eyebrow, title, subtitle, locationError, locationActio
               </button>
             </div>
           ) : null}
-          <Link href="/cleaners" className="whitespace-nowrap text-sm font-semibold text-slate-500 transition hover:text-[#0C8FA3]">Browse all →</Link>
+
         </div>
       </div>
 
       {isLoading ? (
         <div className="surface-card p-8 text-slate-600">Loading cleaners…</div>
       ) : !cleaners?.length ? (
-        <div className="surface-card p-8 text-slate-600">No cleaners are available here yet.</div>
+        <div className="rounded-[26px] border border-white/55 bg-white/50 p-8 text-slate-600 shadow-sm backdrop-blur-xl">New cleaners coming soon.</div>
       ) : (
         <div ref={railRef} className="flex snap-x snap-mandatory gap-5 overflow-x-auto px-1 pb-2 hide-scrollbar-mobile scroll-smooth">
           {cleaners.map((cleaner) => (
