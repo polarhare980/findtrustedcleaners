@@ -38,6 +38,9 @@ export default function CleanerSearchPage() {
   const [error, setError] = useState('')
   const [cleaners, setCleaners] = useState([])
   const [searchMeta, setSearchMeta] = useState(null)
+  const [exactLocation, setExactLocation] = useState(null)
+  const [isLocating, setIsLocating] = useState(false)
+  const [locationError, setLocationError] = useState('')
 
   useEffect(() => {
     if (hydratedFromQuery) return
@@ -59,10 +62,14 @@ export default function CleanerSearchPage() {
   const apiUrl = useMemo(() => {
     const params = new URLSearchParams()
     if (postcode.trim()) params.set('postcode', postcode.trim())
+    if (exactLocation?.lat && exactLocation?.lng) {
+      params.set('lat', String(exactLocation.lat))
+      params.set('lng', String(exactLocation.lng))
+    }
     if (serviceType.trim()) params.set('serviceType', serviceType.trim())
     if (radius) params.set('radius', radius)
-    return `/api/cleaners?${params.toString()}`
-  }, [postcode, serviceType, cleaningPath, timePreference, radius])
+    return `/api/cleaners/matched?${params.toString()}`
+  }, [postcode, serviceType, cleaningPath, timePreference, radius, exactLocation])
 
   useEffect(() => {
     if (!hydratedFromQuery) return
@@ -92,6 +99,27 @@ export default function CleanerSearchPage() {
     }
   }, [apiUrl, hydratedFromQuery])
 
+
+  const handleUseExactLocation = () => {
+    setLocationError('')
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      setLocationError('Your browser does not support exact location. Use a postcode instead.')
+      return
+    }
+    setIsLocating(true)
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setExactLocation({ lat: position.coords.latitude, lng: position.coords.longitude })
+        setIsLocating(false)
+      },
+      () => {
+        setLocationError('Location permission was not allowed. Use your postcode instead.')
+        setIsLocating(false)
+      },
+      { enableHighAccuracy: true, timeout: 9000, maximumAge: 1000 * 60 * 10 }
+    )
+  }
+
   const handleSearch = () => {
     const params = new URLSearchParams()
     if (postcode.trim()) params.set('postcode', postcode.trim())
@@ -108,6 +136,7 @@ export default function CleanerSearchPage() {
     setCleaningPath('home')
     setTimePreference('Any time')
     setRadius('8')
+    setExactLocation(null)
     router.replace('/cleaners')
   }
 
@@ -164,6 +193,12 @@ export default function CleanerSearchPage() {
                 <div>
                   <label className="mb-2 block text-sm font-medium text-slate-700">Postcode</label>
                   <input value={postcode} onChange={(e) => setPostcode(e.target.value)} placeholder="Enter your postcode" className="ftc-input bg-white" />
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <button type="button" onClick={handleUseExactLocation} disabled={isLocating} className="rounded-full border border-teal-200 bg-white px-3 py-2 text-xs font-bold text-teal-800 transition hover:bg-teal-50 disabled:cursor-wait disabled:opacity-70">
+                      {isLocating ? 'Finding your area…' : 'Use my exact area'}
+                    </button>
+                    {locationError ? <span className="text-xs font-medium text-amber-700">{locationError}</span> : null}
+                  </div>
                 </div>
                 <div>
                   <label className="mb-2 block text-sm font-medium text-slate-700">Preferred time</label>
@@ -195,7 +230,7 @@ export default function CleanerSearchPage() {
                 <button onClick={handleSearch} className="ftc-button-primary w-full sm:w-auto">Show matching cleaners</button>
                 <button onClick={handleClear} className="ftc-button-secondary w-full sm:w-auto">Start again</button>
               </div>
-              {searchMeta?.usedDistanceSearch && postcode ? (<p className="mt-4 text-sm text-slate-500">Showing cleaners within roughly {searchMeta?.radiusMiles || radius} miles of {postcode.toUpperCase()}.</p>) : null}
+              {searchMeta?.usedDistanceSearch ? (<p className="mt-4 text-sm text-slate-500">Showing cleaners matched to {postcode ? postcode.toUpperCase() : 'your area'} within roughly {searchMeta?.radiusMiles || radius} miles where possible.</p>) : null}
             </div>
           </div>
         </div>

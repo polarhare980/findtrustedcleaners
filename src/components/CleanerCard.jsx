@@ -48,15 +48,22 @@ function getVisibleServices(cleaner = {}) {
 }
 
 function getAvailabilityHint(cleaner = {}) {
+  if (cleaner?.nextAvailableLabel) return cleaner.nextAvailableLabel
   const availability = cleaner?.availabilityMerged || cleaner?.availability || {}
+  const todayName = new Date().toLocaleDateString('en-GB', { weekday: 'long' })
+  const todaySlots = availability?.[todayName] || {}
+  const availableToday = Object.values(todaySlots).some((slot) => {
+    if (slot === true || slot === 'available') return true
+    return Boolean(slot && typeof slot === 'object' && (slot.status === 'available' || slot.available === true))
+  })
+  if (availableToday) return 'Available today'
   const days = Object.keys(availability || {})
   let count = 0
   days.forEach((day) => {
-    Object.values(availability?.[day] || {}).forEach((slot) => { if (slot === true) count += 1 })
+    Object.values(availability?.[day] || {}).forEach((slot) => { if (slot === true || slot === 'available') count += 1 })
   })
-  if (count >= 8) return 'Good availability'
-  if (count > 0) return 'Limited availability'
-  return 'View profile'
+  if (count > 0) return 'Next availability on profile'
+  return 'Unavailable today'
 }
 
 export default function CleanerCard({ cleaner, isFavourite = false, onToggleFavourite, isPremium: forcedPremium = false }) {
@@ -126,9 +133,11 @@ export default function CleanerCard({ cleaner, isFavourite = false, onToggleFavo
           </Button>
 
           <span className={`absolute bottom-4 left-4 rounded-full border px-3 py-1.5 text-[11px] font-bold shadow-sm backdrop-blur-md ${
-            availabilityHint.toLowerCase().includes('unavailable') || availabilityHint.toLowerCase().includes('view')
-              ? 'border-white/40 bg-white/82 text-slate-700'
-              : 'border-emerald-100/80 bg-emerald-50/92 text-emerald-800'
+            availabilityHint.toLowerCase().includes('available today')
+              ? 'border-emerald-100/80 bg-emerald-50/92 text-emerald-800'
+              : availabilityHint.toLowerCase().includes('next')
+                ? 'border-amber-100/80 bg-amber-50/92 text-amber-800'
+                : 'border-white/40 bg-white/82 text-slate-700'
           }`}>
             {availabilityHint}
           </span>

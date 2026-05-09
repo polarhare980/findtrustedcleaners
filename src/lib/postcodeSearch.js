@@ -69,18 +69,28 @@ export async function geocodeUkPostcode(postcode = '') {
   const cached = getCachedCoordinates(normal);
   if (cached !== null) return cached;
 
-  const data = await fetchJsonWithTimeout(`https://api.postcodes.io/postcodes/${encodeURIComponent(normal)}`);
-  const result = data?.result;
+  let data = await fetchJsonWithTimeout(`https://api.postcodes.io/postcodes/${encodeURIComponent(normal)}`);
+  let result = data?.result;
+  let isOutcode = false;
+
+  if (!result || typeof result.latitude !== 'number' || typeof result.longitude !== 'number') {
+    const outward = getOutwardPostcode(normal);
+    if (outward) {
+      data = await fetchJsonWithTimeout(`https://api.postcodes.io/outcodes/${encodeURIComponent(outward)}`);
+      result = data?.result;
+      isOutcode = true;
+    }
+  }
 
   if (!result || typeof result.latitude !== 'number' || typeof result.longitude !== 'number') {
     return setCachedCoordinates(normal, null);
   }
 
   return setCachedCoordinates(normal, {
-    postcode: normal,
+    postcode: isOutcode ? getOutwardPostcode(normal) : normal,
     latitude: result.latitude,
     longitude: result.longitude,
-    adminDistrict: result.admin_district || '',
+    adminDistrict: result.admin_district || result.admin_districts?.[0] || '',
     region: result.region || '',
     country: result.country || '',
     quality: result.quality || null,

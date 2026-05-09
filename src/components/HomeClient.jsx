@@ -13,7 +13,7 @@ import RegionalSeoMesh from '@/components/seo/RegionalSeoMesh';
 import AuthorityTrustPanel from '@/components/seo/AuthorityTrustPanel';
 
 const fetcher = (url) => fetch(url, { credentials: 'include' }).then((r) => r.json());
-const CLEANERS_API = '/api/public-cleaners';
+const CLEANERS_API = '/api/cleaners/matched';
 const PURCHASES_API = (id) => `/api/public/purchases/cleaners/${id}`;
 const HOURS = Array.from({ length: 13 }, (_, i) => String(7 + i));
 const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
@@ -56,6 +56,19 @@ const CLEANING_PATHS = [
 ];
 
 const TIME_PREFERENCES = ['Any time', 'Weekday morning', 'Weekday afternoon', 'Evening', 'Weekend'];
+
+
+function buildMatchedCleanersUrl({ postcode = '', lat = '', lng = '', radius = '8' } = {}) {
+  const params = new URLSearchParams();
+  if (postcode.trim()) params.set('postcode', postcode.trim());
+  if (lat && lng) {
+    params.set('lat', String(lat));
+    params.set('lng', String(lng));
+  }
+  if (radius) params.set('radius', radius);
+  const query = params.toString();
+  return `${CLEANERS_API}${query ? `?${query}` : ''}`;
+}
 
 function buildCleanerSearchUrl({ postcode = '', serviceType = '', cleaningPath = '', timePreference = '' } = {}) {
   const params = new URLSearchParams();
@@ -129,8 +142,12 @@ async function hydrateCleanersWithPurchases(cleaners) {
 
 export default function HomeClient() {
   const router = useRouter();
-  const { data, isLoading } = useSWR(CLEANERS_API, fetcher);
   const [postcode, setPostcode] = useState('');
+  const [exactLocation, setExactLocation] = useState(null);
+  const [locationError, setLocationError] = useState('');
+  const [isLocating, setIsLocating] = useState(false);
+  const matchedCleanersUrl = useMemo(() => buildMatchedCleanersUrl({ postcode, lat: exactLocation?.lat, lng: exactLocation?.lng }), [postcode, exactLocation]);
+  const { data, isLoading } = useSWR(matchedCleanersUrl, fetcher);
   const [serviceType, setServiceType] = useState('');
   const [cleaningPath, setCleaningPath] = useState('home');
   const [timePreference, setTimePreference] = useState('Any time');
@@ -155,7 +172,7 @@ export default function HomeClient() {
         if (live && res.ok && data?.success) setViewer(data.user || null);
       } catch {}
     })();
-    return () => { live = false; };
+  return () => { live = false; };
   }, []);
 
   useEffect(() => {
@@ -168,6 +185,30 @@ export default function HomeClient() {
       setFreeCleaners(f);
     })();
   }, [data]);
+
+
+  const requestExactLocation = () => {
+    setLocationError('');
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      setLocationError('Your browser does not support exact location. Enter a postcode instead.');
+      return;
+    }
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setExactLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+        setIsLocating(false);
+      },
+      () => {
+        setLocationError('Location permission was not allowed. You can still enter a postcode.');
+        setIsLocating(false);
+      },
+      { enableHighAccuracy: true, timeout: 9000, maximumAge: 1000 * 60 * 10 }
+    );
+  };
 
   const handleToggleFavourite = async (cleanerId) => {
     const id = String(cleanerId);
@@ -202,6 +243,15 @@ export default function HomeClient() {
     ? postcode.toUpperCase()
     : serviceArea?.label || serviceArea?.outward || null;
 
+
+  const locationLabel = data?.location?.locationConfidence === 'exact'
+    ? 'Showing cleaners matched to your exact area'
+    : postcode
+      ? `Showing cleaners near ${postcode.toUpperCase()}`
+      : data?.location?.locationConfidence === 'approximate'
+        ? 'Showing cleaners matched to your approximate area'
+        : 'Showing available cleaners across West Sussex';
+
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,#f7fbfb_0%,#f8fafc_38%,#f8fafc_100%)] text-slate-900">
       <PublicHeader />
@@ -212,7 +262,23 @@ export default function HomeClient() {
       <CleanerSection
         eyebrow=""
         title="Available cleaners today"
-        subtitle=""
+        subtitle={locationLabel}
+        locationError={locationError}
+        locationAction={
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={requestExactLocation}
+              disabled={isLocating}
+              className="rounded-full border border-[#0C8FA3]/25 bg-white px-3 py-2 text-xs font-bold text-[#076D7E] shadow-sm transition hover:border-[#0C8FA3]/45 hover:bg-[#EAFBFB] disabled:cursor-wait disabled:opacity-70"
+            >
+              {isLocating ? 'Finding your area…' : 'Use my exact area'}
+            </button>
+            <Link href="/cleaners" className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 shadow-sm transition hover:border-[#0C8FA3]/25 hover:text-[#0C8FA3]">
+              Change location
+            </Link>
+          </div>
+        }
         isLoading={isLoading}
         cleaners={premiumCleaners}
         favouriteIds={favouriteIds}
@@ -269,7 +335,8 @@ export default function HomeClient() {
                 {serviceMarket.map((service) => {
                   const appliedPostcode = postcode || serviceArea?.outward || '';
                   const href = `/cleaners?service=${encodeURIComponent(service.label)}${appliedPostcode ? `&postcode=${encodeURIComponent(appliedPostcode)}` : ''}`;
-                  return (
+
+  return (
                     <Link
                       key={service.key}
                       href={href}
@@ -431,7 +498,7 @@ export default function HomeClient() {
   );
 }
 
-function CleanerSection({ eyebrow, title, subtitle, cleaners, isLoading, favouriteIds, onToggleFavourite, onBookingRequest, premium = false }) {
+function CleanerSection({ eyebrow, title, subtitle, locationError, locationAction, cleaners, isLoading, favouriteIds, onToggleFavourite, onBookingRequest, premium = false }) {
   const railRef = useRef(null);
 
   const scrollRail = (direction) => {
@@ -450,8 +517,10 @@ function CleanerSection({ eyebrow, title, subtitle, cleaners, isLoading, favouri
           {eyebrow ? <p className="text-xs font-black uppercase tracking-[0.22em] text-[#0C8FA3]">{eyebrow}</p> : null}
           <h2 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">{title}</h2>
           {subtitle ? <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600/85 sm:text-base">{subtitle}</p> : null}
+          {locationError ? <p className="mt-2 max-w-2xl text-xs font-medium text-amber-700">{locationError}</p> : null}
         </div>
         <div className="flex flex-wrap items-center gap-3">
+          {locationAction || null}
           {premium ? (
             <div className="flex items-center gap-2">
               <button

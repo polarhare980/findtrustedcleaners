@@ -24,6 +24,19 @@ const ServiceSchema = new mongoose.Schema(
   { _id: false }
 );
 
+
+const ServiceAreaSchema = new mongoose.Schema(
+  {
+    town: { type: String, default: '' },
+    postcodePrefix: { type: String, default: '' },
+    postcode: { type: String, default: '' },
+    lat: { type: Number },
+    lng: { type: Number },
+    radiusMiles: { type: Number, default: 8, min: 1, max: 50 },
+  },
+  { _id: false }
+);
+
 const PhotoSchema = new mongoose.Schema(
   {
     url: { type: String, required: true },
@@ -95,6 +108,7 @@ const cleanerSchema = new mongoose.Schema(
     videoUrl: { type: String },
 
     additionalPostcodes: { type: [String], default: [] },
+    serviceAreas: { type: [ServiceAreaSchema], default: [] },
 
     stripeCustomerId: { type: String, default: '' },
     stripeSubscriptionId: { type: String, default: '' },
