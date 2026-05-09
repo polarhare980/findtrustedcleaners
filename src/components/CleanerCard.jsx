@@ -56,7 +56,7 @@ function getAvailabilityHint(cleaner = {}) {
   })
   if (count >= 8) return 'Good availability'
   if (count > 0) return 'Limited availability'
-  return 'Check availability'
+  return 'View profile'
 }
 
 export default function CleanerCard({ cleaner, isFavourite = false, onToggleFavourite, isPremium: forcedPremium = false }) {
@@ -170,8 +170,8 @@ export default function CleanerCard({ cleaner, isFavourite = false, onToggleFavo
 
           <div className={`mt-3 rounded-2xl border px-4 py-3 ${isPremium ? 'border-amber-100 bg-white/80' : 'border-slate-200 bg-slate-50/90'}`}>
             <div className="flex flex-wrap items-center justify-between gap-3">
-              {reviewSummary ? <RatingStars value={reviewSummary.value} count={reviewSummary.count} size={isPremium ? 17 : 15} /> : <span className="text-sm font-medium text-slate-500">New profile</span>}
-              <span className="text-xs font-semibold text-[#0C8FA3]">Check availability</span>
+              {reviewSummary ? <RatingStars value={reviewSummary.value} count={reviewSummary.count} size={isPremium ? 17 : 15} /> : <span className="text-sm font-medium text-slate-500">Trusted local cleaner</span>}
+              <span className="text-xs font-semibold text-[#0C8FA3]">View profile</span>
             </div>
           </div>
 
@@ -180,7 +180,7 @@ export default function CleanerCard({ cleaner, isFavourite = false, onToggleFavo
           ) : null}
 
           <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">
-            <span className="text-sm font-semibold text-slate-700">Does this cleaner feel right?</span>
+            <span className="text-sm font-semibold text-slate-700">See services & availability</span>
             <span className="text-sm font-bold text-[#0C8FA3] transition group-hover:translate-x-1">View →</span>
           </div>
         </div>
