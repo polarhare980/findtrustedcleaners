@@ -385,6 +385,29 @@ export default function HomeClient() {
           </div>
         </section>
 
+        <section className="relative z-20 -mt-6 mb-0 px-4 sm:-mt-8 sm:px-6 lg:px-8" aria-label="Platform trust signals">
+          <div className="relative mx-auto max-w-5xl overflow-hidden rounded-full border border-white/24 bg-white/18 shadow-[0_18px_60px_rgba(15,23,42,0.10)] backdrop-blur-2xl">
+            <div aria-hidden="true" className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-[#6EE7F2]/70 to-transparent" />
+            <div className="flex gap-2 overflow-x-auto px-3 py-2 [scrollbar-width:none] sm:grid sm:grid-cols-4 sm:overflow-visible sm:px-4">
+              {[
+                'Verified cleaners',
+                'Live availability',
+                'Transparent pricing',
+                'UK-based platform',
+              ].map((item, index) => (
+                <div
+                  key={item}
+                  className="flex min-w-max items-center justify-center gap-2 rounded-full px-3 py-2 text-[0.72rem] font-black uppercase tracking-[0.16em] text-slate-800 sm:min-w-0 sm:text-[0.68rem] lg:text-xs"
+                >
+                  <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#0C8FA3]/12 text-[#0C8FA3] ring-1 ring-[#0C8FA3]/18" aria-hidden="true">✓</span>
+                  <span className="whitespace-nowrap">{item}</span>
+                  {index < 3 ? <span aria-hidden="true" className="ml-2 hidden h-4 w-px bg-slate-900/10 sm:inline-block" /> : null}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         <section className="relative z-10 -mt-px py-0">
           <div className="relative mx-auto max-w-7xl overflow-hidden rounded-none bg-slate-950 shadow-none sm:rounded-[44px] sm:shadow-[0_30px_90px_rgba(15,23,42,0.20)]">
             <div
@@ -492,24 +515,6 @@ export default function HomeClient() {
                 </Link>
               ))}
             </div>
-          </div>
-        </section>
-
-        <div aria-hidden="true" className="relative z-20 h-3 bg-white sm:h-4" />
-
-        <section className="relative z-10 -mt-px py-0">
-          <div className="mx-auto grid max-w-7xl gap-3 bg-slate-950/96 p-5 shadow-none backdrop-blur-xl sm:grid-cols-2 sm:p-6 lg:grid-cols-4 lg:rounded-[44px]">
-            {[
-              'Verified cleaner profiles',
-              'Live availability',
-              'Transparent pricing',
-              'Built for UK households',
-            ].map((item) => (
-              <div key={item} className="rounded-[26px] border border-white/10 bg-white/8 p-5 text-white shadow-inner backdrop-blur-xl">
-                <div className="mb-4 h-1.5 w-10 rounded-full bg-gradient-to-r from-[#0C8FA3] to-[#30D5C8]" />
-                <p className="text-base font-black leading-snug">{item}</p>
-              </div>
-            ))}
           </div>
         </section>
 
