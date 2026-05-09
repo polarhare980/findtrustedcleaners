@@ -96,7 +96,7 @@ export default function CleanerCard({ cleaner, isFavourite = false, onToggleFavo
         ) : null}
 
         <div className="relative p-4">
-          <div className="aspect-square overflow-hidden rounded-[24px] bg-slate-100">
+          <div className="h-[170px] w-full overflow-hidden rounded-t-2xl rounded-[24px] bg-slate-100">
             <img
               src={(typeof cleaner.image === 'string' && cleaner.image.trim()) ? cleaner.image : FALLBACK_IMAGE}
               alt={cleaner.companyName || 'Cleaner profile'}
