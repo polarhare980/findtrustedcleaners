@@ -64,14 +64,7 @@ export default function PremiumMatchingHero({
       {/* DEPTH OVERLAY */}
       <div className="absolute inset-0 z-[2] bg-[radial-gradient(circle_at_top_left,rgba(12,143,163,0.18),transparent_42%)]" />
 
-      {/* FLOATING GLASS BUBBLES */}
-      <div className="pointer-events-none absolute inset-0 z-[3] overflow-hidden">
-        <div className="absolute left-[8%] top-[10%] h-32 w-32 rounded-full border border-white/10 bg-white/5 backdrop-blur-2xl animate-pulse" />
-        <div className="absolute left-[18%] top-[55%] h-16 w-16 rounded-full border border-white/10 bg-white/5 backdrop-blur-xl animate-pulse" />
-        <div className="absolute left-[30%] top-[25%] h-24 w-24 rounded-full border border-white/10 bg-white/5 backdrop-blur-2xl animate-pulse" />
-        <div className="absolute right-[12%] top-[20%] h-20 w-20 rounded-full border border-white/10 bg-white/5 backdrop-blur-xl animate-pulse" />
-        <div className="absolute right-[18%] bottom-[15%] h-28 w-28 rounded-full border border-white/10 bg-white/5 backdrop-blur-2xl animate-pulse" />
-      </div>
+      {/* Bubble layer removed while testing hero video playback */}
 
       {/* CONTENT */}
       <div className="relative z-10 mx-auto flex min-h-[92vh] w-full max-w-7xl items-center px-5 py-16 sm:px-8 lg:py-20">
