@@ -9,8 +9,6 @@ import PublicHeader from '@/components/PublicHeader';
 import PublicFooter from '@/components/PublicFooter';
 import PremiumMatchingHero from '@/components/ui/PremiumMatchingHero';
 import { injectPendingFromPurchases } from '@/lib/availability';
-import RegionalSeoMesh from '@/components/seo/RegionalSeoMesh';
-import AuthorityTrustPanel from '@/components/seo/AuthorityTrustPanel';
 
 const fetcher = (url) => fetch(url, { credentials: 'include' }).then((r) => r.json());
 const CLEANERS_API = '/api/cleaners/matched';
@@ -396,72 +394,99 @@ export default function HomeClient() {
         </div>
       </section>
 
-      <CleanerSection
-        eyebrow="More options"
-        title="More trusted cleaners"
-        subtitle=""
-        isLoading={isLoading}
-        cleaners={freeCleaners}
-        favouriteIds={favouriteIds}
-        onToggleFavourite={handleToggleFavourite}
-        onBookingRequest={handleBookingRequest}
-      />
-
-
-      <section className="site-section py-8">
-        <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-          <section className="rounded-[32px] border border-white/70 bg-white/90 p-8 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#0C8FA3]">Find Trusted Cleaners Near You</p>
-            <h2 className="mt-2 text-3xl font-bold text-slate-900">Find cleaners in your area</h2>
-            <p className="mt-4 max-w-3xl text-slate-600">We currently have the strongest availability in Worthing, Lancing and Shoreham-by-Sea, making it easier to find trusted cleaners and book quickly.</p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              {CORE_LOCATION_LINKS.map((location) => (
-                <Link
-                  key={location.href}
-                  href={location.href}
-                  className="rounded-full border border-[#0C8FA3]/25 bg-[#EAFBFB] px-4 py-2 text-sm font-semibold text-[#076D7E] transition hover:-translate-y-0.5 hover:border-[#21B6C7] hover:bg-white"
-                >
-                  Cleaners in {location.label}
+      <section className="site-section py-10">
+        <div className="overflow-hidden rounded-[36px] border border-white/10 bg-[linear-gradient(135deg,rgba(7,15,28,0.96),rgba(12,28,45,0.92))] shadow-[0_35px_100px_rgba(2,8,23,0.45)]">
+          <div className="relative p-8 sm:p-12 lg:p-16">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(45,212,191,0.18),transparent_28%)]" />
+            <div className="relative max-w-2xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-teal-200/80">LOCAL AREAS</p>
+              <h2 className="mt-4 text-4xl font-bold tracking-tight text-white sm:text-5xl">Find cleaners near you</h2>
+              <p className="mt-5 text-lg text-slate-300">Explore trusted local cleaners across West Sussex.</p>
+              <div className="mt-8 flex flex-wrap items-center gap-5">
+                <Link href="/locations" className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur-xl transition hover:bg-white/16">
+                  Explore areas →
                 </Link>
-              ))}
+              </div>
+              <div className="mt-8 flex flex-wrap gap-4 text-sm text-white/60">
+                <Link href="/locations/worthing" className="transition hover:text-white">Worthing</Link>
+                <span>·</span>
+                <Link href="/locations/lancing" className="transition hover:text-white">Lancing</Link>
+                <span>·</span>
+                <Link href="/locations/shoreham-by-sea" className="transition hover:text-white">Shoreham</Link>
+                <span>·</span>
+                <Link href="/locations/littlehampton" className="transition hover:text-white">Littlehampton</Link>
+              </div>
             </div>
-          </section>
-
-          <section className="rounded-[32px] border border-white/70 bg-white/90 p-8 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#0C8FA3]">Core services</p>
-            <h2 className="mt-2 text-3xl font-bold text-slate-900">Browse cleaning services</h2>
-            <p className="mt-4 text-slate-600">Choose the type of cleaning you need and find available cleaners near you.</p>
-            <div className="mt-6 grid gap-3">
-              {CORE_SERVICE_LINKS.map((service) => (
-                <Link
-                  key={service.href}
-                  href={service.href}
-                  className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-800 transition hover:-translate-y-0.5 hover:border-[#0C8FA3]/25 hover:bg-white hover:text-[#076D7E]"
-                >
-                  {service.label}
-                </Link>
-              ))}
-            </div>
-          </section>
+          </div>
         </div>
       </section>
 
-      <RegionalSeoMesh locationName="West Sussex" compact />
+      <section className="site-section py-8">
+        <div className="rounded-[36px] border border-white/60 bg-white/80 p-8 shadow-[0_25px_70px_rgba(15,23,42,0.08)] backdrop-blur-2xl sm:p-10">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#0C8FA3]">SERVICES</p>
+              <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">Choose the cleaning service you need</h2>
+            </div>
+            <Link href="/services" className="text-sm font-semibold text-[#0C8FA3] transition hover:text-slate-900">
+              Browse services →
+            </Link>
+          </div>
 
-      <AuthorityTrustPanel
-        title="A stronger local alternative to national cleaning directories"
-        intro="The West Sussex patch links county coverage, town pages, services, guides and cleaner profiles together so the site can build authority before expanding into East Sussex."
-      />
+          <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+            {[
+              { label: 'Regular cleaning', href: '/services/regular-cleaning' },
+              { label: 'Deep cleaning', href: '/services/deep-cleaning' },
+              { label: 'End of tenancy', href: '/services/end-of-tenancy-cleaning' },
+              { label: 'Oven cleaning', href: '/services/oven-cleaning' },
+              { label: 'Carpet cleaning', href: '/services/carpet-cleaning' },
+            ].map((service) => (
+              <Link
+                key={service.href}
+                href={service.href}
+                className="group rounded-[28px] border border-white/60 bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(240,249,255,0.72))] p-6 shadow-[0_18px_45px_rgba(15,23,42,0.06)] transition hover:-translate-y-1 hover:border-[#0C8FA3]/30"
+              >
+                <div className="flex min-h-[120px] flex-col justify-between">
+                  <span className="text-lg font-semibold tracking-tight text-slate-900">{service.label}</span>
+                  <span className="text-sm text-[#0C8FA3] transition group-hover:translate-x-1">→</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
 
       <section className="site-section py-8">
-        <div className="rounded-[32px] border border-white/70 bg-white/90 p-8 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div className="max-w-3xl">
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#0C8FA3]">Worthing flagship page</p>
-              <h2 className="mt-2 text-3xl font-bold text-slate-900">See the strongest local marketplace page in action</h2>
-              <p className="mt-4 text-slate-600">Worthing is being treated as the lead local page, with service links, live cleaner visibility, nearby area support, and a stronger route into bookable profiles.</p>
+        <div className="rounded-[36px] border border-white/10 bg-[linear-gradient(145deg,#07111f,#0f172a)] p-8 shadow-[0_35px_100px_rgba(2,8,23,0.4)] sm:p-10">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {[
+              'Verified cleaner profiles',
+              'Live availability',
+              'Transparent pricing',
+              'Built for UK households',
+            ].map((item) => (
+              <div key={item} className="rounded-[26px] border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
+                <div className="mb-5 h-10 w-10 rounded-full bg-teal-400/15 ring-1 ring-teal-300/20" />
+                <p className="text-base font-medium text-white">{item}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="site-section py-8">
+        <div className="overflow-hidden rounded-[36px] border border-white/10 bg-[linear-gradient(135deg,rgba(6,12,24,0.96),rgba(15,23,42,0.92))] shadow-[0_35px_100px_rgba(2,8,23,0.45)]">
+          <div className="relative p-8 sm:p-12">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(45,212,191,0.15),transparent_30%)]" />
+            <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+              <div className="max-w-2xl">
+                <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">Explore cleaners in Worthing</h2>
+                <p className="mt-4 text-slate-300">See local cleaner availability, pricing and trusted profiles.</p>
+              </div>
+              <Link href="/locations/worthing" className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur-xl transition hover:bg-white/16">
+                View Worthing cleaners →
+              </Link>
             </div>
-            <Link href="/locations/worthing" className="ftc-button-primary">View cleaners in Worthing</Link>
           </div>
         </div>
       </section>
