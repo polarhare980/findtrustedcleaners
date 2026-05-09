@@ -1,0 +1,11 @@
+:root { color-scheme: light; } .dark { color-scheme: dark; }
+body { background:#f6f7fb; color:#0f172a; } .dark body { background:#0b1220; color:#e5e7eb; }
+.bg-white { background-color:#ffffff !important; } .dark .bg-white { background-color:#111827 !important; }
+.bg-white\/70 { background-color:rgba(255,255,255,0.7) !important; } .dark .bg-white\/70 { background-color:rgba(17,24,39,0.7) !important; }
+.border { border-color:rgba(0,0,0,0.08) !important; } .dark .border { border-color:rgba(255,255,255,0.12) !important; }
+.text-slate-500 { color:#64748b !important; } .dark .text-slate-500 { color:#94a3b8 !important; }
+.text-slate-600 { color:#475569 !important; } .dark .text-slate-600 { color:#94a3b8 !important; }
+.text-slate-700 { color:#334155 !important; } .dark .text-slate-700 { color:#cbd5e1 !important; }
+.text-slate-900 { color:#0f172a !important; } .dark .text-slate-900 { color:#f8fafc !important; }
+.bg-slate-900 { color:#ffffff !important; } a.underline { text-underline-offset:2px; } a:hover { opacity:.9; }
+.rounded-2xl.bg-white, .rounded-2xl.bg-white\/70 { box-shadow:0 1px 4px rgba(0,0,0,0.06); } .dark .rounded-2xl.bg-white, .dark .rounded-2xl.bg-white\/70 { box-shadow:0 1px 4px rgba(0,0,0,0.3); }
