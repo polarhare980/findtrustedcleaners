@@ -66,10 +66,12 @@ export default function CleanerCard({ cleaner, isFavourite = false, onToggleFavo
     setLiked(Boolean(isFavourite))
   }, [isFavourite])
 
-  const reviewSummary = useMemo(() => getReviewSummary(cleaner), [cleaner])
   const services = useMemo(() => getVisibleServices(cleaner), [cleaner])
   const isPremium = Boolean(forcedPremium || cleaner?.isPremium)
-  const hourlyRate = Number(cleaner?.rates || cleaner?.hourlyRate || 0)
+  const primaryService = services?.[0] || 'Cleaning'
+  const specialistLine = primaryService.toLowerCase().includes('clean')
+    ? primaryService
+    : `${primaryService} specialist`
   const availabilityHint = useMemo(() => getAvailabilityHint(cleaner), [cleaner])
 
   const handleFavourite = (e) => {
@@ -82,106 +84,82 @@ export default function CleanerCard({ cleaner, isFavourite = false, onToggleFavo
   return (
     <Link href={`/cleaners/${cleaner._id}`} aria-label={cleaner.companyName || 'View cleaner profile'}>
       <article
-        className={`group relative block overflow-hidden rounded-[30px] border text-card-foreground transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-lg ${
+        className={`group relative overflow-hidden rounded-[22px] border transition-all duration-300 hover:-translate-y-0.5 ${
           isPremium
-            ? 'border-amber-200/80 bg-[linear-gradient(180deg,rgba(255,251,235,0.98)_0%,rgba(255,255,255,0.98)_55%,rgba(248,250,252,0.98)_100%)] shadow-[0_18px_60px_rgba(217,119,6,0.14)] hover:shadow-[0_30px_90px_rgba(217,119,6,0.20)]'
-            : 'border-slate-200 bg-white/75 backdrop-blur-md/95 shadow-sm hover:border-[#0C8FA3]/25 hover:shadow-[0_22px_60px_rgba(15,23,42,0.10)]'
+            ? 'border-amber-200/80 bg-white shadow-[0_16px_45px_rgba(217,119,6,0.13)] hover:shadow-[0_24px_70px_rgba(217,119,6,0.18)]'
+            : 'border-slate-200 bg-white shadow-[0_14px_40px_rgba(15,23,42,0.08)] hover:border-[#0C8FA3]/25 hover:shadow-[0_22px_60px_rgba(15,23,42,0.11)]'
         }`}
       >
         {isPremium ? (
-          <>
-            <div className="absolute inset-x-0 top-0 z-10 h-1.5 bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500" />
-            <div className="pointer-events-none absolute -right-16 -top-16 h-36 w-36 rounded-full bg-amber-300/20 blur-3xl" />
-          </>
+          <div className="absolute inset-x-0 top-0 z-20 h-1.5 bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500" />
         ) : null}
 
-        <div className="relative p-4">
-          <div className="h-[210px] w-full overflow-hidden rounded-t-2xl rounded-[24px] bg-slate-100">
-            <img
-              src={(typeof cleaner.image === 'string' && cleaner.image.trim()) ? cleaner.image : FALLBACK_IMAGE}
-              alt={cleaner.companyName || 'Cleaner profile'}
-              className="h-full w-full object-cover transition-transform duration-300 ease-in-out group-hover:scale-105"
-              onError={(e) => {
-                e.currentTarget.onerror = null
-                e.currentTarget.src = FALLBACK_IMAGE
-              }}
-            />
-          </div>
+        <div className="relative h-[235px] overflow-hidden bg-slate-100 sm:h-[250px]">
+          <img
+            src={(typeof cleaner.image === 'string' && cleaner.image.trim()) ? cleaner.image : FALLBACK_IMAGE}
+            alt={cleaner.companyName || 'Cleaner profile'}
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            onError={(e) => {
+              e.currentTarget.onerror = null
+              e.currentTarget.src = FALLBACK_IMAGE
+            }}
+          />
 
-          <div className={`absolute inset-x-4 bottom-4 h-28 rounded-b-[24px] ${isPremium ? 'bg-gradient-to-t from-slate-950/60 via-slate-950/10 to-transparent' : 'bg-gradient-to-t from-slate-950/35 via-transparent to-transparent'}`} />
+          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-slate-950/70 via-slate-950/20 to-transparent" />
+
+          {isPremium ? (
+            <span className="absolute left-4 top-4 rounded-full border border-amber-100/80 bg-[linear-gradient(135deg,#f5d76e,#e0b84f)] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-[#3b2d00] shadow-[0_2px_14px_rgba(224,184,79,0.35)]">
+              Premium
+            </span>
+          ) : null}
 
           <Button
             variant="secondary"
             size="icon"
-            className="absolute right-7 top-7 h-9 w-9 rounded-full border border-white/60 bg-white/90 text-slate-700 shadow-sm backdrop-blur-sm transition-all duration-300 hover:bg-white hover:text-red-500 sm:opacity-0 sm:group-hover:opacity-100"
+            className={`absolute right-4 top-4 h-9 w-9 rounded-full border border-white/50 shadow-sm backdrop-blur-md transition-all duration-200 hover:scale-105 hover:bg-white ${
+              liked ? 'bg-[#0C8FA3] text-white hover:text-white' : 'bg-white/78 text-slate-700'
+            }`}
             onClick={handleFavourite}
             aria-label={liked ? 'Remove from favourites' : 'Add to favourites'}
           >
-            <Heart size={16} className={liked ? 'fill-red-500 text-red-500' : ''} />
+            <Heart size={16} className={liked ? 'fill-current' : ''} />
           </Button>
 
-          {isPremium ? (
-            <div className="absolute left-7 top-7">
-              <span className="rounded-full border border-amber-200/80 bg-[linear-gradient(135deg,#f5d76e,#e0b84f)] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-[#3b2d00] shadow-[0_2px_14px_rgba(224,184,79,0.35)]">
-                Premium
-              </span>
-            </div>
-          ) : null}
-
-          <div className="absolute bottom-7 right-7 rounded-full border border-white/40 bg-white/92 px-3 py-1.5 text-xs font-semibold text-slate-800 shadow-sm backdrop-blur-sm">
+          <span className={`absolute bottom-4 left-4 rounded-full border px-3 py-1.5 text-[11px] font-bold shadow-sm backdrop-blur-md ${
+            availabilityHint.toLowerCase().includes('unavailable') || availabilityHint.toLowerCase().includes('view')
+              ? 'border-white/40 bg-white/82 text-slate-700'
+              : 'border-emerald-100/80 bg-emerald-50/92 text-emerald-800'
+          }`}>
             {availabilityHint}
-          </div>
-
-          {isPremium && reviewSummary ? (
-            <div className="absolute bottom-7 left-7 rounded-2xl border border-white/30 bg-white/92 px-4 py-3 shadow-lg backdrop-blur-sm">
-              <div className="flex items-end gap-2">
-                <span className="text-2xl font-black tracking-tight text-slate-900">{reviewSummary.value.toFixed(1)}</span>
-                <span className="pb-1 text-sm font-semibold text-amber-600">★</span>
-              </div>
-              <div className="mt-0.5 text-[11px] font-medium text-slate-600">{reviewSummary.count} review{reviewSummary.count === 1 ? '' : 's'}</div>
-            </div>
-          ) : null}
+          </span>
         </div>
 
-        <div className="p-4 pt-1">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <h3 className={`truncate font-bold leading-tight text-slate-900 ${isPremium ? 'text-xl' : 'text-lg'}`}>
-                {cleaner.companyName}
-              </h3>
-              {hourlyRate > 0 ? (
-                <p className="mt-1 text-sm font-medium text-slate-500">From £{hourlyRate}/hr</p>
-              ) : null}
-            </div>
+        <div className="space-y-3 p-4">
+          <div>
+            <h3 className="truncate text-lg font-bold leading-tight text-slate-950">
+              {cleaner.companyName}
+            </h3>
+            <p className="mt-1 truncate text-sm font-medium text-slate-500">
+              {specialistLine}
+            </p>
           </div>
 
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2">
             {cleaner?.businessInsurance ? (
-              <span className={`rounded-full border px-3 py-1 text-[11px] font-semibold ${isPremium ? 'border-[#0C8FA3]/25 bg-[#EAFBFB] text-[#076D7E]' : 'border-[#0C8FA3]/15 bg-[#EAFBFB]/80 text-[#0C8FA3]'}`}>
+              <span className="rounded-full border border-[#0C8FA3]/15 bg-[#EAFBFB]/90 px-3 py-1 text-[11px] font-semibold text-[#076D7E]">
                 Insured
               </span>
             ) : null}
             {cleaner?.dbsChecked ? (
-              <span className={`rounded-full border px-3 py-1 text-[11px] font-semibold ${isPremium ? 'border-blue-200 bg-blue-50 text-blue-800' : 'border-blue-100 bg-blue-50/80 text-blue-700'}`}>
+              <span className="rounded-full border border-blue-100 bg-blue-50/90 px-3 py-1 text-[11px] font-semibold text-blue-700">
                 DBS Checked
               </span>
             ) : null}
-          </div>
-
-          <div className={`mt-3 rounded-2xl border px-4 py-3 ${isPremium ? 'border-amber-100 bg-white/80' : 'border-slate-200 bg-slate-50/90'}`}>
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              {reviewSummary ? <RatingStars value={reviewSummary.value} count={reviewSummary.count} size={isPremium ? 17 : 15} /> : <span className="text-sm font-medium text-slate-500"></span>}
-              <span className="text-xs font-semibold text-[#0C8FA3]">View profile</span>
-            </div>
-          </div>
-
-          {services.length ? (
-            <p className="mt-3 text-sm leading-6 text-slate-600 line-clamp-2">{services.slice(0, 3).join(', ')}{services.length > 3 ? '…' : ''}</p>
-          ) : null}
-
-          <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">
-            <span className="text-sm font-semibold text-slate-700">See services & availability</span>
-            <span className="text-sm font-bold text-[#0C8FA3] transition group-hover:translate-x-1">View →</span>
+            {cleaner?.verified ? (
+              <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-semibold text-slate-700">
+                Verified
+              </span>
+            ) : null}
           </div>
         </div>
       </article>

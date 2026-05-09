@@ -210,8 +210,8 @@ export default function HomeClient() {
         onSearchClick={() => router.push('/cleaners')}
       />
       <CleanerSection
-        eyebrow="Local cleaners near you"
-        title="Find your cleaner"
+        eyebrow=""
+        title="Available cleaners today"
         subtitle=""
         isLoading={isLoading}
         cleaners={premiumCleaners}
@@ -444,11 +444,11 @@ function CleanerSection({ eyebrow, title, subtitle, cleaners, isLoading, favouri
 
   return (
     <section className={premium ? "site-section py-8" : "site-section py-8"}>
-      <div className={premium ? "overflow-hidden rounded-[34px] border border-white/70 bg-[radial-gradient(circle_at_top_left,rgba(12,143,163,0.13),transparent_38%),linear-gradient(180deg,#f4fbfb_0%,#e9f7f7_100%)] p-5 shadow-[0_22px_70px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-7" : ""}>
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div className={premium ? "overflow-hidden rounded-[30px] border border-white/70 bg-[radial-gradient(circle_at_top_left,rgba(12,143,163,0.10),transparent_34%),linear-gradient(180deg,#f7ffff_0%,#ffffff_100%)] p-4 shadow-[0_18px_55px_rgba(15,23,42,0.07)] backdrop-blur-xl sm:p-5" : ""}>
+      <div className="mb-4 flex items-center justify-between gap-3">
         <div>
           {eyebrow ? <p className="text-xs font-black uppercase tracking-[0.22em] text-[#0C8FA3]">{eyebrow}</p> : null}
-          <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-900 sm:text-[2.15rem]">{title}</h2>
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">{title}</h2>
           {subtitle ? <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600/85 sm:text-base">{subtitle}</p> : null}
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -472,7 +472,7 @@ function CleanerSection({ eyebrow, title, subtitle, cleaners, isLoading, favouri
               </button>
             </div>
           ) : null}
-          <Link href="/cleaners" className="text-sm font-medium text-slate-600 transition hover:text-[#0C8FA3]">Browse all →</Link>
+          <Link href="/cleaners" className="whitespace-nowrap text-sm font-semibold text-slate-500 transition hover:text-[#0C8FA3]">Browse all →</Link>
         </div>
       </div>
 
@@ -483,7 +483,7 @@ function CleanerSection({ eyebrow, title, subtitle, cleaners, isLoading, favouri
       ) : (
         <div ref={railRef} className="flex snap-x snap-mandatory gap-5 overflow-x-auto px-1 pb-2 hide-scrollbar-mobile scroll-smooth">
           {cleaners.map((cleaner) => (
-            <div key={cleaner._id} className="min-w-[250px] max-w-[250px] shrink-0 snap-start sm:min-w-[270px] sm:max-w-[270px]">
+            <div key={cleaner._id} className="min-w-[260px] max-w-[260px] shrink-0 snap-start sm:min-w-[285px] sm:max-w-[285px]">
               <CleanerCard
                 cleaner={cleaner}
                 handleBookingRequest={onBookingRequest}
