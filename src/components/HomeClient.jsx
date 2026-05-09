@@ -434,11 +434,13 @@ function CleanerSection({ title, subtitle, cleaners, isLoading, favouriteIds, on
   };
 
   return (
-    <section className="site-section py-8">
+    <section className={premium ? "site-section py-8" : "site-section py-8"}>
+      <div className={premium ? "overflow-hidden rounded-[34px] border border-white/70 bg-[radial-gradient(circle_at_top_left,rgba(12,143,163,0.13),transparent_38%),linear-gradient(180deg,#f4fbfb_0%,#e9f7f7_100%)] p-5 shadow-[0_22px_70px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-7" : ""}>
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-slate-900">{title}</h2>
-          <p className="mt-2 text-slate-600">{subtitle}</p>
+          {premium ? <p className="text-xs font-black uppercase tracking-[0.2em] text-[#0C8FA3]">Featured cleaners</p> : null}
+          <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">{title}</h2>
+          <p className="mt-2 max-w-3xl text-slate-600">{subtitle}</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           {premium ? (
@@ -470,9 +472,9 @@ function CleanerSection({ title, subtitle, cleaners, isLoading, favouriteIds, on
       ) : !cleaners?.length ? (
         <div className="surface-card p-8 text-slate-600">No cleaners are available here yet.</div>
       ) : (
-        <div ref={railRef} className="flex gap-5 overflow-x-auto pb-2 hide-scrollbar-mobile scroll-smooth">
+        <div ref={railRef} className="flex snap-x snap-mandatory gap-5 overflow-x-auto px-1 pb-2 hide-scrollbar-mobile scroll-smooth">
           {cleaners.map((cleaner) => (
-            <div key={cleaner._id} className="min-w-[280px] shrink-0 sm:min-w-[320px]">
+            <div key={cleaner._id} className="min-w-[280px] shrink-0 snap-start sm:min-w-[320px]">
               <CleanerCard
                 cleaner={cleaner}
                 handleBookingRequest={onBookingRequest}
@@ -484,6 +486,7 @@ function CleanerSection({ title, subtitle, cleaners, isLoading, favouriteIds, on
           ))}
         </div>
       )}
+      </div>
     </section>
   );
 }

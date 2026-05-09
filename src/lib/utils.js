@@ -1,3 +1,7 @@
+export function cn(...inputs) {
+  return inputs.filter(Boolean).join(' ');
+}
+
 // Safe: no regex .match() calls; never throws on undefined
 export function getCleanerId(cleaner, fallback) {
   const candidate =
