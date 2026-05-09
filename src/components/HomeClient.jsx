@@ -277,46 +277,32 @@ export default function HomeClient() {
       />
 
       <section className="site-section pb-8">
-        <div className="overflow-hidden rounded-[34px] border border-white/70 bg-white/90 shadow-[0_22px_70px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-          <div className="border-b border-[#0C8FA3]/15 bg-[radial-gradient(circle_at_top_left,_rgba(12,143,163,0.18),_transparent_34%),linear-gradient(135deg,#f7fbfa_0%,#eafbfb_48%,#ffffff_100%)] p-6 sm:p-7">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-              <div className="max-w-3xl">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-full bg-[#0C8FA3] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-white">Local price snapshots</span>
-                  <span className="rounded-full border border-[#0C8FA3]/25 bg-white/80 px-3 py-1 text-xs font-semibold text-[#076D7E]">
-                    {postcode
-                      ? `Showing ${postcode.toUpperCase()}`
-                      : serviceScope === 'local'
-                        ? `Near ${serviceArea?.outward || serviceArea?.label || 'you'}`
-                        : 'Wider market view'}
-                  </span>
-                </div>
-                <h2 className="mt-4 text-3xl font-bold tracking-tight text-slate-900 sm:text-[2.15rem]">Popular cleaning services in your area</h2>
-                <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600/85 sm:text-base">
-                  Compare trusted local cleaners by service, pricing and availability across your area.
-                </p>
-              </div>
-
-              <div className="flex flex-wrap gap-3">
-                <Link href="/cleaners" className="ftc-button-primary">Browse all services</Link>
-                <p className="inline-flex items-center rounded-full border border-slate-200 bg-white/85 px-4 py-3 text-sm text-slate-600">
-                  {postcode
-                    ? 'Showing prices for your searched area.'
-                    : serviceArea?.outward
-                      ? `Using nearby pricing around ${serviceArea.outward}.`
-                      : 'Add a postcode above to tighten local pricing.'}
-                </p>
-              </div>
+        <div
+          className="relative overflow-hidden rounded-[34px] border border-white/20 bg-slate-950 shadow-[0_26px_90px_rgba(15,23,42,0.22)]"
+          style={{
+            backgroundImage:
+              "linear-gradient(115deg, rgba(15,23,42,0.76) 0%, rgba(15,23,42,0.58) 48%, rgba(12,143,163,0.34) 100%), url('/images/service-cards-kitchen-bg.png')",
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        >
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.22),transparent_28rem),radial-gradient(circle_at_80%_10%,rgba(33,182,199,0.24),transparent_22rem)]" />
+          <div className="relative p-6 sm:p-7">
+            <div className="mb-5 flex items-center justify-between gap-3">
+              <span className="rounded-full border border-white/20 bg-white/15 px-3 py-1 text-xs font-bold uppercase tracking-[0.22em] text-white shadow-sm backdrop-blur-md">
+                Local price snapshots
+              </span>
+              <Link href="/services" className="hidden text-sm font-bold text-white/80 transition hover:text-white sm:inline-flex">
+                View services →
+              </Link>
             </div>
-          </div>
 
-          <div className="p-6 sm:p-7">
             {isLoadingServiceMarket ? (
-              <div className="rounded-[28px] border border-dashed border-slate-200 bg-slate-50 px-5 py-10 text-center text-sm text-slate-600">
+              <div className="rounded-[28px] border border-white/20 bg-white/14 px-5 py-10 text-center text-sm text-white/80 shadow-sm backdrop-blur-xl">
                 Loading local service pricing…
               </div>
             ) : !serviceMarket.length ? (
-              <div className="rounded-[28px] border border-dashed border-slate-200 bg-slate-50 px-5 py-10 text-center text-sm text-slate-600">
+              <div className="rounded-[28px] border border-white/20 bg-white/14 px-5 py-10 text-center text-sm text-white/80 shadow-sm backdrop-blur-xl">
                 Service pricing cards will appear here automatically as cleaners add priced services to their profile.
               </div>
             ) : (
@@ -325,50 +311,42 @@ export default function HomeClient() {
                   const appliedPostcode = postcode || serviceArea?.outward || '';
                   const href = `/cleaners?service=${encodeURIComponent(service.label)}${appliedPostcode ? `&postcode=${encodeURIComponent(appliedPostcode)}` : ''}`;
 
-  return (
+                  return (
                     <Link
                       key={service.key}
                       href={href}
-                      className="group relative min-w-[280px] max-w-[280px] snap-start overflow-hidden rounded-[30px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f7fbfa_100%)] p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-[#0C8FA3]/25 hover:shadow-[0_22px_60px_rgba(15,23,42,0.10)] sm:min-w-[320px] sm:max-w-[320px]"
+                      className="group relative min-w-[245px] max-w-[245px] snap-start overflow-hidden rounded-[30px] border border-white/25 bg-white/18 p-5 text-white shadow-[0_18px_55px_rgba(0,0,0,0.18)] backdrop-blur-2xl transition duration-300 hover:-translate-y-1 hover:bg-white/24 hover:shadow-[0_24px_70px_rgba(0,0,0,0.26)] sm:min-w-[285px] sm:max-w-[285px]"
                     >
-                      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#0C8FA3] via-[#21B6C7] to-[#076D7E]" />
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#0C8FA3]">Service</p>
-                          <h3 className="mt-3 text-2xl font-bold leading-tight text-slate-900">{service.label}</h3>
+                      <div className="absolute inset-x-5 top-0 h-1 rounded-full bg-gradient-to-r from-[#6EE7F2] via-white/80 to-[#0C8FA3]" />
+
+                      <div className="relative flex min-h-[178px] flex-col justify-between">
+                        <div>
+                          <h3 className="max-w-[12rem] text-2xl font-black leading-tight tracking-tight text-white drop-shadow-sm">
+                            {service.label}
+                          </h3>
+                          <p className="mt-2 text-sm font-semibold text-white/70">
+                            {service.cleanerCount} cleaner{service.cleanerCount === 1 ? '' : 's'} nearby
+                          </p>
                         </div>
-                        <span className="shrink-0 rounded-full bg-[#EAFBFB] px-3 py-2 text-center text-xs font-semibold text-[#064C59] shadow-sm">
-                          {service.cleanerCount} cleaner{service.cleanerCount === 1 ? '' : 's'}
-                        </span>
-                      </div>
 
-                      <div className="mt-5 rounded-[24px] border border-[#0C8FA3]/15 bg-[#EAFBFB]/70 p-4">
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">From price</p>
-                        <div className="mt-2 flex items-end gap-2">
-                          <span className="text-4xl font-black tracking-tight text-slate-900">
-                            {service.minPrice != null ? `£${service.minPrice}` : 'Quote'}
-                          </span>
-                          <span className="pb-1 text-sm font-medium text-slate-500">
-                            {service.minPrice != null ? 'on profile' : 'on request'}
-                          </span>
+                        <div>
+                          <div className="rounded-[24px] border border-white/22 bg-white/16 p-4 shadow-inner backdrop-blur-xl">
+                            <p className="text-[0.66rem] font-bold uppercase tracking-[0.18em] text-white/62">From</p>
+                            <div className="mt-1 flex items-end gap-2">
+                              <span className="text-4xl font-black tracking-tight text-white">
+                                {service.minPrice != null ? `£${service.minPrice}` : 'Quote'}
+                              </span>
+                              <span className="pb-1 text-sm font-semibold text-white/65">
+                                {service.minPrice != null ? 'per clean' : 'on request'}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="mt-4 inline-flex items-center gap-2 text-sm font-black text-white">
+                            View cleaners
+                            <span aria-hidden="true" className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+                          </div>
                         </div>
-                      </div>
-
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700">
-                          {serviceScope === 'local' ? `Local${serviceArea?.outward ? ` · ${serviceArea.outward}` : ''}` : 'Marketplace'}
-                        </span>
-                        {service.avgDurationMins ? (
-                          <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700">{service.avgDurationMins} mins avg</span>
-                        ) : null}
-                        <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700">
-                          {service.pricedCount || 0} priced
-                        </span>
-                      </div>
-
-                      <div className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[#0C8FA3]">
-                        View matching cleaners
-                        <span aria-hidden="true" className="transition-transform duration-300 group-hover:translate-x-1">→</span>
                       </div>
                     </Link>
                   );
