@@ -358,17 +358,39 @@ export default function HomeClient() {
       </section>
 
       <section className="site-section py-8">
-        <div className="surface-muted p-8">
-          <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#0C8FA3]">Why choose us</p>
-              <h2 className="mt-2 text-3xl font-bold text-slate-900">A simpler way to book cleaning services</h2>
-              <p className="mt-4 text-slate-600">Large marketplaces can rely on brand recognition and hard sell tactics. We focus on clarity instead: free browsing for clients, free basic listings for cleaners, and an optional premium upgrade for businesses that want stronger visibility.</p>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {['Free to browse for clients', 'Free basic listing for cleaners', 'Premium upgrade is optional', 'Built for UK households and local businesses'].map((item) => (
-                <div key={item} className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700">{item}</div>
-              ))}
+        <div className="relative overflow-hidden rounded-[34px] bg-slate-950 shadow-[0_28px_80px_rgba(15,23,42,0.22)]">
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: "url('/images/why-choose-cleaners-bg.png')" }}
+          />
+          <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-r from-slate-950/92 via-slate-950/68 to-slate-950/24" />
+          <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-slate-950/88 to-transparent" />
+
+          <div className="relative min-h-[480px] px-7 py-12 sm:px-10 lg:flex lg:min-h-[540px] lg:items-center lg:px-14">
+            <div className="max-w-xl">
+              <p className="text-xs font-black uppercase tracking-[0.28em] text-[#30D5C8]">Trusted local cleaners</p>
+              <h2 className="mt-5 text-4xl font-black leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-6xl">
+                Booking a cleaner should feel simple.
+              </h2>
+              <p className="mt-5 max-w-lg text-base font-medium leading-7 text-white/78 sm:text-lg">
+                Browse local cleaners with live availability, clear profiles and trusted reviews.
+              </p>
+
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <Link
+                  href="/cleaners"
+                  className="inline-flex min-h-[54px] items-center justify-center rounded-2xl bg-gradient-to-r from-[#0C8FA3] to-[#12C8BA] px-7 text-base font-black text-white shadow-[0_16px_36px_rgba(12,143,163,0.32)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_44px_rgba(12,143,163,0.42)]"
+                >
+                  Find cleaners
+                </Link>
+                <Link
+                  href="/how-it-works"
+                  className="inline-flex min-h-[54px] items-center justify-center rounded-2xl border border-white/42 bg-white/8 px-7 text-base font-black text-white backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-white/14"
+                >
+                  How it works
+                </Link>
+              </div>
             </div>
           </div>
         </div>
