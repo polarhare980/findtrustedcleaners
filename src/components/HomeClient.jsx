@@ -415,50 +415,6 @@ export default function HomeClient() {
         </section>
 
         <section className="relative z-10 -mt-px py-0">
-          <div className="relative mx-auto max-w-7xl overflow-hidden rounded-none bg-slate-950 shadow-none sm:rounded-[44px] sm:shadow-[0_30px_90px_rgba(15,23,42,0.20)]">
-            <div
-              aria-hidden="true"
-              className="absolute inset-0 bg-cover bg-center"
-              style={{ backgroundImage: "url('/images/cleaner-arriving-luxury-home.jpg')" }}
-            />
-            <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/60 to-slate-950/20" />
-            <div aria-hidden="true" className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-white/6 to-transparent" />
-            <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-slate-950/88 to-transparent" />
-
-            <div className="relative min-h-[480px] px-7 py-12 sm:px-10 lg:flex lg:min-h-[540px] lg:items-center lg:px-14">
-              <div className="max-w-xl">
-                <p className="text-xs font-black uppercase tracking-[0.34em] text-[#30D5C8]">For cleaners</p>
-                <h2 className="mt-5 text-4xl font-black leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-6xl">
-                  Grow your local cleaning business
-                </h2>
-                <div aria-hidden="true" className="mt-7 h-0.5 w-24 rounded-full bg-[#30D5C8]" />
-                <p className="mt-7 max-w-md text-xl font-medium leading-9 text-white/72 sm:text-2xl sm:leading-10">
-                  Get discovered by local households with live availability and premium profiles.
-                </p>
-
-                <div className="mt-9 flex flex-col items-start gap-6">
-                  <Link
-                    href="/register/cleaners"
-                    className="inline-flex min-h-[64px] items-center justify-center rounded-[1.7rem] bg-gradient-to-r from-[#0C8FA3] to-[#12C8BA] px-8 text-lg font-black text-white shadow-[0_18px_42px_rgba(12,143,163,0.36)] transition hover:-translate-y-0.5 hover:shadow-[0_22px_50px_rgba(12,143,163,0.46)]"
-                  >
-                    Create cleaner profile <span className="ml-3 text-2xl leading-none" aria-hidden="true">→</span>
-                  </Link>
-                  <Link
-                    href="/about"
-                    className="group inline-flex items-center gap-3 text-base font-black text-white/82 transition hover:text-white"
-                  >
-                    <span className="border-b border-[#30D5C8]/70 pb-2">Learn more</span>
-                    <span className="text-[#30D5C8] transition group-hover:translate-x-1" aria-hidden="true">→</span>
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <div aria-hidden="true" className="relative z-20 h-3 bg-white sm:h-4" />
-
-        <section className="relative z-10 -mt-px py-0">
           <div
             className="relative mx-auto max-w-7xl overflow-hidden rounded-none bg-slate-950 shadow-none sm:rounded-[44px] sm:shadow-[0_28px_85px_rgba(15,23,42,0.18)]"
             style={{
@@ -544,18 +500,44 @@ export default function HomeClient() {
           </div>
         </section>
 
-        <section className="relative z-10 -mt-px pb-14 sm:pb-18">
-          <div className="mx-auto max-w-7xl bg-gradient-to-b from-[#e8f4f7] to-white/75 p-8 text-center shadow-none backdrop-blur-xl sm:rounded-t-[44px] sm:p-10">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#0C8FA3]">For cleaners</p>
-            <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-900 sm:text-5xl">Grow your local cleaning business</h2>
-            <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-slate-600">Get discovered by local households with live availability and premium profiles.</p>
-            <div className="mt-8 flex flex-wrap justify-center gap-4">
-              <Link href="/register/cleaners" className="inline-flex items-center justify-center rounded-full bg-[#11B5C9] px-7 py-4 text-base font-semibold text-white shadow-[0_10px_40px_rgba(17,181,201,0.28)] transition hover:scale-[1.02] hover:bg-[#0ea5b7]">
-                Create cleaner profile <span className="ml-3">→</span>
-              </Link>
-              <Link href="/about" className="inline-flex items-center text-base font-medium text-slate-700 transition hover:text-slate-950">
-                Learn more <span className="ml-2">→</span>
-              </Link>
+        <section className="relative z-10 -mt-px py-0">
+          <div className="relative mx-auto max-w-7xl overflow-hidden rounded-none bg-slate-950 shadow-none sm:rounded-[44px] sm:shadow-[0_30px_90px_rgba(15,23,42,0.20)]">
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 bg-cover bg-center"
+              style={{ backgroundImage: "url('/images/cleaner-arriving-luxury-home.jpg')" }}
+            />
+            <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/60 to-slate-950/20" />
+            <div aria-hidden="true" className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-white/6 to-transparent" />
+            <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-slate-950/88 to-transparent" />
+
+            <div className="relative min-h-[480px] px-7 py-12 sm:px-10 lg:flex lg:min-h-[540px] lg:items-center lg:px-14">
+              <div className="max-w-xl">
+                <p className="text-xs font-black uppercase tracking-[0.34em] text-[#30D5C8]">For cleaners</p>
+                <h2 className="mt-5 text-4xl font-black leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-6xl">
+                  Grow your local cleaning business
+                </h2>
+                <div aria-hidden="true" className="mt-7 h-0.5 w-24 rounded-full bg-[#30D5C8]" />
+                <p className="mt-7 max-w-md text-xl font-medium leading-9 text-white/72 sm:text-2xl sm:leading-10">
+                  Get discovered by local households with live availability and premium profiles.
+                </p>
+
+                <div className="mt-9 flex flex-col items-start gap-6">
+                  <Link
+                    href="/register/cleaners"
+                    className="inline-flex min-h-[64px] items-center justify-center rounded-[1.7rem] bg-gradient-to-r from-[#0C8FA3] to-[#12C8BA] px-8 text-lg font-black text-white shadow-[0_18px_42px_rgba(12,143,163,0.36)] transition hover:-translate-y-0.5 hover:shadow-[0_22px_50px_rgba(12,143,163,0.46)]"
+                  >
+                    Create cleaner profile <span className="ml-3 text-2xl leading-none" aria-hidden="true">→</span>
+                  </Link>
+                  <Link
+                    href="/about"
+                    className="group inline-flex items-center gap-3 text-base font-black text-white/82 transition hover:text-white"
+                  >
+                    <span className="border-b border-[#30D5C8]/70 pb-2">Learn more</span>
+                    <span className="text-[#30D5C8] transition group-hover:translate-x-1" aria-hidden="true">→</span>
+                  </Link>
+                </div>
+              </div>
             </div>
           </div>
         </section>
