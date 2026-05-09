@@ -258,9 +258,10 @@ export default function HomeClient() {
         cleanerCount={cleanerCount}
         onSearchClick={() => router.push('/cleaners')}
       />
-      <div className="relative overflow-hidden pb-14 sm:pb-18">
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_8%,rgba(12,143,163,0.16),transparent_28rem),radial-gradient(circle_at_82%_34%,rgba(18,200,186,0.12),transparent_26rem),linear-gradient(180deg,rgba(255,255,255,0)_0%,rgba(255,255,255,0.44)_28%,rgba(226,241,246,0.42)_64%,rgba(15,23,42,0.08)_100%)]" />
-        <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-white/0 via-white/45 to-transparent" />
+      <div className="relative isolate overflow-hidden pb-0">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_4%,rgba(12,143,163,0.18),transparent_30rem),radial-gradient(circle_at_86%_26%,rgba(18,200,186,0.14),transparent_28rem),linear-gradient(180deg,rgba(255,255,255,0)_0%,rgba(238,249,251,0.78)_15%,rgba(226,241,246,0.86)_32%,rgba(218,235,242,0.82)_48%,rgba(15,23,42,0.92)_72%,rgba(15,23,42,0.98)_100%)]" />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-white/0 via-white/42 to-transparent" />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-[34rem] h-72 bg-gradient-to-b from-transparent via-[#e9f5f8]/80 to-transparent" />
 
         <CleanerSection
           eyebrow=""
@@ -280,9 +281,9 @@ export default function HomeClient() {
           premium
         />
 
-        <section className="site-section relative -mt-3 pb-8 sm:-mt-5 sm:pb-10">
+        <section className="relative z-10 -mt-4 py-0 sm:-mt-7">
           <div
-            className="relative overflow-hidden rounded-[36px] border border-white/15 bg-slate-950 shadow-[0_28px_95px_rgba(15,23,42,0.18)]"
+            className="relative mx-auto max-w-7xl overflow-hidden rounded-none border-0 bg-slate-950 shadow-none sm:rounded-[44px] sm:shadow-[0_34px_110px_rgba(15,23,42,0.18)]"
             style={{
               backgroundImage:
                 "linear-gradient(115deg, rgba(15,23,42,0.62) 0%, rgba(15,23,42,0.42) 46%, rgba(12,143,163,0.24) 100%), url('/images/service-cards-kitchen-bg.png')",
@@ -360,8 +361,8 @@ export default function HomeClient() {
           </div>
         </section>
 
-        <section className="site-section relative -mt-1 py-8 sm:py-10">
-          <div className="relative overflow-hidden rounded-[40px] bg-slate-950 shadow-[0_30px_90px_rgba(15,23,42,0.20)]">
+        <section className="relative z-10 -mt-px py-0">
+          <div className="relative mx-auto max-w-7xl overflow-hidden rounded-none bg-slate-950 shadow-none sm:rounded-[44px] sm:shadow-[0_30px_90px_rgba(15,23,42,0.20)]">
             <div
               aria-hidden="true"
               className="absolute inset-0 bg-cover bg-center"
@@ -400,9 +401,9 @@ export default function HomeClient() {
           </div>
         </section>
 
-        <section className="site-section relative py-8 sm:py-10">
+        <section className="relative z-10 -mt-px py-0">
           <div
-            className="relative overflow-hidden rounded-[40px] bg-slate-950 shadow-[0_28px_85px_rgba(15,23,42,0.18)]"
+            className="relative mx-auto max-w-7xl overflow-hidden rounded-none bg-slate-950 shadow-none sm:rounded-[44px] sm:shadow-[0_28px_85px_rgba(15,23,42,0.18)]"
             style={{
               backgroundImage:
                 "linear-gradient(120deg, rgba(15,23,42,0.88), rgba(15,23,42,0.56), rgba(12,143,163,0.22)), url('/images/homepage-hero.jpg')",
@@ -430,12 +431,12 @@ export default function HomeClient() {
           </div>
         </section>
 
-        <section className="site-section relative py-8 sm:py-10">
-          <div className="grid gap-5 lg:grid-cols-[0.72fr_1.28fr] lg:items-center">
+        <section className="relative z-10 -mt-px py-0">
+          <div className="mx-auto grid max-w-7xl gap-5 bg-gradient-to-b from-slate-950 via-slate-900 to-[#e8f4f7] px-5 py-14 sm:px-8 sm:py-18 lg:grid-cols-[0.72fr_1.28fr] lg:items-center lg:rounded-[44px] lg:px-10">
             <div className="px-1 sm:px-3">
-              <p className="text-xs font-black uppercase tracking-[0.28em] text-[#0C8FA3]">Services</p>
-              <h2 className="mt-4 text-4xl font-black tracking-tight text-slate-950 sm:text-5xl">Choose the cleaning service you need</h2>
-              <Link href="/services" className="mt-7 inline-flex min-h-[52px] items-center justify-center rounded-2xl bg-slate-950 px-6 text-sm font-black text-white shadow-[0_18px_44px_rgba(15,23,42,0.18)] transition hover:-translate-y-0.5 hover:bg-[#0C8FA3]">
+              <p className="text-xs font-black uppercase tracking-[0.28em] text-[#30D5C8]">Services</p>
+              <h2 className="mt-4 text-4xl font-black tracking-tight text-white sm:text-5xl">Choose the cleaning service you need</h2>
+              <Link href="/services" className="mt-7 inline-flex min-h-[52px] items-center justify-center rounded-2xl bg-white px-6 text-sm font-black text-slate-950 shadow-[0_18px_44px_rgba(0,0,0,0.22)] transition hover:-translate-y-0.5 hover:bg-[#EAFBFB]">
                 Browse services →
               </Link>
             </div>
@@ -444,7 +445,7 @@ export default function HomeClient() {
                 <Link
                   key={service.href}
                   href={service.href}
-                  className="group flex min-h-[112px] items-end justify-between rounded-[28px] border border-white/65 bg-white/58 p-5 text-slate-950 shadow-[0_18px_55px_rgba(15,23,42,0.07)] backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:bg-white/82 hover:shadow-[0_24px_70px_rgba(15,23,42,0.11)]"
+                  className="group flex min-h-[112px] items-end justify-between rounded-[28px] border border-white/12 bg-white/10 p-5 text-white shadow-[0_18px_55px_rgba(0,0,0,0.10)] backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:bg-white/16 hover:shadow-[0_24px_70px_rgba(0,0,0,0.18)]"
                 >
                   <span className="text-xl font-black tracking-tight">{service.label.replace(' cleaning', '')}</span>
                   <span className="grid h-9 w-9 place-items-center rounded-full bg-[#EAFBFB] text-[#0C8FA3] transition group-hover:translate-x-1">→</span>
@@ -454,8 +455,8 @@ export default function HomeClient() {
           </div>
         </section>
 
-        <section className="site-section relative py-8 sm:py-10">
-          <div className="grid gap-3 rounded-[34px] border border-white/50 bg-slate-950/92 p-4 shadow-[0_24px_80px_rgba(15,23,42,0.18)] backdrop-blur-xl sm:grid-cols-2 sm:p-5 lg:grid-cols-4">
+        <section className="relative z-10 -mt-px py-0">
+          <div className="mx-auto grid max-w-7xl gap-3 bg-slate-950/96 p-5 shadow-none backdrop-blur-xl sm:grid-cols-2 sm:p-6 lg:grid-cols-4 lg:rounded-[44px]">
             {[
               'Verified cleaner profiles',
               'Live availability',
@@ -470,8 +471,8 @@ export default function HomeClient() {
           </div>
         </section>
 
-        <section className="site-section relative py-8 sm:py-10">
-          <div className="relative overflow-hidden rounded-[40px] border border-white/16 bg-slate-950 shadow-[0_28px_90px_rgba(15,23,42,0.20)]">
+        <section className="relative z-10 -mt-px py-0">
+          <div className="relative mx-auto max-w-7xl overflow-hidden rounded-none border-0 bg-slate-950 shadow-none sm:rounded-[44px] sm:shadow-[0_28px_90px_rgba(15,23,42,0.20)]">
             <div aria-hidden="true" className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(48,213,200,0.18),transparent_24rem),radial-gradient(circle_at_86%_28%,rgba(255,255,255,0.10),transparent_18rem)]" />
             <div className="relative flex flex-col gap-7 px-7 py-12 sm:px-10 lg:flex-row lg:items-center lg:justify-between lg:px-14 lg:py-16">
               <div className="max-w-2xl">
@@ -486,8 +487,8 @@ export default function HomeClient() {
           </div>
         </section>
 
-        <section className="site-section relative py-10 sm:py-12">
-          <div className="rounded-[34px] border border-white/55 bg-white/62 p-8 text-center shadow-[0_24px_70px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-10">
+        <section className="relative z-10 -mt-px pb-14 sm:pb-18">
+          <div className="mx-auto max-w-7xl bg-gradient-to-b from-[#e8f4f7] to-white/75 p-8 text-center shadow-none backdrop-blur-xl sm:rounded-t-[44px] sm:p-10">
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#0C8FA3]">For cleaners</p>
             <h2 className="mt-2 text-3xl font-bold text-slate-900">Want to win more direct booking requests?</h2>
             <p className="mx-auto mt-4 max-w-2xl text-slate-600">Join for free, set your availability, and get discovered by local households.</p>
@@ -528,12 +529,12 @@ function CleanerSection({ eyebrow, title, subtitle, locationError, locationActio
   };
 
   return (
-    <section className={premium ? "site-section relative pt-5 pb-8 sm:pt-8 sm:pb-10" : "site-section relative py-8"}>
-      <div className={premium ? "overflow-hidden rounded-[32px] border border-white/45 bg-white/42 p-4 shadow-[0_18px_55px_rgba(15,23,42,0.055)] backdrop-blur-xl sm:p-5" : ""}>
+    <section className={premium ? "relative z-20 -mt-5 pb-0 sm:-mt-8" : "site-section relative py-8"}>
+      <div className={premium ? "mx-auto max-w-7xl overflow-visible bg-transparent px-4 py-7 sm:px-6 sm:py-9 lg:px-8" : ""}>
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
           {eyebrow ? <p className="text-xs font-black uppercase tracking-[0.22em] text-[#0C8FA3]">{eyebrow}</p> : null}
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">{title}</h2>
+          <h2 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">{title}</h2>
           {subtitle ? <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600/85 sm:text-base">{subtitle}</p> : null}
           {locationError ? <p className="mt-2 max-w-2xl text-xs font-medium text-amber-700">{locationError}</p> : null}
         </div>
@@ -568,7 +569,7 @@ function CleanerSection({ eyebrow, title, subtitle, locationError, locationActio
       ) : !cleaners?.length ? (
         <div className="rounded-[26px] border border-white/55 bg-white/50 p-8 text-slate-600 shadow-sm backdrop-blur-xl">New cleaners coming soon.</div>
       ) : (
-        <div ref={railRef} className="flex snap-x snap-mandatory gap-5 overflow-x-auto px-1 pb-2 hide-scrollbar-mobile scroll-smooth">
+        <div ref={railRef} className="flex snap-x snap-mandatory gap-5 overflow-x-auto px-1 pb-6 hide-scrollbar-mobile scroll-smooth [mask-image:linear-gradient(90deg,transparent,black_1.5rem,black_calc(100%-1.5rem),transparent)]">
           {cleaners.map((cleaner) => (
             <div key={cleaner._id} className="min-w-[260px] max-w-[260px] shrink-0 snap-start sm:min-w-[285px] sm:max-w-[285px]">
               <CleanerCard
