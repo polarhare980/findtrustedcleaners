@@ -419,7 +419,7 @@ export default function HomeClient() {
             <div
               aria-hidden="true"
               className="absolute inset-0 bg-cover bg-center"
-              style={{ backgroundImage: "url('/images/why-choose-cleaners-bg.png')" }}
+              style={{ backgroundImage: "url('/images/cleaner-arriving-luxury-home.jpg')" }}
             />
             <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/60 to-slate-950/20" />
             <div aria-hidden="true" className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-white/6 to-transparent" />
@@ -427,26 +427,28 @@ export default function HomeClient() {
 
             <div className="relative min-h-[480px] px-7 py-12 sm:px-10 lg:flex lg:min-h-[540px] lg:items-center lg:px-14">
               <div className="max-w-xl">
-                <p className="text-xs font-black uppercase tracking-[0.28em] text-[#30D5C8]">Trusted local cleaners</p>
+                <p className="text-xs font-black uppercase tracking-[0.34em] text-[#30D5C8]">For cleaners</p>
                 <h2 className="mt-5 text-4xl font-black leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-6xl">
-                  Booking a cleaner should feel simple.
+                  Grow your local cleaning business
                 </h2>
-                <p className="mt-5 max-w-lg text-base font-medium leading-7 text-white/76 sm:text-lg">
-                  Browse local cleaners with live availability, clear profiles and trusted reviews.
+                <div aria-hidden="true" className="mt-7 h-0.5 w-24 rounded-full bg-[#30D5C8]" />
+                <p className="mt-7 max-w-md text-xl font-medium leading-9 text-white/72 sm:text-2xl sm:leading-10">
+                  Get discovered by local households with live availability and premium profiles.
                 </p>
 
-                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <div className="mt-9 flex flex-col items-start gap-6">
                   <Link
-                    href="/cleaners"
-                    className="inline-flex min-h-[54px] items-center justify-center rounded-2xl bg-gradient-to-r from-[#0C8FA3] to-[#12C8BA] px-7 text-base font-black text-white shadow-[0_16px_36px_rgba(12,143,163,0.32)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_44px_rgba(12,143,163,0.42)]"
+                    href="/register/cleaners"
+                    className="inline-flex min-h-[64px] items-center justify-center rounded-[1.7rem] bg-gradient-to-r from-[#0C8FA3] to-[#12C8BA] px-8 text-lg font-black text-white shadow-[0_18px_42px_rgba(12,143,163,0.36)] transition hover:-translate-y-0.5 hover:shadow-[0_22px_50px_rgba(12,143,163,0.46)]"
                   >
-                    Find cleaners
+                    Create cleaner profile <span className="ml-3 text-2xl leading-none" aria-hidden="true">→</span>
                   </Link>
                   <Link
-                    href="/how-it-works"
-                    className="inline-flex min-h-[54px] items-center justify-center rounded-2xl border border-white/34 bg-white/8 px-7 text-base font-black text-white backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-white/14"
+                    href="/about"
+                    className="group inline-flex items-center gap-3 text-base font-black text-white/82 transition hover:text-white"
                   >
-                    How it works
+                    <span className="border-b border-[#30D5C8]/70 pb-2">Learn more</span>
+                    <span className="text-[#30D5C8] transition group-hover:translate-x-1" aria-hidden="true">→</span>
                   </Link>
                 </div>
               </div>
