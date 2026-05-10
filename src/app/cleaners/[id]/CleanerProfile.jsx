@@ -9,7 +9,6 @@ import PurchaseButton from '@/components/PurchaseButton';
 import RatingStars from '@/components/RatingStars';
 import PublicHeader from '@/components/PublicHeader';
 import PublicFooter from '@/components/PublicFooter';
-import PremiumBenefits from '@/components/PremiumBenefits';
 
 const PUBLIC_CLEANER_API = (id) => `/api/public-cleaners/${id}`;
 const PUBLIC_PURCHASES_API = (id) => `/api/public/purchases/cleaners/${id}`;
@@ -373,8 +372,18 @@ export default function CleanerProfile() {
       <PublicHeader />
 
       <div className="mx-auto max-w-6xl px-4 py-6 md:py-10">
-        <section className="overflow-hidden rounded-[34px] border border-white/70 bg-white/92 shadow-[0_26px_90px_rgba(15,23,42,0.12)] backdrop-blur-xl">
-          <div className="grid gap-0 lg:grid-cols-[1fr,390px]">
+        <section className="relative overflow-hidden rounded-[34px] border border-white/20 bg-slate-950 shadow-[0_30px_100px_rgba(2,44,34,0.22)]">
+          <div className="absolute inset-0">
+            <Image
+              src="/images/homepage-hero.jpg"
+              alt="Premium home cleaning background"
+              fill
+              sizes="100vw"
+              className="object-cover opacity-35"
+            />
+            <div className="absolute inset-0 bg-gradient-to-br from-slate-950/92 via-slate-950/72 to-teal-950/68" />
+          </div>
+          <div className="relative grid gap-0 lg:grid-cols-[1fr,390px]">
             <div className="p-5 md:p-8">
               <div className="grid gap-6 md:grid-cols-[290px,1fr]">
                 <div className="relative aspect-[4/3] overflow-hidden rounded-[30px] bg-slate-100 shadow-lg">
@@ -393,9 +402,9 @@ export default function CleanerProfile() {
                 </div>
 
                 <div className="flex flex-col justify-center">
-                  <p className="text-xs font-bold uppercase tracking-[0.22em] text-teal-700">Cleaner profile</p>
-                  <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 md:text-4xl">{companyName}</h1>
-                  <p className="mt-2 text-lg font-medium text-slate-700">{mainService} in {locationLabel}</p>
+                  <p className="text-xs font-bold uppercase tracking-[0.22em] text-teal-200">Featured local cleaner</p>
+                  <h1 className="mt-2 text-3xl font-black tracking-tight text-white md:text-4xl">{companyName}</h1>
+                  <p className="mt-2 text-lg font-medium text-slate-100">{mainService} in {locationLabel}</p>
 
                   <div className="mt-4 flex flex-wrap gap-2">
                     {badges.length ? badges.map((badge) => (
@@ -403,34 +412,34 @@ export default function CleanerProfile() {
                     )) : <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-600">Profile details in progress</span>}
                   </div>
 
-                  <div className="mt-5 flex flex-wrap items-center gap-3 text-sm text-slate-700">
-                    {siteReviewCount > 0 ? <RatingStars value={siteReviewAverage} count={siteReviewCount} size={16} /> : <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600">New on FindTrustedCleaners</span>}
+                  <div className="mt-5 flex flex-wrap items-center gap-3 text-sm text-slate-100">
+                    {siteReviewCount > 0 ? <RatingStars value={siteReviewAverage} count={siteReviewCount} size={16} /> : <span className="rounded-full border border-white/20 bg-white/12 px-3 py-1 text-xs font-semibold text-white backdrop-blur">New on FindTrustedCleaners</span>}
                     {(googleReviewRating != null || googleReviewCount != null) ? (
                       <span className="rounded-full border border-amber-100 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800">Google {googleReviewRating != null ? Number(googleReviewRating).toFixed(1) : ''}{googleReviewCount != null ? ` · ${googleReviewCount} reviews` : ''}</span>
                     ) : null}
                   </div>
 
-                  <div className="mt-5 rounded-3xl border border-teal-100 bg-gradient-to-br from-teal-50 to-white p-4">
-                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-teal-700">Live availability</p>
+                  <div className="mt-5 rounded-3xl border border-white/20 bg-white/14 p-4 shadow-[0_18px_50px_rgba(0,0,0,0.18)] backdrop-blur-xl">
+                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-teal-200">Live availability</p>
                     <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                       <div>
-                        <p className="text-2xl font-black text-slate-950">{todaySlots.length ? 'Available today' : nextSlot ? `Next available ${nextSlot.dayShort}` : 'No public slots showing'}</p>
-                        <p className="mt-1 text-sm text-slate-600">{nextSlot ? `Next slot: ${nextSlot.label}` : 'You can still send an enquiry or view other cleaners.'}</p>
+                        <p className="text-2xl font-black text-white">{todaySlots.length ? 'Available today' : nextSlot ? `Next available ${nextSlot.dayShort}` : 'No public slots showing'}</p>
+                        <p className="mt-1 text-sm text-slate-200">{nextSlot ? `Next slot: ${nextSlot.label}` : 'You can still send an enquiry or view other cleaners.'}</p>
                       </div>
-                      {hourlyRate ? <div className="rounded-2xl bg-white px-4 py-3 text-right shadow-sm"><p className="text-xs text-slate-500">From</p><p className="text-xl font-black text-teal-800">£{hourlyRate}/hr</p></div> : null}
+                      {hourlyRate ? <div className="rounded-2xl border border-white/20 bg-white/90 px-4 py-3 text-right shadow-sm backdrop-blur"><p className="text-xs text-slate-500">From</p><p className="text-xl font-black text-teal-800">£{hourlyRate}/hr</p></div> : null}
                     </div>
                   </div>
 
                   <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-                    <button type="button" onClick={scrollToBooking} className="rounded-full bg-teal-700 px-6 py-3 text-center font-bold text-white shadow-lg shadow-teal-900/15 transition hover:-translate-y-0.5 hover:bg-teal-800">Request booking</button>
-                    <button type="button" onClick={scrollToBooking} className="rounded-full border border-slate-200 bg-white px-6 py-3 text-center font-bold text-slate-800 transition hover:-translate-y-0.5 hover:border-teal-200 hover:text-teal-800">View availability</button>
+                    <button type="button" onClick={scrollToBooking} className="rounded-full bg-gradient-to-r from-teal-500 to-teal-700 px-6 py-3 text-center font-bold text-white shadow-lg shadow-teal-950/30 transition hover:-translate-y-0.5 hover:from-teal-400 hover:to-teal-700">Request booking</button>
+                    <button type="button" onClick={scrollToBooking} className="rounded-full border border-white/30 bg-white/12 px-6 py-3 text-center font-bold text-white backdrop-blur transition hover:-translate-y-0.5 hover:bg-white/20">View availability</button>
                   </div>
                 </div>
               </div>
             </div>
 
-            <aside ref={bookingRef} id="booking-section" className="border-t border-slate-100 bg-slate-50/70 p-5 lg:border-l lg:border-t-0 md:p-6">
-              <div className="sticky top-4 rounded-[30px] border border-white bg-white p-5 shadow-[0_18px_60px_rgba(15,23,42,0.10)]">
+            <aside ref={bookingRef} id="booking-section" className="border-t border-white/15 bg-white/10 p-5 backdrop-blur-xl lg:border-l lg:border-t-0 md:p-6">
+              <div className="sticky top-4 rounded-[30px] border border-white/70 bg-white/95 p-5 shadow-[0_22px_70px_rgba(0,0,0,0.20)] backdrop-blur-xl">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-xs font-bold uppercase tracking-[0.18em] text-teal-700">Request this cleaner</p>
@@ -519,24 +528,24 @@ export default function CleanerProfile() {
         </section>
 
         <section className="mt-6 grid gap-4 md:grid-cols-3">
-          <div className="rounded-[26px] border border-slate-200 bg-white/90 p-5 shadow-sm">
+          <div className="rounded-[26px] border border-white/70 bg-white/85 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] backdrop-blur-xl">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Trust signals</p>
             <div className="mt-3 flex flex-wrap gap-2">
               {badges.length ? badges.map((b) => <span key={`trust-${b.key}`} className={`rounded-full border px-3 py-1.5 text-xs font-bold ${b.className}`}>{b.label}</span>) : <span className="text-sm text-slate-500">Profile details are still being built out.</span>}
             </div>
           </div>
-          <div className="rounded-[26px] border border-slate-200 bg-white/90 p-5 shadow-sm">
+          <div className="rounded-[26px] border border-white/70 bg-white/85 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] backdrop-blur-xl">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Review snapshot</p>
             <div className="mt-3 text-3xl font-black text-slate-900">{siteReviewCount > 0 ? siteReviewAverage.toFixed(1) : '—'}</div>
             <p className="mt-2 text-sm text-slate-600">{siteReviewCount > 0 ? `${siteReviewCount} verified platform review${siteReviewCount === 1 ? '' : 's'}` : 'No verified platform reviews yet.'}</p>
           </div>
-          <div className="rounded-[26px] border border-slate-200 bg-white/90 p-5 shadow-sm">
+          <div className="rounded-[26px] border border-white/70 bg-white/85 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] backdrop-blur-xl">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Booking clarity</p>
             <p className="mt-3 text-sm leading-6 text-slate-600">Green slots are available, grey slots are pending or booked, and red slots are unavailable.</p>
           </div>
         </section>
 
-        <section className="mt-8 rounded-[30px] border border-white/70 bg-white/90 p-5 shadow-[0_20px_70px_rgba(15,23,42,0.08)] md:p-6">
+        <section className="mt-8 rounded-[30px] border border-white/70 bg-white/85 p-5 shadow-[0_22px_70px_rgba(15,23,42,0.08)] backdrop-blur-xl md:p-6">
           <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-teal-700">Live availability</p>
@@ -582,7 +591,7 @@ export default function CleanerProfile() {
             </div>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {activeServices.map((svc, i) => (
-                <button key={`${svc.name}-${i}`} type="button" onClick={() => { setSelectedServiceKey(svc.key); scrollToBooking(); }} className="rounded-[24px] border border-slate-200 bg-white/90 p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-md">
+                <button key={`${svc.name}-${i}`} type="button" onClick={() => { setSelectedServiceKey(svc.key); scrollToBooking(); }} className="rounded-[24px] border border-white/70 bg-white/85 p-4 backdrop-blur-xl text-left shadow-sm transition hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-md">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <h3 className="font-bold text-slate-950">{svc.name}</h3>
@@ -612,7 +621,7 @@ export default function CleanerProfile() {
 
         <section className="mt-8">
           <h2 className="mb-3 text-2xl font-black text-slate-950">Reviews from local households</h2>
-          <div className="rounded-[30px] border border-white/70 bg-white/90 p-5 shadow-[0_20px_70px_rgba(15,23,42,0.08)] md:p-6">
+          <div className="rounded-[30px] border border-white/70 bg-white/85 p-5 shadow-[0_22px_70px_rgba(15,23,42,0.08)] backdrop-blur-xl md:p-6">
             {siteReviewCount > 0 ? (
               <div className="grid gap-6 lg:grid-cols-[280px,1fr]">
                 <div className="rounded-2xl border border-slate-100 bg-white p-5">
@@ -640,7 +649,7 @@ export default function CleanerProfile() {
         {cleaner.bio ? (
           <section className="mt-8">
             <h2 className="mb-3 text-2xl font-black text-slate-950">About {companyName}</h2>
-            <div className="rounded-[26px] border border-slate-200 bg-white/90 p-5 shadow-sm"><p className="whitespace-pre-line leading-7 text-slate-700">{cleaner.bio}</p></div>
+            <div className="rounded-[26px] border border-white/70 bg-white/85 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] backdrop-blur-xl"><p className="whitespace-pre-line leading-7 text-slate-700">{cleaner.bio}</p></div>
           </section>
         ) : null}
 
@@ -649,17 +658,16 @@ export default function CleanerProfile() {
         </section>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/70 bg-white/95 p-3 shadow-[0_-14px_40px_rgba(15,23,42,0.14)] backdrop-blur-xl md:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/20 bg-slate-950/88 p-3 shadow-[0_-14px_40px_rgba(15,23,42,0.14)] backdrop-blur-xl md:hidden">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.14em] text-teal-700">{todaySlots.length ? 'Available today' : 'Next slot'}</p>
-            <p className="text-sm font-black text-slate-950">{nextSlot ? nextSlot.label : 'Send enquiry'}</p>
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-teal-200">{todaySlots.length ? 'Available today' : 'Next slot'}</p>
+            <p className="text-sm font-black text-white">{nextSlot ? nextSlot.label : 'Send enquiry'}</p>
           </div>
-          <button type="button" onClick={scrollToBooking} className="rounded-full bg-teal-700 px-5 py-3 text-sm font-black text-white shadow-lg">Request booking</button>
+          <button type="button" onClick={scrollToBooking} className="rounded-full bg-gradient-to-r from-teal-500 to-teal-700 px-5 py-3 text-sm font-black text-white shadow-lg shadow-teal-950/30">Request booking</button>
         </div>
       </div>
 
-      <PremiumBenefits />
       <PublicFooter />
     </main>
   );
