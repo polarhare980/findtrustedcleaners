@@ -37,6 +37,8 @@ const BlogPostSchema = new mongoose.Schema(
     },
 
     excerpt: { type: String, default: "" },
+    metaTitle: { type: String, default: "" },
+    metaDescription: { type: String, default: "" },
     content: { type: String, default: "" }, // stored as HTML
     coverImage: { type: String, default: "" }, // URL or /uploads/... path
     tags: [{ type: String }],

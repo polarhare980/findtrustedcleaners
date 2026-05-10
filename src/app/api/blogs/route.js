@@ -38,7 +38,7 @@ export async function POST(req) {
   if (!valid) return response;
 
   await connectToDatabase();
-  const { title, slug, content, excerpt, coverImage, tags, published } = await req.json();
+  const { title, slug, content, excerpt, metaTitle, metaDescription, coverImage, tags, published } = await req.json();
 
   if (!title || !slug || !content) {
     return Response.json(
@@ -53,6 +53,8 @@ export async function POST(req) {
       slug,
       content,
       excerpt: excerpt || "",
+      metaTitle: metaTitle || "",
+      metaDescription: metaDescription || "",
       coverImage: coverImage || "",
       tags: Array.isArray(tags) ? tags : [],
       published: published !== false,
@@ -84,7 +86,7 @@ export async function PUT(req) {
   if (!valid) return response;
 
   await connectToDatabase();
-  const { id, title, slug, content, excerpt, coverImage, tags, published } = await req.json();
+  const { id, title, slug, content, excerpt, metaTitle, metaDescription, coverImage, tags, published } = await req.json();
 
   if (!id) {
     return Response.json({ success: false, message: "Missing id" }, { status: 400 });
@@ -98,6 +100,8 @@ export async function PUT(req) {
         ...(slug !== undefined && { slug }),
         ...(content !== undefined && { content }),
         ...(excerpt !== undefined && { excerpt }),
+        ...(metaTitle !== undefined && { metaTitle }),
+        ...(metaDescription !== undefined && { metaDescription }),
         ...(coverImage !== undefined && { coverImage }),
         ...(tags !== undefined && { tags: Array.isArray(tags) ? tags : [] }),
         ...(published !== undefined && { published: published !== false }),

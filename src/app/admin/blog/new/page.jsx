@@ -59,6 +59,8 @@ export default function AdminBlogNewPage() {
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
   const [excerpt, setExcerpt] = useState("");
+  const [metaTitle, setMetaTitle] = useState("");
+  const [metaDescription, setMetaDescription] = useState("");
   const [content, setContent] = useState("");
   const [coverImage, setCoverImage] = useState("");
   const [tags, setTags] = useState("");
@@ -91,6 +93,8 @@ export default function AdminBlogNewPage() {
         setTitle(post.title || "");
         setSlug(post.slug || "");
         setExcerpt(post.excerpt || "");
+        setMetaTitle(post.metaTitle || "");
+        setMetaDescription(post.metaDescription || "");
         setContent(post.content || "");
         setCoverImage(post.coverImage || "");
         setTags(Array.isArray(post.tags) ? post.tags.join(", ") : "");
@@ -117,6 +121,8 @@ export default function AdminBlogNewPage() {
             title,
             slug,
             excerpt,
+            metaTitle,
+            metaDescription,
             content,
             coverImage,
             tags: toTagsArray(tags),
@@ -126,6 +132,8 @@ export default function AdminBlogNewPage() {
             title,
             slug,
             excerpt,
+            metaTitle,
+            metaDescription,
             content,
             coverImage,
             tags: toTagsArray(tags),
@@ -244,6 +252,36 @@ export default function AdminBlogNewPage() {
             value={excerpt}
             onChange={(e) => setExcerpt(e.target.value)}
           />
+
+          <div className="rounded-2xl border bg-white p-4 space-y-3">
+            <div>
+              <div className="text-sm font-semibold mb-1">Meta title</div>
+              <input
+                className="w-full p-3 rounded-xl border"
+                placeholder="SEO title, ideally 50–60 characters"
+                value={metaTitle}
+                maxLength={70}
+                onChange={(e) => setMetaTitle(e.target.value)}
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                {metaTitle.length}/70. Leave blank to use the blog title.
+              </p>
+            </div>
+
+            <div>
+              <div className="text-sm font-semibold mb-1">Meta description</div>
+              <textarea
+                className="w-full p-3 rounded-xl border min-h-[96px]"
+                placeholder="Short Google description, ideally 140–160 characters"
+                value={metaDescription}
+                maxLength={180}
+                onChange={(e) => setMetaDescription(e.target.value)}
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                {metaDescription.length}/180. Leave blank to use the excerpt.
+              </p>
+            </div>
+          </div>
 
           <textarea
             ref={contentRef}

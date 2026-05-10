@@ -40,6 +40,24 @@ function escapeRegex(s = "") {
   return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+function compactText(value = "") {
+  return String(value || "")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function buildBlogMeta(post = {}) {
+  const title = compactText(post.metaTitle) || compactText(post.title) || "Blog post | Find Trusted Cleaners";
+  const description =
+    compactText(post.metaDescription) ||
+    compactText(post.excerpt) ||
+    compactText(post.content).slice(0, 155) ||
+    "Cleaning advice, local hiring tips and trusted cleaner guidance from Find Trusted Cleaners.";
+
+  return { title, description };
+}
+
 async function findDbPostBySlug(rawSlug) {
   const slug = normaliseSlug(rawSlug);
 
@@ -86,10 +104,24 @@ export async function generateMetadata({ params }) {
   const post = await findDbPostBySlug(resolvedParams?.slug);
   if (!post || post.published === false) return {};
 
+  const meta = buildBlogMeta(post);
+
   return {
-    title: post.title || "Blog post",
-    description: post.excerpt || "",
-    openGraph: post.coverImage ? { images: [post.coverImage] } : undefined,
+    title: meta.title,
+    description: meta.description,
+    openGraph: {
+      title: meta.title,
+      description: meta.description,
+      type: "article",
+      url: `https://www.findtrustedcleaners.com/blog/${slug}`,
+      ...(post.coverImage ? { images: [post.coverImage] } : {}),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: meta.title,
+      description: meta.description,
+      ...(post.coverImage ? { images: [post.coverImage] } : {}),
+    },
     alternates: { canonical: `https://www.findtrustedcleaners.com/blog/${slug}` },
     robots: { index: true, follow: true },
   };
