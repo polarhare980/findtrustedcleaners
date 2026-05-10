@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import PublicHeader from '@/components/PublicHeader'
 import PublicFooter from '@/components/PublicFooter'
@@ -97,6 +97,7 @@ export default function CleanerSearchPage() {
   const [isLocating, setIsLocating] = useState(false)
   const [locationError, setLocationError] = useState('')
   const [activeCleanerIndex, setActiveCleanerIndex] = useState(0)
+  const swipeStartX = useRef(null)
 
   useEffect(() => {
     if (hydratedFromQuery) return
@@ -171,6 +172,12 @@ export default function CleanerSearchPage() {
     setActiveCleanerIndex(0)
   }, [serviceType, postcode, radius, exactLocation])
 
+  useEffect(() => {
+    if (activeCleanerIndex > 0 && activeCleanerIndex >= cleaners.length) {
+      setActiveCleanerIndex(0)
+    }
+  }, [activeCleanerIndex, cleaners.length])
+
   const handleUseExactLocation = () => {
     setLocationError('')
     if (typeof navigator === 'undefined' || !navigator.geolocation) {
@@ -234,9 +241,22 @@ export default function CleanerSearchPage() {
     })
   }
 
-  const activeMode = SEARCH_MODES.find((mode) => mode.id === searchMode)
   const activeCleaner = cleaners[activeCleanerIndex]
   const locationLabel = postcode ? postcode.toUpperCase() : exactLocation ? 'your area' : 'near you'
+
+  const handleSwipeStart = (event) => {
+    swipeStartX.current = event.touches?.[0]?.clientX ?? null
+  }
+
+  const handleSwipeEnd = (event) => {
+    if (swipeStartX.current === null) return
+    const endX = event.changedTouches?.[0]?.clientX
+    if (typeof endX !== 'number') return
+    const diff = swipeStartX.current - endX
+    swipeStartX.current = null
+    if (Math.abs(diff) < 45) return
+    goToCleaner(diff > 0 ? 'next' : 'previous')
+  }
 
   const summary = useMemo(() => {
     const parts = []
@@ -246,183 +266,154 @@ export default function CleanerSearchPage() {
   }, [postcode, serviceType])
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,rgba(12,143,163,0.14),transparent_32rem),radial-gradient(circle_at_88%_18%,rgba(15,23,42,0.08),transparent_28rem),linear-gradient(180deg,#f3f8fa_0%,#e8f1f5_44%,#dfeaf0_100%)] text-slate-900">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(12,143,163,0.14),transparent_32rem),radial-gradient(circle_at_88%_18%,rgba(15,23,42,0.08),transparent_28rem),linear-gradient(180deg,#f3f8fa_0%,#e8f1f5_44%,#dfeaf0_100%)] text-slate-900">
       <PublicHeader />
 
-      <section className="site-section pt-4 pb-5 sm:pt-10">
-        <div className="relative isolate w-full max-w-full overflow-hidden rounded-[28px] border border-white/20 bg-slate-950 text-white shadow-[0_30px_100px_rgba(15,23,42,0.24)]">
-          <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(2,6,23,0.96)_0%,rgba(15,23,42,0.86)_48%,rgba(12,143,163,0.36)_100%)]" />
+      <section className="site-section pt-5 pb-5 sm:pt-8">
+        <div className="relative isolate overflow-hidden rounded-[32px] border border-white/20 bg-slate-950 text-white shadow-[0_30px_100px_rgba(15,23,42,0.24)] sm:rounded-[42px]">
+          <div className="absolute inset-0 bg-[url('/images/cleaner-arriving-luxury-home.jpg')] bg-cover bg-center opacity-55" />
+          <div className="absolute inset-0 bg-[linear-gradient(110deg,rgba(2,6,23,0.96)_0%,rgba(2,6,23,0.86)_42%,rgba(12,143,163,0.42)_100%)]" />
+          <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-slate-950/95 to-transparent" />
           <div className="absolute -right-28 -top-28 h-72 w-72 rounded-full bg-[#0C8FA3]/35 blur-3xl" />
-          <div className="absolute bottom-0 left-1/3 h-52 w-52 rounded-full bg-cyan-200/10 blur-3xl" />
 
-          <div className="relative grid min-w-0 gap-6 p-4 sm:gap-8 sm:p-8 lg:grid-cols-[1.03fr_0.97fr] lg:p-10">
-            <div className="flex min-h-0 min-w-0 flex-col justify-between sm:min-h-[430px]">
-              <div>
-                <span className="inline-flex max-w-full rounded-full border border-white/[0.12] bg-white/[0.10] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.16em] text-cyan-100 shadow-sm backdrop-blur-xl sm:px-4 sm:text-xs sm:tracking-[0.22em]">
-                  Simpler cleaner search
-                </span>
-                <h1 className="mt-5 max-w-3xl break-words text-[2.55rem] font-semibold leading-[0.95] tracking-[-0.055em] text-white sm:mt-6 sm:text-6xl lg:text-7xl">
-                  What kind of cleaner do you need?
-                </h1>
-                <p className="mt-5 max-w-2xl text-base font-medium leading-7 text-slate-200 sm:mt-6 sm:text-2xl sm:leading-8">
-                  Start with domestic cleaning for the closest available match, or choose specialist cleaning for a specific job.
-                </p>
+          <div className="relative px-4 py-6 sm:px-8 sm:py-10 lg:px-10">
+            <span className="inline-flex rounded-full border border-white/[0.12] bg-white/[0.10] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-cyan-100 shadow-sm backdrop-blur-xl sm:text-xs">
+              Simpler cleaner search
+            </span>
+
+            <h1 className="mt-5 max-w-3xl text-4xl font-semibold leading-[0.95] tracking-[-0.055em] text-white sm:text-6xl lg:text-7xl">
+              What kind of cleaner do you need?
+            </h1>
+            <p className="mt-5 max-w-2xl text-base font-medium leading-7 text-slate-100 sm:text-xl sm:leading-8">
+              Start with domestic cleaning for the closest available match, or choose specialist cleaning for a specific job.
+            </p>
+
+            <div className="mt-8 grid gap-4 md:grid-cols-2">
+              {SEARCH_MODES.map((mode) => {
+                const active = searchMode === mode.id
+                const imageClass = mode.id === 'domestic'
+                  ? "bg-[url('/images/services/regular-cleaning.jpg')]"
+                  : "bg-[url('/images/service-cards-kitchen-bg.png')]"
+
+                return (
+                  <button
+                    key={mode.id}
+                    type="button"
+                    onClick={() => handleModeSelect(mode.id)}
+                    className={`group relative min-h-[190px] overflow-hidden rounded-[28px] border p-5 text-left shadow-[0_18px_55px_rgba(0,0,0,0.18)] transition duration-300 hover:-translate-y-1 sm:min-h-[230px] ${
+                      active ? 'border-cyan-200 bg-white text-white ring-2 ring-cyan-200/60' : 'border-white/[0.18] bg-white/[0.10] text-white'
+                    }`}
+                  >
+                    <span className={`absolute inset-0 bg-cover bg-center transition duration-500 group-hover:scale-105 ${imageClass}`} />
+                    <span className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,0.15)_0%,rgba(2,6,23,0.62)_54%,rgba(2,6,23,0.92)_100%)]" />
+                    <span className="relative flex h-full min-h-[150px] flex-col justify-end sm:min-h-[190px]">
+                      <span className="flex items-end justify-between gap-4">
+                        <span>
+                          <span className="block text-2xl font-black tracking-[-0.04em] text-white sm:text-3xl">{mode.label}</span>
+                          <span className="mt-2 block max-w-md text-sm font-medium leading-6 text-white/78 sm:text-base">{mode.description}</span>
+                        </span>
+                        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white text-xl font-black text-slate-950 shadow-lg transition group-hover:translate-x-1">
+                          →
+                        </span>
+                      </span>
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+
+            {searchMode === 'specialist' ? (
+              <div className="mt-5 rounded-[26px] border border-white/[0.14] bg-slate-950/45 p-4 shadow-[0_20px_70px_rgba(0,0,0,0.18)] backdrop-blur-2xl">
+                <p className="mb-3 text-xs font-bold uppercase tracking-[0.22em] text-cyan-100/80">Choose specialist job</p>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+                  {SPECIALIST_SERVICES.map((service) => (
+                    <button
+                      key={service}
+                      type="button"
+                      onClick={() => handleSpecialistSelect(service)}
+                      className={`rounded-2xl border px-3 py-3 text-left text-sm font-bold transition ${
+                        serviceType === service
+                          ? 'border-cyan-200 bg-white text-slate-950'
+                          : 'border-white/[0.12] bg-white/[0.10] text-white/[0.82] hover:bg-white/[0.16] hover:text-white'
+                      }`}
+                    >
+                      {compactServiceLabel(service)}
+                    </button>
+                  ))}
+                </div>
               </div>
+            ) : null}
 
-              <div className="mt-8">
-                <div className="grid min-w-0 gap-3 sm:grid-cols-2">
-                  {SEARCH_MODES.map((mode) => {
-                    const active = searchMode === mode.id
-                    return (
-                      <button
-                        key={mode.id}
-                        type="button"
-                        onClick={() => handleModeSelect(mode.id)}
-                        className={`min-w-0 overflow-hidden rounded-[22px] border p-4 text-left backdrop-blur-xl transition duration-300 hover:-translate-y-0.5 sm:rounded-[26px] sm:p-5 ${
-                          active
-                            ? 'border-cyan-200 bg-white text-slate-950 shadow-[0_18px_45px_rgba(255,255,255,0.18)]'
-                            : 'border-white/[0.14] bg-white/[0.10] text-white hover:bg-white/[0.16]'
-                        }`}
-                      >
-                        <span className="text-base font-black tracking-tight">{mode.label}</span>
-                        <span className={`mt-2 block break-words text-sm leading-6 ${active ? 'text-slate-600' : 'text-white/[0.68]'}`}>{mode.description}</span>
-                      </button>
-                    )
-                  })}
-                </div>
-
-                <div className="mt-5 flex min-w-0 flex-col gap-3 sm:mt-6 sm:flex-row">
-                  <input
-                    value={postcode}
-                    onChange={(e) => setPostcode(e.target.value)}
-                    placeholder="Enter postcode"
-                    className="
-    w-full
-    h-14
-    rounded-2xl
-    bg-white
-    text-slate-900
-    placeholder:text-slate-500
-    px-5
-    text-lg
-    font-medium
-    border border-white/40
-    shadow-lg
-    focus:outline-none
-    focus:ring-2
-    focus:ring-cyan-400
-    focus:border-cyan-300
-    transition-all"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleSearch}
-                    className="inline-flex h-14 items-center justify-center rounded-full bg-[#0C8FA3] px-7 text-base font-bold text-white shadow-xl shadow-[#0C8FA3]/20 transition hover:-translate-y-0.5 hover:bg-[#087C8E]"
-                  >
-                    Search
-                  </button>
-                </div>
-
-                <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-slate-300">
-                  <button
-                    type="button"
-                    onClick={handleUseExactLocation}
-                    disabled={isLocating}
-                    className="font-bold text-cyan-100 transition hover:text-white disabled:cursor-wait disabled:opacity-70"
-                  >
-                    {isLocating ? 'Finding your area…' : 'Use my exact area'}
-                  </button>
-                  {locationError ? <span className="font-medium text-amber-200">{locationError}</span> : null}
-                </div>
+            <div className="mt-6 rounded-[28px] border border-white/[0.16] bg-white/[0.14] p-3 shadow-[0_24px_80px_rgba(0,0,0,0.16)] backdrop-blur-2xl">
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <input
+                  value={postcode}
+                  onChange={(e) => setPostcode(e.target.value)}
+                  placeholder="Enter postcode"
+                  className="h-14 flex-1 rounded-2xl border border-white/60 bg-white px-5 text-lg font-semibold text-slate-950 shadow-lg outline-none placeholder:text-slate-500 transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300"
+                />
+                <button
+                  type="button"
+                  onClick={handleSearch}
+                  className="inline-flex h-14 items-center justify-center rounded-2xl bg-[#0C8FA3] px-8 text-base font-black text-white shadow-xl shadow-[#0C8FA3]/25 transition hover:-translate-y-0.5 hover:bg-[#087C8E] sm:min-w-36"
+                >
+                  Search
+                </button>
+              </div>
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-3 px-1 text-sm text-slate-200">
+                <button
+                  type="button"
+                  onClick={handleUseExactLocation}
+                  disabled={isLocating}
+                  className="font-bold text-cyan-100 transition hover:text-white disabled:cursor-wait disabled:opacity-70"
+                >
+                  {isLocating ? 'Finding your area…' : 'Use my exact area'}
+                </button>
+                {locationError ? <span className="font-medium text-amber-200">{locationError}</span> : null}
               </div>
             </div>
 
-            <div className="min-w-0 rounded-[26px] border border-white/[0.14] bg-white/[0.12] p-3 shadow-[0_24px_80px_rgba(0,0,0,0.16)] backdrop-blur-2xl sm:rounded-[34px] sm:p-5">
-              <div className="min-w-0 rounded-[22px] border border-white/[0.12] bg-white/[0.10] p-4 sm:rounded-[28px] sm:p-5">
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.22em] text-cyan-100/[0.80]">Your route</p>
-                    <h2 className="mt-2 text-2xl font-semibold tracking-tight text-white">{activeMode?.title || 'Choose domestic or specialist'}</h2>
-                  </div>
-                  <div className="rounded-full border border-white/[0.12] bg-white/[0.10] px-3 py-1.5 text-xs font-bold text-white/[0.80]">
-                    {loading ? 'Live' : `${cleaners.length} found`}
-                  </div>
+            <div className="mt-5 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+              {TIME_PREFERENCES.map((time) => (
+                <button
+                  key={time}
+                  type="button"
+                  onClick={() => setTimePreference(time)}
+                  className={`whitespace-nowrap rounded-full border px-4 py-2 text-sm font-bold shadow-sm backdrop-blur-xl transition ${
+                    timePreference === time
+                      ? 'border-white bg-white text-slate-950'
+                      : 'border-white/[0.14] bg-white/[0.10] text-white/[0.78] hover:bg-white/[0.16] hover:text-white'
+                  }`}
+                >
+                  {time}
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <details className="rounded-2xl border border-white/[0.12] bg-white/[0.10] px-4 py-3 text-sm text-slate-200 backdrop-blur-xl sm:min-w-56">
+                <summary className="cursor-pointer font-bold text-white">Refine distance</summary>
+                <div className="mt-3">
+                  <select
+                    value={radius}
+                    onChange={(e) => setRadius(e.target.value)}
+                    className="w-full rounded-2xl border border-white/[0.12] bg-slate-950/70 px-4 py-3 text-white outline-none"
+                  >
+                    <option value="5">5 miles</option>
+                    <option value="8">8 miles</option>
+                    <option value="12">12 miles</option>
+                    <option value="15">15 miles</option>
+                  </select>
                 </div>
+              </details>
 
-                <p className="mt-3 text-sm leading-6 text-slate-300">
-                  {searchMode === 'domestic'
-                    ? 'Domestic cleaning skips the extra choices and shows the best nearby match first.'
-                    : searchMode === 'specialist'
-                      ? 'Pick one specialist service below. Domestic cleaning is intentionally not repeated here.'
-                      : 'Most customers only need to decide between everyday home cleaning and a specific specialist job.'}
-                </p>
-
-                {searchMode === 'specialist' ? (
-                  <div className="mt-5">
-                    <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-white/[0.48]">Specialist job</p>
-                    <div className="grid grid-cols-1 gap-2 min-[390px]:grid-cols-2">
-                      {SPECIALIST_SERVICES.map((service) => (
-                        <button
-                          key={service}
-                          type="button"
-                          onClick={() => handleSpecialistSelect(service)}
-                          className={`rounded-2xl border px-4 py-3 text-left text-sm font-bold transition break-words ${
-                            serviceType === service
-                              ? 'border-cyan-200 bg-white text-slate-950'
-                              : 'border-white/[0.12] bg-white/[0.08] text-white/[0.78] hover:bg-white/[0.14] hover:text-white'
-                          }`}
-                        >
-                          {compactServiceLabel(service)}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-
-                <div className="mt-5">
-                  <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-white/[0.48]">Timing</p>
-                  <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-                    {TIME_PREFERENCES.map((time) => (
-                      <button
-                        key={time}
-                        type="button"
-                        onClick={() => setTimePreference(time)}
-                        className={`whitespace-nowrap rounded-full border px-4 py-2 text-sm font-bold transition ${
-                          timePreference === time
-                            ? 'border-cyan-200 bg-white text-slate-950'
-                            : 'border-white/[0.12] bg-white/[0.08] text-white/[0.74] hover:bg-white/[0.14] hover:text-white'
-                        }`}
-                      >
-                        {time}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <details className="mt-5 rounded-2xl border border-white/[0.12] bg-white/[0.08] px-4 py-3 text-sm text-slate-200">
-                  <summary className="cursor-pointer font-bold text-white">Refine distance</summary>
-                  <div className="mt-3">
-                    <select
-                      value={radius}
-                      onChange={(e) => setRadius(e.target.value)}
-                      className="w-full rounded-2xl border border-white/[0.12] bg-slate-950/60 px-4 py-3 text-white outline-none"
-                    >
-                      <option value="5">5 miles</option>
-                      <option value="8">8 miles</option>
-                      <option value="12">12 miles</option>
-                      <option value="15">15 miles</option>
-                    </select>
-                  </div>
-                </details>
-
-                <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                  <button onClick={handleSearch} className="inline-flex items-center justify-center rounded-full bg-white px-5 py-3 text-sm font-bold text-slate-950 shadow-sm transition hover:-translate-y-0.5 hover:bg-cyan-50">
-                    Update results
-                  </button>
-                  <button onClick={handleClear} className="inline-flex items-center justify-center rounded-full border border-white/[0.12] bg-white/[0.08] px-5 py-3 text-sm font-bold text-white transition hover:bg-white/[0.14]">
-                    Reset
-                  </button>
-                </div>
+              <div className="flex gap-3">
+                <button onClick={handleSearch} className="inline-flex items-center justify-center rounded-full bg-white px-5 py-3 text-sm font-bold text-slate-950 shadow-sm transition hover:-translate-y-0.5 hover:bg-cyan-50">
+                  Update results
+                </button>
+                <button onClick={handleClear} className="inline-flex items-center justify-center rounded-full border border-white/[0.12] bg-white/[0.10] px-5 py-3 text-sm font-bold text-white transition hover:bg-white/[0.16]">
+                  Reset
+                </button>
               </div>
             </div>
           </div>
@@ -434,11 +425,11 @@ export default function CleanerSearchPage() {
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.22em] text-[#0C8FA3]">Live availability</p>
             <h2 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-slate-950 sm:text-4xl">
-              {searchMode === 'domestic' ? `Closest available domestic cleaner ${postcode || exactLocation ? `near ${locationLabel}` : 'near you'}` : `Available cleaners ${postcode || exactLocation ? `near ${locationLabel}` : 'near you'}`}
+              Available cleaners today
             </h2>
           </div>
           <p className="max-w-md text-sm font-medium leading-6 text-slate-600">
-            {loading ? 'Finding trusted local cleaners…' : `${cleaners.length} cleaner${cleaners.length === 1 ? '' : 's'} matched for ${summary}.`}
+            {loading ? 'Finding trusted local cleaners…' : `Closest matches based on your area and availability. ${cleaners.length} cleaner${cleaners.length === 1 ? '' : 's'} matched for ${summary}.`}
           </p>
         </div>
 
@@ -464,39 +455,46 @@ export default function CleanerSearchPage() {
             <p className="text-base font-semibold text-slate-700">Loading available cleaners…</p>
           </div>
         ) : cleaners.length ? (
-          searchMode === 'domestic' ? (
-            <div className="mx-auto max-w-xl">
-              <div className="mb-4 flex items-center justify-between rounded-full border border-white/70 bg-white/80 px-4 py-2 text-sm font-bold text-slate-600 shadow-sm backdrop-blur-xl">
-                <span>{activeCleanerIndex + 1} of {cleaners.length}</span>
-                <span>{activeCleanerIndex === 0 ? 'Best match' : 'Next available option'}</span>
-              </div>
-
-              <CleanerCard cleaner={activeCleaner} />
-
-              <div className="mt-5 grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => goToCleaner('previous')}
-                  className="rounded-full border border-white/80 bg-white/85 px-5 py-3 text-sm font-black text-slate-700 shadow-sm backdrop-blur-xl transition hover:-translate-y-0.5 hover:bg-white"
-                >
-                  Previous
-                </button>
-                <button
-                  type="button"
-                  onClick={() => goToCleaner('next')}
-                  className="rounded-full bg-[#0C8FA3] px-5 py-3 text-sm font-black text-white shadow-xl shadow-[#0C8FA3]/20 transition hover:-translate-y-0.5 hover:bg-[#087C8E]"
-                >
-                  Next cleaner
-                </button>
-              </div>
+          <div className="mx-auto max-w-xl">
+            <div className="mb-4 flex items-center justify-between rounded-full border border-white/70 bg-white/85 px-4 py-2 text-sm font-bold text-slate-600 shadow-sm backdrop-blur-xl">
+              <span>{activeCleanerIndex + 1} of {cleaners.length}</span>
+              <span>{activeCleanerIndex === 0 ? 'Best match' : 'Swipe for next'}</span>
             </div>
-          ) : (
-            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-              {cleaners.map((cleaner) => (
-                <CleanerCard key={cleaner._id} cleaner={cleaner} />
+
+            <div
+              className="touch-pan-y"
+              onTouchStart={handleSwipeStart}
+              onTouchEnd={handleSwipeEnd}
+            >
+              <CleanerCard cleaner={activeCleaner} />
+            </div>
+
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => goToCleaner('previous')}
+                className="rounded-full border border-white/80 bg-white/85 px-5 py-3 text-sm font-black text-slate-700 shadow-sm backdrop-blur-xl transition hover:-translate-y-0.5 hover:bg-white"
+              >
+                Previous
+              </button>
+              <button
+                type="button"
+                onClick={() => goToCleaner('next')}
+                className="rounded-full bg-[#0C8FA3] px-5 py-3 text-sm font-black text-white shadow-xl shadow-[#0C8FA3]/20 transition hover:-translate-y-0.5 hover:bg-[#087C8E]"
+              >
+                Next cleaner
+              </button>
+            </div>
+
+            <div className="mt-4 flex justify-center gap-1.5" aria-hidden="true">
+              {cleaners.slice(0, 8).map((cleaner, index) => (
+                <span
+                  key={cleaner._id || index}
+                  className={`h-1.5 rounded-full transition-all ${index === activeCleanerIndex ? 'w-7 bg-[#0C8FA3]' : 'w-1.5 bg-slate-300'}`}
+                />
               ))}
             </div>
-          )
+          </div>
         ) : (
           <div className="relative overflow-hidden rounded-[34px] border border-white/70 bg-white/90 p-10 text-center shadow-[0_20px_70px_rgba(15,23,42,0.08)] backdrop-blur-xl">
             <div className="absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-[#0C8FA3]/40 to-transparent" />
