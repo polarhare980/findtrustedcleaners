@@ -12,14 +12,14 @@ export default function PurchaseButton({
   const router = useRouter();
 
   const slotReady = !!selectedSlot?.day && Number.isInteger(Number(selectedSlot?.hour));
-  const buttonLabel = !slotReady ? 'Select a Time Slot' : 'Continue to Booking Form';
+  const buttonLabel = !slotReady ? 'Choose an available slot' : 'Send booking request';
 
   const handleContinue = () => {
     const day = selectedSlot?.day;
     const hourNum = Number(selectedSlot?.hour);
 
     if (!day || !Number.isInteger(hourNum)) {
-      const msg = 'Please select a time slot before continuing.';
+      const msg = 'Please choose an available slot before sending your booking request.';
       onPurchaseError?.(msg);
       return;
     }
