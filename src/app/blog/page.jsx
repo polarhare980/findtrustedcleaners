@@ -11,17 +11,23 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export const metadata = {
-  title: "Blog | Find Trusted Cleaners",
+  title: "Magazine | Find Trusted Cleaners",
   description:
-    "Cleaning tips, guides and advice from the Find Trusted Cleaners team.",
+    "Interior-led cleaning stories, practical home guides and calm advice for finding the right cleaner.",
   alternates: {
-    canonical: '/blog',
+    canonical: "/blog",
   },
   robots: {
     index: true,
     follow: true,
   },
 };
+
+const FALLBACK_IMAGES = [
+  "/og-image.jpg",
+  "/background.jpg",
+  "/cleaner-illustration.png",
+];
 
 const STATIC_META = [
   {
@@ -71,6 +77,49 @@ function safeDate(value) {
   return d && !Number.isNaN(d.getTime()) ? d : null;
 }
 
+function displayDate(post) {
+  const date = safeDate(post.createdAt) || safeDate(post.updatedAt);
+  if (!date) return "Editorial guide";
+  return date.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+function cleanText(value = "") {
+  return String(value)
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function makeBullets(post) {
+  const source = cleanText(post.excerpt || post.description || post.content || "");
+  if (!source) {
+    return ["A calm, practical read for planning your next clean.", "Designed to help you choose with more confidence."];
+  }
+
+  const sentences = source
+    .split(/(?<=[.!?])\s+/)
+    .map((s) => s.replace(/[.!?]+$/, "").trim())
+    .filter(Boolean);
+
+  if (sentences.length >= 2) return sentences.slice(0, 3);
+
+  const words = source.split(" ").filter(Boolean);
+  return [
+    words.slice(0, 12).join(" "),
+    words.slice(12, 26).join(" ") || "A quick editorial guide for cleaner home decisions",
+  ].filter(Boolean);
+}
+
+function getImage(post, index = 0) {
+  return post.coverImage || post.image || post.heroImage || FALLBACK_IMAGES[index % FALLBACK_IMAGES.length];
+}
+
 async function getDbPosts() {
   try {
     await connectToDatabase();
@@ -81,6 +130,61 @@ async function getDbPosts() {
   } catch {
     return [];
   }
+}
+
+function MagazineCard({ post, index, featured = false }) {
+  const hrefSlug = post._listSlug || normaliseSlug(post.slug);
+  const image = getImage(post, index);
+  const bullets = makeBullets(post);
+  const tags = Array.isArray(post.tags) ? post.tags.slice(0, 2) : [];
+
+  return (
+    <Link
+      href={`/blog/${hrefSlug}`}
+      className={`group block overflow-hidden rounded-[2rem] border border-white/15 bg-slate-950 shadow-[0_30px_90px_rgba(15,23,42,0.18)] transition duration-500 hover:-translate-y-1 hover:shadow-[0_38px_110px_rgba(15,23,42,0.28)] ${featured ? "lg:min-h-[620px]" : "min-h-[460px]"}`}
+    >
+      <article className="relative flex h-full min-h-[inherit] flex-col justify-end overflow-hidden">
+        <Image
+          src={image}
+          alt={post.title || "FindTrustedCleaners editorial article"}
+          fill
+          className="object-cover transition duration-700 group-hover:scale-[1.04]"
+          sizes={featured ? "(max-width: 1024px) 100vw, 64vw" : "(max-width: 768px) 88vw, 34vw"}
+          priority={featured}
+        />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,0.05)_0%,rgba(2,6,23,0.22)_38%,rgba(2,6,23,0.88)_100%)]" />
+        <div className="absolute left-5 top-5 flex flex-wrap gap-2">
+          {tags.length ? tags.map((tag) => (
+            <span key={tag} className="rounded-full border border-white/25 bg-white/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white backdrop-blur-md">
+              {tag}
+            </span>
+          )) : (
+            <span className="rounded-full border border-white/25 bg-white/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white backdrop-blur-md">
+              Journal
+            </span>
+          )}
+        </div>
+
+        <div className="relative z-10 p-6 text-white sm:p-8">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.22em] text-white/75">{featured ? "Featured story" : displayDate(post)}</p>
+          <h2 className={`${featured ? "text-4xl sm:text-5xl" : "text-2xl sm:text-3xl"} max-w-2xl font-semibold tracking-[-0.04em] leading-[1.02]`}>
+            {post.title}
+          </h2>
+          <ul className="mt-5 space-y-2 text-sm leading-6 text-white/80 sm:text-[15px]">
+            {bullets.map((bullet) => (
+              <li key={bullet} className="flex gap-3">
+                <span className="mt-[0.6rem] h-1.5 w-1.5 shrink-0 rounded-full bg-teal-300" />
+                <span>{bullet}</span>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-7 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-950 transition group-hover:bg-teal-300">
+            Read article <span aria-hidden="true">→</span>
+          </div>
+        </div>
+      </article>
+    </Link>
+  );
 }
 
 export default async function BlogPage() {
@@ -110,6 +214,7 @@ export default async function BlogPage() {
 
   const featuredPost = allPosts[0] || null;
   const remainingPosts = featuredPost ? allPosts.slice(1) : allPosts;
+  const swipePosts = remainingPosts.slice(0, 8);
 
   const slots = {
     top: process.env.NEXT_PUBLIC_ADSENSE_SLOT_BLOG_LIST_TOP || "",
@@ -117,158 +222,108 @@ export default async function BlogPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,#f7fbfb_0%,#f8fafc_42%,#f8fafc_100%)] text-slate-900">
+    <main className="min-h-screen bg-[#f3eee6] text-slate-950">
       <PublicHeader />
 
-      <section className="relative overflow-hidden border-b border-white/60 bg-[radial-gradient(circle_at_top_left,_rgba(20,184,166,0.16),_transparent_32%),linear-gradient(135deg,#f8fffe_0%,#eefcf9_48%,#ffffff_100%)]">
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
-          <div className="rounded-[32px] border border-white/70 bg-white/84 p-7 shadow-[0_24px_80px_rgba(15,23,42,0.10)] backdrop-blur-xl sm:p-10">
-            <p className="mb-3 text-sm font-semibold uppercase tracking-[0.22em] text-teal-700">FindTrustedCleaners blog</p>
-            <h1 className="max-w-3xl text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">Cleaning tips, booking advice, and practical guides</h1>
-            <p className="mt-4 max-w-2xl text-lg leading-8 text-slate-600">Make the blog feel more premium, easier to scan, and more useful for people deciding how to book the right cleaner.</p>
+      <section className="relative overflow-hidden bg-slate-950 text-white">
+        <div className="absolute inset-0">
+          <Image
+            src={featuredPost ? getImage(featuredPost, 0) : "/background.jpg"}
+            alt="FindTrustedCleaners magazine hero"
+            fill
+            className="object-cover opacity-45"
+            sizes="100vw"
+            priority
+          />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(2,6,23,0.86)_0%,rgba(2,6,23,0.58)_44%,rgba(2,6,23,0.22)_100%)]" />
+        </div>
+
+        <div className="relative mx-auto grid min-h-[74vh] max-w-7xl items-end px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
+          <div className="max-w-3xl">
+            <p className="mb-5 text-xs font-semibold uppercase tracking-[0.34em] text-teal-200">FindTrustedCleaners Magazine</p>
+            <h1 className="text-5xl font-semibold tracking-[-0.06em] sm:text-7xl lg:text-8xl">
+              Better homes, calmer choices.
+            </h1>
+            <p className="mt-7 max-w-2xl text-lg leading-8 text-white/80 sm:text-xl">
+              Image-led guides for modern home life: cleaner homes, smarter booking decisions and practical advice without the spammy feel.
+            </p>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+      <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
         {slots.top ? (
-          <div className="mb-10">
+          <div className="mb-10 overflow-hidden rounded-[1.75rem] border border-black/5 bg-white/55 p-3 shadow-sm backdrop-blur-xl">
             <AdSlot
               slot={slots.top}
-              className="overflow-hidden rounded-2xl border bg-white shadow-sm"
+              className="overflow-hidden rounded-[1.25rem] bg-white/70"
               style={{ minHeight: 90 }}
             />
           </div>
         ) : null}
 
         {allPosts.length === 0 ? (
-          <div className="rounded-[28px] border border-white/70 bg-white/88 p-8 text-slate-600 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">No posts yet — check back soon.</div>
+          <div className="rounded-[2rem] border border-black/5 bg-white/70 p-8 text-slate-600 shadow-sm backdrop-blur-xl">No posts yet — check back soon.</div>
         ) : (
           <>
             {featuredPost ? (
-              <section className="mb-10 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-                <Link
-                  href={`/blog/${featuredPost._listSlug}`}
-                  className="group overflow-hidden rounded-[32px] border border-white/70 bg-white/88 shadow-[0_24px_80px_rgba(15,23,42,0.10)] backdrop-blur-xl"
-                >
-                  <div className="relative h-72 bg-gradient-to-br from-teal-50 to-teal-100 sm:h-[380px]">
-                    {featuredPost.coverImage ? (
-                      <Image
-                        src={featuredPost.coverImage}
-                        alt={featuredPost.title || 'Featured blog post'}
-                        fill
-                        className="object-cover transition duration-500 group-hover:scale-[1.03]"
-                        sizes="(max-width: 1024px) 100vw, 60vw"
-                        priority
-                      />
-                    ) : (
-                      <div className="flex h-full items-center justify-center text-6xl">🧽</div>
-                    )}
-                    <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-slate-950/30 to-transparent" />
+              <section className="mb-16 grid gap-7 lg:grid-cols-[1.55fr_0.75fr]">
+                <MagazineCard post={featuredPost} index={0} featured />
+                <div className="flex flex-col justify-between rounded-[2rem] border border-black/5 bg-white/60 p-7 shadow-[0_24px_70px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-8">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.28em] text-teal-800">Editor&apos;s note</p>
+                    <h2 className="mt-5 text-4xl font-semibold tracking-[-0.05em] text-slate-950">No more spammy cleaning blog energy.</h2>
+                    <p className="mt-5 text-lg leading-8 text-slate-700">
+                      The blog now behaves more like a magazine cover: bigger imagery, shorter copy, stronger mood and simple article paths.
+                    </p>
                   </div>
-                </Link>
-
-                <div className="flex h-full flex-col justify-center rounded-[32px] border border-white/70 bg-white/88 p-7 shadow-[0_24px_80px_rgba(15,23,42,0.10)] backdrop-blur-xl sm:p-8">
-                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-teal-700">Featured article</p>
-                  <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">{featuredPost.title}</h2>
-                  {featuredPost.excerpt ? <p className="mt-4 text-lg leading-8 text-slate-600">{featuredPost.excerpt}</p> : null}
-                  {featuredPost.tags?.length ? (
-                    <div className="mt-5 flex flex-wrap gap-2">
-                      {featuredPost.tags.slice(0, 3).map((tag) => (
-                        <span key={tag} className="rounded-full border border-teal-100 bg-teal-50/90 px-3 py-1 text-xs font-semibold text-teal-800 shadow-sm">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  ) : null}
-                  <div className="mt-6 text-sm text-slate-500">
-                    {(safeDate(featuredPost.createdAt) || safeDate(featuredPost.updatedAt))?.toLocaleDateString('en-GB', {
-                      day: 'numeric',
-                      month: 'long',
-                      year: 'numeric',
-                    })}
-                  </div>
-                  <div className="mt-8">
-                    <span className="inline-flex rounded-full bg-teal-600 px-5 py-3 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(13,148,136,0.25)] transition group-hover:bg-teal-700">Read article</span>
+                  <div className="mt-8 border-t border-slate-950/10 pt-6 text-sm leading-6 text-slate-600">
+                    Keep SEO in the structure. Let the visible design feel calm, premium and human.
                   </div>
                 </div>
               </section>
             ) : null}
 
-            <section className="mb-6 flex items-end justify-between gap-4">
+            {swipePosts.length ? (
+              <section className="mb-16">
+                <div className="mb-6 flex items-end justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.28em] text-teal-800">Swipe to read</p>
+                    <h2 className="mt-2 text-4xl font-semibold tracking-[-0.05em] text-slate-950">Next articles</h2>
+                  </div>
+                  <p className="hidden max-w-xs text-right text-sm leading-6 text-slate-600 sm:block">A horizontal magazine rail for quick browsing on mobile and desktop.</p>
+                </div>
+                <div className="flex snap-x gap-5 overflow-x-auto pb-5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  {swipePosts.map((post, index) => (
+                    <div key={`swipe-${post._id || post.slug}`} className="w-[82vw] shrink-0 snap-start sm:w-[420px]">
+                      <MagazineCard post={post} index={index + 1} />
+                    </div>
+                  ))}
+                </div>
+              </section>
+            ) : null}
+
+            <section className="mb-7 flex items-end justify-between gap-4">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">Latest posts</p>
-                <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">Browse the rest of the blog</h2>
+                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-teal-800">Latest issue</p>
+                <h2 className="mt-2 text-4xl font-semibold tracking-[-0.05em] text-slate-950">All stories</h2>
               </div>
             </section>
 
-            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-7 md:grid-cols-2 xl:grid-cols-3">
               {remainingPosts.map((post, idx) => {
-                const hrefSlug = post._listSlug || normaliseSlug(post.slug);
-                const displayDate = safeDate(post.createdAt) || safeDate(post.updatedAt);
-
+                const card = <MagazineCard post={post} index={idx + 2} />;
                 if (slots.infeed && idx === 5) {
                   return (
-                    <div
-                      key="infeed-ad"
-                      className="flex items-center justify-center overflow-hidden rounded-[28px] border border-white/70 bg-white/88 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl"
-                    >
-                      <AdSlot slot={slots.infeed} className="w-full" style={{ minHeight: 250 }} />
+                    <div key={`ad-and-${post._id || post.slug}`} className="contents">
+                      <div className="overflow-hidden rounded-[2rem] border border-black/5 bg-white/55 p-3 shadow-sm backdrop-blur-xl">
+                        <AdSlot slot={slots.infeed} className="w-full rounded-[1.5rem] bg-white/70" style={{ minHeight: 250 }} />
+                      </div>
+                      <div>{card}</div>
                     </div>
                   );
                 }
-
-                return (
-                  <Link
-                    key={`${post._id || post.slug}-${hrefSlug}`}
-                    href={`/blog/${hrefSlug}`}
-                    className="group flex flex-col overflow-hidden rounded-[28px] border border-white/70 bg-white/88 shadow-[0_20px_60px_rgba(15,23,42,0.08)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_28px_80px_rgba(15,23,42,0.12)] backdrop-blur-xl"
-                  >
-                    {post.coverImage ? (
-                      <div className="relative h-52 bg-gray-100">
-                        <Image
-                          src={post.coverImage}
-                          alt={post.title || 'Blog post'}
-                          fill
-                          className="object-cover transition duration-500 group-hover:scale-[1.03]"
-                          sizes="(max-width: 768px) 100vw, 33vw"
-                        />
-                      </div>
-                    ) : (
-                      <div className="flex h-52 items-center justify-center bg-gradient-to-br from-teal-50 to-teal-100 text-5xl">🧹</div>
-                    )}
-
-                    <div className="flex flex-1 flex-col p-6">
-                      {post.tags?.length > 0 ? (
-                        <div className="mb-3 flex flex-wrap gap-2">
-                          {post.tags.slice(0, 2).map((tag) => (
-                            <span key={tag} className="rounded-full border border-teal-100 bg-teal-50/90 px-3 py-1 text-xs font-semibold text-teal-800 shadow-sm">
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      ) : null}
-
-                      <h3 className="text-xl font-bold leading-snug text-slate-900 transition-colors group-hover:text-teal-700 line-clamp-2">
-                        {post.title}
-                      </h3>
-
-                      {post.excerpt ? (
-                        <p className="mt-3 flex-1 text-sm leading-7 text-slate-600 line-clamp-3">{post.excerpt}</p>
-                      ) : null}
-
-                      {displayDate ? (
-                        <div className="mt-5 text-sm text-slate-500">
-                          {displayDate.toLocaleDateString('en-GB', {
-                            day: 'numeric',
-                            month: 'long',
-                            year: 'numeric',
-                          })}
-                        </div>
-                      ) : null}
-                    </div>
-                  </Link>
-                );
+                return <div key={`${post._id || post.slug}-${post._listSlug || post.slug}`}>{card}</div>;
               })}
             </div>
           </>
