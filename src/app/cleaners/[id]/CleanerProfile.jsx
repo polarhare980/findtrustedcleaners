@@ -371,37 +371,22 @@ export default function CleanerProfile() {
     <main className="min-h-screen bg-[linear-gradient(180deg,#f7fbfb_0%,#f8fafc_42%,#eef7f5_100%)] pb-24 text-slate-900 md:pb-0">
       <PublicHeader />
 
-      <div className="mx-auto max-w-6xl px-4 py-6 md:py-10">
-        <section className="relative overflow-hidden rounded-[34px] border border-white/20 bg-slate-950 shadow-[0_30px_100px_rgba(2,44,34,0.22)]">
+      <div className="mx-auto max-w-6xl px-4 py-0 md:py-6">
+        <section className="relative -mx-4 overflow-hidden bg-slate-950 shadow-[0_30px_100px_rgba(2,44,34,0.22)] md:mx-0 md:rounded-[34px]">
           <div className="absolute inset-0">
             <Image
-              src="/images/homepage-hero.jpg"
+              src="/images/cleaner-profile-background.png"
               alt="Premium home cleaning background"
               fill
               sizes="100vw"
-              className="object-cover opacity-35"
+              className="object-cover opacity-85"
             />
-            <div className="absolute inset-0 bg-gradient-to-br from-slate-950/92 via-slate-950/72 to-teal-950/68" />
+            <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/70 to-slate-950/20" />
           </div>
-          <div className="relative grid gap-0 lg:grid-cols-[1fr,390px]">
-            <div className="p-5 md:p-8">
-              <div className="grid gap-6 md:grid-cols-[290px,1fr]">
-                <div className="relative aspect-[4/3] overflow-hidden rounded-[30px] bg-slate-100 shadow-lg">
-                  <Image
-                    src={coverPhoto}
-                    alt={companyName}
-                    fill
-                    priority
-                    sizes="(min-width: 768px) 290px, 100vw"
-                    className={`object-cover ${cleaner.imageHasText ? 'blur-sm' : ''}`}
-                    onError={(e) => { e.currentTarget.src = FALLBACK_IMAGE; }}
-                  />
-                  {cleaner.imageHasText ? <div className="absolute inset-0 grid place-items-center bg-white/65 text-xs font-semibold text-slate-700">Contact info hidden for safety</div> : null}
-                  <div className="absolute left-4 top-4 rounded-full border border-white/70 bg-white/90 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-teal-800 shadow-sm">Live profile</div>
-                  <button type="button" aria-label="Save cleaner" className="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-full border border-white/70 bg-white/90 text-lg shadow-sm">♡</button>
-                </div>
-
-                <div className="flex flex-col justify-center">
+          <div className="relative grid min-h-[760px] gap-0 lg:grid-cols-[1fr,390px]">
+            <div className="flex items-center p-6 md:p-10 lg:p-12">
+              <div className="grid w-full gap-6">
+                <div className="max-w-2xl flex flex-col justify-center">
                   <p className="text-xs font-bold uppercase tracking-[0.22em] text-teal-200">Featured local cleaner</p>
                   <h1 className="mt-2 text-3xl font-black tracking-tight text-white md:text-4xl">{companyName}</h1>
                   <p className="mt-2 text-lg font-medium text-slate-100">{mainService} in {locationLabel}</p>
@@ -419,14 +404,14 @@ export default function CleanerProfile() {
                     ) : null}
                   </div>
 
-                  <div className="mt-5 rounded-3xl border border-white/20 bg-white/14 p-4 shadow-[0_18px_50px_rgba(0,0,0,0.18)] backdrop-blur-xl">
+                  <div className="mt-6 max-w-xl">
                     <p className="text-xs font-bold uppercase tracking-[0.18em] text-teal-200">Live availability</p>
                     <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                       <div>
                         <p className="text-2xl font-black text-white">{todaySlots.length ? 'Available today' : nextSlot ? `Next available ${nextSlot.dayShort}` : 'No public slots showing'}</p>
                         <p className="mt-1 text-sm text-slate-200">{nextSlot ? `Next slot: ${nextSlot.label}` : 'You can still send an enquiry or view other cleaners.'}</p>
                       </div>
-                      {hourlyRate ? <div className="rounded-2xl border border-white/20 bg-white/90 px-4 py-3 text-right shadow-sm backdrop-blur"><p className="text-xs text-slate-500">From</p><p className="text-xl font-black text-teal-800">£{hourlyRate}/hr</p></div> : null}
+                      {hourlyRate ? <div className="rounded-2xl border border-white/20 bg-white/15 px-4 py-3 text-right text-white backdrop-blur"><p className="text-xs text-teal-100">From</p><p className="text-xl font-black text-white">£{hourlyRate}/hr</p></div> : null}
                     </div>
                   </div>
 
@@ -438,8 +423,8 @@ export default function CleanerProfile() {
               </div>
             </div>
 
-            <aside ref={bookingRef} id="booking-section" className="border-t border-white/15 bg-white/10 p-5 backdrop-blur-xl lg:border-l lg:border-t-0 md:p-6">
-              <div className="sticky top-4 rounded-[30px] border border-white/70 bg-white/95 p-5 shadow-[0_22px_70px_rgba(0,0,0,0.20)] backdrop-blur-xl">
+            <aside ref={bookingRef} id="booking-section" className="flex items-center border-t border-white/10 bg-transparent p-5 lg:border-l lg:border-t-0 md:p-6">
+              <div className="sticky top-4 rounded-[30px] border border-white/25 bg-white/90 p-5 shadow-[0_22px_70px_rgba(0,0,0,0.20)] backdrop-blur-xl">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-xs font-bold uppercase tracking-[0.18em] text-teal-700">Request this cleaner</p>
@@ -527,21 +512,23 @@ export default function CleanerProfile() {
           </div>
         </section>
 
-        <section className="mt-6 grid gap-4 md:grid-cols-3">
-          <div className="rounded-[26px] border border-white/70 bg-white/85 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] backdrop-blur-xl">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Trust signals</p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {badges.length ? badges.map((b) => <span key={`trust-${b.key}`} className={`rounded-full border px-3 py-1.5 text-xs font-bold ${b.className}`}>{b.label}</span>) : <span className="text-sm text-slate-500">Profile details are still being built out.</span>}
+        <section className="mt-6 border-y border-slate-200/70 py-5">
+          <div className="grid gap-5 md:grid-cols-3">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-teal-700">Cleaner checks</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {badges.length ? badges.map((b) => <span key={`trust-${b.key}`} className={`rounded-full border px-3 py-1.5 text-xs font-bold ${b.className}`}>{b.label}</span>) : <span className="text-sm text-slate-500">Profile details are still being built out.</span>}
+              </div>
             </div>
-          </div>
-          <div className="rounded-[26px] border border-white/70 bg-white/85 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] backdrop-blur-xl">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Review snapshot</p>
-            <div className="mt-3 text-3xl font-black text-slate-900">{siteReviewCount > 0 ? siteReviewAverage.toFixed(1) : '—'}</div>
-            <p className="mt-2 text-sm text-slate-600">{siteReviewCount > 0 ? `${siteReviewCount} verified platform review${siteReviewCount === 1 ? '' : 's'}` : 'No verified platform reviews yet.'}</p>
-          </div>
-          <div className="rounded-[26px] border border-white/70 bg-white/85 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] backdrop-blur-xl">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Booking clarity</p>
-            <p className="mt-3 text-sm leading-6 text-slate-600">Green slots are available, grey slots are pending or booked, and red slots are unavailable.</p>
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-teal-700">Customer confidence</p>
+              <div className="mt-3 text-3xl font-black text-slate-900">{siteReviewCount > 0 ? siteReviewAverage.toFixed(1) : '—'}</div>
+              <p className="mt-2 text-sm text-slate-600">{siteReviewCount > 0 ? `${siteReviewCount} verified platform review${siteReviewCount === 1 ? '' : 's'}` : 'No verified platform reviews yet.'}</p>
+            </div>
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-teal-700">Booking guide</p>
+              <p className="mt-3 text-sm leading-6 text-slate-600">Green slots are available, grey slots are pending or booked, and red slots are unavailable.</p>
+            </div>
           </div>
         </section>
 

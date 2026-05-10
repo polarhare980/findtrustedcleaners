@@ -38,7 +38,7 @@ export async function generateMetadata({ params }) {
     const title = profileTitle(cleaner);
     return {
       title: `${title} | Find Trusted Cleaners`,
-      description: `View ${title}, including services, trust signals and live availability before you book.`,
+      description: `View ${title}, including services, cleaner checks and live availability before you book.`,
       alternates: { canonical: `${SITE_URL}/cleaners/${routeParam}` },
       robots: { index: true, follow: true },
     };
