@@ -42,17 +42,18 @@ export default function TermsPage() {
           content: (
             <>
               <p>
-                FindTrustedCleaners is an online marketplace that allows users to
-                browse cleaner profiles, compare services and availability, and
-                submit booking requests. By using the platform, you agree to use
-                it lawfully and in accordance with these terms.
+                FindTrustedCleaners is an online marketplace that allows users
+                to browse cleaner profiles, compare services and availability,
+                and submit booking requests. By using the platform, you agree to
+                use it lawfully and in accordance with these terms.
               </p>
 
               <p>
                 References to “trusted” cleaners relate to marketplace features,
-                profile information, customer reviews and trust signals displayed
-                on the platform, and do not represent certification, endorsement,
-                vetting, licensing or a guarantee of quality, conduct or safety.
+                profile information, customer reviews and trust signals
+                displayed on the platform, and do not represent certification,
+                endorsement, vetting, licensing or a guarantee of quality,
+                conduct or safety.
               </p>
             </>
           ),
@@ -76,8 +77,8 @@ export default function TermsPage() {
 
               <p>
                 Clients are responsible for confirming pricing, scope of work,
-                timings, cancellations and service expectations directly with the
-                cleaner before work takes place.
+                timings, cancellations and service expectations directly with
+                the cleaner before work takes place.
               </p>
             </>
           ),
@@ -90,14 +91,14 @@ export default function TermsPage() {
               <p>
                 Cleaners are responsible for ensuring all profile information is
                 accurate, current and not misleading, including services,
-                pricing, availability, qualifications, images, insurance claims,
-                DBS claims, trust signals and contact information.
+                pricing, availability, qualifications, images, insurance
+                claims, DBS claims, trust signals and contact information.
               </p>
 
               <p>
-                Cleaners must operate lawfully, maintain professional conduct and
-                ensure they hold any insurance, licences, permissions or legal
-                compliance required for the services they provide.
+                Cleaners must operate lawfully, maintain professional conduct
+                and ensure they hold any insurance, licences, permissions or
+                legal compliance required for the services they provide.
               </p>
 
               <p>
@@ -135,6 +136,30 @@ export default function TermsPage() {
         },
 
         {
+          title: 'Account security and eligibility',
+          content: (
+            <>
+              <p>
+                Users must be at least 18 years old to create an account,
+                submit bookings, offer services or use paid features on the
+                platform.
+              </p>
+
+              <p>
+                Users are responsible for maintaining the confidentiality and
+                security of their account credentials and for all activity
+                carried out through their account.
+              </p>
+
+              <p>
+                You must notify us promptly if you believe your account has been
+                accessed without permission or used fraudulently.
+              </p>
+            </>
+          ),
+        },
+
+        {
           title: 'Cleaner listings and visibility',
           content: (
             <>
@@ -146,9 +171,9 @@ export default function TermsPage() {
 
               <p>
                 Premium placement, subscriptions or upgraded visibility may
-                affect how and where listings appear, but do not guarantee work,
-                ranking position, customer enquiries, booking volume or business
-                results.
+                affect how and where listings appear, but do not guarantee
+                work, ranking position, customer enquiries, booking volume or
+                business results.
               </p>
             </>
           ),
@@ -178,10 +203,10 @@ export default function TermsPage() {
           content: (
             <>
               <p>
-                Certain platform features may involve payment, including cleaner
-                upgrades, subscriptions or booking-related functionality.
-                Charges displayed at checkout form part of the agreement for
-                that transaction.
+                Certain platform features may involve payment, including
+                cleaner upgrades, subscriptions or booking-related
+                functionality. Charges displayed at checkout form part of the
+                agreement for that transaction.
               </p>
 
               <p>
@@ -191,10 +216,10 @@ export default function TermsPage() {
               </p>
 
               <p>
-                Unless expressly stated otherwise, payments made to the platform
-                relate to access to marketplace features and visibility, and do
-                not guarantee earnings, leads, ranking positions or customer
-                bookings.
+                Unless expressly stated otherwise, payments made to the
+                platform relate to access to marketplace features and
+                visibility, and do not guarantee earnings, leads, ranking
+                positions or customer bookings.
               </p>
             </>
           ),
@@ -210,10 +235,10 @@ export default function TermsPage() {
               </p>
 
               <p>
-                We may moderate, refuse, edit or remove reviews or other content
-                that appears false, misleading, abusive, defamatory, unlawful,
-                promotional, spam-related or otherwise unsuitable for the
-                platform.
+                We may moderate, refuse, edit or remove reviews or other
+                content that appears false, misleading, abusive, defamatory,
+                unlawful, promotional, spam-related or otherwise unsuitable for
+                the platform.
               </p>
 
               <p>
@@ -230,16 +255,17 @@ export default function TermsPage() {
           content: (
             <>
               <p>
-                FindTrustedCleaners is a marketplace platform only. Cleaners are
-                independent businesses or individuals and are not employees,
+                FindTrustedCleaners is a marketplace platform only. Cleaners
+                are independent businesses or individuals and are not employees,
                 workers, representatives, partners or agents of
                 FindTrustedCleaners.
               </p>
 
               <p>
                 Any agreement regarding pricing, timings, property access,
-                instructions, cancellations, disputes or performance of cleaning
-                services is made directly between the client and the cleaner.
+                instructions, cancellations, disputes or performance of
+                cleaning services is made directly between the client and the
+                cleaner.
               </p>
             </>
           ),
@@ -259,8 +285,35 @@ export default function TermsPage() {
 
               <p>
                 Users are responsible for carrying out their own judgement,
-                checks and decisions before arranging services, allowing property
-                access or entering into agreements with other users.
+                checks and decisions before arranging services, allowing
+                property access or entering into agreements with other users.
+              </p>
+            </>
+          ),
+        },
+
+        {
+          title: 'Fraud, manipulation and platform abuse',
+          content: (
+            <>
+              <p>
+                Users must not manipulate or misuse the platform, including
+                through fake bookings, fake reviews, impersonation, misleading
+                claims, fraudulent chargebacks, spam activity, scraping,
+                unlawful data collection or attempts to interfere with platform
+                systems.
+              </p>
+
+              <p>
+                Users must not attempt to bypass platform processes in a way
+                that harms the marketplace, other users or the integrity of
+                reviews, rankings, trust signals or booking systems.
+              </p>
+
+              <p>
+                We reserve the right to suspend, restrict or permanently remove
+                accounts where we reasonably suspect fraud, manipulation,
+                abusive conduct or misuse of the platform.
               </p>
             </>
           ),
@@ -273,9 +326,25 @@ export default function TermsPage() {
               <p>
                 Users must not misuse the platform, interfere with site
                 operation, scrape data unlawfully, attempt unauthorised access,
-                upload malicious material, submit fraudulent bookings, manipulate
-                reviews or use the service in a way that harms other users or
-                the platform.
+                upload malicious material, submit fraudulent bookings,
+                manipulate reviews or use the service in a way that harms other
+                users or the platform.
+              </p>
+            </>
+          ),
+        },
+
+        {
+          title: 'Indemnity',
+          content: (
+            <>
+              <p>
+                You agree to indemnify and hold harmless
+                FindTrustedCleaners, its operators, affiliates and service
+                providers from claims, liabilities, damages, losses, costs or
+                expenses arising from your misuse of the platform, breach of
+                these terms, violation of applicable law or disputes with other
+                users.
               </p>
             </>
           ),
@@ -286,10 +355,10 @@ export default function TermsPage() {
           content: (
             <>
               <p>
-                To the fullest extent permitted by law, FindTrustedCleaners is
-                not liable for the acts, omissions, conduct, negligence,
-                services or behaviour of cleaners, clients or other third
-                parties using the platform.
+                To the fullest extent permitted by law,
+                FindTrustedCleaners is not liable for the acts, omissions,
+                conduct, negligence, services or behaviour of cleaners,
+                clients or other third parties using the platform.
               </p>
 
               <p>
@@ -307,8 +376,8 @@ export default function TermsPage() {
 
               <p>
                 To the extent permitted by law, our liability is limited to
-                losses that are reasonably foreseeable and directly caused by our
-                own breach of these terms.
+                losses that are reasonably foreseeable and directly caused by
+                our own breach of these terms.
               </p>
             </>
           ),
@@ -323,6 +392,24 @@ export default function TermsPage() {
                 services or legal requirements change. Continued use of the
                 platform after updated terms are published means the revised
                 terms apply.
+              </p>
+            </>
+          ),
+        },
+
+        {
+          title: 'Governing law',
+          content: (
+            <>
+              <p>
+                These terms and any disputes relating to the platform or its
+                use are governed by the laws of England and Wales.
+              </p>
+
+              <p>
+                Users agree that the courts of England and Wales will have
+                jurisdiction over disputes arising in connection with these
+                terms or use of the platform.
               </p>
             </>
           ),
