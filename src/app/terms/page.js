@@ -2,10 +2,12 @@ import LegalPage from '@/components/LegalPage';
 
 export const metadata = {
   title: 'Terms & Conditions | FindTrustedCleaners',
-  description: 'Terms and conditions for using the FindTrustedCleaners marketplace, including cleaner profiles, bookings, reviews and platform rules.',
+  description:
+    'Terms and conditions for using the FindTrustedCleaners marketplace, including cleaner profiles, bookings, reviews, subscriptions and platform rules.',
   openGraph: {
     title: 'Terms & Conditions | FindTrustedCleaners',
-    description: 'Terms and conditions for using the FindTrustedCleaners marketplace.',
+    description:
+      'Marketplace terms for clients, cleaners and visitors using FindTrustedCleaners.',
     url: 'https://www.findtrustedcleaners.com/terms',
     siteName: 'FindTrustedCleaners',
     images: [
@@ -25,98 +27,320 @@ export const metadata = {
 };
 
 const supportEmail = 'findtrustedcleaners@gmail.com';
-const updatedAt = '12 April 2026';
+const updatedAt = '10 May 2026';
 
 export default function TermsPage() {
   return (
     <LegalPage
       eyebrow="Terms & conditions"
       title="Marketplace terms for clients, cleaners and visitors"
-      intro="These terms explain how FindTrustedCleaners works, what users can expect from the platform, and the rules that apply when browsing, registering, booking, reviewing or upgrading an account."
+      intro="These terms explain how FindTrustedCleaners works, the responsibilities of clients and cleaners, and the rules that apply when using the platform, browsing listings, requesting bookings, posting reviews or upgrading accounts."
       updatedAt={updatedAt}
       sections={[
         {
           title: 'Using the platform',
           content: (
             <>
-              <p>FindTrustedCleaners is a marketplace that allows visitors to browse cleaner profiles, compare services and availability, and send booking requests. By using the platform, you agree to use it lawfully and in line with these terms.</p>
+              <p>
+                FindTrustedCleaners is an online marketplace that allows users to
+                browse cleaner profiles, compare services and availability, and
+                submit booking requests. By using the platform, you agree to use
+                it lawfully and in accordance with these terms.
+              </p>
+
+              <p>
+                References to “trusted” cleaners relate to marketplace features,
+                profile information, customer reviews and trust signals displayed
+                on the platform, and do not represent certification, endorsement,
+                vetting, licensing or a guarantee of quality, conduct or safety.
+              </p>
             </>
           ),
         },
+
         {
-          title: 'Accounts and profile information',
+          title: 'Client responsibilities',
           content: (
             <>
-              <p>Clients and cleaners must provide accurate, current information when registering or updating an account. Cleaners are responsible for the accuracy of public profile content including services, pricing, availability, trust signals, images and contact information.</p>
-              <p>We may suspend, restrict or remove accounts or content where there is misuse, misleading information, spam, fraud risk, abuse, or breach of these terms.</p>
+              <p>
+                Clients are responsible for providing accurate booking details,
+                property access information, timings and instructions when using
+                the platform.
+              </p>
+
+              <p>
+                Clients must behave lawfully and respectfully towards cleaners
+                and must not use the platform for fraudulent, abusive,
+                discriminatory, threatening or unlawful purposes.
+              </p>
+
+              <p>
+                Clients are responsible for confirming pricing, scope of work,
+                timings, cancellations and service expectations directly with the
+                cleaner before work takes place.
+              </p>
             </>
           ),
         },
+
+        {
+          title: 'Cleaner responsibilities',
+          content: (
+            <>
+              <p>
+                Cleaners are responsible for ensuring all profile information is
+                accurate, current and not misleading, including services,
+                pricing, availability, qualifications, images, insurance claims,
+                DBS claims, trust signals and contact information.
+              </p>
+
+              <p>
+                Cleaners must operate lawfully, maintain professional conduct and
+                ensure they hold any insurance, licences, permissions or legal
+                compliance required for the services they provide.
+              </p>
+
+              <p>
+                Where cleaners upload insurance, DBS or trust-related
+                information, the cleaner is solely responsible for ensuring such
+                information remains valid, current and accurate at all times.
+              </p>
+
+              <p>
+                Cleaners must not submit false information, manipulate reviews,
+                impersonate others, misuse customer information, or attempt to
+                mislead users of the platform.
+              </p>
+            </>
+          ),
+        },
+
+        {
+          title: 'Accounts and profile accuracy',
+          content: (
+            <>
+              <p>
+                Users must provide accurate and up-to-date information when
+                registering or updating an account.
+              </p>
+
+              <p>
+                We may suspend, restrict, refuse or remove accounts, listings,
+                reviews or content where we reasonably believe there is misuse
+                of the platform, misleading information, fraud risk, spam,
+                abusive conduct, unlawful activity or breach of these terms.
+              </p>
+            </>
+          ),
+        },
+
         {
           title: 'Cleaner listings and visibility',
           content: (
             <>
-              <p>Cleaner profiles may be displayed publicly across the site, including search, homepage sections, local areas, service-based sections and profile pages. Premium placement or upgraded visibility may affect where a cleaner appears, but does not guarantee work, ranking position or booking volume.</p>
+              <p>
+                Cleaner profiles may appear publicly across the platform,
+                including homepage sections, search results, service pages,
+                location pages and cleaner profile pages.
+              </p>
+
+              <p>
+                Premium placement, subscriptions or upgraded visibility may
+                affect how and where listings appear, but do not guarantee work,
+                ranking position, customer enquiries, booking volume or business
+                results.
+              </p>
             </>
           ),
         },
+
         {
-          title: 'Booking requests and approvals',
+          title: 'Booking requests and scheduling',
           content: (
             <>
-              <p>Clients can submit booking requests through the platform. A request is not confirmed until the cleaner accepts it or the platform marks it as approved through the live booking flow.</p>
-              <p>Availability shown on the site is intended to help with matching and scheduling, but there may still be occasions where a slot changes, becomes unavailable, or is declined.</p>
+              <p>
+                Booking requests submitted through the platform are requests
+                only and are not confirmed until accepted by the cleaner or
+                marked as approved through the booking flow.
+              </p>
+
+              <p>
+                Availability shown on the platform is intended as a scheduling
+                aid only and may change without notice. Slots may become
+                unavailable, be declined or be modified after submission.
+              </p>
             </>
           ),
         },
+
         {
-          title: 'Payments, upgrades and fees',
+          title: 'Payments, subscriptions and fees',
           content: (
             <>
-              <p>Some features may involve payment, such as cleaner upgrades or booking-related flows. Any charges shown at checkout form part of the agreement for that transaction. Third-party processors may be used to collect and handle payments securely.</p>
-              <p>Unless stated otherwise, platform fees relate to use of the marketplace and not to a guarantee of earnings, lead volume, ranking position or business results.</p>
+              <p>
+                Certain platform features may involve payment, including cleaner
+                upgrades, subscriptions or booking-related functionality.
+                Charges displayed at checkout form part of the agreement for
+                that transaction.
+              </p>
+
+              <p>
+                Third-party payment providers may be used to securely process
+                payments. We do not store full payment card details directly on
+                our servers.
+              </p>
+
+              <p>
+                Unless expressly stated otherwise, payments made to the platform
+                relate to access to marketplace features and visibility, and do
+                not guarantee earnings, leads, ranking positions or customer
+                bookings.
+              </p>
             </>
           ),
         },
+
         {
           title: 'Reviews and user content',
           content: (
             <>
-              <p>Platform reviews are intended to reflect genuine customer experiences. We may moderate, remove or refuse reviews or other content that appears false, abusive, defamatory, irrelevant, promotional, misleading, unlawful or otherwise unsuitable for publication.</p>
-              <p>By submitting content, you confirm you have the right to submit it and give us permission to display it in connection with the platform.</p>
+              <p>
+                Reviews and user-generated content must be genuine, lawful and
+                relevant to a real customer experience.
+              </p>
+
+              <p>
+                We may moderate, refuse, edit or remove reviews or other content
+                that appears false, misleading, abusive, defamatory, unlawful,
+                promotional, spam-related or otherwise unsuitable for the
+                platform.
+              </p>
+
+              <p>
+                By submitting content, you confirm you have the legal right to
+                submit it and grant us permission to display, reproduce and use
+                it in connection with operating and promoting the platform.
+              </p>
             </>
           ),
         },
+
         {
-          title: 'Contact between clients and cleaners',
+          title: 'Independent contractor relationship',
           content: (
             <>
-              <p>Clients and cleaners are responsible for the agreement between them regarding access, property, instructions, timings, pricing, cancellations, and performance of the cleaning service itself. FindTrustedCleaners is not the employer of cleaners listed on the platform.</p>
+              <p>
+                FindTrustedCleaners is a marketplace platform only. Cleaners are
+                independent businesses or individuals and are not employees,
+                workers, representatives, partners or agents of
+                FindTrustedCleaners.
+              </p>
+
+              <p>
+                Any agreement regarding pricing, timings, property access,
+                instructions, cancellations, disputes or performance of cleaning
+                services is made directly between the client and the cleaner.
+              </p>
             </>
           ),
         },
+
+        {
+          title: 'Safety, verification and trust disclaimer',
+          content: (
+            <>
+              <p>
+                While we may provide profile features, trust indicators,
+                moderation tools or reporting systems, we do not guarantee the
+                identity, conduct, honesty, qualifications, insurance status,
+                licensing, suitability or safety of any cleaner or client using
+                the platform.
+              </p>
+
+              <p>
+                Users are responsible for carrying out their own judgement,
+                checks and decisions before arranging services, allowing property
+                access or entering into agreements with other users.
+              </p>
+            </>
+          ),
+        },
+
         {
           title: 'Acceptable use',
           content: (
             <>
-              <p>You must not misuse the platform, attempt unauthorised access, submit fraudulent bookings, scrape data unlawfully, interfere with site operation, upload harmful material, or use the service in a way that damages other users or the platform.</p>
+              <p>
+                Users must not misuse the platform, interfere with site
+                operation, scrape data unlawfully, attempt unauthorised access,
+                upload malicious material, submit fraudulent bookings, manipulate
+                reviews or use the service in a way that harms other users or
+                the platform.
+              </p>
             </>
           ),
         },
+
         {
-          title: 'Liability and platform role',
+          title: 'Limitation of liability',
           content: (
             <>
-              <p>We aim to provide a useful and reliable marketplace, but we do not guarantee uninterrupted availability, uninterrupted messaging, error-free data, cleaner performance, or client conduct. To the fullest extent allowed by law, our liability is limited to losses that are reasonably foreseeable and directly caused by our breach.</p>
+              <p>
+                To the fullest extent permitted by law, FindTrustedCleaners is
+                not liable for the acts, omissions, conduct, negligence,
+                services or behaviour of cleaners, clients or other third
+                parties using the platform.
+              </p>
+
+              <p>
+                This includes, without limitation, liability relating to
+                property damage, theft, injury, disputes, missed appointments,
+                inaccurate listings, misleading information, loss of earnings,
+                service dissatisfaction, unlawful conduct or failed bookings.
+              </p>
+
+              <p>
+                We do not guarantee uninterrupted platform availability,
+                uninterrupted messaging, error-free operation or continuous
+                access to any feature or listing.
+              </p>
+
+              <p>
+                To the extent permitted by law, our liability is limited to
+                losses that are reasonably foreseeable and directly caused by our
+                own breach of these terms.
+              </p>
             </>
           ),
         },
+
         {
-          title: 'Changes and contact',
+          title: 'Changes to these terms',
           content: (
             <>
-              <p>We may update these terms from time to time as the platform develops. Continued use of the website after changes are published means the updated terms apply.</p>
-              <p>Questions about these terms can be sent to <a className="font-medium text-teal-700 underline underline-offset-4" href={`mailto:${supportEmail}`}>{supportEmail}</a>.</p>
+              <p>
+                We may update these terms from time to time as the platform,
+                services or legal requirements change. Continued use of the
+                platform after updated terms are published means the revised
+                terms apply.
+              </p>
+            </>
+          ),
+        },
+
+        {
+          title: 'Contact',
+          content: (
+            <>
+              <p>
+                Questions about these terms can be sent to{' '}
+                <a
+                  className="font-medium text-teal-700 underline underline-offset-4"
+                  href={`mailto:${supportEmail}`}
+                >
+                  {supportEmail}
+                </a>.
+              </p>
             </>
           ),
         },
