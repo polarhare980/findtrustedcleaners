@@ -296,7 +296,23 @@ export default function CleanerSearchPage() {
                     value={postcode}
                     onChange={(e) => setPostcode(e.target.value)}
                     placeholder="Enter postcode"
-                    className="h-14 min-w-0 flex-1 rounded-full border border-white/[0.12] bg-white/[0.12] px-5 text-base font-semibold text-white outline-none backdrop-blur-xl placeholder:text-white/[0.52] transition focus:border-cyan-200/[0.70] focus:bg-white/[0.16]"
+                    className="
+    w-full
+    h-14
+    rounded-2xl
+    bg-white
+    text-slate-900
+    placeholder:text-slate-500
+    px-5
+    text-lg
+    font-medium
+    border border-white/40
+    shadow-lg
+    focus:outline-none
+    focus:ring-2
+    focus:ring-cyan-400
+    focus:border-cyan-300
+    transition-all"
                   />
                   <button
                     type="button"
