@@ -246,31 +246,31 @@ export default function CleanerSearchPage() {
   }, [postcode, serviceType])
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(12,143,163,0.14),transparent_32rem),radial-gradient(circle_at_88%_18%,rgba(15,23,42,0.08),transparent_28rem),linear-gradient(180deg,#f3f8fa_0%,#e8f1f5_44%,#dfeaf0_100%)] text-slate-900">
+    <main className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,rgba(12,143,163,0.14),transparent_32rem),radial-gradient(circle_at_88%_18%,rgba(15,23,42,0.08),transparent_28rem),linear-gradient(180deg,#f3f8fa_0%,#e8f1f5_44%,#dfeaf0_100%)] text-slate-900">
       <PublicHeader />
 
-      <section className="site-section pt-7 pb-5 sm:pt-10">
-        <div className="relative isolate overflow-hidden rounded-[38px] border border-white/20 bg-slate-950 text-white shadow-[0_30px_100px_rgba(15,23,42,0.24)]">
+      <section className="site-section pt-4 pb-5 sm:pt-10">
+        <div className="relative isolate w-full max-w-full overflow-hidden rounded-[28px] border border-white/20 bg-slate-950 text-white shadow-[0_30px_100px_rgba(15,23,42,0.24)]">
           <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(2,6,23,0.96)_0%,rgba(15,23,42,0.86)_48%,rgba(12,143,163,0.36)_100%)]" />
           <div className="absolute -right-28 -top-28 h-72 w-72 rounded-full bg-[#0C8FA3]/35 blur-3xl" />
           <div className="absolute bottom-0 left-1/3 h-52 w-52 rounded-full bg-cyan-200/10 blur-3xl" />
 
-          <div className="relative grid gap-8 p-5 sm:p-8 lg:grid-cols-[1.03fr_0.97fr] lg:p-10">
-            <div className="flex min-h-[430px] flex-col justify-between">
+          <div className="relative grid min-w-0 gap-6 p-4 sm:gap-8 sm:p-8 lg:grid-cols-[1.03fr_0.97fr] lg:p-10">
+            <div className="flex min-h-0 min-w-0 flex-col justify-between sm:min-h-[430px]">
               <div>
-                <span className="inline-flex rounded-full border border-white/[0.12] bg-white/[0.10] px-4 py-2 text-xs font-bold uppercase tracking-[0.22em] text-cyan-100 shadow-sm backdrop-blur-xl">
+                <span className="inline-flex max-w-full rounded-full border border-white/[0.12] bg-white/[0.10] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.16em] text-cyan-100 shadow-sm backdrop-blur-xl sm:px-4 sm:text-xs sm:tracking-[0.22em]">
                   Simpler cleaner search
                 </span>
-                <h1 className="mt-6 max-w-3xl text-5xl font-semibold tracking-[-0.055em] text-white sm:text-6xl lg:text-7xl">
+                <h1 className="mt-5 max-w-3xl break-words text-[2.55rem] font-semibold leading-[0.95] tracking-[-0.055em] text-white sm:mt-6 sm:text-6xl lg:text-7xl">
                   What kind of cleaner do you need?
                 </h1>
-                <p className="mt-6 max-w-2xl text-xl font-medium leading-8 text-slate-200 sm:text-2xl">
+                <p className="mt-5 max-w-2xl text-base font-medium leading-7 text-slate-200 sm:mt-6 sm:text-2xl sm:leading-8">
                   Start with domestic cleaning for the closest available match, or choose specialist cleaning for a specific job.
                 </p>
               </div>
 
               <div className="mt-8">
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid min-w-0 gap-3 sm:grid-cols-2">
                   {SEARCH_MODES.map((mode) => {
                     const active = searchMode === mode.id
                     return (
@@ -278,25 +278,25 @@ export default function CleanerSearchPage() {
                         key={mode.id}
                         type="button"
                         onClick={() => handleModeSelect(mode.id)}
-                        className={`rounded-[26px] border p-5 text-left backdrop-blur-xl transition duration-300 hover:-translate-y-0.5 ${
+                        className={`min-w-0 overflow-hidden rounded-[22px] border p-4 text-left backdrop-blur-xl transition duration-300 hover:-translate-y-0.5 sm:rounded-[26px] sm:p-5 ${
                           active
                             ? 'border-cyan-200 bg-white text-slate-950 shadow-[0_18px_45px_rgba(255,255,255,0.18)]'
                             : 'border-white/[0.14] bg-white/[0.10] text-white hover:bg-white/[0.16]'
                         }`}
                       >
                         <span className="text-base font-black tracking-tight">{mode.label}</span>
-                        <span className={`mt-2 block text-sm leading-6 ${active ? 'text-slate-600' : 'text-white/[0.68]'}`}>{mode.description}</span>
+                        <span className={`mt-2 block break-words text-sm leading-6 ${active ? 'text-slate-600' : 'text-white/[0.68]'}`}>{mode.description}</span>
                       </button>
                     )
                   })}
                 </div>
 
-                <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                <div className="mt-5 flex min-w-0 flex-col gap-3 sm:mt-6 sm:flex-row">
                   <input
                     value={postcode}
                     onChange={(e) => setPostcode(e.target.value)}
                     placeholder="Enter postcode"
-                    className="h-14 flex-1 rounded-full border border-white/[0.12] bg-white/[0.12] px-5 text-base font-semibold text-white outline-none backdrop-blur-xl placeholder:text-white/[0.52] transition focus:border-cyan-200/[0.70] focus:bg-white/[0.16]"
+                    className="h-14 min-w-0 flex-1 rounded-full border border-white/[0.12] bg-white/[0.12] px-5 text-base font-semibold text-white outline-none backdrop-blur-xl placeholder:text-white/[0.52] transition focus:border-cyan-200/[0.70] focus:bg-white/[0.16]"
                   />
                   <button
                     type="button"
@@ -321,8 +321,8 @@ export default function CleanerSearchPage() {
               </div>
             </div>
 
-            <div className="rounded-[34px] border border-white/[0.14] bg-white/[0.12] p-4 shadow-[0_24px_80px_rgba(0,0,0,0.16)] backdrop-blur-2xl sm:p-5">
-              <div className="rounded-[28px] border border-white/[0.12] bg-white/[0.10] p-5">
+            <div className="min-w-0 rounded-[26px] border border-white/[0.14] bg-white/[0.12] p-3 shadow-[0_24px_80px_rgba(0,0,0,0.16)] backdrop-blur-2xl sm:rounded-[34px] sm:p-5">
+              <div className="min-w-0 rounded-[22px] border border-white/[0.12] bg-white/[0.10] p-4 sm:rounded-[28px] sm:p-5">
                 <div className="flex items-center justify-between gap-4">
                   <div>
                     <p className="text-xs font-bold uppercase tracking-[0.22em] text-cyan-100/[0.80]">Your route</p>
@@ -344,13 +344,13 @@ export default function CleanerSearchPage() {
                 {searchMode === 'specialist' ? (
                   <div className="mt-5">
                     <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-white/[0.48]">Specialist job</p>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 gap-2 min-[390px]:grid-cols-2">
                       {SPECIALIST_SERVICES.map((service) => (
                         <button
                           key={service}
                           type="button"
                           onClick={() => handleSpecialistSelect(service)}
-                          className={`rounded-2xl border px-4 py-3 text-left text-sm font-bold transition ${
+                          className={`rounded-2xl border px-4 py-3 text-left text-sm font-bold transition break-words ${
                             serviceType === service
                               ? 'border-cyan-200 bg-white text-slate-950'
                               : 'border-white/[0.12] bg-white/[0.08] text-white/[0.78] hover:bg-white/[0.14] hover:text-white'
