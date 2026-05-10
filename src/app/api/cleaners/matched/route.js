@@ -26,12 +26,28 @@ function resolveCleanerImage(cleaner = {}) {
   return '/default-avatar.png';
 }
 
-function buildServiceQuery(serviceType = '') {
-  if (!serviceType) return null;
+const DOMESTIC_SERVICES = [
+  'Regular Cleaning',
+  'One-Off Deep Clean',
+  'Spring Cleaning',
+  'After-party Cleaning',
+  'End of Tenancy',
+  'Moving House Cleaning',
+];
+
+function buildServiceQuery(serviceType = '', category = '') {
+  const requestedServices = category === 'domestic'
+    ? DOMESTIC_SERVICES
+    : serviceType
+      ? [serviceType]
+      : [];
+
+  if (!requestedServices.length) return null;
+
   return {
     $or: [
-      { services: { $in: [serviceType] } },
-      { servicesDetailed: { $elemMatch: { name: serviceType, active: { $ne: false } } } },
+      { services: { $in: requestedServices } },
+      { servicesDetailed: { $elemMatch: { name: { $in: requestedServices }, active: { $ne: false } } } },
     ],
   };
 }
@@ -72,10 +88,11 @@ export async function GET(req) {
     const postcode = searchParams.get('postcode')?.trim() || '';
     const town = searchParams.get('town')?.trim() || '';
     const serviceType = searchParams.get('serviceType')?.trim() || searchParams.get('service')?.trim() || '';
+    const category = searchParams.get('category')?.trim() || '';
     const radiusMiles = parseRadiusMiles(searchParams.get('radius'), 8);
 
     const query = {};
-    const serviceQuery = buildServiceQuery(serviceType);
+    const serviceQuery = buildServiceQuery(serviceType, category);
     if (serviceQuery) Object.assign(query, serviceQuery);
 
     const raw = await Cleaner.find(query)
@@ -99,6 +116,7 @@ export async function GET(req) {
         postcode,
         town,
         radiusMiles,
+        category,
         usedDistanceSearch: Boolean(lat && lng) || Boolean(postcode),
         fallbackUsed: !matched.some((cleaner) => cleaner.localMatch),
       },
