@@ -97,6 +97,10 @@ function cleanText(value = "") {
 }
 
 function makeBullets(post) {
+  if (Array.isArray(post.takeaways) && post.takeaways.length) {
+    return post.takeaways.map((item) => cleanText(item)).filter(Boolean).slice(0, 3);
+  }
+
   const source = cleanText(post.excerpt || post.description || post.content || "");
   if (!source) {
     return ["A calm, practical read for planning your next clean.", "Designed to help you choose with more confidence."];

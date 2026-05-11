@@ -308,7 +308,7 @@ export default async function BlogPostPage({ params }) {
   })
     .sort({ createdAt: -1, updatedAt: -1 })
     .limit(8)
-    .select("title slug excerpt description coverImage heroImage image imageAlt tags category createdAt updatedAt")
+    .select("title slug excerpt description coverImage heroImage image imageAlt tags category readTime takeaways pullQuote createdAt updatedAt")
     .lean();
 
   const enhancedContent = injectAutoAdMarkers(

@@ -16,7 +16,16 @@ function toTagsArray(input) {
   return String(input || "")
     .split(",")
     .map((t) => t.trim())
-    .filter(Boolean);
+    .filter(Boolean)
+    .slice(0, 3);
+}
+
+function toTakeawaysArray(input) {
+  return String(input || "")
+    .split(/\r?\n|,/)
+    .map((t) => t.trim())
+    .filter(Boolean)
+    .slice(0, 4);
 }
 
 function insertAtCursor(textarea, text) {
@@ -59,6 +68,10 @@ export default function AdminBlogNewPage() {
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
   const [excerpt, setExcerpt] = useState("");
+  const [category, setCategory] = useState("");
+  const [readTime, setReadTime] = useState("");
+  const [pullQuote, setPullQuote] = useState("");
+  const [takeaways, setTakeaways] = useState("");
   const [metaTitle, setMetaTitle] = useState("");
   const [metaDescription, setMetaDescription] = useState("");
   const [content, setContent] = useState("");
@@ -93,6 +106,10 @@ export default function AdminBlogNewPage() {
         setTitle(post.title || "");
         setSlug(post.slug || "");
         setExcerpt(post.excerpt || "");
+        setCategory(post.category || "");
+        setReadTime(post.readTime || "");
+        setPullQuote(post.pullQuote || "");
+        setTakeaways(Array.isArray(post.takeaways) ? post.takeaways.join("\n") : "");
         setMetaTitle(post.metaTitle || "");
         setMetaDescription(post.metaDescription || "");
         setContent(post.content || "");
@@ -121,6 +138,10 @@ export default function AdminBlogNewPage() {
             title,
             slug,
             excerpt,
+            category,
+            readTime,
+            pullQuote,
+            takeaways: toTakeawaysArray(takeaways),
             metaTitle,
             metaDescription,
             content,
@@ -132,6 +153,10 @@ export default function AdminBlogNewPage() {
             title,
             slug,
             excerpt,
+            category,
+            readTime,
+            pullQuote,
+            takeaways: toTakeawaysArray(takeaways),
             metaTitle,
             metaDescription,
             content,
@@ -252,6 +277,52 @@ export default function AdminBlogNewPage() {
             value={excerpt}
             onChange={(e) => setExcerpt(e.target.value)}
           />
+
+          <div className="rounded-2xl border bg-white p-4 space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <div className="text-sm font-semibold mb-1">Editorial category</div>
+                <input
+                  className="w-full p-3 rounded-xl border"
+                  placeholder="e.g. Home Life, Moving Home"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                />
+              </div>
+              <div>
+                <div className="text-sm font-semibold mb-1">Read time</div>
+                <input
+                  className="w-full p-3 rounded-xl border"
+                  placeholder="e.g. 6 min read"
+                  value={readTime}
+                  onChange={(e) => setReadTime(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div>
+              <div className="text-sm font-semibold mb-1">Pull quote</div>
+              <textarea
+                className="w-full p-3 rounded-xl border min-h-[92px]"
+                placeholder="Magazine-style quote to feature near the top"
+                value={pullQuote}
+                onChange={(e) => setPullQuote(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <div className="text-sm font-semibold mb-1">Key takeaways</div>
+              <textarea
+                className="w-full p-3 rounded-xl border min-h-[120px]"
+                placeholder={"One takeaway per line.\nMax 4."}
+                value={takeaways}
+                onChange={(e) => setTakeaways(e.target.value)}
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                These are now manually saved. The article layout will not auto-generate them from the excerpt.
+              </p>
+            </div>
+          </div>
 
           <div className="rounded-2xl border bg-white p-4 space-y-3">
             <div>

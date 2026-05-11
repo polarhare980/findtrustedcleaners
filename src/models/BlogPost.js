@@ -37,6 +37,10 @@ const BlogPostSchema = new mongoose.Schema(
     },
 
     excerpt: { type: String, default: "" },
+    category: { type: String, default: "" },
+    readTime: { type: String, default: "" },
+    pullQuote: { type: String, default: "" },
+    takeaways: [{ type: String }],
     metaTitle: { type: String, default: "" },
     metaDescription: { type: String, default: "" },
     content: { type: String, default: "" }, // stored as HTML

@@ -34,6 +34,15 @@ function readingMinutes(post = {}) {
   return Math.max(1, Math.ceil(words / 220));
 }
 
+function formatReadTime(value, fallbackMinutes = 1) {
+  if (typeof value === "string" && value.trim()) {
+    return value.toLowerCase().includes("read") ? value.trim() : `${value.trim()} min read`;
+  }
+
+  const n = Number(value || fallbackMinutes);
+  return `${Math.max(1, Math.round(Number.isFinite(n) ? n : fallbackMinutes))} min read`;
+}
+
 function categoryFromPost(post = {}) {
   const firstTag = Array.isArray(post.tags) && post.tags.length ? post.tags[0] : null;
   return post.category || firstTag || "Home Life";
@@ -43,28 +52,19 @@ function getHeroImage(post = {}) {
   return post.coverImage || post.heroImage || post.image || FALLBACK_HERO;
 }
 
-function makeFallbackTakeaways(post = {}) {
-  const source = cleanText(post.excerpt || post.description || post.content || "");
-  if (!source) {
-    return [
-      "A calmer way to think about cleaning and home care.",
-      "Practical advice without the usual directory clutter.",
-      "Useful next steps for choosing the right cleaner.",
-    ];
+function normaliseStringList(value) {
+  if (Array.isArray(value)) {
+    return value.map((item) => cleanText(item)).filter(Boolean);
   }
 
-  const sentences = source
-    .split(/(?<=[.!?])\s+/)
-    .map((sentence) => sentence.replace(/[.!?]+$/, "").trim())
-    .filter(Boolean);
+  if (typeof value === "string") {
+    return value
+      .split(/\r?\n|,/)
+      .map((item) => cleanText(item))
+      .filter(Boolean);
+  }
 
-  if (sentences.length >= 2) return sentences.slice(0, 4);
-
-  const words = source.split(" ").filter(Boolean);
-  return [
-    words.slice(0, 14).join(" "),
-    words.slice(14, 30).join(" ") || "A practical guide for making a clearer choice",
-  ].filter(Boolean);
+  return [];
 }
 
 function EditorialAdBlock({ slot, minHeight = 120 }) {
@@ -184,9 +184,13 @@ export default function MagazineArticleLayout({ post = {}, slots = {}, readNextP
   const title = post.title || "FindTrustedCleaners Magazine";
   const excerpt = cleanText(post.excerpt || post.description || post.metaDescription || "Practical, calm advice for choosing cleaners and caring for your home.");
   const category = categoryFromPost(post);
-  const dateLabel = formatDate(post.createdAt || post.updatedAt);
-  const minutes = post.readingTime || readingMinutes(post);
-  const takeaways = Array.isArray(post.takeaways) && post.takeaways.length ? post.takeaways : makeFallbackTakeaways(post);
+  const dateLabel = formatDate(post.publishedAt || post.createdAt || post.updatedAt);
+  const readTimeLabel = formatReadTime(post.readTime || post.readingTime, readingMinutes(post));
+  const takeaways = normaliseStringList(post.takeaways);
+  const pullQuote = cleanText(post.pullQuote || "");
+  const bodyText = cleanText(contentHtml || post.content || "");
+  const shouldShowStandfirst = Boolean(excerpt) && !bodyText.toLowerCase().startsWith(excerpt.toLowerCase());
+  const shouldShowPullQuote = Boolean(pullQuote) && !bodyText.toLowerCase().includes(pullQuote.toLowerCase());
 
   return (
     <main className="min-h-screen bg-[#f5f0e8] text-stone-950">
@@ -221,7 +225,7 @@ export default function MagazineArticleLayout({ post = {}, slots = {}, readNextP
       <section className="border-b border-stone-200/80 bg-[#fbf7ef]/95">
         <div className="mx-auto flex max-w-7xl flex-wrap gap-3 px-4 py-5 text-sm text-stone-600 sm:px-6 lg:px-8">
           <span className="rounded-full border border-stone-200 bg-white/70 px-4 py-2">{dateLabel}</span>
-          <span className="rounded-full border border-stone-200 bg-white/70 px-4 py-2">{Math.max(1, Math.round(minutes))} min read</span>
+          <span className="rounded-full border border-stone-200 bg-white/70 px-4 py-2">{readTimeLabel}</span>
           <span className="rounded-full border border-stone-200 bg-white/70 px-4 py-2">By Find Trusted Cleaners</span>
         </div>
       </section>
@@ -234,22 +238,32 @@ export default function MagazineArticleLayout({ post = {}, slots = {}, readNextP
 
       <section className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-4 py-10 sm:px-6 lg:grid-cols-[minmax(0,760px)_320px] lg:px-8 lg:py-16">
         <article className="min-w-0">
-          <div className="mb-8 rounded-[30px] border border-stone-200/80 bg-white/72 p-6 shadow-[0_20px_70px_rgba(82,64,42,0.08)] backdrop-blur sm:p-8">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-teal-700">Key takeaways</p>
-            <ul className="mt-4 grid gap-3 text-sm leading-6 text-stone-700 sm:text-base">
-              {takeaways.slice(0, 4).map((item) => (
-                <li key={item} className="flex gap-3 rounded-2xl bg-[#f5f0e8]/80 p-3">
-                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-teal-600" />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {takeaways.length > 0 ? (
+            <div className="mb-8 rounded-[30px] border border-stone-200/80 bg-white/72 p-6 shadow-[0_20px_70px_rgba(82,64,42,0.08)] backdrop-blur sm:p-8">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-teal-700">Key takeaways</p>
+              <ul className="mt-4 grid gap-3 text-sm leading-6 text-stone-700 sm:text-base">
+                {takeaways.slice(0, 4).map((item) => (
+                  <li key={item} className="flex gap-3 rounded-2xl bg-[#f5f0e8]/80 p-3">
+                    <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-teal-600" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
+          {shouldShowPullQuote ? (
+            <blockquote className="mb-10 rounded-[30px] border border-stone-200/80 bg-white/62 px-7 py-8 text-3xl font-medium leading-tight tracking-[-0.035em] text-stone-700 shadow-[0_20px_70px_rgba(82,64,42,0.08)] sm:text-4xl">
+              {pullQuote}
+            </blockquote>
+          ) : null}
 
           <div className="magazine-prose prose prose-lg max-w-none prose-headings:font-semibold prose-headings:tracking-tight prose-headings:text-stone-950 prose-h2:mt-14 prose-h2:text-3xl prose-h2:leading-tight prose-h3:mt-10 prose-h3:text-2xl prose-p:text-stone-700 prose-p:leading-8 prose-a:text-teal-700 prose-a:underline prose-a:decoration-teal-200 prose-a:underline-offset-4 hover:prose-a:text-teal-900 prose-strong:text-stone-950 prose-img:my-10 prose-img:rounded-[28px] prose-img:shadow-[0_24px_80px_rgba(82,64,42,0.14)] prose-blockquote:my-12 prose-blockquote:border-0 prose-blockquote:px-0 prose-blockquote:text-3xl prose-blockquote:font-medium prose-blockquote:leading-tight prose-blockquote:tracking-[-0.035em] prose-blockquote:text-stone-700 prose-blockquote:not-italic sm:prose-blockquote:text-4xl">
-            <div className="mb-8 text-xl leading-9 text-stone-700 first-letter:float-left first-letter:mr-3 first-letter:text-7xl first-letter:font-serif first-letter:leading-[0.8] first-letter:text-stone-400">
-              {excerpt}
-            </div>
+            {shouldShowStandfirst ? (
+              <div className="mb-8 text-xl leading-9 text-stone-700 first-letter:float-left first-letter:mr-3 first-letter:text-7xl first-letter:font-serif first-letter:leading-[0.8] first-letter:text-stone-400">
+                {excerpt}
+              </div>
+            ) : null}
             {children || renderHtmlWithAdMarkers(contentHtml, slots)}
           </div>
 

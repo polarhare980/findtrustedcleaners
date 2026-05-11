@@ -22,6 +22,10 @@ function cleanText(value = '') {
 }
 
 function makeBullets(blog) {
+  if (Array.isArray(blog.takeaways) && blog.takeaways.length) {
+    return blog.takeaways.map((item) => cleanText(item)).filter(Boolean).slice(0, 3);
+  }
+
   const source = cleanText(blog.excerpt || blog.description || blog.content || '');
   if (!source) return ['A calm, useful guide for planning your next clean.', 'Short, practical and easy to scan.'];
 
